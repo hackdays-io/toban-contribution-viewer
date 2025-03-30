@@ -1,6 +1,6 @@
-# TeamInsight - Contribution Analytics Platform
+# Toban Contribution Viewer
 
-TeamInsight is an AI-powered analytics platform designed to extract, analyze, and visualize team contributions across digital workspaces. The platform connects to Slack, GitHub, and Notion via their APIs to collect activity data, processes it using AI to identify meaningful contributions, and presents actionable insights through an intuitive dashboard.
+Toban Contribution Viewer is an AI-powered analytics platform designed to extract, analyze, and visualize team contributions across digital workspaces. The platform connects to Slack, GitHub, and Notion via their APIs to collect activity data, processes it using AI to identify meaningful contributions, and presents actionable insights through an intuitive dashboard.
 
 ## Business Value
 
@@ -9,26 +9,6 @@ TeamInsight is an AI-powered analytics platform designed to extract, analyze, an
 - **Optimize Workflows**: Discover bottlenecks and inefficiencies in your team's digital processes
 - **Foster Recognition**: Create a culture of appreciation by highlighting diverse forms of contribution
 - **Data-Driven Management**: Make informed decisions based on comprehensive contribution metrics rather than anecdotal evidence
-
-## Core Features
-
-### Data Collection & Integration
-- Secure OAuth connections to Slack, GitHub, and Notion
-- Configurable data collection parameters (date ranges, channels, repositories)
-- Real-time and scheduled data synchronization
-- Privacy-focused data handling with anonymization options
-
-### AI-Powered Analysis
-- Content classification by type and value (problem-solving, knowledge sharing, coordination)
-- Contribution quality assessment based on context and impact
-- Cross-platform activity correlation (e.g., Slack discussions leading to GitHub commits)
-- Trend identification and anomaly detection
-
-### Visualization & Reporting
-- Interactive dashboards with customizable views
-- Individual and team contribution profiles
-- Time-series analysis of activity patterns
-- Exportable reports for performance reviews
 
 ## Technical Stack
 
@@ -39,18 +19,24 @@ TeamInsight is an AI-powered analytics platform designed to extract, analyze, an
 - **Authentication**: Auth0
 - **Hosting**: AWS
 
-## Getting Started
+## Development Setup
+
+This section provides detailed instructions for setting up the project for local development.
 
 ### Prerequisites
 
-- Python 3.8+
-- Node.js 16+
-- PostgreSQL
-- API keys for:
-  - Slack
-  - GitHub
-  - Notion
-  - OpenAI
+- Python 3.12+
+- Node.js 18+
+- PostgreSQL 13+
+- Git
+
+### Getting Started
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/hackdays-io/toban-contribution-viewer.git
+   cd toban-contribution-viewer
+   ```
 
 ### Backend Setup
 
@@ -59,7 +45,7 @@ TeamInsight is an AI-powered analytics platform designed to extract, analyze, an
    cd backend
    ```
 
-2. Create and activate virtual environment:
+2. Create and activate a virtual environment:
    ```bash
    python -m venv venv
    source venv/bin/activate  # On Windows: venv\Scripts\activate
@@ -70,16 +56,18 @@ TeamInsight is an AI-powered analytics platform designed to extract, analyze, an
    pip install -r requirements.txt
    ```
 
-4. Set up environment variables:
+4. Copy the example environment variables file and configure it:
    ```bash
    cp .env.example .env
-   # Edit .env with your configuration
+   # Edit .env with your configuration using your preferred editor
    ```
 
 5. Run the development server:
    ```bash
    uvicorn app.main:app --reload
    ```
+
+6. Access the API documentation at http://localhost:8000/docs
 
 ### Frontend Setup
 
@@ -93,7 +81,7 @@ TeamInsight is an AI-powered analytics platform designed to extract, analyze, an
    npm install
    ```
 
-3. Set up environment variables:
+3. Copy the example environment variables file and configure it:
    ```bash
    cp .env.example .env.local
    # Edit .env.local with your configuration
@@ -103,6 +91,128 @@ TeamInsight is an AI-powered analytics platform designed to extract, analyze, an
    ```bash
    npm run dev
    ```
+
+5. Access the application at http://localhost:5173
+
+## Development Workflow
+
+### Code Style and Linting
+
+We use automated tools to ensure code consistency:
+
+#### Backend
+
+- **Black**: For code formatting
+- **isort**: For import sorting
+- **flake8**: For linting
+
+Run these tools before committing:
+```bash
+cd backend
+black .
+isort .
+flake8
+```
+
+#### Frontend
+
+- **ESLint**: For linting
+- **Prettier**: For code formatting
+- **TypeScript**: For type checking
+
+Run these tools before committing:
+```bash
+cd frontend
+npm run lint
+npm run format
+npm run typecheck
+```
+
+### Testing
+
+#### Backend Tests
+
+Run the tests with pytest:
+```bash
+cd backend
+pytest
+```
+
+For test coverage:
+```bash
+pytest --cov=app --cov-report=term-missing
+```
+
+#### Frontend Tests
+
+Run the tests with Vitest:
+```bash
+cd frontend
+npm test
+```
+
+For watching mode during development:
+```bash
+npm run test:watch
+```
+
+### Git Workflow
+
+1. Create a feature branch from `main`:
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+
+2. Make your changes, commit regularly with descriptive messages:
+   ```bash
+   git add .
+   git commit -m "Add feature: description of changes"
+   ```
+
+3. Push your branch and create a pull request:
+   ```bash
+   git push -u origin feature/your-feature-name
+   ```
+
+4. Ensure CI checks pass and request a code review
+5. After approval, merge your PR into `main`
+
+## API Integrations
+
+To fully use the application, you'll need to set up the following API integrations:
+
+### Required API Keys
+
+- **Slack API**: For accessing workspace activity
+- **GitHub API**: For accessing repository contributions
+- **Notion API**: For accessing document contributions
+- **OpenAI API**: For AI-powered analysis
+
+Refer to each platform's documentation for obtaining API keys. Add these keys to your `.env` files as described in the setup sections.
+
+## Continuous Integration/Deployment
+
+Our CI/CD pipeline is set up with GitHub Actions:
+
+- **Pull Requests**: Automatically run tests, linting, and build checks
+- **Main Branch**: Automated deployments to staging environment
+- **Release Tags**: Automated deployments to production environment
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Backend dependency issues**: Make sure your Python version matches the requirements (3.12+)
+2. **Frontend build errors**: Clear node_modules and reinstall dependencies
+3. **Database connection issues**: Verify PostgreSQL is running and credentials are correct
+
+### Getting Help
+
+If you encounter issues not covered in this documentation:
+
+1. Check existing GitHub issues
+2. Create a new issue with detailed information about your problem
+3. Reach out to the team on the project Slack channel
 
 ## Contributing
 
