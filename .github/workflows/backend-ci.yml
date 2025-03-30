@@ -53,6 +53,16 @@ jobs:
         echo "OPENAI_API_KEY=sk-test-key" >> .env.test
 
     - name: Check environment variables
+      env:
+        CI: "true"
+        TESTING: "True"
+        DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/test_db"
+        SECRET_KEY: "test-secret-key-for-ci"
+        AUTH0_DOMAIN: "example.auth0.com"
+        AUTH0_CLIENT_ID: "test-client-id"
+        AUTH0_CLIENT_SECRET: "test-client-secret"
+        AUTH0_AUDIENCE: "https://api.example.com"
+        OPENAI_API_KEY: "sk-test-key"
       run: python scripts/check_env.py --env-file .env.test --no-exit
 
     - name: Run tests with pytest

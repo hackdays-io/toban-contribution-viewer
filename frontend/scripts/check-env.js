@@ -6,9 +6,15 @@
  * Can be run as a pre-build check in CI/CD pipelines
  */
 
-const fs = require('fs');
-const path = require('path');
-const dotenv = require('dotenv');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import dotenv from 'dotenv';
+
+// Convert ESM __dirname equivalent
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Required environment variables that must be defined
 const REQUIRED_ENV_VARS = [

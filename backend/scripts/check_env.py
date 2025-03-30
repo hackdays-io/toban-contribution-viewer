@@ -12,6 +12,10 @@ from pathlib import Path
 # Add the parent directory to sys.path so we can import app modules
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+# Set environment variables for testing if we're in CI mode
+if os.environ.get('CI') == 'true':
+    os.environ['TESTING'] = 'True'
+
 from app.core.env_test import check_env  # noqa: E402
 
 
