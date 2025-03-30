@@ -1,1 +1,1 @@
-# Test package initialization file
+"""Test package initialization file."""
