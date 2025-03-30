@@ -1,6 +1,6 @@
 import os
 from functools import lru_cache
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, List, Optional
 
 from pydantic import PostgresDsn, SecretStr, validator
 from pydantic_settings import BaseSettings
