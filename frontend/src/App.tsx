@@ -1,9 +1,12 @@
-import { Box, ChakraProvider, Heading, Text } from '@chakra-ui/react'
+import { Box, ChakraProvider, Heading, Text, extendTheme } from '@chakra-ui/react'
 import './App.css'
+
+// Create a default theme
+const theme = extendTheme({})
 
 function App() {
   return (
-    <ChakraProvider>
+    <ChakraProvider theme={theme}>
       <Box p={5} textAlign="center">
         <Heading as="h1" size="xl" mb={4}>
           Toban Contribution Viewer
