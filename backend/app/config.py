@@ -50,7 +50,8 @@ class Settings(BaseSettings):
     def validate_database_url(cls, v: Optional[str]) -> Any:
         if os.environ.get("TESTING") == "True":
             # Use test database during testing
-            return cls.DATABASE_TEST_URL if cls.DATABASE_TEST_URL else v
+            test_url = os.environ.get("DATABASE_TEST_URL")
+            return test_url if test_url else v
         return v
     
     class Config:
