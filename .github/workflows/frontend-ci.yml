@@ -39,7 +39,22 @@ jobs:
     - name: Type check
       run: npm run typecheck || npm run check:types || npm run tsc
 
+    - name: Create test environment file
+      run: cp .env.example .env.test
+    
+    - name: Install dotenv for env checking
+      run: npm install dotenv --no-save
+    
+    - name: Check environment variables
+      run: node scripts/check-env.js .env.test
+    
     - name: Build
+      env:
+        VITE_API_URL: "http://localhost:8000/api/v1"
+        VITE_AUTH0_DOMAIN: "example.auth0.com"
+        VITE_AUTH0_CLIENT_ID: "test-client-id"
+        VITE_AUTH0_AUDIENCE: "https://api.example.com"
+        VITE_DEV_MODE: "false"
       run: npm run build
 
     - name: Test

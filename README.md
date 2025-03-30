@@ -1,4 +1,4 @@
-# TeamInsight - Contribution Analytics Platform
+# Toban Contribution Viewer
 
 TeamInsight is an AI-powered analytics platform designed to extract, analyze, and visualize team contributions across digital workspaces. The platform connects to Slack, GitHub, and Notion via their APIs to collect activity data, processes it using AI to identify meaningful contributions, and presents actionable insights through an intuitive dashboard.
 
@@ -43,9 +43,9 @@ TeamInsight is an AI-powered analytics platform designed to extract, analyze, an
 
 ### Prerequisites
 
-- Python 3.8+
-- Node.js 16+
-- PostgreSQL
+- Python 3.12+
+- Node.js 18+
+- PostgreSQL 13+
 - API keys for:
   - Slack
   - GitHub
@@ -103,6 +103,38 @@ TeamInsight is an AI-powered analytics platform designed to extract, analyze, an
    ```bash
    npm run dev
    ```
+
+## Environment Variables Management
+
+The project uses a structured approach to environment variables management to ensure proper configuration across environments.
+
+### Backend Environment Variables
+
+Backend environment variables are managed through:
+
+1. **Configuration Definition**: All environment variables are defined in `app/config.py` using Pydantic for validation
+2. **Environment Validation**: The application validates required variables at startup and logs warnings if any are missing
+3. **Testing Utility**: A utility (`app/core/env_test.py`) is provided to check environment configurations
+4. **Command-line Verification**: The `scripts/check_env.py` script can be used to verify environment variables before deployment
+
+Required backend environment variables:
+- `DATABASE_URL`: PostgreSQL connection string
+- `SECRET_KEY`: Application secret key for security
+- `AUTH0_DOMAIN`, `AUTH0_CLIENT_ID`, `AUTH0_CLIENT_SECRET`, `AUTH0_AUDIENCE`: Auth0 authentication settings
+- `OPENAI_API_KEY`: For AI-powered analysis
+
+### Frontend Environment Variables
+
+Frontend environment variables are managed through:
+
+1. **Centralized Configuration**: All environment variables are accessed through the `src/config/env.ts` module
+2. **Validation at Runtime**: The application validates required variables during initialization
+3. **Build-time Verification**: The `npm run check-env` script verifies environment variables during build
+4. **Typed Access**: Strongly-typed access to environment variables with proper error handling
+
+Required frontend environment variables:
+- `VITE_API_URL`: URL to the backend API
+- `VITE_AUTH0_DOMAIN`, `VITE_AUTH0_CLIENT_ID`, `VITE_AUTH0_AUDIENCE`: Auth0 authentication settings
 
 ## Contributing
 
