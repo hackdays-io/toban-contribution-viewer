@@ -41,7 +41,43 @@ jobs:
     - name: Lint with flake8
       run: flake8 . --count --max-complexity=10 --max-line-length=120 --statistics
 
+    - name: Create test environment file
+      run: |
+        mkdir -p /tmp
+        echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/test_db" > .env.test
+        echo "DATABASE_TEST_URL=postgresql://postgres:postgres@localhost:5432/test_db" >> .env.test
+        echo "SECRET_KEY=test-secret-key-for-ci" >> .env.test
+        echo "AUTH0_DOMAIN=example.auth0.com" >> .env.test
+        echo "AUTH0_CLIENT_ID=test-client-id" >> .env.test
+        echo "AUTH0_CLIENT_SECRET=test-client-secret" >> .env.test
+        echo "AUTH0_AUDIENCE=https://api.example.com" >> .env.test
+        echo "OPENAI_API_KEY=sk-test-key" >> .env.test
+
+    - name: Check environment variables
+      env:
+        CI: "true"
+        TESTING: "True"
+        DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/test_db"
+        DATABASE_TEST_URL: "postgresql://postgres:postgres@localhost:5432/test_db"
+        SECRET_KEY: "test-secret-key-for-ci"
+        AUTH0_DOMAIN: "example.auth0.com"
+        AUTH0_CLIENT_ID: "test-client-id"
+        AUTH0_CLIENT_SECRET: "test-client-secret"
+        AUTH0_AUDIENCE: "https://api.example.com"
+        OPENAI_API_KEY: "sk-test-key"
+      run: python scripts/check_env.py --env-file .env.test --no-exit
+
     - name: Run tests with pytest
+      env:
+        TESTING: "True"
+        DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/test_db"
+        DATABASE_TEST_URL: "postgresql://postgres:postgres@localhost:5432/test_db"
+        SECRET_KEY: "test-secret-key-for-ci-environment"
+        AUTH0_DOMAIN: "example.auth0.com"
+        AUTH0_CLIENT_ID: "test-client-id"
+        AUTH0_CLIENT_SECRET: "test-client-secret"
+        AUTH0_AUDIENCE: "https://api.example.com"
+        OPENAI_API_KEY: "sk-test-key"
       run: pytest --cov=app --cov-report=xml
 
     - name: Upload coverage to Codecov
