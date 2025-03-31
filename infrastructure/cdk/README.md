@@ -29,9 +29,14 @@ cp .env.example .env
 Before you can deploy CDK stacks, you need to bootstrap your AWS environment:
 
 ```bash
-# Replace with your actual AWS account ID and region
+# For a single account
 npx cdk bootstrap aws://123456789012/us-east-1
+
+# For an entire AWS Organization using OU
+npx cdk bootstrap aws:ou-xxxx-xxxxxxxx/us-east-1
 ```
+
+**Important**: If you encounter a cyclic dependency error, the code has been modified to avoid this issue. Make sure you're using the latest version of the code.
 
 ## Deploying Infrastructure
 
