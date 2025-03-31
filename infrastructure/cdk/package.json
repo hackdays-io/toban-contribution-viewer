@@ -11,7 +11,7 @@
     "cdk": "cdk",
     "deploy": "cdk deploy --all",
     "diff": "cdk diff",
-    "bootstrap": "cdk bootstrap"
+    "bootstrap": "./bootstrap.sh"
   },
   "devDependencies": {
     "@types/jest": "^29.5.4",
