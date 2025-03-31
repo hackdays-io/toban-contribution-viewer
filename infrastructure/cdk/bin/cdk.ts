@@ -28,6 +28,8 @@ const backendStack = new BackendStack(app, 'TobanBackend', {
   description: 'Backend resources for Toban Contribution Viewer',
   databaseSecretArn: databaseStack.databaseSecretArn,
   databaseInstance: databaseStack.databaseInstance,
+  vpc: databaseStack.vpc,
+  dbSecurityGroup: databaseStack.dbSecurityGroup,
 });
 
 const frontendStack = new FrontendStack(app, 'TobanFrontend', {
@@ -36,8 +38,7 @@ const frontendStack = new FrontendStack(app, 'TobanFrontend', {
   apiUrl: backendStack.apiUrl,
 });
 
-// Add dependencies
-backendStack.addDependency(databaseStack);
+// Add dependencies - only frontend depends on backend
 frontendStack.addDependency(backendStack);
 
 // Add tags to all resources
