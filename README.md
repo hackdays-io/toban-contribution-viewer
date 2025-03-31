@@ -136,6 +136,49 @@ Required frontend environment variables:
 - `VITE_API_URL`: URL to the backend API
 - `VITE_AUTH0_DOMAIN`, `VITE_AUTH0_CLIENT_ID`, `VITE_AUTH0_AUDIENCE`: Auth0 authentication settings
 
+## Deployment
+
+The project uses GitHub Actions for continuous deployment to AWS.
+
+### Backend Deployment
+
+The backend is deployed to AWS Elastic Beanstalk:
+
+1. Push to the `main` branch triggers the deployment workflow
+2. Tests are run to ensure code quality
+3. A deployment package is created and uploaded to Elastic Beanstalk
+4. Environment variables are managed through the Elastic Beanstalk configuration
+
+Required deployment secrets:
+- `AWS_ACCESS_KEY_ID`: AWS access key with permissions for Elastic Beanstalk
+- `AWS_SECRET_ACCESS_KEY`: AWS secret key
+- `AWS_REGION`: The AWS region where your Elastic Beanstalk environment is located
+- `EB_APPLICATION_NAME`: The name of your Elastic Beanstalk application
+- `EB_ENVIRONMENT_NAME`: The name of your Elastic Beanstalk environment
+- All the required backend environment variables for production
+
+### Frontend Deployment
+
+The frontend is deployed to AWS S3 and CloudFront:
+
+1. Push to the `main` branch triggers the deployment workflow
+2. A production build is created with environment variables
+3. The build is uploaded to an S3 bucket
+4. CloudFront cache is invalidated to serve the latest version
+
+Required deployment secrets:
+- `AWS_ACCESS_KEY_ID`: AWS access key with S3 and CloudFront permissions
+- `AWS_SECRET_ACCESS_KEY`: AWS secret key
+- `AWS_REGION`: The AWS region where your S3 bucket is located
+- `S3_BUCKET_NAME`: The name of your S3 bucket for hosting
+- `CLOUDFRONT_DISTRIBUTION_ID`: The ID of your CloudFront distribution
+- `SITE_DOMAIN`: The domain name of your site
+- All the required frontend environment variables for production
+
+### Manual Deployment
+
+You can also trigger deployments manually through the GitHub Actions interface using the workflow_dispatch event.
+
 ## Contributing
 
 Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.

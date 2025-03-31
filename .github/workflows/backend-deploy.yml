@@ -1,0 +1,117 @@
+name: Backend Deployment
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-deploy.yml'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8 pytest pytest-cov black isort
+          pip install -r requirements.txt
+      
+      - name: Run tests
+        env:
+          TESTING: "True"
+          DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/test_db"
+          DATABASE_TEST_URL: "postgresql://postgres:postgres@localhost:5432/test_db"
+          SECRET_KEY: "test-secret-key-for-ci-environment"
+          AUTH0_DOMAIN: "example.auth0.com"
+          AUTH0_CLIENT_ID: "test-client-id"
+          AUTH0_CLIENT_SECRET: "test-client-secret"
+          AUTH0_AUDIENCE: "https://api.example.com"
+          OPENAI_API_KEY: "sk-test-key"
+        run: pytest --cov=app --cov-report=xml
+      
+      - name: Generate deployment package
+        run: |
+          mkdir -p deployment_package
+          cp -r app deployment_package/
+          cp -r scripts deployment_package/
+          cp requirements.txt deployment_package/
+          cp Procfile deployment_package/ || echo "No Procfile found, creating one"
+          if [ ! -f deployment_package/Procfile ]; then
+            echo "web: uvicorn app.main:app --host 0.0.0.0 --port \$PORT" > deployment_package/Procfile
+          fi
+          cd deployment_package && zip -r ../deployment_package.zip .
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      
+      - name: Deploy to Elastic Beanstalk
+        uses: einaregilsson/beanstalk-deploy@v21
+        with:
+          aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          application_name: ${{ secrets.EB_APPLICATION_NAME }}
+          environment_name: ${{ secrets.EB_ENVIRONMENT_NAME }}
+          version_label: "ver-${{ github.sha }}"
+          region: ${{ secrets.AWS_REGION }}
+          deployment_package: deployment_package.zip
+          wait_for_environment_recovery: 300
+      
+      - name: Send deployment notification
+        if: always()
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              "text": "${{ job.status == 'success' && '✅ Backend deployed successfully' || '❌ Backend deployment failed' }}",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "${{ job.status == 'success' && '✅ Backend deployed successfully to Elastic Beanstalk' || '❌ Backend deployment failed' }}"
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Environment:* ${{ secrets.EB_ENVIRONMENT_NAME }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Version:* ver-${{ github.sha }}"
+                    }
+                  ]
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Commit:* <${{ github.event.repository.html_url }}/commit/${{ github.sha }}|${{ github.sha }}>"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
