@@ -46,3 +46,6 @@ yarn-error.log*
 # OS
 .DS_Store
 Thumbs.db
+
+# CDK
+infrastructure/cdk/cdk.out
