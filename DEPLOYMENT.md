@@ -2,9 +2,39 @@
 
 This document provides detailed instructions for setting up and configuring the deployment pipeline for the Toban Contribution Viewer project.
 
-## Infrastructure Setup
+## Infrastructure Setup with CDK
 
-### Backend: AWS Elastic Beanstalk
+Our infrastructure is defined using AWS CDK (Cloud Development Kit) in TypeScript. The CDK code is located in the `infrastructure/cdk` directory and consists of three main stacks:
+
+1. **DatabaseStack**: Sets up RDS PostgreSQL instance with proper security groups and secrets
+2. **BackendStack**: Configures Elastic Beanstalk for the Python backend
+3. **FrontendStack**: Creates S3 bucket and CloudFront distribution for the React frontend
+
+### Deploying Infrastructure
+
+You can deploy the infrastructure manually with these steps:
+
+```bash
+# Navigate to the CDK directory
+cd infrastructure/cdk
+
+# Install dependencies
+npm install
+
+# Bootstrap CDK (first time only)
+npm run bootstrap
+
+# Deploy all stacks
+npm run deploy
+```
+
+Alternatively, the infrastructure is automatically deployed through GitHub Actions when changes are pushed to the `main` branch (see the CI/CD Pipeline section below).
+
+### Manual Setup (Alternative to CDK)
+
+If you prefer to set up the resources manually instead of using CDK, follow these steps:
+
+#### Backend: AWS Elastic Beanstalk
 
 1. **Create an Elastic Beanstalk Application:**
    ```bash
@@ -35,7 +65,7 @@ This document provides detailed instructions for setting up and configuring the 
    - Configure security groups to allow access from your Elastic Beanstalk environment
    - Create the initial database schema
 
-### Frontend: AWS S3 and CloudFront
+#### Frontend: AWS S3 and CloudFront
 
 1. **Create an S3 Bucket:**
    ```bash
@@ -84,7 +114,15 @@ This document provides detailed instructions for setting up and configuring the 
    - Add the domain to your CloudFront distribution
    - Configure DNS settings to point to your CloudFront distribution
 
-## GitHub Actions Setup
+## CI/CD Pipeline with GitHub Actions
+
+Our CI/CD pipeline is implemented using GitHub Actions. The workflow files are located in the `.github/workflows` directory.
+
+### Workflow Files
+
+1. **infrastructure-deploy.yml**: Deploys AWS CDK infrastructure
+2. **backend-deploy.yml**: Runs tests and deploys backend to Elastic Beanstalk
+3. **frontend-deploy.yml**: Runs tests and deploys frontend to S3/CloudFront
 
 ### Creating Required Secrets
 
@@ -94,18 +132,23 @@ Add the following secrets to your GitHub repository:
    - `AWS_ACCESS_KEY_ID`: Your AWS access key
    - `AWS_SECRET_ACCESS_KEY`: Your AWS secret key
    - `AWS_REGION`: The AWS region (e.g., us-east-1)
+   - `AWS_ACCOUNT_ID`: Your AWS account ID
 
 2. Elastic Beanstalk configuration:
-   - `EB_APPLICATION_NAME`: Your Elastic Beanstalk application name (e.g., toban-contribution-viewer)
-   - `EB_ENVIRONMENT_NAME`: Your Elastic Beanstalk environment name (e.g., toban-contribution-viewer-prod)
+   - `EB_APPLICATION_NAME`: Your Elastic Beanstalk application name (e.g., TobanContributionViewer)
+   - `EB_ENVIRONMENT_NAME`: Your Elastic Beanstalk environment name (e.g., TobanContributionViewer-prod)
 
 3. S3 and CloudFront configuration:
-   - `S3_BUCKET_NAME`: Your S3 bucket name (e.g., toban-contribution-viewer-frontend)
-   - `CLOUDFRONT_DISTRIBUTION_ID`: Your CloudFront distribution ID
+   - `S3_BUCKET_NAME`: Your S3 bucket name (from the CDK output)
+   - `CLOUDFRONT_DISTRIBUTION_ID`: Your CloudFront distribution ID (from the CDK output)
    - `SITE_DOMAIN`: Your site domain (e.g., app.yoursite.com)
+   - `API_DOMAIN`: Your API domain (from Elastic Beanstalk)
 
 4. Environment-specific variables:
-   - All the required backend and frontend environment variables for production
+   - `FRONTEND_API_URL`: URL for the frontend to access the API
+   - `AUTH0_DOMAIN`: Your Auth0 domain
+   - `AUTH0_CLIENT_ID`: Your Auth0 client ID
+   - `AUTH0_AUDIENCE`: Your Auth0 API audience
 
 5. Slack notifications (optional):
    - `SLACK_WEBHOOK_URL`: Your Slack webhook URL for deployment notifications
@@ -126,11 +169,17 @@ The production environment is automatically deployed when changes are pushed to 
 
 To set up a staging environment:
 
-1. Create additional Elastic Beanstalk environment and S3 bucket for staging
-2. Create a new GitHub workflow file specifically for staging deployment
-3. Configure the workflow to deploy to the staging environment when changes are pushed to a staging branch
+1. Create a new branch (e.g., `staging`)
+2. Duplicate the workflow files and modify them to target staging environments
+3. Configure the workflows to deploy to the staging environment when changes are pushed to the staging branch
 
 ## Rollback Procedures
+
+### Infrastructure Rollback
+
+1. Find the previous CloudFormation stack version in the AWS Console
+2. Restore the previous version using CloudFormation
+3. Alternatively, make changes to fix issues in the CDK code and redeploy
 
 ### Backend Rollback
 
@@ -145,3 +194,7 @@ To set up a staging environment:
 1. Navigate to your S3 bucket
 2. Restore a previous version using S3 versioning
 3. Invalidate the CloudFront cache to serve the restored version
+
+## Local Development Setup
+
+See the README.md file for instructions on setting up the development environment locally.
