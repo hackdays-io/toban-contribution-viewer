@@ -36,6 +36,9 @@ yarn-error.log*
 .pnp/
 .pnp.js
 
+# Docker
+.env.docker
+
 # IDE
 .idea/
 .vscode/

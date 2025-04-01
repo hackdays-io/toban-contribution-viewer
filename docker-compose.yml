@@ -1,0 +1,87 @@
+version: '3.8'
+
+# Load environment variables from .env.docker file
+# Copy .env.docker.example to .env.docker and fill in your values
+services:
+  postgres:
+    image: postgres:13
+    container_name: tobancv-postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-toban_admin}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - POSTGRES_DB=${POSTGRES_DB:-tobancv}
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-toban_admin} -d ${POSTGRES_DB:-tobancv}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: tobancv-backend
+    volumes:
+      # Mount the code for hot-reloading, but exclude some directories
+      - ./backend:/app:cached
+      # Create anonymous volume to prevent overwriting container directories
+      - /app/__pycache__
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-toban_admin}:${POSTGRES_PASSWORD:-postgres}@postgres/${POSTGRES_DB:-tobancv}
+      - SECRET_KEY=development_secret_key_change_in_production
+      - AUTH0_DOMAIN=${AUTH0_DOMAIN:-example.auth0.com}
+      - AUTH0_CLIENT_ID=${AUTH0_CLIENT_ID:-your_client_id}
+      - AUTH0_CLIENT_SECRET=${AUTH0_CLIENT_SECRET:-your_client_secret}
+      - AUTH0_AUDIENCE=${AUTH0_AUDIENCE:-your_audience}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-your_openai_api_key}
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONUNBUFFERED=1
+      # Optional integration environment variables
+      - SLACK_CLIENT_ID=${SLACK_CLIENT_ID:-}
+      - SLACK_CLIENT_SECRET=${SLACK_CLIENT_SECRET:-}
+      - SLACK_SIGNING_SECRET=${SLACK_SIGNING_SECRET:-}
+      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID:-}
+      - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET:-}
+      - NOTION_API_KEY=${NOTION_API_KEY:-}
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    # Use restart policy to handle potential startup failures
+    restart: unless-stopped
+
+  frontend:
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: tobancv-frontend
+    volumes:
+      # Mount code for hot-reloading but with better performance
+      - ./frontend:/app:cached
+      # Use anonymous volume to prevent node_modules from being overwritten
+      - /app/node_modules
+    environment:
+      # API URL needs to be localhost since it's accessed from the browser
+      - VITE_API_URL=http://localhost:8000/api/v1
+      - VITE_AUTH0_DOMAIN=${AUTH0_DOMAIN:-example.auth0.com}
+      - VITE_AUTH0_CLIENT_ID=${AUTH0_CLIENT_ID:-your_client_id}
+      - VITE_AUTH0_AUDIENCE=${AUTH0_AUDIENCE:-your_audience}
+      - VITE_AUTH0_REDIRECT_URI=http://localhost:5173/callback
+      - VITE_DEV_MODE=true
+      - VITE_ENABLE_NOTION_INTEGRATION=true
+      - VITE_ENABLE_SLACK_INTEGRATION=true
+      - VITE_ENABLE_GITHUB_INTEGRATION=true
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    # Use restart policy to handle potential startup failures
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
