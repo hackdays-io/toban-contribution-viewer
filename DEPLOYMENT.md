@@ -46,7 +46,7 @@ If you prefer to set up the resources manually instead of using CDK, follow thes
    aws elasticbeanstalk create-environment \
      --application-name toban-contribution-viewer \
      --environment-name toban-contribution-viewer-prod \
-     --solution-stack-name "64bit Amazon Linux 2023 v4.0.6 running Python 3.12" \
+     --solution-stack-name "64bit Amazon Linux 2023 v4.5.0 running Python 3.9" \
      --option-settings file://backend/eb-config.json
    ```
 
