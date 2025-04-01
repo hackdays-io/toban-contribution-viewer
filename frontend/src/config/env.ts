@@ -6,9 +6,8 @@
 // Required environment variables that must be defined
 const REQUIRED_ENV_VARS = [
   'VITE_API_URL',
-  'VITE_AUTH0_DOMAIN',
-  'VITE_AUTH0_CLIENT_ID',
-  'VITE_AUTH0_AUDIENCE',
+  'VITE_SUPABASE_URL',
+  'VITE_SUPABASE_ANON_KEY',
 ] as const;
 
 // Optional environment variables with default values
@@ -17,7 +16,7 @@ const OPTIONAL_ENV_VARS = {
   VITE_ENABLE_NOTION_INTEGRATION: 'true',
   VITE_ENABLE_SLACK_INTEGRATION: 'true',
   VITE_ENABLE_GITHUB_INTEGRATION: 'true',
-  VITE_AUTH0_REDIRECT_URI: window.location.origin + '/callback',
+  VITE_AUTH_REDIRECT_URI: window.location.origin + '/auth/callback',
 } as const;
 
 // Type definitions
@@ -90,11 +89,10 @@ export const validateEnvironment = (): boolean => {
 // Create a config object with all environment variables
 export const env = {
   apiUrl: getEnvVar('VITE_API_URL'),
-  auth: {
-    domain: getEnvVar('VITE_AUTH0_DOMAIN'),
-    clientId: getEnvVar('VITE_AUTH0_CLIENT_ID'),
-    audience: getEnvVar('VITE_AUTH0_AUDIENCE'),
-    redirectUri: getEnvVar('VITE_AUTH0_REDIRECT_URI'),
+  supabase: {
+    url: getEnvVar('VITE_SUPABASE_URL'),
+    anonKey: getEnvVar('VITE_SUPABASE_ANON_KEY'),
+    redirectUri: getEnvVar('VITE_AUTH_REDIRECT_URI'),
   },
   features: {
     enableNotion: getBooleanEnvVar('VITE_ENABLE_NOTION_INTEGRATION'),

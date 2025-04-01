@@ -23,10 +23,9 @@ class Settings(BaseSettings):
     DATABASE_TEST_URL: Optional[PostgresDsn] = None
     
     # Authentication Settings
-    AUTH0_DOMAIN: str
-    AUTH0_CLIENT_ID: str
-    AUTH0_CLIENT_SECRET: SecretStr
-    AUTH0_AUDIENCE: str
+    SUPABASE_URL: str
+    SUPABASE_KEY: SecretStr
+    SUPABASE_JWT_SECRET: str
     
     # Third-Party API Keys
     OPENAI_API_KEY: SecretStr

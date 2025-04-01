@@ -36,7 +36,7 @@ TeamInsight is an AI-powered analytics platform designed to extract, analyze, an
 - **Frontend**: React with TypeScript and Chakra UI
 - **AI Processing**: OpenAI API (GPT-4)
 - **Database**: PostgreSQL for structured data
-- **Authentication**: Auth0
+- **Authentication**: Supabase Auth (open-source)
 - **Hosting**: AWS
 
 ## Getting Started
@@ -50,6 +50,11 @@ TeamInsight is an AI-powered analytics platform designed to extract, analyze, an
   - Python 3.9+
   - Node.js 18+
   - PostgreSQL 13+
+  
+- Supabase Account (for authentication)
+  - Create an account at [supabase.com](https://supabase.com/)
+  - Create a new project and enable authentication
+  - Configure auth providers (email, GitHub, Google, etc.)
   
 - API keys for:
   - Slack
@@ -168,6 +173,32 @@ TeamInsight is an AI-powered analytics platform designed to extract, analyze, an
    npm run dev
    ```
 
+## Supabase Authentication Setup
+
+This project uses Supabase for authentication, which is an open-source alternative to Auth0.
+
+### Setting Up Supabase
+
+1. Create an account at [supabase.com](https://supabase.com/)
+2. Create a new project
+3. Navigate to Authentication → Settings and configure:
+   - Enable Email/Password sign-in
+   - Configure redirect URLs (add http://localhost:5173/auth/callback for local development)
+   - Optional: Enable social providers like GitHub and Google
+4. Get your Supabase credentials:
+   - Project URL: Found in Project Settings → API
+   - Anon Key: Public API key found in Project Settings → API
+   - Service Role Key: Found in Project Settings → API (keep this secret!)
+   - JWT Secret: Found in Project Settings → API → JWT Settings
+5. Add these credentials to your environment variables
+
+### Authentication Flow
+
+1. Users sign in through the login form or social providers
+2. Supabase handles the authentication and returns a JWT token
+3. The token is stored in the browser and sent with API requests
+4. The backend validates the JWT using the JWT secret
+
 ## Environment Variables Management
 
 The project uses a structured approach to environment variables management to ensure proper configuration across environments.
@@ -191,7 +222,7 @@ nano .env.docker  # or use any text editor
 
 Required Docker environment variables:
 - `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`: Database connection settings
-- `AUTH0_DOMAIN`, `AUTH0_CLIENT_ID`, `AUTH0_CLIENT_SECRET`, `AUTH0_AUDIENCE`: Auth0 authentication settings
+- `SUPABASE_URL`, `SUPABASE_KEY`, `SUPABASE_JWT_SECRET`, `SUPABASE_ANON_KEY`: Supabase authentication settings
 - `OPENAI_API_KEY`: For AI-powered analysis
 
 ### Backend Environment Variables
@@ -206,7 +237,7 @@ Backend environment variables are managed through:
 Required backend environment variables:
 - `DATABASE_URL`: PostgreSQL connection string
 - `SECRET_KEY`: Application secret key for security
-- `AUTH0_DOMAIN`, `AUTH0_CLIENT_ID`, `AUTH0_CLIENT_SECRET`, `AUTH0_AUDIENCE`: Auth0 authentication settings
+- `SUPABASE_URL`, `SUPABASE_KEY`, `SUPABASE_JWT_SECRET`: Supabase authentication settings
 - `OPENAI_API_KEY`: For AI-powered analysis
 
 ### Frontend Environment Variables
@@ -220,7 +251,7 @@ Frontend environment variables are managed through:
 
 Required frontend environment variables:
 - `VITE_API_URL`: URL to the backend API
-- `VITE_AUTH0_DOMAIN`, `VITE_AUTH0_CLIENT_ID`, `VITE_AUTH0_AUDIENCE`: Auth0 authentication settings
+- `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`: Supabase authentication settings
 
 ## Deployment
 

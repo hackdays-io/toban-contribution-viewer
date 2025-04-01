@@ -33,10 +33,9 @@ services:
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER:-toban_admin}:${POSTGRES_PASSWORD:-postgres}@postgres/${POSTGRES_DB:-tobancv}
       - SECRET_KEY=development_secret_key_change_in_production
-      - AUTH0_DOMAIN=${AUTH0_DOMAIN:-example.auth0.com}
-      - AUTH0_CLIENT_ID=${AUTH0_CLIENT_ID:-your_client_id}
-      - AUTH0_CLIENT_SECRET=${AUTH0_CLIENT_SECRET:-your_client_secret}
-      - AUTH0_AUDIENCE=${AUTH0_AUDIENCE:-your_audience}
+      - SUPABASE_URL=${SUPABASE_URL:-your_supabase_url}
+      - SUPABASE_KEY=${SUPABASE_KEY:-your_supabase_service_role_key}
+      - SUPABASE_JWT_SECRET=${SUPABASE_JWT_SECRET:-your_supabase_jwt_secret}
       - OPENAI_API_KEY=${OPENAI_API_KEY:-your_openai_api_key}
       - PYTHONDONTWRITEBYTECODE=1
       - PYTHONUNBUFFERED=1
@@ -68,10 +67,9 @@ services:
     environment:
       # API URL needs to be localhost since it's accessed from the browser
       - VITE_API_URL=http://localhost:8000/api/v1
-      - VITE_AUTH0_DOMAIN=${AUTH0_DOMAIN:-example.auth0.com}
-      - VITE_AUTH0_CLIENT_ID=${AUTH0_CLIENT_ID:-your_client_id}
-      - VITE_AUTH0_AUDIENCE=${AUTH0_AUDIENCE:-your_audience}
-      - VITE_AUTH0_REDIRECT_URI=http://localhost:5173/callback
+      - VITE_SUPABASE_URL=${SUPABASE_URL:-your_supabase_url}
+      - VITE_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:-your_supabase_anon_key}
+      - VITE_AUTH_REDIRECT_URI=http://localhost:5173/auth/callback
       - VITE_DEV_MODE=true
       - VITE_ENABLE_NOTION_INTEGRATION=true
       - VITE_ENABLE_SLACK_INTEGRATION=true
