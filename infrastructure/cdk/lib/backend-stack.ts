@@ -34,7 +34,7 @@ export class BackendStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'EBSecurityGroupId', {
       value: ebSecurityGroup.securityGroupId,
       description: 'Security group ID for Elastic Beanstalk environment',
-      exportName: 'TobanEBSecurityGroupId',
+      exportName: 'TobanCVEBSecurityGroupId',
     });
 
     // Create an S3 bucket for application versions
@@ -80,7 +80,7 @@ export class BackendStack extends cdk.Stack {
     const ebEnv = new elasticbeanstalk.CfnEnvironment(this, 'Environment', {
       environmentName: 'TobanContributionViewer-' + (process.env.ENVIRONMENT || 'dev'),
       applicationName: ebApp.applicationName as string,
-      solutionStackName: '64bit Amazon Linux 2023 v4.0.6 running Python 3.11',
+      solutionStackName: '64bit Amazon Linux 2023 v4.5.0 running Python 3.9',
       optionSettings: [
         // VPC Configuration
         {
@@ -203,14 +203,14 @@ export class BackendStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'ApiEndpoint', {
       value: this.apiUrl,
       description: 'API endpoint URL',
-      exportName: 'TobanApiEndpoint',
+      exportName: 'TobanCVApiEndpoint',
     });
 
     // Output the Elastic Beanstalk environment name for CI/CD integration
     new cdk.CfnOutput(this, 'EnvironmentName', {
       value: ebEnv.environmentName as string,
       description: 'Elastic Beanstalk environment name',
-      exportName: 'TobanEBEnvironmentName',
+      exportName: 'TobanCVEBEnvironmentName',
     });
   }
 }

@@ -18,12 +18,12 @@ const env = {
 };
 
 // Create stacks
-const databaseStack = new DatabaseStack(app, 'TobanDatabase', {
+const databaseStack = new DatabaseStack(app, 'TobanCVDatabase', {
   env,
   description: 'Database resources for Toban Contribution Viewer',
 });
 
-const backendStack = new BackendStack(app, 'TobanBackend', {
+const backendStack = new BackendStack(app, 'TobanCVBackend', {
   env,
   description: 'Backend resources for Toban Contribution Viewer',
   databaseSecretArn: databaseStack.databaseSecretArn,
@@ -32,7 +32,7 @@ const backendStack = new BackendStack(app, 'TobanBackend', {
   dbSecurityGroup: databaseStack.dbSecurityGroup,
 });
 
-const frontendStack = new FrontendStack(app, 'TobanFrontend', {
+const frontendStack = new FrontendStack(app, 'TobanCVFrontend', {
   env,
   description: 'Frontend resources for Toban Contribution Viewer',
   apiUrl: backendStack.apiUrl,

@@ -14,7 +14,7 @@ export class DatabaseStack extends cdk.Stack {
     super(scope, id, props);
 
     // Create VPC
-    this.vpc = new ec2.Vpc(this, 'TobanVPC', {
+    this.vpc = new ec2.Vpc(this, 'TobanCVVPC', {
       maxAzs: 2,
       natGateways: 1
     });
@@ -27,7 +27,7 @@ export class DatabaseStack extends cdk.Stack {
 
     // Create database credentials secret
     const databaseCredentialsSecret = new secretsmanager.Secret(this, 'DBCredentialsSecret', {
-      secretName: 'toban/database-credentials',
+      secretName: 'tobancv/database-credentials',
       generateSecretString: {
         secretStringTemplate: JSON.stringify({
           username: 'toban_admin',
@@ -43,7 +43,7 @@ export class DatabaseStack extends cdk.Stack {
     // Create RDS PostgreSQL instance
     this.databaseInstance = new rds.DatabaseInstance(this, 'Database', {
       engine: rds.DatabaseInstanceEngine.postgres({
-        version: rds.PostgresEngineVersion.VER_14_7,
+        version: rds.PostgresEngineVersion.VER_13,
       }),
       instanceType: ec2.InstanceType.of(
         ec2.InstanceClass.BURSTABLE3,
@@ -63,7 +63,7 @@ export class DatabaseStack extends cdk.Stack {
       backupRetention: cdk.Duration.days(7),
       deleteAutomatedBackups: true,
       deletionProtection: false,
-      databaseName: 'toban',
+      databaseName: 'tobancv',
       publiclyAccessible: false,
     });
 
@@ -71,14 +71,14 @@ export class DatabaseStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'DBEndpoint', {
       value: this.databaseInstance.dbInstanceEndpointAddress,
       description: 'Database endpoint',
-      exportName: 'TobanDBEndpoint',
+      exportName: 'TobanCVDBEndpoint',
     });
 
     // Output the database secret ARN
     new cdk.CfnOutput(this, 'DBSecretArn', {
       value: databaseCredentialsSecret.secretArn,
       description: 'Database credentials secret ARN',
-      exportName: 'TobanDBSecretArn',
+      exportName: 'TobanCVDBSecretArn',
     });
   }
 }
