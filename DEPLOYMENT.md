@@ -54,10 +54,9 @@ If you prefer to set up the resources manually instead of using CDK, follow thes
    Set the following environment variables in the Elastic Beanstalk environment:
    - `DATABASE_URL`: Your production PostgreSQL connection string
    - `SECRET_KEY`: A secure random string for production
-   - `AUTH0_DOMAIN`: Your Auth0 domain
-   - `AUTH0_CLIENT_ID`: Your Auth0 client ID
-   - `AUTH0_CLIENT_SECRET`: Your Auth0 client secret
-   - `AUTH0_AUDIENCE`: Your Auth0 API audience
+   - `SUPABASE_URL`: Your Supabase project URL
+   - `SUPABASE_KEY`: Your Supabase service role key
+   - `SUPABASE_JWT_SECRET`: Your Supabase JWT signing secret
    - `OPENAI_API_KEY`: Your OpenAI API key
 
 4. **Set Up Database:**
@@ -146,9 +145,9 @@ Add the following secrets to your GitHub repository:
 
 4. Environment-specific variables:
    - `FRONTEND_API_URL`: URL for the frontend to access the API
-   - `AUTH0_DOMAIN`: Your Auth0 domain
-   - `AUTH0_CLIENT_ID`: Your Auth0 client ID
-   - `AUTH0_AUDIENCE`: Your Auth0 API audience
+   - `SUPABASE_URL`: Your Supabase project URL
+   - `SUPABASE_ANON_KEY`: Your Supabase anon/public key
+   - `SUPABASE_JWT_SECRET`: Your Supabase JWT signing secret
 
 5. Slack notifications (optional):
    - `SLACK_WEBHOOK_URL`: Your Slack webhook URL for deployment notifications
