@@ -1,5 +1,3 @@
-version: '3.8'
-
 # Load environment variables from .env.docker file
 # Copy .env.docker.example to .env.docker and fill in your values
 services:
