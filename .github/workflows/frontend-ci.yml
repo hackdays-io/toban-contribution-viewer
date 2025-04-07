@@ -43,9 +43,8 @@ jobs:
       run: |
         mkdir -p /tmp
         echo "VITE_API_URL=http://localhost:8000/api/v1" > .env.test
-        echo "VITE_AUTH0_DOMAIN=example.auth0.com" >> .env.test
-        echo "VITE_AUTH0_CLIENT_ID=test-client-id" >> .env.test
-        echo "VITE_AUTH0_AUDIENCE=https://api.example.com" >> .env.test
+        echo "VITE_SUPABASE_URL=https://example.supabase.co" >> .env.test
+        echo "VITE_SUPABASE_ANON_KEY=test-supabase-key" >> .env.test
     
     - name: Install dotenv for env checking
       run: npm install dotenv --no-save
@@ -57,9 +56,8 @@ jobs:
       env:
         CI: "true"
         VITE_API_URL: "http://localhost:8000/api/v1"
-        VITE_AUTH0_DOMAIN: "example.auth0.com"
-        VITE_AUTH0_CLIENT_ID: "test-client-id"
-        VITE_AUTH0_AUDIENCE: "https://api.example.com"
+        VITE_SUPABASE_URL: "https://example.supabase.co"
+        VITE_SUPABASE_ANON_KEY: "test-supabase-key"
         VITE_DEV_MODE: "false"
       run: npm run build
 
