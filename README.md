@@ -250,7 +250,7 @@ When creating your Slack app, the following scopes are required for comprehensiv
 
 ### Sample App Manifest
 
-For faster setup, you can use this app manifest (replace the placeholder URLs with your actual URLs):
+For faster setup, you can use this app manifest (replace the placeholder URLs with your actual URLs). You can create a new app using a manifest by clicking "Create New App" in the Slack API dashboard, then selecting "From an app manifest":
 
 ```yaml
 display_information:
