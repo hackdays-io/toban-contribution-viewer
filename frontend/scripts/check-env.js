@@ -19,9 +19,8 @@ const __dirname = dirname(__filename);
 // Required environment variables that must be defined
 const REQUIRED_ENV_VARS = [
   'VITE_API_URL',
-  'VITE_AUTH0_DOMAIN',
-  'VITE_AUTH0_CLIENT_ID',
-  'VITE_AUTH0_AUDIENCE',
+  'VITE_SUPABASE_URL',
+  'VITE_SUPABASE_ANON_KEY',
 ];
 
 // Function to parse .env file

@@ -47,10 +47,9 @@ jobs:
         echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/test_db" > .env.test
         echo "DATABASE_TEST_URL=postgresql://postgres:postgres@localhost:5432/test_db" >> .env.test
         echo "SECRET_KEY=test-secret-key-for-ci" >> .env.test
-        echo "AUTH0_DOMAIN=example.auth0.com" >> .env.test
-        echo "AUTH0_CLIENT_ID=test-client-id" >> .env.test
-        echo "AUTH0_CLIENT_SECRET=test-client-secret" >> .env.test
-        echo "AUTH0_AUDIENCE=https://api.example.com" >> .env.test
+        echo "SUPABASE_URL=https://example.supabase.co" >> .env.test
+        echo "SUPABASE_KEY=test-supabase-key" >> .env.test
+        echo "SUPABASE_JWT_SECRET=test-jwt-secret" >> .env.test
         echo "OPENAI_API_KEY=sk-test-key" >> .env.test
 
     - name: Check environment variables
@@ -60,10 +59,9 @@ jobs:
         DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/test_db"
         DATABASE_TEST_URL: "postgresql://postgres:postgres@localhost:5432/test_db"
         SECRET_KEY: "test-secret-key-for-ci"
-        AUTH0_DOMAIN: "example.auth0.com"
-        AUTH0_CLIENT_ID: "test-client-id"
-        AUTH0_CLIENT_SECRET: "test-client-secret"
-        AUTH0_AUDIENCE: "https://api.example.com"
+        SUPABASE_URL: "https://example.supabase.co"
+        SUPABASE_KEY: "test-supabase-key"
+        SUPABASE_JWT_SECRET: "test-jwt-secret"
         OPENAI_API_KEY: "sk-test-key"
       run: python scripts/check_env.py --env-file .env.test --no-exit
 
@@ -73,10 +71,9 @@ jobs:
         DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/test_db"
         DATABASE_TEST_URL: "postgresql://postgres:postgres@localhost:5432/test_db"
         SECRET_KEY: "test-secret-key-for-ci-environment"
-        AUTH0_DOMAIN: "example.auth0.com"
-        AUTH0_CLIENT_ID: "test-client-id"
-        AUTH0_CLIENT_SECRET: "test-client-secret"
-        AUTH0_AUDIENCE: "https://api.example.com"
+        SUPABASE_URL: "https://example.supabase.co"
+        SUPABASE_KEY: "test-supabase-key"
+        SUPABASE_JWT_SECRET: "test-jwt-secret"
         OPENAI_API_KEY: "sk-test-key"
       run: pytest --cov=app --cov-report=xml
 
