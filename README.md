@@ -199,6 +199,55 @@ This project uses Supabase for authentication, which is an open-source alternati
 3. The token is stored in the browser and sent with API requests
 4. The backend validates the JWT using the JWT secret
 
+## Slack Integration
+
+The Toban Contribution Viewer integrates with Slack to analyze team communication patterns and contributions.
+
+### Required OAuth Scopes
+
+When creating your Slack app, the following scopes are required for comprehensive contribution tracking:
+
+#### Message Access:
+- `channels:history` - Read messages in public channels
+- `groups:history` - Read messages in private channels
+- `im:history` - Access direct messages (optional, for 1:1 contributions)
+- `mpim:history` - Access group direct messages
+
+#### Channel Information:
+- `channels:read` - View basic info about public channels
+- `groups:read` - View basic info about private channels
+
+#### User Information:
+- `users:read` - Access basic user information
+- `users.profile:read` - Access user profile details
+- `team:read` - View basic workspace information
+
+#### Reactions & Engagement:
+- `reactions:read` - View emoji reactions (for measuring engagement)
+
+#### Optional Scopes:
+- `files:read` - Access files (if tracking document contributions)
+- `search:read` - For historical search features
+- `threads:read` - If tracking thread participation specifically
+
+### Integration Flow
+
+1. User authenticates via OAuth flow to grant workspace access
+2. App periodically collects message and reaction data
+3. AI analysis identifies patterns and valuable contributions
+4. Metrics are displayed in the contribution dashboard
+
+### Setup Process
+
+1. Create a Slack app at [api.slack.com](https://api.slack.com/apps)
+2. Configure OAuth scopes listed above
+3. Set redirect URLs for OAuth flow
+4. Install app to your workspace
+5. Add Slack credentials to environment variables:
+   - `SLACK_CLIENT_ID`
+   - `SLACK_CLIENT_SECRET`
+   - `SLACK_SIGNING_SECRET`
+
 ## Environment Variables Management
 
 The project uses a structured approach to environment variables management to ensure proper configuration across environments.
@@ -239,6 +288,7 @@ Required backend environment variables:
 - `SECRET_KEY`: Application secret key for security
 - `SUPABASE_URL`, `SUPABASE_KEY`, `SUPABASE_JWT_SECRET`: Supabase authentication settings
 - `OPENAI_API_KEY`: For AI-powered analysis
+- `SLACK_CLIENT_ID`, `SLACK_CLIENT_SECRET`, `SLACK_SIGNING_SECRET`: For Slack integration
 
 ### Frontend Environment Variables
 
