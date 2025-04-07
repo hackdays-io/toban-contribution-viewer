@@ -227,7 +227,8 @@ When creating your Slack app, the following scopes are required for comprehensiv
 
 #### Optional Scopes:
 - `files:read` - Access files (if tracking document contributions)
-- `search:read` - For historical search features
+
+**Note about search functionality**: The `search:read` scope is required for using Slack's search API, but this scope cannot be directly requested through the OAuth & Permissions page. Instead, the application will need to use the standard history scopes (`channels:history`, `groups:history`, etc.) to collect and index messages for searching within the application.
 
 ### Integration Flow
 
