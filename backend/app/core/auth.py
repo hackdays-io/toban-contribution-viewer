@@ -1,5 +1,5 @@
 import time
-from typing import Dict, Optional
+from typing import Dict
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -9,6 +9,7 @@ from app.config import settings
 
 # Setup the JWT bearer token validation
 security = HTTPBearer()
+
 
 def decode_token(token: str) -> Dict:
     """
@@ -28,6 +29,7 @@ def decode_token(token: str) -> Dict:
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+
 def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ) -> Dict:
@@ -36,7 +38,7 @@ def get_current_user(
     """
     token = credentials.credentials
     payload = decode_token(token)
-    
+
     # Validate token expiration
     if payload.get("exp") and time.time() > payload["exp"]:
         raise HTTPException(
@@ -44,17 +46,17 @@ def get_current_user(
             detail="Token has expired",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     # Extract user data from the token payload
     user_id = payload.get("sub")
-    
+
     if not user_id:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token payload",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     # Return user data from token
     return {
         "id": user_id,
