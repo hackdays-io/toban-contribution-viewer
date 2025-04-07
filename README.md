@@ -248,6 +248,55 @@ When creating your Slack app, the following scopes are required for comprehensiv
    - `SLACK_CLIENT_SECRET`
    - `SLACK_SIGNING_SECRET`
 
+### Sample App Manifest
+
+For faster setup, you can use this app manifest (replace the placeholder URLs with your actual URLs):
+
+```yaml
+display_information:
+  name: Toban Contribution Viewer
+  description: Track and analyze team contributions across Slack
+  background_color: "#4A154B"
+
+features:
+  bot_user:
+    display_name: Toban
+    always_online: false
+
+oauth_config:
+  redirect_urls:
+    - https://your-app-domain.com/api/v1/slack/oauth-callback
+    - http://localhost:8000/api/v1/slack/oauth-callback
+  scopes:
+    bot:
+      - channels:history
+      - channels:read
+      - groups:history
+      - groups:read
+      - im:history
+      - mpim:history
+      - reactions:read
+      - users:read
+      - users.profile:read
+      - team:read
+      - files:read
+
+settings:
+  org_deploy_enabled: false
+  socket_mode_enabled: false
+  token_rotation_enabled: false
+```
+
+After creating your app using the manifest, you'll need to:
+
+1. Enable "Event Subscriptions" and configure request URL
+2. Subscribe to Bot Events:
+   - `message.channels`
+   - `message.groups`
+   - `reaction_added`
+   - `team_join`
+   - `user_change`
+
 ## Environment Variables Management
 
 The project uses a structured approach to environment variables management to ensure proper configuration across environments.
