@@ -1,4 +1,4 @@
-import { Box, ChakraProvider, Container, extendTheme } from '@chakra-ui/react'
+import { ChakraProvider, Container, extendTheme } from '@chakra-ui/react'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import './App.css'
 

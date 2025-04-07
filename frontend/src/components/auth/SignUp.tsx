@@ -49,7 +49,7 @@ const SignUp: React.FC = () => {
 
     try {
       setLoading(true);
-      const { data, error } = await signUp(email, password);
+      const { error } = await signUp(email, password);
       
       if (error) throw error;
       

@@ -20,8 +20,7 @@ const AuthContext = createContext<AuthContextType>({
   signOut: async () => {},
 });
 
-// Hook to use the auth context
-export const useAuth = () => useContext(AuthContext);
+// useAuth hook is exported from separate file
 
 // Provider component to wrap the app
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {

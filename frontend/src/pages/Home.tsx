@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Button, Container, Heading, Stack, Text, useColorModeValue } from '@chakra-ui/react';
 import { Link as RouterLink } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import useAuth from '../context/useAuth';
 
 const Home: React.FC = () => {
   const { user } = useAuth();
