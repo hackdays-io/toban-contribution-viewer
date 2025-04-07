@@ -53,7 +53,7 @@ init_env_files() {
 # Start the development environment
 start_dev() {
   print_message "Starting development environment..."
-  docker compose up -d
+  docker compose --env-file .env.docker up -d
   print_message "Development environment is running!"
   print_message "Frontend: http://localhost:5173"
   print_message "Backend API: http://localhost:8000"
@@ -77,7 +77,7 @@ restart_dev() {
 # Rebuild containers
 rebuild() {
   print_message "Rebuilding containers..."
-  docker compose build
+  docker compose --env-file .env.docker build
   print_message "Containers rebuilt. Run './docker-dev.sh start' to start them."
 }
 
