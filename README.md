@@ -44,7 +44,7 @@ TeamInsight is an AI-powered analytics platform designed to extract, analyze, an
 ### Prerequisites
 
 - Option 1 (Docker): 
-  - Docker and Docker Compose
+  - Docker with compose plugin
   
 - Option 2 (Local Development):
   - Python 3.9+

@@ -53,7 +53,7 @@ init_env_files() {
 # Start the development environment
 start_dev() {
   print_message "Starting development environment..."
-  docker-compose up -d
+  docker compose up -d
   print_message "Development environment is running!"
   print_message "Frontend: http://localhost:5173"
   print_message "Backend API: http://localhost:8000"
@@ -63,21 +63,21 @@ start_dev() {
 # Stop the development environment
 stop_dev() {
   print_message "Stopping development environment..."
-  docker-compose down
+  docker compose down
   print_message "Development environment stopped."
 }
 
 # Restart the development environment
 restart_dev() {
   print_message "Restarting development environment..."
-  docker-compose restart
+  docker compose restart
   print_message "Development environment restarted."
 }
 
 # Rebuild containers
 rebuild() {
   print_message "Rebuilding containers..."
-  docker-compose build
+  docker compose build
   print_message "Containers rebuilt. Run './docker-dev.sh start' to start them."
 }
 
@@ -89,7 +89,7 @@ backend_exec() {
   fi
   
   print_message "Executing in backend container: $*"
-  docker-compose exec backend "$@"
+  docker compose exec backend "$@"
 }
 
 # Execute a command in the frontend container
@@ -100,30 +100,30 @@ frontend_exec() {
   fi
   
   print_message "Executing in frontend container: $*"
-  docker-compose exec frontend "$@"
+  docker compose exec frontend "$@"
 }
 
 # Show logs
 show_logs() {
   if [ $# -eq 0 ]; then
     print_message "Showing logs for all services..."
-    docker-compose logs -f
+    docker compose logs -f
   else
     print_message "Showing logs for service: $1"
-    docker-compose logs -f "$1"
+    docker compose logs -f "$1"
   fi
 }
 
 # Run backend tests
 backend_test() {
   print_message "Running backend tests..."
-  docker-compose exec backend pytest "$@"
+  docker compose exec backend pytest "$@"
 }
 
 # Run frontend tests
 frontend_test() {
   print_message "Running frontend tests..."
-  docker-compose exec frontend npm test "$@"
+  docker compose exec frontend npm test "$@"
 }
 
 # Main function to handle commands
