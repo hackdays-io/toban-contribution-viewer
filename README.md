@@ -208,8 +208,8 @@ The Toban Contribution Viewer integrates with Slack to analyze team communicatio
 When creating your Slack app, the following scopes are required for comprehensive contribution tracking:
 
 #### Message Access:
-- `channels:history` - Read messages in public channels
-- `groups:history` - Read messages in private channels
+- `channels:history` - Read messages and threads in public channels
+- `groups:history` - Read messages and threads in private channels
 - `im:history` - Access direct messages (optional, for 1:1 contributions)
 - `mpim:history` - Access group direct messages
 
@@ -228,7 +228,6 @@ When creating your Slack app, the following scopes are required for comprehensiv
 #### Optional Scopes:
 - `files:read` - Access files (if tracking document contributions)
 - `search:read` - For historical search features
-- `threads:read` - If tracking thread participation specifically
 
 ### Integration Flow
 
