@@ -5,7 +5,7 @@ import uuid
 from datetime import datetime
 from typing import Any, Dict
 
-from sqlalchemy import Column, DateTime, Boolean, String
+from sqlalchemy import Boolean, Column, DateTime, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declared_attr
 

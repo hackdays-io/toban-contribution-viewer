@@ -6,16 +6,12 @@ import uuid
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from sqlalchemy import (
-    Column, String, DateTime, Boolean, Integer, Float, ForeignKey, 
-    Text, JSON, Index, Table
-)
-from sqlalchemy.dialects.postgresql import UUID, JSONB
-from sqlalchemy.orm import relationship, Mapped
+from sqlalchemy import JSON, Boolean, Column, DateTime, Float, ForeignKey, Index, Integer, String, Table, Text
+from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy.orm import Mapped, relationship
 
 from app.db.base import Base
 from app.models.base import BaseModel
-
 
 # Association table for many-to-many relationship between SlackAnalysis and SlackChannel
 analysis_channels = Table(
