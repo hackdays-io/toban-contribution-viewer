@@ -35,7 +35,7 @@ TeamInsight is an AI-powered analytics platform designed to extract, analyze, an
 - **Backend**: Python with FastAPI
 - **Frontend**: React with TypeScript and Chakra UI
 - **AI Processing**: OpenAI API (GPT-4)
-- **Database**: PostgreSQL for structured data
+- **Database**: PostgreSQL with SQLAlchemy ORM
 - **Authentication**: Supabase Auth (open-source)
 - **Hosting**: AWS
 
@@ -198,6 +198,47 @@ This project uses Supabase for authentication, which is an open-source alternati
 2. Supabase handles the authentication and returns a JWT token
 3. The token is stored in the browser and sent with API requests
 4. The backend validates the JWT using the JWT secret
+
+## Database Structure
+
+The application uses PostgreSQL with SQLAlchemy ORM for data modeling and Alembic for migrations.
+
+### Database Setup
+
+1. Initialize the database models:
+   ```bash
+   cd backend
+   source venv/bin/activate
+   alembic revision --autogenerate -m "Initial migration"
+   ```
+
+2. Apply migrations to create the database schema:
+   ```bash
+   alembic upgrade head
+   ```
+
+### Key Models
+
+#### Slack Integration Models
+
+- **SlackWorkspace**: Connected Slack workspaces
+- **SlackChannel**: Channels within workspaces
+- **SlackUser**: User profiles from Slack
+- **SlackMessage**: Messages from Slack channels
+- **SlackReaction**: Emoji reactions to messages
+- **SlackAnalysis**: Analysis configurations and results
+- **SlackContribution**: User contribution scores and insights
+
+#### Relationships
+
+- A Workspace has many Channels and Users
+- A Channel contains many Messages
+- A Message belongs to a Channel and a User
+- A Message may have many Reactions
+- An Analysis includes multiple Channels
+- Contribution scores are calculated per User, Analysis, and optionally per Channel
+
+Detailed model documentation can be found in the `backend/docs/models/` directory.
 
 ## Slack Integration
 

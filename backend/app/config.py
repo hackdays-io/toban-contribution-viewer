@@ -9,24 +9,26 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     # API Settings
     PROJECT_NAME: str = "Toban Contribution Viewer API"
-    PROJECT_DESCRIPTION: str = "API for tracking and visualizing contributions across various platforms"
+    PROJECT_DESCRIPTION: str = (
+        "API for tracking and visualizing contributions across various platforms"
+    )
     PROJECT_VERSION: str = "0.1.0"
     API_PREFIX: str = "/api/v1"
     DEBUG: bool = False
     ALLOWED_HOSTS: List[str] = ["localhost", "127.0.0.1"]
-    
+
     # Secret Keys
     SECRET_KEY: str
-    
+
     # Database Settings
     DATABASE_URL: PostgresDsn
     DATABASE_TEST_URL: Optional[PostgresDsn] = None
-    
+
     # Authentication Settings
     SUPABASE_URL: str
     SUPABASE_KEY: SecretStr
     SUPABASE_JWT_SECRET: str
-    
+
     # Third-Party API Keys
     OPENAI_API_KEY: SecretStr
     SLACK_CLIENT_ID: Optional[str] = None
@@ -35,15 +37,15 @@ class Settings(BaseSettings):
     GITHUB_CLIENT_ID: Optional[str] = None
     GITHUB_CLIENT_SECRET: Optional[SecretStr] = None
     NOTION_API_KEY: Optional[SecretStr] = None
-    
+
     # Feature Flags
     ENABLE_SLACK_INTEGRATION: bool = True
     ENABLE_GITHUB_INTEGRATION: bool = True
     ENABLE_NOTION_INTEGRATION: bool = True
-    
+
     # Logging
     LOG_LEVEL: str = "INFO"
-    
+
     # Validators
     @validator("DATABASE_URL", pre=True)
     def validate_database_url(cls, v: Optional[str]) -> Any:
@@ -52,7 +54,7 @@ class Settings(BaseSettings):
             test_url = os.environ.get("DATABASE_TEST_URL")
             return test_url if test_url else v
         return v
-    
+
     class Config:
         env_file = ".env"
         case_sensitive = True
@@ -63,7 +65,7 @@ class Settings(BaseSettings):
 def get_settings() -> Settings:
     """
     Get application settings from environment variables.
-    
+
     Using lru_cache to avoid reloading settings for each request.
     """
     return Settings()

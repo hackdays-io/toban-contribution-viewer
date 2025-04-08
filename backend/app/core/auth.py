@@ -20,7 +20,7 @@ def decode_token(token: str) -> Dict:
             token,
             settings.SUPABASE_JWT_SECRET,
             algorithms=["HS256"],
-            options={"verify_signature": True}
+            options={"verify_signature": True},
         )
     except Exception as e:
         raise HTTPException(
@@ -31,7 +31,7 @@ def decode_token(token: str) -> Dict:
 
 
 def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security)
+    credentials: HTTPAuthorizationCredentials = Depends(security),
 ) -> Dict:
     """
     Get the current authenticated user from the JWT token.
