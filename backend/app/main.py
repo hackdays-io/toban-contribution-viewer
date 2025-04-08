@@ -36,10 +36,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 # Root endpoint
 @app.get("/")
 async def root():
     return {"message": "Welcome to Toban Contribution Viewer API"}
+
 
 # Health check endpoint
 @app.get("/health")
