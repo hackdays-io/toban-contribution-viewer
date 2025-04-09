@@ -13,7 +13,14 @@ from app.config import settings
 @pytest.fixture
 def app():
     app = FastAPI()
+    
+    # Use api_router directly - it already has /api prefix
     app.include_router(api_router)
+    
+    # Debug: print available routes
+    for route in app.routes:
+        print(f"Route: {route.path}, methods: {route.methods}")
+    
     return app
 
 
@@ -34,7 +41,8 @@ def test_get_oauth_url(client, monkeypatch):
     assert response.status_code == 200
     assert "url" in response.json()
     assert "test_client_id" in response.json()["url"]
-    assert "channels:history" in response.json()["url"]
+    # The URL is encoded, so check for the encoded parameter instead
+    assert "channels%3Ahistory" in response.json()["url"]
 
 
 def test_get_oauth_url_missing_client_id(client, monkeypatch):
@@ -50,7 +58,7 @@ def test_get_oauth_url_missing_client_id(client, monkeypatch):
     assert "not properly configured" in response.json()["detail"]
 
 
-@patch("app.api.v1.slack.oauth.requests.post")
+@patch("requests.post")
 def test_oauth_callback_success(mock_post, client, monkeypatch):
     """Test successful OAuth callback."""
     # Mock settings
@@ -73,13 +81,23 @@ def test_oauth_callback_success(mock_post, client, monkeypatch):
     }
     mock_post.return_value = mock_response
     
-    # Mock database session
-    with patch("app.api.v1.slack.oauth.get_async_db") as mock_get_db:
+    # Mock the async context manager
+    async def mock_async_db():
         mock_db = MagicMock()
         mock_db.execute = MagicMock()
-        mock_db.commit = MagicMock()
-        mock_get_db.return_value = mock_db
+        # Ensure the result of execute has a .scalars().first() chain that returns None
+        execute_result = MagicMock()
+        scalars_result = MagicMock()
+        scalars_result.first.return_value = None  # No existing workspace
+        execute_result.scalars.return_value = scalars_result
+        mock_db.execute.return_value = execute_result
         
+        mock_db.commit = MagicMock()
+        mock_db.close = MagicMock()
+        yield mock_db
+
+    # Replace the get_async_db function
+    with patch("app.api.v1.slack.oauth.get_async_db", mock_async_db):
         # Make request
         response = client.get("/api/v1/slack/oauth-callback?code=test_code")
         
@@ -93,7 +111,7 @@ def test_oauth_callback_success(mock_post, client, monkeypatch):
         assert "test_client_id" in mock_post.call_args[1]["data"]["client_id"]
 
 
-@patch("app.api.v1.slack.oauth.requests.post")
+@patch("requests.post")
 def test_oauth_callback_error(mock_post, client, monkeypatch):
     """Test OAuth callback with API error."""
     # Mock settings
@@ -109,8 +127,13 @@ def test_oauth_callback_error(mock_post, client, monkeypatch):
     }
     mock_post.return_value = mock_response
     
+    # Mock the async context manager
+    async def mock_async_db():
+        mock_db = MagicMock()
+        yield mock_db
+    
     # Make request
-    with patch("app.api.v1.slack.oauth.get_async_db"):
+    with patch("app.api.v1.slack.oauth.get_async_db", mock_async_db):
         response = client.get("/api/v1/slack/oauth-callback?code=invalid_code")
         
         # Check response
@@ -120,9 +143,15 @@ def test_oauth_callback_error(mock_post, client, monkeypatch):
 
 def test_oauth_callback_with_error_param(client):
     """Test OAuth callback with error parameter."""
-    # Make request with error
-    response = client.get("/api/v1/slack/oauth-callback?code=test_code&error=access_denied")
+    # Mock the async context manager
+    async def mock_async_db():
+        mock_db = MagicMock()
+        yield mock_db
     
-    # Check response
-    assert response.status_code == 400
-    assert "access_denied" in response.json()["detail"]
+    # Make request with error
+    with patch("app.api.v1.slack.oauth.get_async_db", mock_async_db):
+        response = client.get("/api/v1/slack/oauth-callback?code=test_code&error=access_denied")
+        
+        # Check response
+        assert response.status_code == 400
+        assert "access_denied" in response.json()["detail"]

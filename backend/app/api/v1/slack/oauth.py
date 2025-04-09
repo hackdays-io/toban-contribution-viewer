@@ -18,7 +18,7 @@ from app.models.slack import SlackWorkspace
 # Configure logging
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/slack", tags=["slack"])
+router = APIRouter(tags=["slack"])
 
 
 class SlackOAuthResponse(BaseModel):
