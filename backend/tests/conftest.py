@@ -3,7 +3,7 @@ Pytest configuration file with shared fixtures.
 """
 import asyncio
 import os
-from typing import AsyncGenerator, Generator
+from typing import AsyncGenerator
 from unittest.mock import MagicMock, patch
 
 import pytest

@@ -1,15 +1,10 @@
 """
 Tests for Slack OAuth integration.
 """
-import asyncio
-from unittest.mock import AsyncMock, MagicMock, patch
-
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from app.api.v1.slack.oauth import router as slack_oauth_router
-from app.api.v1.slack.router import router as slack_router
 from app.config import settings
 
 

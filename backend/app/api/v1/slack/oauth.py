@@ -6,7 +6,7 @@ from typing import Dict, Optional
 from urllib.parse import urlencode
 
 import requests
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field, validator
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -208,7 +208,7 @@ async def list_workspaces(
     """
     try:
         result = await db.execute(
-            select(SlackWorkspace).where(SlackWorkspace.is_active == True)
+            select(SlackWorkspace).where(SlackWorkspace.is_active.is_(True))
         )
         workspaces = result.scalars().all()
         
