@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     PROJECT_VERSION: str = "0.1.0"
     API_PREFIX: str = "/api/v1"
     DEBUG: bool = False
+    API_URL: Optional[str] = None  # Base URL for the API, used for constructing callback URLs
     ALLOWED_HOSTS: List[str] = ["http://localhost:5173", "http://localhost:8000", "http://127.0.0.1:5173", "http://127.0.0.1:8000"]
 
     # Secret Keys

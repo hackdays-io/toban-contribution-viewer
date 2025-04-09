@@ -81,9 +81,14 @@ async def get_oauth_url(
         "user_scope": "",  # No user tokens needed for our use case
     }
 
-    # Add redirect_uri if provided
+    # Add redirect_uri if provided or use default callback URL
     if redirect_uri:
         params["redirect_uri"] = redirect_uri
+    else:
+        # Construct default callback URL based on API_PREFIX
+        # For local development this will be http://localhost:8000/api/v1/slack/oauth-callback
+        base_url = str(settings.API_URL).rstrip("/") if settings.API_URL else f"http://localhost:8000{settings.API_PREFIX}"
+        params["redirect_uri"] = f"{base_url}/slack/oauth-callback"
 
     oauth_url = f"https://slack.com/oauth/v2/authorize?{urlencode(params)}"
 

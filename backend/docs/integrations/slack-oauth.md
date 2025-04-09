@@ -21,9 +21,12 @@ This guide explains how to set up and test the Slack OAuth integration in the To
    - `users:read`
    - `users.profile:read`
    - `team:read`
-5. In the "Redirect URLs" section, add:
-   - For local development: `http://localhost:8000/api/v1/slack/oauth-callback`
+5. In the "Redirect URLs" section, add the following URLs:
+   - For local development with backend only: `http://localhost:8000/api/v1/slack/oauth-callback`
+   - For local development with frontend: `http://localhost:5173/api/v1/slack/oauth-callback`
    - For production: `https://yourdomain.com/api/v1/slack/oauth-callback`
+   
+   **Important**: You must add all the URLs you plan to use. Slack requires an exact match between the redirect_uri in the OAuth request and the configured URLs.
 6. Save your changes
 
 ## Configuring Environment Variables
@@ -74,9 +77,19 @@ If you see CORS errors, ensure:
 ### OAuth Callback Issues
 
 If authorization doesn't work properly:
-1. Check that Redirect URLs in your Slack app configuration match your callback routes
-2. Ensure the callback endpoint is accessible from the internet if testing from Slack
-3. Check backend logs for detailed error messages
+
+1. **"redirect_uri did not match any configured URIs" error**:
+   - This means the redirect URI sent to Slack doesn't match any configured in your Slack app settings
+   - Go to your Slack app's settings at api.slack.com/apps
+   - Navigate to "OAuth & Permissions" and check the "Redirect URLs" section
+   - Make sure the exact URL being used in the request is listed there
+   - For local development with frontend, add: `http://localhost:5173/api/v1/slack/oauth-callback`
+
+2. **Other OAuth issues**:
+   - Check that all Redirect URLs in your Slack app configuration match your callback routes
+   - Ensure the callback endpoint is accessible from the internet if testing from Slack
+   - Verify that the protocol (http/https) matches exactly
+   - Check backend logs for detailed error messages
 
 ## Code Implementation
 
