@@ -317,9 +317,9 @@ Forwarding  https://abc-123-xyz.ngrok-free.app -> http://localhost:8000
 2. Navigate to "OAuth & Permissions"
 3. Add the ngrok URL to the "Redirect URLs" section:
    ```
-   https://abc-123-xyz.ngrok-free.app/api/v1/slack/oauth-callback
+   https://abc-123-xyz.ngrok-free.app/auth/slack/callback
    ```
-   **IMPORTANT**: Make sure to include the `/api/v1` prefix in the URL
+   **IMPORTANT**: This URL should match the frontend callback route, not the API endpoint
 4. Save changes
 
 #### Step 5: Update environment variables

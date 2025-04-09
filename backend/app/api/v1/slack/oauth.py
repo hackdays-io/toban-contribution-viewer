@@ -85,18 +85,27 @@ async def get_oauth_url(
     # Ignore any redirect_uri provided from frontend to ensure consistency with Slack app config
     
     # Get base URL from settings.API_URL (which should be the ngrok URL if provided)
-    # Always ensure the API_PREFIX is included in the URL
+    # Use the frontend URL for the redirect to show a nice UI after OAuth
     if settings.API_URL:
-        # For external URLs like ngrok, make sure we include the API_PREFIX
-        base_url = str(settings.API_URL).rstrip("/")
-        # Add API_PREFIX if it's not already included in the API_URL
-        if not base_url.endswith(settings.API_PREFIX):
-            base_url = f"{base_url}{settings.API_PREFIX}"
+        # Extract the base domain from API_URL
+        api_url = str(settings.API_URL).rstrip("/")
+        
+        # For ngrok or other external URLs, use the frontend domain
+        # For example, if API_URL is https://example.ngrok-free.app/api/v1
+        # we want to redirect to https://example.ngrok-free.app/auth/slack/callback
+        
+        # Remove any path components to get the base domain
+        if "/api/v1" in api_url:
+            base_url = api_url.split("/api/v1")[0]
+        else:
+            base_url = api_url
+            
+        frontend_callback = f"{base_url}/auth/slack/callback"
     else:
-        # Default for local development
-        base_url = f"http://localhost:8000{settings.API_PREFIX}"
+        # Default for local development - use frontend URL
+        frontend_callback = "http://localhost:5173/auth/slack/callback"
     
-    params["redirect_uri"] = f"{base_url}/slack/oauth-callback"
+    params["redirect_uri"] = frontend_callback
     
     # Log debugging information
     logger.info(f"Settings API_URL: {settings.API_URL}")
@@ -113,6 +122,7 @@ async def slack_oauth_callback(
     code: str = Query(...),
     state: Optional[str] = Query(None),
     error: Optional[str] = Query(None),
+    redirect_from_frontend: Optional[bool] = Query(False),
     db: AsyncSession = Depends(get_async_db),
 ) -> Dict[str, str]:
     """

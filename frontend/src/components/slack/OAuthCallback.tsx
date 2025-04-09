@@ -32,7 +32,7 @@ const OAuthCallback: React.FC = () => {
       try {
         // Send code to backend
         const response = await fetch(
-          `${import.meta.env.VITE_API_URL}/api/v1/slack/oauth-callback?code=${code}`
+          `${import.meta.env.VITE_API_URL}/slack/oauth-callback?code=${code}&redirect_from_frontend=true`
         );
         
         if (!response.ok) {
