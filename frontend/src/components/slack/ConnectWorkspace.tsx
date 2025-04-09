@@ -18,7 +18,7 @@ const ConnectWorkspace: React.FC = () => {
       setIsLoading(true);
       
       // Get OAuth URL from backend
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/slack/oauth-url`);
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/slack/oauth-url`);
       
       if (!response.ok) {
         const error = await response.json();
