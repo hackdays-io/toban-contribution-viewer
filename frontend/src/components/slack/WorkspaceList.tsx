@@ -48,6 +48,8 @@ const WorkspaceList: React.FC = () => {
 
   useEffect(() => {
     fetchWorkspaces();
+    // fetchWorkspaces is defined inside the component and doesn't depend on any props or state
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   /**

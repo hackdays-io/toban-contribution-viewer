@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
 import { Button, Box, Heading, Text, VStack, useToast, Spinner } from '@chakra-ui/react';
-import { useNavigate } from 'react-router-dom';
 
 /**
  * Component to connect a Slack workspace using OAuth.
  */
 const ConnectWorkspace: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate();
   const toast = useToast();
 
   /**

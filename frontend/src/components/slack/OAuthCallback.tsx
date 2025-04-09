@@ -36,11 +36,11 @@ const OAuthCallback: React.FC = () => {
         );
         
         if (!response.ok) {
-          const data = await response.json();
-          throw new Error(data.detail || 'Failed to complete authorization');
+          const errorData = await response.json();
+          throw new Error(errorData.detail || 'Failed to complete authorization');
         }
         
-        const data = await response.json();
+        await response.json();
         setStatus('success');
         
         // Navigate to workspace list after a short delay
