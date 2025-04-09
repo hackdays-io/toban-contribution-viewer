@@ -1,9 +1,0 @@
-version: 2
-# Placeholder - copy this file and add your authtoken
-# authtoken: your_ngrok_authtoken
-web_addr: 0.0.0.0:4040
-tunnels:
-  app:
-    proto: http
-    addr: http://localhost:5173
-    inspect: false
