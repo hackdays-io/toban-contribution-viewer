@@ -23,6 +23,9 @@ MANIFEST
 .env
 venv/
 env/
+.coverage
+.pytest_cache/
+htmlcov/
 
 # Node
 node_modules/
