@@ -45,14 +45,11 @@ class SlackOAuthResponse(BaseModel):
 
 @router.get("/oauth-url")
 async def get_oauth_url(
-    redirect_uri: Optional[str] = Query(None),
+    # No longer accepting redirect_uri from frontend
 ) -> Dict[str, str]:
     """
     Generate OAuth URL for Slack.
-
-    Args:
-        redirect_uri: Optional redirect URI override. If not provided, uses the default.
-
+    
     Returns:
         Dictionary containing the OAuth URL.
     """
@@ -81,8 +78,7 @@ async def get_oauth_url(
         "user_scope": "",  # No user tokens needed for our use case
     }
 
-    # Always use the backend URL for the callback to ensure it matches the Slack app settings
-    # Ignore any redirect_uri provided from frontend to ensure consistency with Slack app config
+    # Always use our controlled URLs for the callback to ensure it matches the Slack app settings
     
     # Get base URL from settings.FRONTEND_URL (which should be the ngrok app URL if provided)
     # or construct it from API_URL
@@ -116,7 +112,9 @@ async def get_oauth_url(
     
     # Log debugging information
     logger.info(f"Settings API_URL: {settings.API_URL}")
-    logger.info(f"Using base URL: {base_url}")
+    # Only log base_url if we're using API_URL path (not frontend_url or default)
+    if not settings.FRONTEND_URL and settings.API_URL:
+        logger.info(f"Using base URL: {base_url}")
     logger.info(f"Using redirect URI: {params['redirect_uri']}")
 
     oauth_url = f"https://slack.com/oauth/v2/authorize?{urlencode(params)}"

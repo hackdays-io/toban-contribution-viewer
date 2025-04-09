@@ -44,6 +44,8 @@ services:
       # API and Frontend URLs 
       - API_URL=http://localhost:8000
       - FRONTEND_URL=${NGROK_URL:-http://localhost:5173}
+      # Add ngrok URL to CORS allowed origins
+      - ADDITIONAL_CORS_ORIGINS=${NGROK_URL:-}
       # For debugging
       - DEBUG_NGROK_URL=${NGROK_URL:-}
       - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID:-}
@@ -68,7 +70,7 @@ services:
       # Use anonymous volume to prevent node_modules from being overwritten
       - /app/node_modules
     environment:
-      # API URL - always use localhost since it's accessed from the browser
+      # API URL for browser requests - always use localhost since we're in a browser context
       - VITE_API_URL=http://localhost:8000/api/v1
       # Frontend URL for redirects (use ngrok tunnel if available)
       - VITE_FRONTEND_URL=${NGROK_URL:-http://localhost:5173}

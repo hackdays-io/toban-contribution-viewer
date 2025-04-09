@@ -50,11 +50,11 @@ echo "Starting ngrok for frontend (http://localhost:5173)..."
 echo "Press Ctrl+C to stop"
 echo ""
 echo "Once ngrok is running, update your .env.docker file with:"
-echo "NGROK_URL=https://your-ngrok-url.ngrok-free.app"
+echo "NGROK_URL=https://your-frontend-ngrok-url.ngrok-free.app"
 echo ""
 echo "And configure your Slack App's redirect URL to:"
-echo "https://your-ngrok-url.ngrok-free.app/auth/slack/callback"
+echo "https://your-frontend-ngrok-url.ngrok-free.app/auth/slack/callback"
 echo ""
 
-# Start ngrok
+# Start ngrok for the frontend only
 ngrok start --config="$TMP_CONFIG" app
