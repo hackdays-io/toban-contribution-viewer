@@ -3,10 +3,10 @@ Pytest configuration file with shared fixtures.
 """
 import asyncio
 import os
-import pytest
 from typing import AsyncGenerator, Generator
 from unittest.mock import MagicMock, patch
 
+import pytest
 from fastapi import FastAPI
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
