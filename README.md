@@ -319,6 +319,7 @@ Forwarding  https://abc-123-xyz.ngrok-free.app -> http://localhost:8000
    ```
    https://abc-123-xyz.ngrok-free.app/api/v1/slack/oauth-callback
    ```
+   **IMPORTANT**: Make sure to include the `/api/v1` prefix in the URL
 4. Save changes
 
 #### Step 5: Update environment variables

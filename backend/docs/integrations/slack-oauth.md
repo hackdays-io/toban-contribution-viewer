@@ -74,6 +74,7 @@ ngrok http 8000
   ```
   https://abc-123-xyz.ngrok-free.app/api/v1/slack/oauth-callback
   ```
+  **IMPORTANT**: Make sure to include the `/api/v1` prefix in the URL
 
 #### 3. Configure Environment Variables
 Update your `.env.docker` file with:

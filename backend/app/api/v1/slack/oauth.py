@@ -85,7 +85,17 @@ async def get_oauth_url(
     # Ignore any redirect_uri provided from frontend to ensure consistency with Slack app config
     
     # Get base URL from settings.API_URL (which should be the ngrok URL if provided)
-    base_url = str(settings.API_URL).rstrip("/") if settings.API_URL else f"http://localhost:8000{settings.API_PREFIX}"
+    # Always ensure the API_PREFIX is included in the URL
+    if settings.API_URL:
+        # For external URLs like ngrok, make sure we include the API_PREFIX
+        base_url = str(settings.API_URL).rstrip("/")
+        # Add API_PREFIX if it's not already included in the API_URL
+        if not base_url.endswith(settings.API_PREFIX):
+            base_url = f"{base_url}{settings.API_PREFIX}"
+    else:
+        # Default for local development
+        base_url = f"http://localhost:8000{settings.API_PREFIX}"
+    
     params["redirect_uri"] = f"{base_url}/slack/oauth-callback"
     
     # Log debugging information
