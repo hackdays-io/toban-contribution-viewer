@@ -56,30 +56,7 @@ async def get_oauth_url(
     Returns:
         Dictionary containing the OAuth URL.
     """
-    # Debug info to check environment variables
-    client_id = settings.SLACK_CLIENT_ID
-    logger.info(f"SLACK_CLIENT_ID from settings: '{client_id}'")
-
-    # Fallback to direct environment check
-    import os
-    env_client_id = os.environ.get("SLACK_CLIENT_ID", "")
-    logger.info(f"SLACK_CLIENT_ID from env: '{env_client_id}'")
-    
-    # Try to load from .env file directly as a last resort
-    try:
-        import dotenv
-        loaded = dotenv.load_dotenv()
-        logger.info(f"Loaded .env file manually: {loaded}")
-        env_client_id_after = os.environ.get("SLACK_CLIENT_ID", "")
-        logger.info(f"SLACK_CLIENT_ID after dotenv: '{env_client_id_after}'")
-    except Exception as e:
-        logger.error(f"Error loading .env manually: {str(e)}")
-    
-    # Use environment value if available
-    if env_client_id_after:
-        client_id = env_client_id_after
-    
-    if not client_id:
+    if not settings.SLACK_CLIENT_ID:
         logger.error("SLACK_CLIENT_ID is not configured")
         raise HTTPException(
             status_code=500, detail="Slack integration is not properly configured"
@@ -99,7 +76,7 @@ async def get_oauth_url(
 
     # Create the OAuth URL
     params = {
-        "client_id": client_id,
+        "client_id": settings.SLACK_CLIENT_ID,
         "scope": ",".join(scopes),
         "user_scope": "",  # No user tokens needed for our use case
     }
@@ -136,25 +113,7 @@ async def slack_oauth_callback(
         logger.error(f"Slack OAuth error: {error}")
         raise HTTPException(status_code=400, detail=f"Slack OAuth error: {error}")
 
-    # Debug info to check environment variables
-    import os
-    client_id = settings.SLACK_CLIENT_ID
-    client_secret = settings.SLACK_CLIENT_SECRET.get_secret_value() if settings.SLACK_CLIENT_SECRET else None
-    
-    # Fallback to direct environment check
-    env_client_id = os.environ.get("SLACK_CLIENT_ID", "")
-    env_client_secret = os.environ.get("SLACK_CLIENT_SECRET", "")
-    
-    logger.info(f"SLACK_CLIENT_ID: Settings='{client_id}', Env='{env_client_id}'")
-    logger.info(f"SLACK_CLIENT_SECRET: Settings={'SET' if client_secret else 'NOT SET'}, Env={'SET' if env_client_secret else 'NOT SET'}")
-    
-    # Use environment values as fallback
-    if not client_id and env_client_id:
-        client_id = env_client_id
-    if not client_secret and env_client_secret:
-        client_secret = env_client_secret
-    
-    if not client_id or not client_secret:
+    if not settings.SLACK_CLIENT_ID or not settings.SLACK_CLIENT_SECRET:
         logger.error("Slack credentials not configured")
         raise HTTPException(
             status_code=500, detail="Slack integration is not properly configured"
@@ -165,8 +124,8 @@ async def slack_oauth_callback(
         token_response = requests.post(
             "https://slack.com/api/oauth.v2.access",
             data={
-                "client_id": client_id,
-                "client_secret": client_secret,
+                "client_id": settings.SLACK_CLIENT_ID,
+                "client_secret": settings.SLACK_CLIENT_SECRET.get_secret_value(),
                 "code": code,
             },
         )
