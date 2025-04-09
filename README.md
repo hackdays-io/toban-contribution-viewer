@@ -289,6 +289,66 @@ When creating your Slack app, the following scopes are required for comprehensiv
    - `SLACK_CLIENT_SECRET`
    - `SLACK_SIGNING_SECRET`
 
+### Using ngrok for Slack OAuth
+
+Slack requires HTTPS URLs for OAuth redirects in production environments. For local development, you can use ngrok to create a secure HTTPS tunnel:
+
+#### Step 1: Install ngrok
+```bash
+npm install -g ngrok
+```
+
+#### Step 2: Start Docker containers
+```bash
+docker compose up -d
+```
+
+#### Step 3: Start ngrok in a separate terminal
+```bash
+ngrok http 8000
+```
+This will display an output showing your ngrok URLs, for example:
+```
+Forwarding  https://abc-123-xyz.ngrok-free.app -> http://localhost:8000
+```
+
+#### Step 4: Configure Slack app
+1. Go to [api.slack.com/apps](https://api.slack.com/apps) and select your app
+2. Navigate to "OAuth & Permissions"
+3. Add the ngrok URL to the "Redirect URLs" section:
+   ```
+   https://abc-123-xyz.ngrok-free.app/api/v1/slack/oauth-callback
+   ```
+   **IMPORTANT**: Make sure to include the `/api/v1` prefix in the URL
+4. Save changes
+
+#### Step 5: Update environment variables
+Create or edit your `.env.docker` file to include:
+```
+# Slack credentials
+SLACK_CLIENT_ID=your_slack_client_id
+SLACK_CLIENT_SECRET=your_slack_client_secret
+SLACK_SIGNING_SECRET=your_slack_signing_secret
+
+# Use ngrok URL 
+NGROK_URL=https://abc-123-xyz.ngrok-free.app
+```
+
+#### Step 6: Restart the backend container
+```bash
+docker compose restart backend
+```
+
+#### Step 7: Test the OAuth flow
+1. Navigate to the frontend at http://localhost:5173
+2. Go to the Slack connection page
+3. Click "Connect to Slack" to initiate the OAuth flow
+
+#### Important notes
+- The ngrok URL changes each time you restart ngrok unless you have a paid account with a reserved domain
+- Remember to update both your Slack app settings and `.env.docker` file when the URL changes
+- For persistent development, consider upgrading to ngrok Pro for a fixed subdomain
+
 ### Sample App Manifest
 
 For faster setup, you can use this app manifest (replace the placeholder URLs with your actual URLs). You can create a new app using a manifest by clicking "Create New App" in the Slack API dashboard, then selecting "From an app manifest":
@@ -308,6 +368,7 @@ oauth_config:
   redirect_urls:
     - https://your-app-domain.com/api/v1/slack/oauth-callback
     - http://localhost:8000/api/v1/slack/oauth-callback
+    - https://your-ngrok-url.ngrok-free.app/api/v1/slack/oauth-callback
   scopes:
     bot:
       - channels:history
@@ -363,6 +424,9 @@ Required Docker environment variables:
 - `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`: Database connection settings
 - `SUPABASE_URL`, `SUPABASE_KEY`, `SUPABASE_JWT_SECRET`, `SUPABASE_ANON_KEY`: Supabase authentication settings
 - `OPENAI_API_KEY`: For AI-powered analysis
+- Integration variables (as needed):
+  - `SLACK_CLIENT_ID`, `SLACK_CLIENT_SECRET`, `SLACK_SIGNING_SECRET`: For Slack integration
+  - `NGROK_URL`: Your ngrok HTTPS URL for development with Slack OAuth
 
 ### Backend Environment Variables
 

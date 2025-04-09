@@ -64,12 +64,14 @@ For manual testing of the OAuth flow:
 
 2. Set the OAuth Redirect URL in your Slack App to:
    - http://localhost:8000/api/v1/slack/oauth-callback
+   - Note: We always use the backend URL for callbacks, even when initiated from the frontend
 
 3. Add your Slack credentials to the `.env` file:
    ```
    SLACK_CLIENT_ID=your_client_id
    SLACK_CLIENT_SECRET=your_client_secret
    SLACK_SIGNING_SECRET=your_signing_secret
+   API_URL=http://localhost:8000  # For local development
    ```
 
 4. Start the backend and frontend servers.
