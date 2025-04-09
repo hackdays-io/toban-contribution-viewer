@@ -5,6 +5,7 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
+from app.api.v1.slack.router import router as slack_router
 from app.config import settings
 
 
