@@ -22,11 +22,14 @@ This guide explains how to set up and test the Slack OAuth integration in the To
    - `users.profile:read`
    - `team:read`
 5. In the "Redirect URLs" section, add the following URLs:
-   - For local development with backend only: `http://localhost:8000/api/v1/slack/oauth-callback`
-   - For local development with frontend: `http://localhost:5173/api/v1/slack/oauth-callback`
+   - For local development: `http://localhost:8000/api/v1/slack/oauth-callback`
    - For production: `https://yourdomain.com/api/v1/slack/oauth-callback`
    
-   **Important**: You must add all the URLs you plan to use. Slack requires an exact match between the redirect_uri in the OAuth request and the configured URLs.
+   **Important**: 
+   - Slack requires an exact match between the redirect_uri in the OAuth request and the configured URLs
+   - Our application always uses the backend URL for callbacks, even when the OAuth flow is initiated from the frontend
+   - For non-localhost URLs, Slack REQUIRES HTTPS (http:// URLs will be rejected)
+   - Only localhost URLs can use http:// protocol
 6. Save your changes
 
 ## Configuring Environment Variables
@@ -37,6 +40,7 @@ Add the following variables to your environment:
 SLACK_CLIENT_ID=your_slack_client_id
 SLACK_CLIENT_SECRET=your_slack_client_secret
 SLACK_SIGNING_SECRET=your_slack_signing_secret
+API_URL=your_backend_url # e.g., http://localhost:8000 for local development
 ```
 
 ### Development Environment
@@ -50,6 +54,57 @@ For local development, add these to:
 In production, set these as environment variables in your deployment platform.
 
 ## Testing the Integration
+
+### Using ngrok for Local Development
+
+Slack requires HTTPS URLs for OAuth redirects in production. To develop locally, use ngrok:
+
+#### 1. Install and Configure ngrok
+```bash
+# Install ngrok
+npm install -g ngrok
+
+# Start ngrok tunnel to your backend
+ngrok http 8000
+```
+
+#### 2. Configure Slack App with ngrok URL
+- Copy the HTTPS URL from ngrok (e.g., `https://abc-123-xyz.ngrok-free.app`)
+- In Slack app settings under "OAuth & Permissions", add:
+  ```
+  https://abc-123-xyz.ngrok-free.app/api/v1/slack/oauth-callback
+  ```
+
+#### 3. Configure Environment Variables
+Update your `.env.docker` file with:
+```bash
+# Slack credentials
+SLACK_CLIENT_ID=your_slack_client_id
+SLACK_CLIENT_SECRET=your_slack_client_secret
+SLACK_SIGNING_SECRET=your_slack_signing_secret
+
+# ngrok URL for callbacks
+NGROK_URL=https://abc-123-xyz.ngrok-free.app
+```
+
+#### 4. Apply Changes
+```bash
+# Restart the backend container
+docker compose restart backend
+```
+
+#### 5. Verify Configuration
+You can check the redirect URI being used by looking at the backend logs:
+```bash
+docker compose logs backend | grep "Using redirect URI"
+```
+
+#### Troubleshooting ngrok
+- The free version of ngrok generates a new URL each session
+- Update both Slack app settings and `.env.docker` when restarting ngrok
+- Consider upgrading to ngrok Pro for a fixed subdomain
+
+### Testing the flow
 
 1. Start the backend and frontend servers
 2. Log in to the application
@@ -80,12 +135,24 @@ If authorization doesn't work properly:
 
 1. **"redirect_uri did not match any configured URIs" error**:
    - This means the redirect URI sent to Slack doesn't match any configured in your Slack app settings
-   - Go to your Slack app's settings at api.slack.com/apps
-   - Navigate to "OAuth & Permissions" and check the "Redirect URLs" section
-   - Make sure the exact URL being used in the request is listed there
-   - For local development with frontend, add: `http://localhost:5173/api/v1/slack/oauth-callback`
+   - Check the backend logs to see the exact URI being used:
+     ```bash
+     docker compose logs backend | grep "Using redirect URI"
+     ```
+   - Add the exact URI to your Slack app's "Redirect URLs" section
+   - Common issues with ngrok:
+     - ngrok URL has changed (free tier generates new URL each session)
+     - Your NGROK_URL environment variable doesn't match the current ngrok URL
+     - You forgot to restart the backend after updating the NGROK_URL
 
-2. **Other OAuth issues**:
+2. **"URL is not HTTPS" error**:
+   - Slack requires HTTPS for all non-localhost URLs
+   - Make sure you're using the HTTPS URL provided by ngrok, not HTTP
+   - Verify the ngrok tunnel is running properly
+   - If using a custom domain, ensure it has a valid SSL certificate
+   - Make sure your ngrok URL is properly configured in both your application and Slack app settings
+
+3. **Other OAuth issues**:
    - Check that all Redirect URLs in your Slack app configuration match your callback routes
    - Ensure the callback endpoint is accessible from the internet if testing from Slack
    - Verify that the protocol (http/https) matches exactly
