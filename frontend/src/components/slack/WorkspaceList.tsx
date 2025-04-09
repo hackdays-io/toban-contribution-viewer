@@ -58,7 +58,7 @@ const WorkspaceList: React.FC = () => {
   const fetchWorkspaces = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/slack/workspaces`);
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/slack/workspaces`);
       
       if (!response.ok) {
         throw new Error('Failed to fetch workspaces');
@@ -88,7 +88,7 @@ const WorkspaceList: React.FC = () => {
     
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/v1/slack/workspaces/${selectedWorkspace.id}`,
+        `${import.meta.env.VITE_API_URL}/slack/workspaces/${selectedWorkspace.id}`,
         {
           method: 'DELETE',
         }

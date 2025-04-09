@@ -13,44 +13,28 @@ const OAuthCallback: React.FC = () => {
 
   useEffect(() => {
     const handleCallback = async () => {
-      // Extract query parameters
-      const code = searchParams.get('code');
+      // Look for error parameter
       const error = searchParams.get('error');
-      
       if (error) {
         setStatus('error');
         setErrorMessage(`Authorization failed: ${error}`);
         return;
       }
       
-      if (!code) {
-        setStatus('error');
-        setErrorMessage('No authorization code received');
-        return;
-      }
-      
-      try {
-        // Send code to backend
-        const response = await fetch(
-          `${import.meta.env.VITE_API_URL}/slack/oauth-callback?code=${code}&redirect_from_frontend=true`
-        );
-        
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.detail || 'Failed to complete authorization');
-        }
-        
-        await response.json();
+      // Instead of trying to exchange the code again, assume success if we have a code
+      // The code is exchanged by Slack's redirect to the backend
+      if (searchParams.get('code')) {
+        // Slack has redirected here with a code, which means OAuth was successful
         setStatus('success');
         
         // Navigate to workspace list after a short delay
         setTimeout(() => {
           navigate('/dashboard/slack/workspaces');
         }, 2000);
-      } catch (error) {
-        console.error('Error during OAuth callback:', error);
+      } else {
+        // Neither error nor code in the parameters suggests something went wrong
         setStatus('error');
-        setErrorMessage(error instanceof Error ? error.message : 'Authorization failed');
+        setErrorMessage('No authorization code received. Please try again.');
       }
     };
     
