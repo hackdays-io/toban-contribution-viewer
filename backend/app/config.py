@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     API_PREFIX: str = "/api/v1"
     DEBUG: bool = False
     API_URL: Optional[str] = None  # Base URL for the API, used for constructing callback URLs (e.g., ngrok URL)
+    FRONTEND_URL: Optional[str] = None  # Base URL for the frontend, used for redirects (e.g., ngrok app URL)
     ALLOWED_HOSTS: List[str] = [
         "http://localhost:5173", 
         "http://localhost:8000", 

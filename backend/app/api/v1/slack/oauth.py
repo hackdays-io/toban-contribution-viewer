@@ -84,9 +84,14 @@ async def get_oauth_url(
     # Always use the backend URL for the callback to ensure it matches the Slack app settings
     # Ignore any redirect_uri provided from frontend to ensure consistency with Slack app config
     
-    # Get base URL from settings.API_URL (which should be the ngrok URL if provided)
-    # Use the frontend URL for the redirect to show a nice UI after OAuth
-    if settings.API_URL:
+    # Get base URL from settings.FRONTEND_URL (which should be the ngrok app URL if provided)
+    # or construct it from API_URL
+    if settings.FRONTEND_URL:
+        # Use the FRONTEND_URL directly if it's configured
+        frontend_base_url = str(settings.FRONTEND_URL).rstrip("/")
+        frontend_callback = f"{frontend_base_url}/auth/slack/callback"
+        logger.info(f"Using frontend URL directly: {frontend_base_url}")
+    elif settings.API_URL:
         # Extract the base domain from API_URL
         api_url = str(settings.API_URL).rstrip("/")
         
@@ -101,9 +106,11 @@ async def get_oauth_url(
             base_url = api_url
             
         frontend_callback = f"{base_url}/auth/slack/callback"
+        logger.info(f"Extracted base URL from API_URL: {base_url}")
     else:
         # Default for local development - use frontend URL
         frontend_callback = "http://localhost:5173/auth/slack/callback"
+        logger.info("Using default local frontend URL")
     
     params["redirect_uri"] = frontend_callback
     
