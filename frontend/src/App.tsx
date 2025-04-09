@@ -13,6 +13,13 @@ import ProtectedRoute from './components/auth/ProtectedRoute'
 import Home from './pages/Home'
 import Dashboard from './pages/Dashboard'
 
+// Slack Pages
+import {
+  ConnectPage as SlackConnectPage,
+  OAuthCallbackPage as SlackOAuthCallbackPage,
+  WorkspacesPage as SlackWorkspacesPage,
+} from './pages/slack'
+
 // Create a default theme
 const theme = extendTheme({})
 
@@ -37,6 +44,28 @@ function App() {
                     <Dashboard />
                   </ProtectedRoute>
                 } 
+              />
+              
+              {/* Slack routes */}
+              <Route
+                path="/dashboard/slack/workspaces"
+                element={
+                  <ProtectedRoute>
+                    <SlackWorkspacesPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard/slack/connect"
+                element={
+                  <ProtectedRoute>
+                    <SlackConnectPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/api/v1/slack/oauth-callback"
+                element={<SlackOAuthCallbackPage />}
               />
             </Routes>
           </Container>

@@ -53,11 +53,16 @@ const SignUp: React.FC = () => {
       
       if (error) throw error;
       
+      // More detailed success message in development
+      const isDev = import.meta.env.VITE_DEV_MODE === 'true';
+      
       toast({
         title: 'Success',
-        description: 'Check your email for the confirmation link!',
+        description: isDev 
+          ? 'Development mode: Email confirmation sent to Supabase. Please log in to your Supabase dashboard to view confirmation links or try signing in directly.' 
+          : 'Check your email for the confirmation link!',
         status: 'success',
-        duration: 5000,
+        duration: 10000,
         isClosable: true,
       });
     } catch (error) {

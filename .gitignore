@@ -10,8 +10,8 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
-lib64/
+/lib/    # Only ignore lib at root level, not src/lib
+/lib64/  # Only ignore lib64 at root level
 parts/
 sdist/
 var/
@@ -23,6 +23,9 @@ MANIFEST
 .env
 venv/
 env/
+.coverage
+.pytest_cache/
+htmlcov/
 
 # Node
 node_modules/

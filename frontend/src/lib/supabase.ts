@@ -22,9 +22,31 @@ export const signIn = async (email: string, password: string) => {
 };
 
 export const signUp = async (email: string, password: string) => {
+  // In development, provide auto-confirmation option if desired
+  if (env.isDev) {
+    console.log('Development mode: Proceeding with standard signup. You may need to verify via the Supabase dashboard.');
+    
+    // Use standard flow for consistency
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        // For development only - set this to true to bypass email confirmation
+        // This requires "Confirm email" to be disabled in Supabase Auth settings
+        emailRedirectTo: `${window.location.origin}/auth/callback`
+      }
+    });
+    
+    return { data, error };
+  }
+  
+  // In production, use normal sign-up flow with email confirmation
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
+    options: {
+      emailRedirectTo: `${window.location.origin}/auth/callback`
+    }
   });
   
   return { data, error };

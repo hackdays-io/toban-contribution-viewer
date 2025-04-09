@@ -13,6 +13,7 @@ import {
   Text,
   useToast,
 } from '@chakra-ui/react';
+import { Link } from 'react-router-dom';
 import useAuth from '../context/useAuth';
 
 const Dashboard: React.FC = () => {
@@ -91,12 +92,26 @@ const Dashboard: React.FC = () => {
               <Heading as="h2" size="md" mb={4}>
                 Slack Contributions
               </Heading>
-              <Text>
+              <Text mb={4}>
                 Connect your Slack workspace to track messages, reactions, and engagement.
               </Text>
-              <Button mt={4} colorScheme="blue">
-                Connect Slack
-              </Button>
+              <HStack spacing={4}>
+                <Button 
+                  as={Link} 
+                  to="/dashboard/slack/connect" 
+                  colorScheme="purple"
+                >
+                  Connect Workspace
+                </Button>
+                <Button
+                  as={Link}
+                  to="/dashboard/slack/workspaces"
+                  variant="outline"
+                  colorScheme="purple"
+                >
+                  Manage Workspaces
+                </Button>
+              </HStack>
             </Box>
           </TabPanel>
           
