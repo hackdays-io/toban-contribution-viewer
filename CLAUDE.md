@@ -31,3 +31,6 @@
 ## Environment Setup
 - Frontend: `npm run check-env` (verify environment variables)
 - Backend: `python scripts/check_env.py` (verify environment variables)
+
+## Development
+- Backend: Activate venv before running python.

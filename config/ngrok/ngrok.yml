@@ -1,7 +1,0 @@
-version: 2
-authtoken: ${NGROK_AUTHTOKEN}
-web_addr: 0.0.0.0:4040
-tunnels:
-  api:
-    proto: http
-    addr: backend:8000

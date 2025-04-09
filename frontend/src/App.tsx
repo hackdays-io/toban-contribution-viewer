@@ -64,7 +64,7 @@ function App() {
                 }
               />
               <Route
-                path="/api/v1/slack/oauth-callback"
+                path="/auth/slack/callback"
                 element={<SlackOAuthCallbackPage />}
               />
             </Routes>

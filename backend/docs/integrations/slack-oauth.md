@@ -72,9 +72,9 @@ ngrok http 8000
 - Copy the HTTPS URL from ngrok (e.g., `https://abc-123-xyz.ngrok-free.app`)
 - In Slack app settings under "OAuth & Permissions", add:
   ```
-  https://abc-123-xyz.ngrok-free.app/api/v1/slack/oauth-callback
+  https://abc-123-xyz.ngrok-free.app/auth/slack/callback
   ```
-  **IMPORTANT**: Make sure to include the `/api/v1` prefix in the URL
+  **IMPORTANT**: This URL must match the frontend callback route, not the API endpoint
 
 #### 3. Configure Environment Variables
 Update your `.env.docker` file with:

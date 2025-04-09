@@ -303,13 +303,26 @@ npm install -g ngrok
 docker compose up -d
 ```
 
-#### Step 3: Start ngrok in a separate terminal
+#### Step 3: Start ngrok for the frontend
+Use the provided script to start ngrok with your authtoken:
+
 ```bash
-ngrok http 8000
+# Make the script executable if needed
+chmod +x ./scripts/start-ngrok.sh
+
+# Run the script with your authtoken
+./scripts/start-ngrok.sh your_ngrok_authtoken
+
+# Alternatively, create a .env.ngrok file with your token
+echo "NGROK_AUTHTOKEN=your_ngrok_authtoken" > .env.ngrok
+# If you have custom URL, specify NGROK_CUSTOM_DOMAIN (without https://)
+echo "NGROK_CUSTOM_DOMAIN=your_ngrok_custom_app.com" >> .env.ngrok
+./scripts/start-ngrok.sh
 ```
-This will display an output showing your ngrok URLs, for example:
+
+This will display an output showing your ngrok URL, for example:
 ```
-Forwarding  https://abc-123-xyz.ngrok-free.app -> http://localhost:8000
+Tunnel Status  app       online  https://xyz-123-abc.ngrok-free.app -> http://localhost:5173
 ```
 
 #### Step 4: Configure Slack app
@@ -317,9 +330,9 @@ Forwarding  https://abc-123-xyz.ngrok-free.app -> http://localhost:8000
 2. Navigate to "OAuth & Permissions"
 3. Add the ngrok URL to the "Redirect URLs" section:
    ```
-   https://abc-123-xyz.ngrok-free.app/api/v1/slack/oauth-callback
+   https://xyz-123-abc.ngrok-free.app/auth/slack/callback
    ```
-   **IMPORTANT**: Make sure to include the `/api/v1` prefix in the URL
+   **IMPORTANT**: This URL should match the frontend callback route, not the API endpoint
 4. Save changes
 
 #### Step 5: Update environment variables
@@ -330,24 +343,28 @@ SLACK_CLIENT_ID=your_slack_client_id
 SLACK_CLIENT_SECRET=your_slack_client_secret
 SLACK_SIGNING_SECRET=your_slack_signing_secret
 
-# Use ngrok URL 
-NGROK_URL=https://abc-123-xyz.ngrok-free.app
+# ngrok URL (from the output of the ngrok command)
+NGROK_URL=https://xyz-123-abc.ngrok-free.app
+
+# Required for ngrok configuration
+NGROK_AUTHTOKEN=your_ngrok_auth_token
 ```
 
-#### Step 6: Restart the backend container
+#### Step 6: Restart the containers
 ```bash
-docker compose restart backend
+docker compose restart
 ```
 
 #### Step 7: Test the OAuth flow
-1. Navigate to the frontend at http://localhost:5173
+1. Navigate to the frontend at your ngrok URL (e.g., https://xyz-123-abc.ngrok-free.app)
 2. Go to the Slack connection page
 3. Click "Connect to Slack" to initiate the OAuth flow
 
 #### Important notes
-- The ngrok URL changes each time you restart ngrok unless you have a paid account with a reserved domain
-- Remember to update both your Slack app settings and `.env.docker` file when the URL changes
-- For persistent development, consider upgrading to ngrok Pro for a fixed subdomain
+- The ngrok URLs change each time you restart ngrok unless you have a paid account with a reserved domain
+- Remember to update both your Slack app settings and `.env.docker` file when the URLs change
+- For persistent development, consider upgrading to ngrok Pro for fixed subdomains
+- The frontend must be accessible via HTTPS for the complete OAuth flow to work correctly
 
 ### Sample App Manifest
 
@@ -366,9 +383,9 @@ features:
 
 oauth_config:
   redirect_urls:
-    - https://your-app-domain.com/api/v1/slack/oauth-callback
-    - http://localhost:8000/api/v1/slack/oauth-callback
-    - https://your-ngrok-url.ngrok-free.app/api/v1/slack/oauth-callback
+    - https://your-app-domain.com/auth/slack/callback
+    - http://localhost:5173/auth/slack/callback
+    - https://your-ngrok-app-url.ngrok-free.app/auth/slack/callback
   scopes:
     bot:
       - channels:history
