@@ -23,7 +23,7 @@ export const signIn = async (email: string, password: string) => {
 
 export const signUp = async (email: string, password: string) => {
   // In development, provide auto-confirmation option if desired
-  if (env.devMode) {
+  if (env.isDev) {
     console.log('Development mode: Proceeding with standard signup. You may need to verify via the Supabase dashboard.');
     
     // Use standard flow for consistency
