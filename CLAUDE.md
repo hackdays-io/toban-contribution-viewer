@@ -34,3 +34,7 @@
 
 ## Development
 - Backend: Activate venv before running python.
+
+## Do test before creating new pull requests
+- Run above test, lint, format, black, isort, flake8, mypy when you create new pull requests.
+- Also run those tests when you push changes to the branch which already sent a pull request
