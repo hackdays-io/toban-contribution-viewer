@@ -34,11 +34,11 @@ async def get_sync_status(
 ) -> Dict[str, Any]:
     """
     Get the current sync status for a workspace.
-    
+
     Args:
         workspace_id: UUID of the workspace
         db: Database session
-        
+
     Returns:
         Dictionary with sync status information
     """
@@ -48,47 +48,50 @@ async def get_sync_status(
             select(SlackWorkspace).where(SlackWorkspace.id == workspace_id)
         )
         workspace = result.scalars().first()
-        
+
         if not workspace:
             raise HTTPException(status_code=404, detail="Workspace not found")
-            
+
         # Get channel count
         channel_count_result = await db.execute(
             select(SlackChannel).where(SlackChannel.workspace_id == workspace_id)
         )
         channels = channel_count_result.scalars().all()
         channel_count = len(channels)
-        
+
         # Get timestamp of most recently updated channel
         recent_channel_sync = None
         if channels:
             recent_channel_sync_times = [
-                channel.last_sync_at for channel in channels 
+                channel.last_sync_at
+                for channel in channels
                 if channel.last_sync_at is not None
             ]
             if recent_channel_sync_times:
                 recent_channel_sync = max(recent_channel_sync_times)
-        
+
         # For is_syncing, check both the workspace status AND the timestamp
         # A workspace with status "syncing" that hasn't been updated for more than 5 minutes
         # is probably stuck, so we'll consider it not syncing anymore
         is_syncing = workspace.connection_status == "syncing"
-        
+
         # If sync status is "syncing" but it's been more than 5 minutes since last update,
         # we'll consider the sync as completed or failed
         if is_syncing and workspace.last_sync_at:
-            # Calculate time since last sync - if > 5 minutes and status is still "syncing", 
+            # Calculate time since last sync - if > 5 minutes and status is still "syncing",
             # it's probably stuck
             sync_timeout_minutes = 5  # Consider sync complete or failed after 5 minutes
-            time_since_last_sync = (datetime.utcnow() - workspace.last_sync_at).total_seconds() / 60
-            
+            time_since_last_sync = (
+                datetime.utcnow() - workspace.last_sync_at
+            ).total_seconds() / 60
+
             if time_since_last_sync > sync_timeout_minutes:
                 is_syncing = False
                 logger.warning(
                     f"Workspace {workspace_id} has status 'syncing' but hasn't been updated for {time_since_last_sync:.1f} minutes. "
                     f"Considering sync as completed or failed."
                 )
-                
+
                 # Update the workspace status to "active" so we don't keep checking
                 try:
                     await db.execute(
@@ -97,11 +100,13 @@ async def get_sync_status(
                         .values(connection_status="active")
                     )
                     await db.commit()
-                    logger.info(f"Updated workspace {workspace_id} status from 'syncing' to 'active' due to timeout")
+                    logger.info(
+                        f"Updated workspace {workspace_id} status from 'syncing' to 'active' due to timeout"
+                    )
                 except Exception as e:
                     logger.error(f"Error updating workspace status: {str(e)}")
                     await db.rollback()
-        
+
         return {
             "status": "success",
             "workspace_status": workspace.connection_status,
@@ -111,7 +116,7 @@ async def get_sync_status(
             "channel_count": channel_count,
             "sync_time": datetime.utcnow().isoformat(),  # Add current server time for comparison
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -119,6 +124,7 @@ async def get_sync_status(
         raise HTTPException(
             status_code=500, detail="An error occurred while retrieving sync status"
         )
+
 
 @router.get("/workspaces/{workspace_id}/channels")
 async def list_channels(
