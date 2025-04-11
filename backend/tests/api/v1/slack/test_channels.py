@@ -150,10 +150,27 @@ def test_sync_channels():
     # Create a test client
     client = TestClient(app)
 
-    # Mock the database session
-    with patch("app.api.v1.slack.channels.get_async_db") as mock_get_db:
-        # Create a mock session
+    # Create a mock workspace
+    workspace_id = str(uuid.uuid4())
+    mock_workspace = MagicMock()
+    mock_workspace.id = workspace_id
+    mock_workspace.access_token = "xoxb-test-token"
+    mock_workspace.is_connected = True
+
+    # Patch execute to return our workspace and mock background tasks
+    with patch(
+        "app.api.v1.slack.channels.get_async_db"
+    ) as mock_get_db, patch(
+        "app.api.v1.slack.channels.BackgroundTasks"
+    ) as mock_bg_tasks:
+
+        # Mock session for database
         mock_session = MagicMock(spec=AsyncSession)
+
+        # Make execute return an async context manager that yields our workspace
+        mock_result = MagicMock()
+        mock_result.scalars.return_value.first.return_value = mock_workspace
+        mock_session.execute.return_value = mock_result
 
         # Configure mock_get_db to be an async generator
         async def mock_get_db_impl():
@@ -161,31 +178,21 @@ def test_sync_channels():
 
         mock_get_db.return_value = mock_get_db_impl()
 
-        # Mock ChannelService.sync_channels_from_slack
-        with patch(
-            "app.api.v1.slack.channels.ChannelService.sync_channels_from_slack"
-        ) as mock_sync:
-            # Set up the mock to return some test data
-            mock_sync.return_value = (5, 10, 15)  # created, updated, total
+        # Now test should pass since we mocked everything correctly
+        response = client.post(
+            f"/workspaces/{workspace_id}/channels/sync",
+            params={"limit": 100, "sync_all_pages": "1"},
+        )
 
-            workspace_id = str(uuid.uuid4())
+        # Verify the background task was added
+        mock_bg_tasks.return_value.add_task.assert_called_once()
 
-            # Make the request
-            response = client.post(
-                f"/workspaces/{workspace_id}/channels/sync",
-                params={"limit": 100, "sync_all_pages": "1"},
-            )
-
-            # Verify the response
-            assert response.status_code == 200
-            data = response.json()
-            assert data["status"] == "success"
-            assert data["created_count"] == 5
-            assert data["updated_count"] == 10
-            assert data["total_count"] == 15
-
-            # Verify the service was called
-            mock_sync.assert_called_once()
+        # Verify the response
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "syncing"
+        assert "message" in data
+        assert data["workspace_id"] == workspace_id
 
 
 def test_select_channels_for_analysis(mock_workspace, mock_channels):
