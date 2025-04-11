@@ -77,7 +77,7 @@ const ChannelList: React.FC = () => {
   const { workspaceId } = useParams<{ workspaceId: string }>();
   const navigate = useNavigate();
   const toast = useToast();
-  
+
   // State for channels and loading
   const [channels, setChannels] = useState<Channel[]>([]);
   const [selectedChannels, setSelectedChannels] = useState<string[]>([]);
@@ -87,17 +87,17 @@ const ChannelList: React.FC = () => {
     total_items: 0,
     total_pages: 0,
   });
-  
+
   // State for filters
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [includeArchived, setIncludeArchived] = useState(false);
-  
+
   // Loading states
   const [isLoading, setIsLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  
+
   // Sync status
   const [syncStatus, setSyncStatus] = useState<{
     is_syncing: boolean;
@@ -107,37 +107,37 @@ const ChannelList: React.FC = () => {
     last_workspace_sync: string | null;
     sync_time: string;
   } | null>(null);
-  
+
   // Alert dialog for insufficient permissions
   const { isOpen, onOpen, onClose } = useDisclosure();
   const cancelRef = React.useRef<HTMLButtonElement>(null);
-  
+
   // Fetch channels when component loads or filters change
   useEffect(() => {
     fetchChannels();
   }, [pagination.page, typeFilter, includeArchived, workspaceId]);
-  
+
   // Function to check sync status
   const checkSyncStatus = async () => {
     if (!workspaceId) return;
-    
+
     try {
       const response = await fetch(
         `${import.meta.env.VITE_API_URL}/slack/workspaces/${workspaceId}/sync-status`
       );
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch sync status');
       }
-      
+
       const data = await response.json();
       const previousStatus = syncStatus;
       setSyncStatus(data);
-      
-      console.log("Sync status check:", data.is_syncing ? "SYNCING" : "NOT SYNCING", 
-        "Workspace status:", data.workspace_status, 
+
+      console.log("Sync status check:", data.is_syncing ? "SYNCING" : "NOT SYNCING",
+        "Workspace status:", data.workspace_status,
         "Channel count:", data.channel_count);
-      
+
       // Detect sync state changes
       if (data.is_syncing) {
         // If we're syncing, update UI and poll again
@@ -148,14 +148,14 @@ const ChannelList: React.FC = () => {
       } else {
         // If sync has completed (we were syncing but now we're not)
         const wasSyncing = isSyncing || (previousStatus && previousStatus.is_syncing);
-        
+
         if (wasSyncing) {
           // Reset syncing state
           setIsSyncing(false);
-          
+
           // Refresh the channel list
           await fetchChannels();
-          
+
           // Show completion notification
           toast({
             title: 'Channel Sync Completed',
@@ -175,13 +175,13 @@ const ChannelList: React.FC = () => {
       setIsSyncing(false);
     }
   };
-  
+
   // Check sync status on load and when syncing status changes
   useEffect(() => {
     checkSyncStatus();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [workspaceId]);
-  
+
   // Convert type filter to API parameter
   const getTypeFilters = (): string[] | null => {
     switch(typeFilter) {
@@ -196,44 +196,44 @@ const ChannelList: React.FC = () => {
         return null;
     }
   };
-  
+
   /**
    * Fetch channels from the API
    */
   const fetchChannels = async () => {
     if (!workspaceId) return;
-    
+
     setIsLoading(true);
-    
+
     try {
       const queryParams = new URLSearchParams({
         page: pagination.page.toString(),
         page_size: pagination.page_size.toString(),
         include_archived: includeArchived.toString(),
       });
-      
+
       const typeFilters = getTypeFilters();
       if (typeFilters) {
         typeFilters.forEach(type => queryParams.append('types', type));
       }
-      
+
       const response = await fetch(
         `${import.meta.env.VITE_API_URL}/slack/workspaces/${workspaceId}/channels?${queryParams}`
       );
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch channels');
       }
-      
+
       const data: ChannelResponse = await response.json();
       setChannels(data.channels);
       setPagination(data.pagination);
-      
+
       // Initialize selected channels from those marked in the API
       const preselected = data.channels
         .filter(channel => channel.is_selected_for_analysis)
         .map(channel => channel.id);
-      
+
       if (pagination.page === 1) {
         setSelectedChannels(preselected);
       } else {
@@ -261,15 +261,15 @@ const ChannelList: React.FC = () => {
       setIsLoading(false);
     }
   };
-  
+
   /**
    * Sync channels from Slack API with background processing and polling
    */
   const syncChannels = async () => {
     if (!workspaceId) return;
-    
+
     setIsSyncing(true);
-    
+
     try {
       // Show initial toast to indicate sync started
       toast({
@@ -279,20 +279,20 @@ const ChannelList: React.FC = () => {
         duration: 5000,
         isClosable: true,
       });
-      
+
       // Use query parameters for the endpoint
       const queryParams = new URLSearchParams({
         limit: '1000', // Maximum limit for efficiency
         sync_all_pages: '1', // Use 1 instead of true
         batch_size: '200', // Process in batches of 200 channels
       });
-      
+
       // Start the background sync process
       const response = await fetch(
         `${import.meta.env.VITE_API_URL}/slack/workspaces/${workspaceId}/channels/sync?${queryParams}`,
         { method: 'POST' }
       );
-      
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         if (errorData.detail && errorData.detail.includes('missing_scope')) {
@@ -301,9 +301,9 @@ const ChannelList: React.FC = () => {
           throw new Error(errorData.detail || 'Failed to sync channels');
         }
       }
-      
+
       const data = await response.json();
-      
+
       // Show a toast indicating background processing started
       toast({
         title: 'Channel Sync Started',
@@ -312,13 +312,13 @@ const ChannelList: React.FC = () => {
         duration: 7000,
         isClosable: true,
       });
-      
+
       // Start checking sync status instead of simple polling
       checkSyncStatus();
-      
+
       // Don't set isSyncing to false here, as we want to keep the syncing indicator
       // while the background process and polling are running
-      
+
     } catch (error) {
       console.error('Error syncing channels:', error);
       toast({
@@ -331,25 +331,25 @@ const ChannelList: React.FC = () => {
       setIsSyncing(false);
     }
   };
-  
+
   /**
    * Save selected channels for analysis
    */
   const saveSelectedChannels = async () => {
     if (!workspaceId) return;
-    
+
     // Check if any selected channels don't have bot membership
     const nonMemberChannels = channels.filter(
       channel => selectedChannels.includes(channel.id) && !channel.is_bot_member
     );
-    
+
     if (nonMemberChannels.length > 0) {
       onOpen(); // Open alert dialog
       return;
     }
-    
+
     setIsSaving(true);
-    
+
     try {
       const response = await fetch(
         `${import.meta.env.VITE_API_URL}/slack/workspaces/${workspaceId}/channels/select`,
@@ -363,13 +363,13 @@ const ChannelList: React.FC = () => {
           }),
         }
       );
-      
+
       if (!response.ok) {
         throw new Error('Failed to save channel selection');
       }
-      
+
       const data = await response.json();
-      
+
       toast({
         title: 'Channels Selected',
         description: `Selected ${data.selected_count} channels for analysis`,
@@ -377,7 +377,7 @@ const ChannelList: React.FC = () => {
         duration: 5000,
         isClosable: true,
       });
-      
+
       // Navigate to the next step
       navigate(`/dashboard/slack/workspaces/${workspaceId}`);
     } catch (error) {
@@ -393,7 +393,7 @@ const ChannelList: React.FC = () => {
       setIsSaving(false);
     }
   };
-  
+
   /**
    * Handle channel selection
    */
@@ -406,7 +406,7 @@ const ChannelList: React.FC = () => {
       }
     });
   };
-  
+
   /**
    * Handle bulk selection
    */
@@ -416,7 +416,7 @@ const ChannelList: React.FC = () => {
       const selectableChannels = channels
         .filter(channel => channel.is_supported && channel.is_bot_member)
         .map(channel => channel.id);
-      
+
       setSelectedChannels(prev => {
         const newSelection = [...prev];
         selectableChannels.forEach(id => {
@@ -432,7 +432,7 @@ const ChannelList: React.FC = () => {
       setSelectedChannels(prev => prev.filter(id => !currentPageIds.includes(id)));
     }
   };
-  
+
   /**
    * Filter channels by search term
    */
@@ -441,7 +441,7 @@ const ChannelList: React.FC = () => {
     return channel.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
            channel.purpose.toLowerCase().includes(searchTerm.toLowerCase());
   });
-  
+
   /**
    * Change page
    */
@@ -453,7 +453,7 @@ const ChannelList: React.FC = () => {
       });
     }
   };
-  
+
   /**
    * Format channel type for display
    */
@@ -471,7 +471,7 @@ const ChannelList: React.FC = () => {
         return type;
     }
   };
-  
+
   /**
    * Get color for channel type badge
    */
@@ -488,7 +488,7 @@ const ChannelList: React.FC = () => {
         return 'gray';
     }
   };
-  
+
   return (
     <Box p={6} maxWidth="1200px" mx="auto">
       <HStack justifyContent="space-between" mb={6}>
@@ -501,14 +501,14 @@ const ChannelList: React.FC = () => {
           Back to Workspace
         </Button>
       </HStack>
-      
+
       <Divider mb={6} />
-      
+
       {/* Filters and controls */}
-      <Flex 
-        direction={{ base: 'column', md: 'row' }} 
-        justify="space-between" 
-        align={{ base: 'stretch', md: 'center' }} 
+      <Flex
+        direction={{ base: 'column', md: 'row' }}
+        justify="space-between"
+        align={{ base: 'stretch', md: 'center' }}
         mb={6}
         gap={4}
       >
@@ -523,7 +523,7 @@ const ChannelList: React.FC = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </InputGroup>
-          
+
           <Select
             maxW="180px"
             value={typeFilter}
@@ -534,7 +534,7 @@ const ChannelList: React.FC = () => {
             <option value="private">Private</option>
             <option value="direct">Direct Messages</option>
           </Select>
-          
+
           <Checkbox
             isChecked={includeArchived}
             onChange={(e) => setIncludeArchived(e.target.checked)}
@@ -542,7 +542,7 @@ const ChannelList: React.FC = () => {
             Include Archived
           </Checkbox>
         </HStack>
-        
+
         <HStack flex="1" justify="flex-end" spacing={2}>
           <Button
             leftIcon={<Icon as={FiRefreshCw} />}
@@ -565,7 +565,7 @@ const ChannelList: React.FC = () => {
           </Button>
         </HStack>
       </Flex>
-      
+
       {/* Channels table */}
       <Box overflowX="auto">
         <Table variant="simple">
@@ -573,7 +573,7 @@ const ChannelList: React.FC = () => {
             <Tr>
                   <Th width="50px">
                     <Checkbox
-                      isChecked={filteredChannels.length > 0 && filteredChannels.every(channel => 
+                      isChecked={filteredChannels.length > 0 && filteredChannels.every(channel =>
                         selectedChannels.includes(channel.id) || !channel.is_bot_member
                       )}
                       isIndeterminate={
@@ -602,8 +602,8 @@ const ChannelList: React.FC = () => {
                     <Td colSpan={6} textAlign="center" py={8}>
                       <VStack spacing={4}>
                         <Text color="gray.500">No channels found. You may need to sync channels from Slack first.</Text>
-                        <Button 
-                          colorScheme="purple" 
+                        <Button
+                          colorScheme="purple"
                           size="sm"
                           onClick={syncChannels}
                           isLoading={isSyncing}
@@ -657,7 +657,7 @@ const ChannelList: React.FC = () => {
               </Tbody>
             </Table>
           </Box>
-          
+
           {/* Pagination */}
           {!isLoading && pagination.total_pages > 1 && (
             <Flex justify="space-between" align="center" mt={6}>
@@ -687,7 +687,7 @@ const ChannelList: React.FC = () => {
               </HStack>
             </Flex>
           )}
-      
+
       {/* Action buttons */}
       <Flex justify="flex-end" mt={8}>
         <HStack spacing={4}>
@@ -709,7 +709,7 @@ const ChannelList: React.FC = () => {
           </Button>
         </HStack>
       </Flex>
-      
+
       {/* Sync status and selected channels summary */}
       <Flex mt={6} gap={4} direction={{ base: 'column', md: 'row' }}>
         {/* Selected channels summary */}
@@ -725,7 +725,7 @@ const ChannelList: React.FC = () => {
             )}
           </Text>
         </Box>
-        
+
         {/* Sync status information */}
         {syncStatus && (
           <Box p={4} borderWidth="1px" borderRadius="md" bg="gray.50" flex="1">
@@ -758,7 +758,7 @@ const ChannelList: React.FC = () => {
           </Box>
         )}
       </Flex>
-      
+
       {/* Bot membership warning dialog */}
       <AlertDialog isOpen={isOpen} leastDestructiveRef={cancelRef} onClose={onClose}>
         <AlertDialogOverlay>
@@ -769,7 +769,7 @@ const ChannelList: React.FC = () => {
 
             <AlertDialogBody>
               <Text mb={4}>
-                Some of your selected channels don't have the Toban bot installed. 
+                Some of your selected channels don't have the Toban bot installed.
                 The bot needs to be in the channel to analyze messages.
               </Text>
               <Text fontWeight="bold" mb={2}>Missing from:</Text>

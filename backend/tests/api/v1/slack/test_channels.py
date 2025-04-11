@@ -1,18 +1,15 @@
-"""
-Tests for Slack channels API.
-"""
+"""Tests for Slack channels API."""
 
 import uuid
 from unittest.mock import MagicMock, patch
 
 import pytest
-from fastapi import BackgroundTasks, FastAPI
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.slack.channels import router as channels_router
 from app.models.slack import SlackChannel, SlackWorkspace
-from app.services.slack.channels import ChannelService
 
 
 @pytest.fixture
@@ -140,13 +137,18 @@ def test_list_channels(mock_workspace, mock_channels):
 
             # Verify the service was called with correct parameters
             mock_get_channels.assert_called_once()
-@pytest.mark.skip(reason="Test needs to be run in isolated environment due to socket connections")
+
+
+@pytest.mark.skip(
+    reason="Test needs to be run in isolated environment due to socket connections"
+)
 def test_sync_channels():
     """Test syncing channels from Slack API."""
     # This test is skipped because it requires complex mocking of FastAPI's BackgroundTasks
     # and the CI environment has issues with socket connections
     # The functionality has been manually verified to work correctly
     pass
+
 
 def test_select_channels_for_analysis(mock_workspace, mock_channels):
     """Test selecting channels for analysis."""

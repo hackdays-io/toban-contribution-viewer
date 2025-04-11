@@ -15,15 +15,16 @@ Run with: pytest -xvs tests/api/v1/slack/test_channels_integration.py
 """
 
 # When running outside Docker but connecting to Docker database
-import os
-
-if "DATABASE_URL" in os.environ and "postgres" in os.environ["DATABASE_URL"]:
-    # Replace internal Docker hostname with localhost
-    os.environ["DATABASE_URL"] = os.environ["DATABASE_URL"].replace("postgres", "localhost")
-
+import asyncio
 import os
 import uuid
 from unittest.mock import patch
+
+if "DATABASE_URL" in os.environ and "postgres" in os.environ["DATABASE_URL"]:
+    # Replace internal Docker hostname with localhost
+    os.environ["DATABASE_URL"] = os.environ["DATABASE_URL"].replace(
+        "postgres", "localhost"
+    )
 
 import pytest
 from fastapi import FastAPI
@@ -35,7 +36,9 @@ from app.models.slack import SlackWorkspace
 from app.services.slack.channels import ChannelService
 
 # Flag to control real API usage - set to True to use actual Slack API
-USE_REAL_SLACK_API = os.environ.get("TEST_USE_REAL_SLACK_API", "false").lower() == "true"
+USE_REAL_SLACK_API = (
+    os.environ.get("TEST_USE_REAL_SLACK_API", "false").lower() == "true"
+)
 # Flag to control real database usage - set to True to use actual database
 USE_REAL_DATABASE = os.environ.get("TEST_USE_REAL_DATABASE", "false").lower() == "true"
 
@@ -73,7 +76,7 @@ async def setup_test_db(test_workspace):
 
     # Get a real database session
     async_session = get_async_session()
-    session = await anext(async_session)
+    session = await asyncio.anext(async_session)
 
     # Check if we're using an existing workspace or need to create one
     if TEST_WORKSPACE_ID:
@@ -84,9 +87,10 @@ async def setup_test_db(test_workspace):
             select(SlackWorkspace).where(SlackWorkspace.id == TEST_WORKSPACE_ID)
         )
         workspace = workspace_result.scalars().first()
-        
         if not workspace:
-            pytest.skip(f"Test workspace with ID {TEST_WORKSPACE_ID} not found in database")
+            pytest.skip(
+                f"Test workspace with ID {TEST_WORKSPACE_ID} not found in database"
+            )
     else:
         # Create a test workspace
         workspace = SlackWorkspace(
@@ -99,7 +103,6 @@ async def setup_test_db(test_workspace):
         )
         session.add(workspace)
         await session.commit()
-        
         # Update the test_workspace dict with the real ID
         test_workspace["id"] = str(workspace.id)
 
@@ -147,7 +150,12 @@ def api_client():
 
 @pytest.mark.asyncio
 @pytest.mark.skipif(
-    not (USE_REAL_SLACK_API and USE_REAL_DATABASE and TEST_WORKSPACE_ID and TEST_SLACK_TOKEN),
+    not (
+        USE_REAL_SLACK_API
+        and USE_REAL_DATABASE
+        and TEST_WORKSPACE_ID
+        and TEST_SLACK_TOKEN
+    ),
     reason="Skipping real API test. Set env vars to run.",
 )
 async def test_list_channels_integration(api_client, setup_test_db, test_workspace):
@@ -174,7 +182,12 @@ async def test_list_channels_integration(api_client, setup_test_db, test_workspa
 
 @pytest.mark.asyncio
 @pytest.mark.skipif(
-    not (USE_REAL_SLACK_API and USE_REAL_DATABASE and TEST_WORKSPACE_ID and TEST_SLACK_TOKEN),
+    not (
+        USE_REAL_SLACK_API
+        and USE_REAL_DATABASE
+        and TEST_WORKSPACE_ID
+        and TEST_SLACK_TOKEN
+    ),
     reason="Skipping real API test. Set env vars to run.",
 )
 async def test_sync_channels_integration(api_client, setup_test_db, test_workspace):
@@ -200,7 +213,12 @@ async def test_sync_channels_integration(api_client, setup_test_db, test_workspa
 
 @pytest.mark.asyncio
 @pytest.mark.skipif(
-    not (USE_REAL_SLACK_API and USE_REAL_DATABASE and TEST_WORKSPACE_ID and TEST_SLACK_TOKEN),
+    not (
+        USE_REAL_SLACK_API
+        and USE_REAL_DATABASE
+        and TEST_WORKSPACE_ID
+        and TEST_SLACK_TOKEN
+    ),
     reason="Skipping real API test. Set env vars to run.",
 )
 async def test_select_channels_integration(api_client, setup_test_db, test_workspace):
@@ -210,26 +228,21 @@ async def test_select_channels_integration(api_client, setup_test_db, test_works
         f"/workspaces/{test_workspace['id']}/channels", params={"page_size": 5}
     )
     assert list_response.status_code == 200
-    
     channels = list_response.json()["channels"]
     if not channels:
         pytest.skip("No channels found to select")
-    
     # Get IDs of channels to select (up to 3)
-    channel_ids = [channel["id"] for channel in channels[:min(3, len(channels))]]
-    
+    channel_ids = [channel["id"] for channel in channels[: min(3, len(channels))]]
     # Make the request to select channels
     response = api_client.post(
         f"/workspaces/{test_workspace['id']}/channels/select",
         json={"channel_ids": channel_ids},
     )
-    
     # Verify the response
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "success"
     assert data["selected_count"] == len(channel_ids)
-    
     # Print some helpful info about the test results
     print(f"Selected {data['selected_count']} channels for analysis")
     for channel in data["selected_channels"]:
@@ -238,53 +251,42 @@ async def test_select_channels_integration(api_client, setup_test_db, test_works
 
 @pytest.mark.asyncio
 async def test_channel_service_direct(setup_test_db, test_workspace):
-    """
-    Direct test of ChannelService without going through API endpoints.
+    """Direct test of ChannelService without going through API endpoints.
+
     This is useful for testing lower-level functionality.
     """
     if not (USE_REAL_SLACK_API and USE_REAL_DATABASE and TEST_SLACK_TOKEN):
         pytest.skip("Skipping real service test. Set env vars to run.")
-    
     from app.db.session import get_async_session
 
     # Get a database session
-    session = await anext(get_async_session())
-    
+    session = await asyncio.anext(get_async_session())
     try:
         # First sync the channels to ensure we have data
         created, updated, total = await ChannelService.sync_channels_from_slack(
             db=session,
             workspace_id=test_workspace["id"],
             limit=10,
-            sync_all_pages=False  # Just sync first page for speed
+            sync_all_pages=False,  # Just sync first page for speed
         )
-        
-        print(f"Service test - Synced channels: {total} total, {created} created, {updated} updated")
-        
+        print(
+            f"Service test - Synced channels: {total} total, {created} created, {updated} updated"
+        )
         # Now get the list of channels
         result = await ChannelService.get_channels_for_workspace(
-            db=session,
-            workspace_id=test_workspace["id"],
-            page=1,
-            page_size=5
+            db=session, workspace_id=test_workspace["id"], page=1, page_size=5
         )
-        
         channels = result["channels"]
         print(f"Service test - Retrieved {len(channels)} channels")
-        
         if channels:
             # Select the first channel for analysis
             channel_ids = [channels[0]["id"]]
             select_result = await ChannelService.select_channels_for_analysis(
-                db=session,
-                workspace_id=test_workspace["id"],
-                channel_ids=channel_ids
+                db=session, workspace_id=test_workspace["id"], channel_ids=channel_ids
             )
-            
             print(f"Service test - Selected {select_result['selected_count']} channels")
             assert select_result["selected_count"] == 1
             assert select_result["selected_channels"][0]["id"] == channel_ids[0]
-    
     finally:
         await session.close()
 
@@ -294,7 +296,6 @@ if __name__ == "__main__":
     # Set flags for real connections
     os.environ["TEST_USE_REAL_SLACK_API"] = "true"
     os.environ["TEST_USE_REAL_DATABASE"] = "true"
-    
     # Check for required environment variables
     if not TEST_WORKSPACE_ID:
         print("ERROR: TEST_WORKSPACE_ID environment variable must be set")
@@ -302,7 +303,7 @@ if __name__ == "__main__":
     if not TEST_SLACK_TOKEN:
         print("ERROR: TEST_SLACK_TOKEN environment variable must be set")
         exit(1)
-    
     # Run pytest with verbose output
     import sys
+
     sys.exit(pytest.main(["-xvs", __file__]))
