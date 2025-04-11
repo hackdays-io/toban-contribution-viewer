@@ -17,6 +17,10 @@ This guide explains how to set up and test the Slack OAuth integration in the To
    - `channels:read`
    - `groups:history`
    - `groups:read`
+   - `im:history`
+   - `im:read`
+   - `mpim:history`
+   - `mpim:read`
    - `reactions:read`
    - `users:read`
    - `users.profile:read`

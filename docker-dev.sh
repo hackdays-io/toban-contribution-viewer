@@ -63,14 +63,14 @@ start_dev() {
 # Stop the development environment
 stop_dev() {
   print_message "Stopping development environment..."
-  docker compose down
+  docker compose --env-file .env.docker down
   print_message "Development environment stopped."
 }
 
 # Restart the development environment
 restart_dev() {
   print_message "Restarting development environment..."
-  docker compose restart
+  docker compose --env-file .env.docker restart
   print_message "Development environment restarted."
 }
 
