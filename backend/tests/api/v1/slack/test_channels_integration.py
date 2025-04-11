@@ -7,8 +7,18 @@ To run these tests, you need:
 2. Proper environment variables set
 3. A test database
 
+Note: To run these tests from outside Docker while using the Docker database,
+      you will need to modify the DATABASE_URL environment variable to use the
+      exposed port (typically 5432) on localhost instead of the internal Docker network.
+
 Run with: pytest -xvs tests/api/v1/slack/test_channels_integration.py
 """
+
+# When running outside Docker but connecting to Docker database
+import os
+if "DATABASE_URL" in os.environ and "postgres" in os.environ["DATABASE_URL"]:
+    # Replace internal Docker hostname with localhost
+    os.environ["DATABASE_URL"] = os.environ["DATABASE_URL"].replace("postgres", "localhost")
 
 import os
 import uuid
@@ -170,10 +180,10 @@ async def test_list_channels_integration(api_client, setup_test_db, test_workspa
 )
 async def test_sync_channels_integration(api_client, setup_test_db, test_workspace):
     """Integration test for syncing channels with real API and database."""
-    # Make the request to sync channels
+    # Make the request to sync channels - use valid parameters
     response = api_client.post(
         f"/workspaces/{test_workspace['id']}/channels/sync",
-        params={"limit": 20, "sync_all_pages": 1},
+        params={"limit": 100, "sync_all_pages": 1},  # limit must be >= 100
     )
 
     # Verify the response
