@@ -103,7 +103,7 @@ async def schedule_background_tasks():
             try:
                 # Create a new async session using the factory
                 from app.db.session import AsyncSessionLocal
-                
+
                 # Run maintenance tasks with a new session
                 async with AsyncSessionLocal() as db:
                     # Verify tokens and update metadata
