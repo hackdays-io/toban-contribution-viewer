@@ -10,7 +10,7 @@ from fastapi import Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.session import engine, get_async_db
+from app.db.session import get_async_db
 from app.models.slack import SlackWorkspace
 from app.services.slack.workspace import WorkspaceService
 
@@ -106,7 +106,10 @@ async def schedule_background_tasks():
         while True:
             try:
                 # Get a new DB session
-                async with AsyncSession(engine) as db:
+                # Make sure we use the AsyncEngine, not Engine
+                from sqlalchemy.ext.asyncio import create_async_session
+                from app.db.session import get_async_db
+                async for db in get_async_db():
                     # Run token verification every 6 hours
                     await verify_all_tokens(db)
                     

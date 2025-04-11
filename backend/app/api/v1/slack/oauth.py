@@ -322,6 +322,9 @@ async def verify_workspace_token(
         Dictionary with verification status
     """
     try:
+        # Log the verification attempt
+        logger.info(f"Verifying workspace token for workspace ID: {workspace_id}")
+        
         # Check if workspace exists
         result = await db.execute(
             select(SlackWorkspace).where(SlackWorkspace.id == workspace_id)
@@ -329,14 +332,44 @@ async def verify_workspace_token(
         workspace = result.scalars().first()
         
         if not workspace:
+            logger.error(f"Workspace not found: {workspace_id}")
             raise HTTPException(status_code=404, detail="Workspace not found")
         
+        logger.info(f"Found workspace: {workspace.name} (slack_id: {workspace.slack_id})")
+        logger.info(f"Current connection status: {workspace.connection_status}, is_connected: {workspace.is_connected}")
+        logger.info(f"Access token exists: {bool(workspace.access_token)}")
+        
         # Verify the token
+        logger.info(f"Verifying token for workspace {workspace.name}")
         results = await WorkspaceService.verify_workspace_tokens(db, workspace_id)
+        
+        # Log verification results
+        if results:
+            logger.info(f"Token verification results: {results}")
+        else:
+            logger.error("No verification results returned")
         
         if results and results[0]["status"] == "verified":
             # If token is valid, update workspace metadata
-            await WorkspaceService.update_workspace_metadata(db, workspace)
+            logger.info(f"Token verified successfully. Updating metadata for {workspace.name}")
+            try:
+                await WorkspaceService.update_workspace_metadata(db, workspace)
+                logger.info(f"Metadata updated for {workspace.name}. Icon URL: {workspace.icon_url}, Team size: {workspace.team_size}")
+            except Exception as e:
+                logger.error(f"Error updating metadata: {str(e)}")
+                return {
+                    "status": "warning",
+                    "message": f"Token verified but error updating metadata: {str(e)}",
+                    "workspace": {
+                        "id": str(workspace.id),
+                        "name": workspace.name,
+                        "domain": workspace.domain,
+                        "icon_url": workspace.icon_url,
+                        "team_size": workspace.team_size,
+                        "is_connected": workspace.is_connected,
+                        "connection_status": workspace.connection_status,
+                    }
+                }
             
             return {
                 "status": "success",
@@ -345,7 +378,7 @@ async def verify_workspace_token(
                     "id": str(workspace.id),
                     "name": workspace.name,
                     "domain": workspace.domain,
-                    "icon_url": workspace.icon_url,
+                    "icon_url": workspace.icon_url, 
                     "team_size": workspace.team_size,
                     "is_connected": workspace.is_connected,
                     "connection_status": workspace.connection_status,
@@ -353,9 +386,15 @@ async def verify_workspace_token(
             }
         else:
             # Return the verification result
+            error_message = "Token verification failed"
+            if results and len(results) > 0:
+                error_message = results[0]["message"]
+                
+            logger.error(f"Token verification failed: {error_message}")
+            
             return {
                 "status": "error",
-                "message": results[0]["message"] if results else "Token verification failed",
+                "message": error_message,
                 "workspace": {
                     "id": str(workspace.id),
                     "name": workspace.name,
