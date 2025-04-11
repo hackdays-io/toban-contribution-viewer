@@ -105,11 +105,11 @@ async def schedule_background_tasks():
     try:
         while True:
             try:
-                # Get a new DB session
-                # Make sure we use the AsyncEngine, not Engine
-                from sqlalchemy.ext.asyncio import create_async_session
-                from app.db.session import get_async_db
-                async for db in get_async_db():
+                # Get a new DB session using the factory
+                from app.db.session import AsyncSessionLocal
+                
+                # Create a new async session using the factory
+                async with AsyncSessionLocal() as db:
                     # Run token verification every 6 hours
                     await verify_all_tokens(db)
                     
