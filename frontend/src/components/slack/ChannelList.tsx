@@ -158,7 +158,11 @@ const ChannelList: React.FC = () => {
       
       const data: ChannelResponse = await response.json();
       setChannels(data.channels);
-      setPagination(data.pagination);
+      setPagination(prevPagination => ({
+        ...prevPagination,
+        total_items: data.pagination.total_items,
+        total_pages: data.pagination.total_pages,
+      }));
       
       // Initialize selected channels from those marked in the API
       const preselected = data.channels
@@ -191,7 +195,9 @@ const ChannelList: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [workspaceId, pagination, includeArchived, toast, getTypeFilters]);
+  // We only depend on page, typeFilter, and includeArchived from state
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workspaceId, pagination.page, pagination.page_size, includeArchived, typeFilter, toast]);
 
   // Function to check sync status
   const checkSyncStatus = async () => {
@@ -216,8 +222,9 @@ const ChannelList: React.FC = () => {
       
       // Detect sync state changes
       if (data.is_syncing) {
-        // If we're syncing, update UI and poll again
-        setTimeout(checkSyncStatus, 5000);
+        // If we're syncing, update UI and poll again, but with a longer interval
+        // to reduce unnecessary requests
+        setTimeout(checkSyncStatus, 10000);
         if (!isSyncing) {
           setIsSyncing(true);
         }
@@ -229,7 +236,7 @@ const ChannelList: React.FC = () => {
           // Reset syncing state
           setIsSyncing(false);
           
-          // Refresh the channel list
+          // Refresh the channel list only if we actually completed syncing
           await fetchChannels();
           
           // Show completion notification
@@ -255,7 +262,10 @@ const ChannelList: React.FC = () => {
   // Fetch channels when component loads or filters change
   useEffect(() => {
     fetchChannels();
-  }, [pagination.page, typeFilter, includeArchived, workspaceId, fetchChannels]);
+    // Adding pagination.page as a log to see if this is getting called too often
+    console.log("Fetching channels for page", pagination.page);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pagination.page, typeFilter, includeArchived, workspaceId]);
 
   // Check sync status on load and when syncing status changes
   useEffect(() => {
