@@ -328,6 +328,15 @@ const WorkspaceList: React.FC = () => {
               <HStack spacing={4} mt={4}>
                 <Button
                   size="sm"
+                  variant="solid"
+                  colorScheme="purple"
+                  as={Link}
+                  to={`/dashboard/slack/workspaces/${workspace.id}/channels`}
+                >
+                  Select Channels
+                </Button>
+                <Button
+                  size="sm"
                   variant="outline"
                   colorScheme="purple"
                   leftIcon={<Icon as={FiRefreshCw} />}
