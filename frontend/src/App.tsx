@@ -76,6 +76,14 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="/dashboard/slack/workspaces/:workspaceId"
+                element={
+                  <ProtectedRoute>
+                    <SlackWorkspacesPage />
+                  </ProtectedRoute>
+                }
+              />
             </Routes>
           </Container>
         </AuthProvider>
