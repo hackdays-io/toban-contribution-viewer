@@ -113,76 +113,6 @@ const ChannelList: React.FC = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const cancelRef = React.useRef<HTMLButtonElement>(null);
 
-  // Fetch channels when component loads or filters change
-  useEffect(() => {
-    fetchChannels();
-  }, [pagination.page, typeFilter, includeArchived, workspaceId, fetchChannels]);
-
-  // Function to check sync status
-  const checkSyncStatus = async () => {
-    if (!workspaceId) return;
-
-    try {
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/slack/workspaces/${workspaceId}/sync-status`
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch sync status');
-      }
-
-      const data = await response.json();
-      const previousStatus = syncStatus;
-      setSyncStatus(data);
-
-      console.log("Sync status check:", data.is_syncing ? "SYNCING" : "NOT SYNCING",
-        "Workspace status:", data.workspace_status,
-        "Channel count:", data.channel_count);
-
-      // Detect sync state changes
-      if (data.is_syncing) {
-        // If we're syncing, update UI and poll again
-        setTimeout(checkSyncStatus, 5000);
-        if (!isSyncing) {
-          setIsSyncing(true);
-        }
-      } else {
-        // If sync has completed (we were syncing but now we're not)
-        const wasSyncing = isSyncing || (previousStatus && previousStatus.is_syncing);
-
-        if (wasSyncing) {
-          // Reset syncing state
-          setIsSyncing(false);
-
-          // Refresh the channel list
-          await fetchChannels();
-
-          // Show completion notification
-          toast({
-            title: 'Channel Sync Completed',
-            description: `Successfully synced ${data.channel_count} channels.`,
-            status: 'success',
-            duration: 5000,
-            isClosable: true,
-          });
-        } else {
-          // Not syncing, just update state silently
-          setIsSyncing(false);
-        }
-      }
-    } catch (error) {
-      console.error('Error checking sync status:', error);
-      // On error, reset syncing state to be safe
-      setIsSyncing(false);
-    }
-  };
-
-  // Check sync status on load and when syncing status changes
-  useEffect(() => {
-    checkSyncStatus();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [workspaceId]);
-
   // Convert type filter to API parameter
   const getTypeFilters = useCallback((): string[] | null => {
     switch(typeFilter) {
@@ -203,38 +133,38 @@ const ChannelList: React.FC = () => {
    */
   const fetchChannels = useCallback(async () => {
     if (!workspaceId) return;
-
+    
     setIsLoading(true);
-
+    
     try {
       const queryParams = new URLSearchParams({
         page: pagination.page.toString(),
         page_size: pagination.page_size.toString(),
         include_archived: includeArchived.toString(),
       });
-
+      
       const typeFilters = getTypeFilters();
       if (typeFilters) {
         typeFilters.forEach(type => queryParams.append('types', type));
       }
-
+      
       const response = await fetch(
         `${import.meta.env.VITE_API_URL}/slack/workspaces/${workspaceId}/channels?${queryParams}`
       );
-
+      
       if (!response.ok) {
         throw new Error('Failed to fetch channels');
       }
-
+      
       const data: ChannelResponse = await response.json();
       setChannels(data.channels);
       setPagination(data.pagination);
-
+      
       // Initialize selected channels from those marked in the API
       const preselected = data.channels
         .filter(channel => channel.is_selected_for_analysis)
         .map(channel => channel.id);
-
+      
       if (pagination.page === 1) {
         setSelectedChannels(preselected);
       } else {
@@ -263,14 +193,84 @@ const ChannelList: React.FC = () => {
     }
   }, [workspaceId, pagination, includeArchived, toast, getTypeFilters]);
 
+  // Function to check sync status
+  const checkSyncStatus = async () => {
+    if (!workspaceId) return;
+    
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/slack/workspaces/${workspaceId}/sync-status`
+      );
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch sync status');
+      }
+      
+      const data = await response.json();
+      const previousStatus = syncStatus;
+      setSyncStatus(data);
+      
+      console.log("Sync status check:", data.is_syncing ? "SYNCING" : "NOT SYNCING",
+        "Workspace status:", data.workspace_status,
+        "Channel count:", data.channel_count);
+      
+      // Detect sync state changes
+      if (data.is_syncing) {
+        // If we're syncing, update UI and poll again
+        setTimeout(checkSyncStatus, 5000);
+        if (!isSyncing) {
+          setIsSyncing(true);
+        }
+      } else {
+        // If sync has completed (we were syncing but now we're not)
+        const wasSyncing = isSyncing || (previousStatus && previousStatus.is_syncing);
+        
+        if (wasSyncing) {
+          // Reset syncing state
+          setIsSyncing(false);
+          
+          // Refresh the channel list
+          await fetchChannels();
+          
+          // Show completion notification
+          toast({
+            title: 'Channel Sync Completed',
+            description: `Successfully synced ${data.channel_count} channels.`,
+            status: 'success',
+            duration: 5000,
+            isClosable: true,
+          });
+        } else {
+          // Not syncing, just update state silently
+          setIsSyncing(false);
+        }
+      }
+    } catch (error) {
+      console.error('Error checking sync status:', error);
+      // On error, reset syncing state to be safe
+      setIsSyncing(false);
+    }
+  };
+
+  // Fetch channels when component loads or filters change
+  useEffect(() => {
+    fetchChannels();
+  }, [pagination.page, typeFilter, includeArchived, workspaceId, fetchChannels]);
+
+  // Check sync status on load and when syncing status changes
+  useEffect(() => {
+    checkSyncStatus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workspaceId]);
+
   /**
    * Sync channels from Slack API with background processing and polling
    */
   const syncChannels = async () => {
     if (!workspaceId) return;
-
+    
     setIsSyncing(true);
-
+    
     try {
       // Show initial toast to indicate sync started
       toast({
@@ -280,20 +280,20 @@ const ChannelList: React.FC = () => {
         duration: 5000,
         isClosable: true,
       });
-
+      
       // Use query parameters for the endpoint
       const queryParams = new URLSearchParams({
         limit: '1000', // Maximum limit for efficiency
         sync_all_pages: '1', // Use 1 instead of true
         batch_size: '200', // Process in batches of 200 channels
       });
-
+      
       // Start the background sync process
       const response = await fetch(
         `${import.meta.env.VITE_API_URL}/slack/workspaces/${workspaceId}/channels/sync?${queryParams}`,
         { method: 'POST' }
       );
-
+      
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         if (errorData.detail && errorData.detail.includes('missing_scope')) {
@@ -302,9 +302,9 @@ const ChannelList: React.FC = () => {
           throw new Error(errorData.detail || 'Failed to sync channels');
         }
       }
-
+      
       const data: SyncResponse = await response.json();
-
+      
       // Show a toast indicating background processing started
       toast({
         title: 'Channel Sync Started',
@@ -313,13 +313,13 @@ const ChannelList: React.FC = () => {
         duration: 7000,
         isClosable: true,
       });
-
+      
       // Start checking sync status instead of simple polling
       checkSyncStatus();
-
+      
       // Don't set isSyncing to false here, as we want to keep the syncing indicator
       // while the background process and polling are running
-
+      
     } catch (error) {
       console.error('Error syncing channels:', error);
       toast({
@@ -332,25 +332,25 @@ const ChannelList: React.FC = () => {
       setIsSyncing(false);
     }
   };
-
+  
   /**
    * Save selected channels for analysis
    */
   const saveSelectedChannels = async () => {
     if (!workspaceId) return;
-
+    
     // Check if any selected channels don't have bot membership
     const nonMemberChannels = channels.filter(
       channel => selectedChannels.includes(channel.id) && !channel.is_bot_member
     );
-
+    
     if (nonMemberChannels.length > 0) {
       onOpen(); // Open alert dialog
       return;
     }
-
+    
     setIsSaving(true);
-
+    
     try {
       const response = await fetch(
         `${import.meta.env.VITE_API_URL}/slack/workspaces/${workspaceId}/channels/select`,
@@ -364,13 +364,13 @@ const ChannelList: React.FC = () => {
           }),
         }
       );
-
+      
       if (!response.ok) {
         throw new Error('Failed to save channel selection');
       }
-
+      
       const data = await response.json();
-
+      
       toast({
         title: 'Channels Selected',
         description: `Selected ${data.selected_count} channels for analysis`,
@@ -378,7 +378,7 @@ const ChannelList: React.FC = () => {
         duration: 5000,
         isClosable: true,
       });
-
+      
       // Navigate to the next step
       navigate(`/dashboard/slack/workspaces/${workspaceId}`);
     } catch (error) {
@@ -394,7 +394,7 @@ const ChannelList: React.FC = () => {
       setIsSaving(false);
     }
   };
-
+  
   /**
    * Handle channel selection
    */
@@ -407,7 +407,7 @@ const ChannelList: React.FC = () => {
       }
     });
   };
-
+  
   /**
    * Handle bulk selection
    */
@@ -417,7 +417,7 @@ const ChannelList: React.FC = () => {
       const selectableChannels = channels
         .filter(channel => channel.is_supported && channel.is_bot_member)
         .map(channel => channel.id);
-
+      
       setSelectedChannels(prev => {
         const newSelection = [...prev];
         selectableChannels.forEach(id => {
@@ -433,7 +433,7 @@ const ChannelList: React.FC = () => {
       setSelectedChannels(prev => prev.filter(id => !currentPageIds.includes(id)));
     }
   };
-
+  
   /**
    * Filter channels by search term
    */
@@ -442,7 +442,7 @@ const ChannelList: React.FC = () => {
     return channel.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
            channel.purpose.toLowerCase().includes(searchTerm.toLowerCase());
   });
-
+  
   /**
    * Change page
    */
@@ -454,7 +454,7 @@ const ChannelList: React.FC = () => {
       });
     }
   };
-
+  
   /**
    * Format channel type for display
    */
@@ -472,7 +472,7 @@ const ChannelList: React.FC = () => {
         return type;
     }
   };
-
+  
   /**
    * Get color for channel type badge
    */
@@ -489,7 +489,7 @@ const ChannelList: React.FC = () => {
         return 'gray';
     }
   };
-
+  
   return (
     <Box p={6} maxWidth="1200px" mx="auto">
       <HStack justifyContent="space-between" mb={6}>
