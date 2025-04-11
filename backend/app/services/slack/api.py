@@ -179,10 +179,17 @@ class SlackApiClient:
         """
         try:
             # Call a simple API endpoint that requires authentication
-            await self._make_request("GET", "auth.test")
+            logger.info(f"Calling auth.test API with token: {self.access_token[:5]}...")
+            response = await self._make_request("GET", "auth.test")
+            logger.info(f"Token verification successful: {response}")
             return True
         except SlackApiError as e:
+            logger.error(f"Token verification failed: {e.error_code} - {e.message}")
             if e.error_code in ["invalid_auth", "token_expired"]:
                 return False
             # For other errors, the token might still be valid
+            raise
+        except Exception as e:
+            logger.error(f"Unexpected error during token verification: {str(e)}")
+            # Re-raise the exception to be handled by the caller
             raise

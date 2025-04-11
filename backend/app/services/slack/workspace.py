@@ -74,7 +74,19 @@ class WorkspaceService:
             # Update workspace with fetched data
             workspace.name = team_info.get("name", workspace.name)
             workspace.domain = team_info.get("domain", workspace.domain)
-            workspace.icon_url = team_info.get("icon", {}).get("image_132", None)
+            
+            # Get the icon URL - try different sizes if the standard one isn't available
+            icon_data = team_info.get("icon", {})
+            # Log the available icon data for debugging
+            logger.info(f"Workspace icon data: {icon_data}")
+            
+            # Try different icon sizes in order of preference
+            for size in ["image_132", "image_230", "image_88", "image_68", "image_44", "image_34"]:
+                if size in icon_data and icon_data[size]:
+                    workspace.icon_url = icon_data[size]
+                    logger.info(f"Using icon size {size}: {workspace.icon_url}")
+                    break
+            
             workspace.team_size = user_count
             
             # Store additional metadata
@@ -145,11 +157,14 @@ class WorkspaceService:
                 if not workspace.access_token:
                     verification_result["status"] = "error"
                     verification_result["message"] = "No access token"
+                    results.append(verification_result)
                     continue
                 
                 # Create client and verify token
+                logger.info(f"Verifying token for workspace {workspace.id} ({workspace.name})")
                 client = SlackApiClient(workspace.access_token)
                 is_valid = await client.verify_token()
+                logger.info(f"Token verification result for workspace {workspace.id}: {is_valid}")
                 
                 if not is_valid:
                     # Update workspace status

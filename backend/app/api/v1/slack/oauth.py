@@ -187,6 +187,10 @@ async def slack_oauth_callback(
         team_name = oauth_response.team["name"]
         team_domain = oauth_response.team.get("domain", "")
         
+        # Log OAuth response data for debugging
+        logger.info(f"OAuth response for workspace {team_name}: ID={team_id}, domain={team_domain}")
+        logger.info(f"Access token received (first 5 chars): {oauth_response.access_token[:5]}")
+        
         # Check if workspace already exists
         result = await db.execute(
             select(SlackWorkspace).where(SlackWorkspace.slack_id == team_id)
