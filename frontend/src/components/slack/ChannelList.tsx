@@ -102,8 +102,9 @@ const ChannelList: React.FC = () => {
   const toast = useToast();
 
   // State for channels and loading
-  const [channels, setChannels] = useState<Channel[]>([]);
+  const [allChannels, setAllChannels] = useState<Channel[]>([]); // Store all channels fetched from API
   const [selectedChannels, setSelectedChannels] = useState<string[]>([]);
+  // Client-side pagination state
   const [pagination, setPagination] = useState<PaginationInfo>({
     page: 1,
     page_size: 50,
@@ -136,40 +137,32 @@ const ChannelList: React.FC = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const cancelRef = React.useRef<HTMLButtonElement>(null);
 
-  // Convert type filter to API parameter
-  const getTypeFilters = useCallback((): string[] | null => {
-    switch(typeFilter) {
-      case 'public':
-        return ['public'];
-      case 'private':
-        return ['private'];
-      case 'direct':
-        return ['im', 'mpim'];
-      case 'all':
-      default:
-        return null;
-    }
-  }, [typeFilter]);
+  // No longer needed - we're handling filtering client-side
 
   /**
-   * Fetch channels from the API
+   * Fetch channels from the API - gets all channels at once for client-side filtering
    */
   const fetchChannels = useCallback(async () => {
     if (!workspaceId) return;
 
     setIsLoading(true);
+    
+    console.log("Fetching all channels for client-side filtering");
 
     try {
+      // Request all channels in one go with a large page size
+      // No pagination or filtering params - we'll handle everything client-side
       const queryParams = new URLSearchParams({
-        page: pagination.page.toString(),
-        page_size: pagination.page_size.toString(),
-        include_archived: includeArchived.toString(),
+        page: '1',
+        page_size: '1000', // Get up to 1000 channels at once
+        include_archived: 'true', // Always include archived, we'll filter client-side
       });
-
-      const typeFilters = getTypeFilters();
-      if (typeFilters) {
-        typeFilters.forEach(type => queryParams.append('types', type));
-      }
+      
+      // Always request all channel types and filter client-side
+      const allChannelTypes = ['public', 'private', 'im', 'mpim'];
+      allChannelTypes.forEach(type => queryParams.append('types', type));
+      
+      console.log("Fetching all channels:", queryParams.toString());
 
       const response = await fetch(
         `${import.meta.env.VITE_API_URL}/slack/workspaces/${workspaceId}/channels?${queryParams}`
@@ -180,11 +173,14 @@ const ChannelList: React.FC = () => {
       }
 
       const data: ChannelResponse = await response.json();
-      setChannels(data.channels);
+      setAllChannels(data.channels);
+      
+      // Set total items based on all channels retrieved
       setPagination(prevPagination => ({
         ...prevPagination,
-        total_items: data.pagination.total_items,
-        total_pages: data.pagination.total_pages,
+        page: 1, // Reset to page 1 when fetching channels
+        total_items: data.channels.length,
+        total_pages: Math.ceil(data.channels.length / prevPagination.page_size),
       }));
 
       // Initialize selected channels from those marked in the API
@@ -192,20 +188,7 @@ const ChannelList: React.FC = () => {
         .filter(channel => channel.is_selected_for_analysis)
         .map(channel => channel.id);
 
-      if (pagination.page === 1) {
-        setSelectedChannels(preselected);
-      } else {
-        // When paginating, merge with existing selections
-        setSelectedChannels(prev => {
-          const newSelections = [...prev];
-          preselected.forEach(id => {
-            if (!newSelections.includes(id)) {
-              newSelections.push(id);
-            }
-          });
-          return newSelections;
-        });
-      }
+      setSelectedChannels(preselected);
     } catch (error) {
       console.error('Error fetching channels:', error);
       toast({
@@ -282,13 +265,12 @@ const ChannelList: React.FC = () => {
     }
   };
 
-  // Fetch channels when component loads or filters change
+  // Fetch channels only once when component loads
   useEffect(() => {
     fetchChannels();
-    // Adding pagination.page as a log to see if this is getting called too often
-    console.log("Fetching channels for page", pagination.page);
+    console.log("Initial channel fetch on component mount");
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pagination.page, typeFilter, includeArchived, workspaceId]);
+  }, [workspaceId]);
 
   // Check sync status on load and when syncing status changes
   useEffect(() => {
@@ -373,7 +355,7 @@ const ChannelList: React.FC = () => {
     if (!workspaceId) return;
 
     // Check if any selected channels don't have bot membership
-    const nonMemberChannels = channels.filter(
+    const nonMemberChannels = allChannels.filter(
       channel => selectedChannels.includes(channel.id) && !channel.is_bot_member
     );
 
@@ -459,14 +441,16 @@ const ChannelList: React.FC = () => {
   };
 
   /**
-   * Handle bulk selection
+   * Handle bulk selection - only selects/deselects visible channels on the current page
    */
   const handleSelectAll = (select: boolean) => {
     if (select) {
       // Select all visible channels on this page that are supported
-      const selectableChannels = channels
+      const selectableChannels = paginatedChannels
         .filter(channel => channel.is_supported)
         .map(channel => channel.id);
+        
+      console.log(`Selecting ${selectableChannels.length} channels on current page`);
 
       setSelectedChannels(prev => {
         const newSelection = [...prev];
@@ -479,29 +463,88 @@ const ChannelList: React.FC = () => {
       });
     } else {
       // Unselect all visible channels on this page
-      const currentPageIds = channels.map(channel => channel.id);
+      const currentPageIds = paginatedChannels.map(channel => channel.id);
+      console.log(`Unselecting ${currentPageIds.length} channels on current page`);
       setSelectedChannels(prev => prev.filter(id => !currentPageIds.includes(id)));
     }
   };
 
   /**
-   * Filter channels by search term
+   * Apply all filtering and pagination client-side
    */
-  const filteredChannels = channels.filter(channel => {
-    if (searchTerm === '') return true;
-    return channel.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-           channel.purpose.toLowerCase().includes(searchTerm.toLowerCase());
+  const normalizedSearchTerm = searchTerm.trim().toLowerCase();
+  
+  // STEP 1: Apply all filters to allChannels
+  const filteredChannels = allChannels.filter(channel => {
+    // Filter by search term (if any)
+    if (normalizedSearchTerm !== '') {
+      const channelName = channel.name.toLowerCase();
+      if (!channelName.includes(normalizedSearchTerm)) {
+        return false;
+      }
+    }
+    
+    // Filter by channel type (if not "all")
+    if (typeFilter !== 'all') {
+      if (typeFilter === 'public' && channel.type !== 'public') return false;
+      if (typeFilter === 'private' && channel.type !== 'private') return false;
+      if (typeFilter === 'direct' && !['im', 'mpim'].includes(channel.type)) return false;
+    }
+    
+    // Filter by archived status
+    if (!includeArchived && channel.is_archived) {
+      return false;
+    }
+    
+    // Channel passed all filters
+    return true;
   });
+  
+  // Debug logging
+  console.log("Client-side filtering results:", {
+    totalChannels: allChannels.length,
+    filteredChannels: filteredChannels.length,
+    searchTerm: normalizedSearchTerm || '(none)',
+    typeFilter,
+    includeArchived
+  });
+  
+  // STEP 2: Calculate pagination based on filtered results
+  const pageSize = pagination.page_size;
+  const totalFilteredItems = filteredChannels.length;
+  const totalFilteredPages = Math.max(1, Math.ceil(totalFilteredItems / pageSize));
+  
+  // Ensure current page is valid for the filtered results
+  let currentPage = pagination.page;
+  if (currentPage > totalFilteredPages) {
+    currentPage = 1;
+    // Reset pagination to page 1 if the current page is invalid
+    if (pagination.page !== 1) {
+      setPagination(prev => ({
+        ...prev,
+        page: 1
+      }));
+    }
+  }
+  
+  // STEP 3: Get only the channels for the current page
+  const paginatedChannels = filteredChannels.slice(
+    (currentPage - 1) * pageSize, 
+    currentPage * pageSize
+  );
 
   /**
-   * Change page
+   * Change page - now handles all pagination client-side
    */
   const changePage = (newPage: number) => {
-    if (newPage >= 1 && newPage <= pagination.total_pages) {
-      setPagination({
-        ...pagination,
+    console.log(`Changing page to ${newPage} (current: ${pagination.page}, totalPages: ${totalFilteredPages})`);
+    
+    // Simple client-side page change
+    if (newPage >= 1 && newPage <= totalFilteredPages) {
+      setPagination(prev => ({
+        ...prev,
         page: newPage,
-      });
+      }));
     }
   };
 
@@ -571,14 +614,30 @@ const ChannelList: React.FC = () => {
             <Input
               placeholder="Search channels..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                // Reset to page 1 when changing search term
+                if (e.target.value !== searchTerm) {
+                  setPagination(prev => ({
+                    ...prev,
+                    page: 1
+                  }));
+                }
+                setSearchTerm(e.target.value);
+              }}
             />
           </InputGroup>
 
           <Select
             maxW="180px"
             value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value)}
+            onChange={(e) => {
+              // Reset to page 1 when changing type filter
+              setPagination(prev => ({
+                ...prev,
+                page: 1
+              }));
+              setTypeFilter(e.target.value);
+            }}
           >
             <option value="all">All Types</option>
             <option value="public">Public</option>
@@ -588,7 +647,14 @@ const ChannelList: React.FC = () => {
 
           <Checkbox
             isChecked={includeArchived}
-            onChange={(e) => setIncludeArchived(e.target.checked)}
+            onChange={(e) => {
+              // Reset to page 1 when changing archive filter
+              setPagination(prev => ({
+                ...prev,
+                page: 1
+              }));
+              setIncludeArchived(e.target.checked);
+            }}
           >
             Include Archived
           </Checkbox>
@@ -624,12 +690,12 @@ const ChannelList: React.FC = () => {
             <Tr>
                   <Th width="50px">
                     <Checkbox
-                      isChecked={filteredChannels.length > 0 && filteredChannels.every(channel =>
+                      isChecked={paginatedChannels.length > 0 && paginatedChannels.every(channel =>
                         selectedChannels.includes(channel.id)
                       )}
                       isIndeterminate={
-                        filteredChannels.some(channel => selectedChannels.includes(channel.id)) &&
-                        !filteredChannels.every(channel => selectedChannels.includes(channel.id))
+                        paginatedChannels.some(channel => selectedChannels.includes(channel.id)) &&
+                        !paginatedChannels.every(channel => selectedChannels.includes(channel.id))
                       }
                       onChange={(e) => handleSelectAll(e.target.checked)}
                     />
@@ -648,7 +714,7 @@ const ChannelList: React.FC = () => {
                       <Spinner size="md" color="purple.500" />
                     </Td>
                   </Tr>
-                ) : filteredChannels.length === 0 ? (
+                ) : paginatedChannels.length === 0 ? (
                   <Tr>
                     <Td colSpan={6} textAlign="center" py={8}>
                       <VStack spacing={4}>
@@ -666,7 +732,7 @@ const ChannelList: React.FC = () => {
                     </Td>
                   </Tr>
                 ) : (
-                  filteredChannels.map(channel => (
+                  paginatedChannels.map(channel => (
                     <Tr key={channel.id}>
                       <Td>
                         <Checkbox
@@ -708,28 +774,30 @@ const ChannelList: React.FC = () => {
             </Table>
           </Box>
 
-          {/* Pagination */}
-          {!isLoading && pagination.total_pages > 1 && (
+          {/* Pagination - simplified for client-side only */}
+          {!isLoading && totalFilteredPages > 1 && (
             <Flex justify="space-between" align="center" mt={6}>
               <Text color="gray.600">
-                Showing {(pagination.page - 1) * pagination.page_size + 1} to{' '}
-                {Math.min(pagination.page * pagination.page_size, pagination.total_items)} of{' '}
-                {pagination.total_items} channels
+                Showing {filteredChannels.length === 0 ? 0 : (currentPage - 1) * pageSize + 1} to{' '}
+                {Math.min(currentPage * pageSize, totalFilteredItems)} of{' '}
+                {totalFilteredItems} channels
               </Text>
               <HStack>
                 <Button
                   leftIcon={<Icon as={FiArrowLeft} />}
-                  onClick={() => changePage(pagination.page - 1)}
-                  isDisabled={pagination.page === 1}
+                  onClick={() => changePage(currentPage - 1)}
+                  isDisabled={currentPage === 1}
                   size="sm"
                 >
                   Previous
                 </Button>
-                <Text>{pagination.page} of {pagination.total_pages}</Text>
+                <Text>
+                  {currentPage} of {totalFilteredPages}
+                </Text>
                 <Button
                   rightIcon={<Icon as={FiArrowRight} />}
-                  onClick={() => changePage(pagination.page + 1)}
-                  isDisabled={pagination.page === pagination.total_pages}
+                  onClick={() => changePage(currentPage + 1)}
+                  isDisabled={currentPage === totalFilteredPages}
                   size="sm"
                 >
                   Next
@@ -824,7 +892,7 @@ const ChannelList: React.FC = () => {
               </Text>
               <Text fontWeight="bold" mb={2}>Missing from:</Text>
               <VStack align="start" spacing={1} pl={4}>
-                {channels
+                {allChannels
                   .filter(channel => selectedChannels.includes(channel.id) && !channel.is_bot_member)
                   .map(channel => (
                     <Text key={channel.id}>#{channel.name}</Text>
