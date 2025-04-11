@@ -147,7 +147,8 @@ const ChannelList: React.FC = () => {
         return ['im', 'mpim'];
       case 'all':
       default:
-        return null;
+        // For "All Types", explicitly request all channel types instead of null
+        return ['public', 'private', 'im', 'mpim'];
     }
   }, [typeFilter]);
 
