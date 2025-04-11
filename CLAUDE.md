@@ -20,7 +20,7 @@
   - 2-space indentation
   - Max line length: 100 characters
   - Imports sorted by module type
-  
+
 - Backend (Python/FastAPI):
   - Follow Black code style
   - Max line length: 120 characters

@@ -72,7 +72,7 @@ const Dashboard: React.FC = () => {
               </Text>
             </Box>
           </TabPanel>
-          
+
           <TabPanel>
             <Box p={4} borderWidth="1px" borderRadius="lg">
               <Heading as="h2" size="md" mb={4}>
@@ -86,7 +86,7 @@ const Dashboard: React.FC = () => {
               </Button>
             </Box>
           </TabPanel>
-          
+
           <TabPanel>
             <Box p={4} borderWidth="1px" borderRadius="lg">
               <Heading as="h2" size="md" mb={4}>
@@ -96,9 +96,9 @@ const Dashboard: React.FC = () => {
                 Connect your Slack workspace to track messages, reactions, and engagement.
               </Text>
               <HStack spacing={4}>
-                <Button 
-                  as={Link} 
-                  to="/dashboard/slack/connect" 
+                <Button
+                  as={Link}
+                  to="/dashboard/slack/connect"
                   colorScheme="purple"
                 >
                   Connect Workspace
@@ -114,7 +114,7 @@ const Dashboard: React.FC = () => {
               </HStack>
             </Box>
           </TabPanel>
-          
+
           <TabPanel>
             <Box p={4} borderWidth="1px" borderRadius="lg">
               <Heading as="h2" size="md" mb={4}>

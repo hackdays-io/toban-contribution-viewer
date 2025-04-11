@@ -22,7 +22,7 @@ const Login: React.FC = () => {
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!email || !password) {
       toast({
         title: 'Error',
@@ -37,9 +37,9 @@ const Login: React.FC = () => {
     try {
       setLoading(true);
       const { error } = await signIn(email, password);
-      
+
       if (error) throw error;
-      
+
       toast({
         title: 'Success',
         description: 'You have been logged in successfully!',
@@ -100,31 +100,31 @@ const Login: React.FC = () => {
     <Box p={8} maxWidth="500px" borderWidth={1} borderRadius={8} boxShadow="lg" mx="auto" mt={10}>
       <VStack spacing={4} align="flex-start">
         <Heading as="h1" size="xl">Login</Heading>
-        
+
         <form onSubmit={handleEmailLogin} style={{ width: '100%' }}>
           <Stack spacing={4} width="100%">
             <FormControl id="email" isRequired>
               <FormLabel>Email address</FormLabel>
-              <Input 
-                type="email" 
+              <Input
+                type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
             </FormControl>
-            
+
             <FormControl id="password" isRequired>
               <FormLabel>Password</FormLabel>
-              <Input 
-                type="password" 
+              <Input
+                type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
             </FormControl>
-            
-            <Button 
-              colorScheme="blue" 
-              width="full" 
-              mt={4} 
+
+            <Button
+              colorScheme="blue"
+              width="full"
+              mt={4}
               type="submit"
               isLoading={loading}
             >
@@ -132,24 +132,24 @@ const Login: React.FC = () => {
             </Button>
           </Stack>
         </form>
-        
+
         <Divider my={6} />
-        
+
         <Text width="100%" textAlign="center" mb={2}>Or continue with</Text>
-        
+
         <Stack direction="row" spacing={4} width="100%">
-          <Button 
-            width="full" 
-            onClick={handleGithubLogin} 
+          <Button
+            width="full"
+            onClick={handleGithubLogin}
             isLoading={loading}
             leftIcon={<Box as="span" fontSize="1.2em">🐱</Box>}
           >
             GitHub
           </Button>
-          
-          <Button 
-            width="full" 
-            onClick={handleGoogleLogin} 
+
+          <Button
+            width="full"
+            onClick={handleGoogleLogin}
             isLoading={loading}
             leftIcon={<Box as="span" fontSize="1.2em">G</Box>}
           >

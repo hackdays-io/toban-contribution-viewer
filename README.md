@@ -43,19 +43,19 @@ TeamInsight is an AI-powered analytics platform designed to extract, analyze, an
 
 ### Prerequisites
 
-- Option 1 (Docker): 
+- Option 1 (Docker):
   - Docker with compose plugin
-  
+
 - Option 2 (Local Development):
   - Python 3.9+
   - Node.js 18+
   - PostgreSQL 13+
-  
+
 - Supabase Account (for authentication)
   - Create an account at [supabase.com](https://supabase.com/)
   - Create a new project and enable authentication
   - Configure auth providers (email, GitHub, Google, etc.)
-  
+
 - API keys for:
   - Slack
   - GitHub
@@ -82,7 +82,7 @@ TeamInsight is an AI-powered analytics platform designed to extract, analyze, an
    ```bash
    # Make the script executable
    chmod +x ./docker-dev.sh
-   
+
    # Start the containers
    ./docker-dev.sh start
    ```
@@ -102,14 +102,14 @@ TeamInsight is an AI-powered analytics platform designed to extract, analyze, an
 
    # Run frontend tests
    ./docker-dev.sh test-frontend
-   
+
    # Execute commands in containers
    ./docker-dev.sh backend python -m pytest
    ./docker-dev.sh frontend npm run lint
-   
+
    # Restart containers
    ./docker-dev.sh restart
-   
+
    # Rebuild containers after dependency changes
    ./docker-dev.sh rebuild
    ```

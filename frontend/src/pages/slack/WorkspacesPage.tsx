@@ -19,11 +19,11 @@ const WorkspacesPage: React.FC = () => {
           <BreadcrumbLink>Slack</BreadcrumbLink>
         </BreadcrumbItem>
       </Breadcrumb>
-      
+
       <Heading size="xl" mb={8}>
         Slack Integration
       </Heading>
-      
+
       <WorkspaceList />
     </Box>
   );

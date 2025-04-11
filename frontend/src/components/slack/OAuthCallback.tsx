@@ -27,12 +27,12 @@ const OAuthCallback: React.FC = () => {
         setErrorMessage(`Authorization failed: ${error}`);
         return;
       }
-      
+
       const code = searchParams.get('code');
       if (code) {
         // Mark that we've started processing this code
         hasProcessedCode.current = true;
-        
+
         try {
           // Forward the code to our backend to exchange it for an access token
           const response = await fetch(
@@ -44,23 +44,23 @@ const OAuthCallback: React.FC = () => {
               },
             }
           );
-          
+
           if (!response.ok) {
             const errorData = await response.json();
             throw new Error(errorData.detail || 'Failed to complete OAuth process');
           }
-          
-          const data = await response.json();
-          
+
+          await response.json();
+
           setStatus('success');
-          
+
           // Navigate to workspace list after a short delay
           setTimeout(() => {
             navigate('/dashboard/slack/workspaces');
           }, 2000);
         } catch (err) {
           setStatus('error');
-          
+
           // Handle specific error messages
           let displayErrorMessage = 'Failed to connect workspace';
           if (err instanceof Error) {
@@ -71,7 +71,7 @@ const OAuthCallback: React.FC = () => {
               displayErrorMessage = err.message;
             }
           }
-          
+
           setErrorMessage(displayErrorMessage);
         }
       } else {
@@ -80,7 +80,7 @@ const OAuthCallback: React.FC = () => {
         setErrorMessage('No authorization code received. Please try again.');
       }
     };
-    
+
     handleCallback();
   }, [searchParams, navigate]);
 
@@ -94,7 +94,7 @@ const OAuthCallback: React.FC = () => {
             <Text color="gray.600">Please wait while we complete the connection process.</Text>
           </>
         )}
-        
+
         {status === 'success' && (
           <>
             <Alert status="success" borderRadius="md">
@@ -104,7 +104,7 @@ const OAuthCallback: React.FC = () => {
             <Text>Redirecting to your workspaces...</Text>
           </>
         )}
-        
+
         {status === 'error' && (
           <>
             <Alert status="error" borderRadius="md">

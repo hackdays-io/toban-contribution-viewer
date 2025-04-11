@@ -90,7 +90,7 @@ For manual testing of the OAuth flow:
   ```bash
   pip install asyncpg greenlet
   ```
-  
+
 - If using Docker, you may need to rebuild the containers:
   ```bash
   ./docker-dev.sh rebuild
@@ -106,7 +106,7 @@ For manual testing of the OAuth flow:
   ```bash
   # In local development
   alembic upgrade head
-  
+
   # In Docker
   ./docker-dev.sh backend alembic upgrade head
   ```
@@ -140,7 +140,7 @@ For manual testing of the OAuth flow:
    - We use `MagicMock` and `AsyncMock` to create mock database sessions
    - We use `app.dependency_overrides` to override the get_async_db dependency
    - We create mock responses for Slack API calls
-   
+
 4. **Test Structure**: Some tests are temporarily skipped due to the complexity of properly mocking all async dependencies. We'll address these in future PRs with a more comprehensive approach to async testing.
 
 These issues will be addressed in separate pull requests to improve test reliability. We recommend using manual testing for now to verify the OAuth flow works correctly in development environments.

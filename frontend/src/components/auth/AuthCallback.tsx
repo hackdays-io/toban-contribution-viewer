@@ -13,11 +13,11 @@ const AuthCallback: React.FC = () => {
       try {
         // The hash contains the access token after OAuth login
         const { error } = await supabase.auth.getSession();
-        
+
         if (error) {
           throw error;
         }
-        
+
         // Redirect to the home page or dashboard after successful login
         navigate('/', { replace: true });
       } catch (err) {
