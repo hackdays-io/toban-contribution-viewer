@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Box, Heading, Text, Spinner, Alert, AlertIcon, VStack } from '@chakra-ui/react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
@@ -10,9 +10,16 @@ const OAuthCallback: React.FC = () => {
   const navigate = useNavigate();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [errorMessage, setErrorMessage] = useState('');
+  // Use a ref to track if we've already processed the code
+  const hasProcessedCode = useRef<boolean>(false);
 
   useEffect(() => {
     const handleCallback = async () => {
+      // Prevent duplicate processing due to StrictMode or rerenders
+      if (hasProcessedCode.current) {
+        return;
+      }
+
       // Look for error parameter
       const error = searchParams.get('error');
       if (error) {
@@ -23,6 +30,9 @@ const OAuthCallback: React.FC = () => {
       
       const code = searchParams.get('code');
       if (code) {
+        // Mark that we've started processing this code
+        hasProcessedCode.current = true;
+        
         try {
           // Forward the code to our backend to exchange it for an access token
           const response = await fetch(
@@ -41,7 +51,6 @@ const OAuthCallback: React.FC = () => {
           }
           
           const data = await response.json();
-          console.log('OAuth successful:', data);
           
           setStatus('success');
           
@@ -50,9 +59,20 @@ const OAuthCallback: React.FC = () => {
             navigate('/dashboard/slack/workspaces');
           }, 2000);
         } catch (err) {
-          console.error('Error during OAuth process:', err);
           setStatus('error');
-          setErrorMessage(err instanceof Error ? err.message : 'Failed to connect workspace');
+          
+          // Handle specific error messages
+          let displayErrorMessage = 'Failed to connect workspace';
+          if (err instanceof Error) {
+            // Shorten and simplify error messages for the user
+            if (err.message.includes('invalid_code')) {
+              displayErrorMessage = 'Authentication code expired or invalid. Please try again.';
+            } else {
+              displayErrorMessage = err.message;
+            }
+          }
+          
+          setErrorMessage(displayErrorMessage);
         }
       } else {
         // Neither error nor code in the parameters suggests something went wrong
