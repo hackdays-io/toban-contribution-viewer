@@ -98,6 +98,16 @@ const ChannelList: React.FC = () => {
   const [isSyncing, setIsSyncing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   
+  // Sync status
+  const [syncStatus, setSyncStatus] = useState<{
+    is_syncing: boolean;
+    workspace_status: string;
+    channel_count: number;
+    last_channel_sync: string | null;
+    last_workspace_sync: string | null;
+    sync_time: string;
+  } | null>(null);
+  
   // Alert dialog for insufficient permissions
   const { isOpen, onOpen, onClose } = useDisclosure();
   const cancelRef = React.useRef<HTMLButtonElement>(null);
@@ -106,6 +116,71 @@ const ChannelList: React.FC = () => {
   useEffect(() => {
     fetchChannels();
   }, [pagination.page, typeFilter, includeArchived, workspaceId]);
+  
+  // Function to check sync status
+  const checkSyncStatus = async () => {
+    if (!workspaceId) return;
+    
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/slack/workspaces/${workspaceId}/sync-status`
+      );
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch sync status');
+      }
+      
+      const data = await response.json();
+      const previousStatus = syncStatus;
+      setSyncStatus(data);
+      
+      console.log("Sync status check:", data.is_syncing ? "SYNCING" : "NOT SYNCING", 
+        "Workspace status:", data.workspace_status, 
+        "Channel count:", data.channel_count);
+      
+      // Detect sync state changes
+      if (data.is_syncing) {
+        // If we're syncing, update UI and poll again
+        setTimeout(checkSyncStatus, 5000);
+        if (!isSyncing) {
+          setIsSyncing(true);
+        }
+      } else {
+        // If sync has completed (we were syncing but now we're not)
+        const wasSyncing = isSyncing || (previousStatus && previousStatus.is_syncing);
+        
+        if (wasSyncing) {
+          // Reset syncing state
+          setIsSyncing(false);
+          
+          // Refresh the channel list
+          await fetchChannels();
+          
+          // Show completion notification
+          toast({
+            title: 'Channel Sync Completed',
+            description: `Successfully synced ${data.channel_count} channels.`,
+            status: 'success',
+            duration: 5000,
+            isClosable: true,
+          });
+        } else {
+          // Not syncing, just update state silently
+          setIsSyncing(false);
+        }
+      }
+    } catch (error) {
+      console.error('Error checking sync status:', error);
+      // On error, reset syncing state to be safe
+      setIsSyncing(false);
+    }
+  };
+  
+  // Check sync status on load and when syncing status changes
+  useEffect(() => {
+    checkSyncStatus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workspaceId]);
   
   // Convert type filter to API parameter
   const getTypeFilters = (): string[] | null => {
@@ -188,7 +263,7 @@ const ChannelList: React.FC = () => {
   };
   
   /**
-   * Sync channels from Slack API
+   * Sync channels from Slack API with background processing and polling
    */
   const syncChannels = async () => {
     if (!workspaceId) return;
@@ -196,81 +271,54 @@ const ChannelList: React.FC = () => {
     setIsSyncing(true);
     
     try {
-      // Use query parameters instead of request body
-      const queryParams = new URLSearchParams({
-        limit: '100', // Use a smaller limit for faster initial load
-        sync_all_pages: '1', // Use 1 instead of true
-      });
-      
       // Show initial toast to indicate sync started
       toast({
         title: 'Syncing Channels',
-        description: 'Starting channel synchronization. This may take a few moments...',
+        description: 'Starting channel synchronization. This may take several minutes for large workspaces.',
         status: 'info',
-        duration: 3000,
+        duration: 5000,
         isClosable: true,
       });
       
-      // Create controller for timeout
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+      // Use query parameters for the endpoint
+      const queryParams = new URLSearchParams({
+        limit: '1000', // Maximum limit for efficiency
+        sync_all_pages: '1', // Use 1 instead of true
+        batch_size: '200', // Process in batches of 200 channels
+      });
       
-      try {
-        const response = await fetch(
-          `${import.meta.env.VITE_API_URL}/slack/workspaces/${workspaceId}/channels/sync?${queryParams}`,
-          {
-            method: 'POST',
-            signal: controller.signal,
-          }
-        );
-        
-        clearTimeout(timeoutId);
-        
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          if (errorData.detail && errorData.detail.includes('missing_scope')) {
-            throw new Error('Missing permissions. Your Slack app may need additional scopes like channels:read, groups:read, im:read, mpim:read');
-          } else {
-            throw new Error(errorData.detail || 'Failed to sync channels');
-          }
+      // Start the background sync process
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/slack/workspaces/${workspaceId}/channels/sync?${queryParams}`,
+        { method: 'POST' }
+      );
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        if (errorData.detail && errorData.detail.includes('missing_scope')) {
+          throw new Error('Missing permissions. Your Slack app may need additional scopes like channels:read, groups:read, im:read, mpim:read');
+        } else {
+          throw new Error(errorData.detail || 'Failed to sync channels');
         }
-        
-        const data: SyncResponse = await response.json();
-        
-        toast({
-          title: 'Channels Synced',
-          description: data.message,
-          status: 'success',
-          duration: 5000,
-          isClosable: true,
-        });
-      } catch (fetchError) {
-        clearTimeout(timeoutId);
-        
-        // Handle timeout specifically
-        if (fetchError.name === 'AbortError') {
-          toast({
-            title: 'Sync Taking Longer Than Expected',
-            description: 'The channel sync is still processing on the server. Please refresh the page in a few moments to see updated channels.',
-            status: 'warning',
-            duration: 7000,
-            isClosable: true,
-          });
-          
-          // Even though we timed out the frontend request, the backend may still be processing
-          // Wait a few seconds and then try to refresh the channel list
-          setTimeout(() => {
-            fetchChannels();
-          }, 5000);
-          
-          return;
-        }
-        
-        throw fetchError;
       }
       
-      // Refresh channel list
-      fetchChannels();
+      const data = await response.json();
+      
+      // Show a toast indicating background processing started
+      toast({
+        title: 'Channel Sync Started',
+        description: data.message || 'Channel synchronization is running in the background. The page will refresh periodically to show updated results.',
+        status: 'info',
+        duration: 7000,
+        isClosable: true,
+      });
+      
+      // Start checking sync status instead of simple polling
+      checkSyncStatus();
+      
+      // Don't set isSyncing to false here, as we want to keep the syncing indicator
+      // while the background process and polling are running
+      
     } catch (error) {
       console.error('Error syncing channels:', error);
       toast({
@@ -280,7 +328,6 @@ const ChannelList: React.FC = () => {
         duration: 5000,
         isClosable: true,
       });
-    } finally {
       setIsSyncing(false);
     }
   };
@@ -496,7 +543,7 @@ const ChannelList: React.FC = () => {
           </Checkbox>
         </HStack>
         
-        <HStack flex="1" justify="flex-end">
+        <HStack flex="1" justify="flex-end" spacing={2}>
           <Button
             leftIcon={<Icon as={FiRefreshCw} />}
             colorScheme="purple"
@@ -506,6 +553,15 @@ const ChannelList: React.FC = () => {
             loadingText="Syncing..."
           >
             Sync Channels
+          </Button>
+          <Button
+            variant="ghost"
+            onClick={() => fetchChannels()}
+            isLoading={isLoading}
+            title="Refresh channel list"
+            aria-label="Refresh channel list"
+          >
+            <Icon as={FiRefreshCw} />
           </Button>
         </HStack>
       </Flex>
@@ -654,19 +710,54 @@ const ChannelList: React.FC = () => {
         </HStack>
       </Flex>
       
-      {/* Selected channels summary */}
-      <Box mt={6} p={4} borderWidth="1px" borderRadius="md" bg="gray.50">
-        <Heading size="sm" mb={2}>
-          Selected Channels: {selectedChannels.length}
-        </Heading>
-        <Text fontSize="sm" color="gray.600">
-          {selectedChannels.length === 0 ? (
-            'No channels selected. Select channels to analyze from the list above.'
-          ) : (
-            `You've selected ${selectedChannels.length} channel${selectedChannels.length !== 1 ? 's' : ''} for analysis.`
-          )}
-        </Text>
-      </Box>
+      {/* Sync status and selected channels summary */}
+      <Flex mt={6} gap={4} direction={{ base: 'column', md: 'row' }}>
+        {/* Selected channels summary */}
+        <Box p={4} borderWidth="1px" borderRadius="md" bg="gray.50" flex="1">
+          <Heading size="sm" mb={2}>
+            Selected Channels: {selectedChannels.length}
+          </Heading>
+          <Text fontSize="sm" color="gray.600">
+            {selectedChannels.length === 0 ? (
+              'No channels selected. Select channels to analyze from the list above.'
+            ) : (
+              `You've selected ${selectedChannels.length} channel${selectedChannels.length !== 1 ? 's' : ''} for analysis.`
+            )}
+          </Text>
+        </Box>
+        
+        {/* Sync status information */}
+        {syncStatus && (
+          <Box p={4} borderWidth="1px" borderRadius="md" bg="gray.50" flex="1">
+            <HStack mb={2} align="center">
+              <Heading size="sm">Sync Status:</Heading>
+              {syncStatus.is_syncing ? (
+                <HStack>
+                  <Spinner size="xs" color="purple.500" />
+                  <Badge colorScheme="purple">Syncing</Badge>
+                </HStack>
+              ) : (
+                <Badge colorScheme="green">Ready</Badge>
+              )}
+            </HStack>
+            <VStack align="start" spacing={1}>
+              <Text fontSize="sm" color="gray.600">
+                Total Channels: {syncStatus.channel_count}
+              </Text>
+              {syncStatus.last_channel_sync && (
+                <Text fontSize="sm" color="gray.600">
+                  Last Updated: {new Date(syncStatus.last_channel_sync).toLocaleString()}
+                </Text>
+              )}
+              {syncStatus.is_syncing && (
+                <Text fontSize="sm" color="purple.600" fontStyle="italic">
+                  Channel sync is running in the background. The list will automatically update when complete.
+                </Text>
+              )}
+            </VStack>
+          </Box>
+        )}
+      </Flex>
       
       {/* Bot membership warning dialog */}
       <AlertDialog isOpen={isOpen} leastDestructiveRef={cancelRef} onClose={onClose}>
