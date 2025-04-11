@@ -1,11 +1,11 @@
 """
 Tests for Slack workspace service.
 """
-import pytest
 from datetime import datetime
 from typing import Any, Dict, List
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.slack import SlackWorkspace

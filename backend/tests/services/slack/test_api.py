@@ -2,10 +2,10 @@
 Tests for Slack API client.
 """
 import json
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import aiohttp
+import pytest
 from aiohttp.client_reqrep import ClientResponse
 
 from app.services.slack.api import SlackApiClient, SlackApiError, SlackApiRateLimitError

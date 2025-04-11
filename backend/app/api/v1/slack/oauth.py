@@ -10,11 +10,10 @@ import requests
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from pydantic import BaseModel, Field, validator
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.db.session import AsyncSessionLocal
 from sqlalchemy.future import select
 
 from app.config import settings
-from app.db.session import get_async_db
+from app.db.session import AsyncSessionLocal, get_async_db
 from app.models.slack import SlackWorkspace
 from app.services.slack.workspace import WorkspaceService
 
