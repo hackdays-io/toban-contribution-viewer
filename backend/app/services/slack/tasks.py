@@ -3,6 +3,7 @@ Background tasks for Slack integration.
 """
 import asyncio
 import logging
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
