@@ -342,3 +342,26 @@ class SlackApiClient:
         except Exception as e:
             logger.error(f"Unexpected error checking bot membership: {str(e)}")
             raise
+
+    async def join_channel(self, channel_id: str) -> Dict[str, Any]:
+        """
+        Join a channel using conversations.join API.
+
+        Args:
+            channel_id: Slack ID of the channel to join
+
+        Returns:
+            Dictionary with the API response
+
+        Raises:
+            SlackApiError: If the API returns an error
+        """
+        try:
+            response = await self._make_request(
+                "POST", "conversations.join", data={"channel": channel_id}
+            )
+            return response
+        except SlackApiError as e:
+            logger.error(f"Error joining channel {channel_id}: {str(e)}")
+            # Rethrow the error to be handled by the caller
+            raise

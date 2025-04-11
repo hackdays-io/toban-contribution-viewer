@@ -62,6 +62,28 @@ interface ChannelResponse {
   pagination: PaginationInfo;
 }
 
+// Installation result type
+interface BotInstallationResult {
+  channel_id: string;
+  name: string;
+  status: 'success' | 'error';
+  error_code?: string;
+  error_message?: string;
+}
+
+interface BotInstallation {
+  attempted_count: number;
+  results: BotInstallationResult[];
+}
+
+interface SelectChannelsResponse {
+  status: string;
+  message: string;
+  selected_count: number;
+  selected_channels: Partial<Channel>[];
+  bot_installation?: BotInstallation;
+}
+
 // Response type for sync operation
 interface SyncResponse {
   status: string;
@@ -98,6 +120,7 @@ const ChannelList: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [installBot, setInstallBot] = useState(true);
 
   // Sync status
   const [syncStatus, setSyncStatus] = useState<{
@@ -133,29 +156,29 @@ const ChannelList: React.FC = () => {
    */
   const fetchChannels = useCallback(async () => {
     if (!workspaceId) return;
-    
+
     setIsLoading(true);
-    
+
     try {
       const queryParams = new URLSearchParams({
         page: pagination.page.toString(),
         page_size: pagination.page_size.toString(),
         include_archived: includeArchived.toString(),
       });
-      
+
       const typeFilters = getTypeFilters();
       if (typeFilters) {
         typeFilters.forEach(type => queryParams.append('types', type));
       }
-      
+
       const response = await fetch(
         `${import.meta.env.VITE_API_URL}/slack/workspaces/${workspaceId}/channels?${queryParams}`
       );
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch channels');
       }
-      
+
       const data: ChannelResponse = await response.json();
       setChannels(data.channels);
       setPagination(prevPagination => ({
@@ -163,12 +186,12 @@ const ChannelList: React.FC = () => {
         total_items: data.pagination.total_items,
         total_pages: data.pagination.total_pages,
       }));
-      
+
       // Initialize selected channels from those marked in the API
       const preselected = data.channels
         .filter(channel => channel.is_selected_for_analysis)
         .map(channel => channel.id);
-      
+
       if (pagination.page === 1) {
         setSelectedChannels(preselected);
       } else {
@@ -202,24 +225,24 @@ const ChannelList: React.FC = () => {
   // Function to check sync status
   const checkSyncStatus = async () => {
     if (!workspaceId) return;
-    
+
     try {
       const response = await fetch(
         `${import.meta.env.VITE_API_URL}/slack/workspaces/${workspaceId}/sync-status`
       );
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch sync status');
       }
-      
+
       const data = await response.json();
       const previousStatus = syncStatus;
       setSyncStatus(data);
-      
+
       console.log("Sync status check:", data.is_syncing ? "SYNCING" : "NOT SYNCING",
         "Workspace status:", data.workspace_status,
         "Channel count:", data.channel_count);
-      
+
       // Detect sync state changes
       if (data.is_syncing) {
         // If we're syncing, update UI and poll again, but with a longer interval
@@ -231,14 +254,14 @@ const ChannelList: React.FC = () => {
       } else {
         // If sync has completed (we were syncing but now we're not)
         const wasSyncing = isSyncing || (previousStatus && previousStatus.is_syncing);
-        
+
         if (wasSyncing) {
           // Reset syncing state
           setIsSyncing(false);
-          
+
           // Refresh the channel list only if we actually completed syncing
           await fetchChannels();
-          
+
           // Show completion notification
           toast({
             title: 'Channel Sync Completed',
@@ -278,9 +301,9 @@ const ChannelList: React.FC = () => {
    */
   const syncChannels = async () => {
     if (!workspaceId) return;
-    
+
     setIsSyncing(true);
-    
+
     try {
       // Show initial toast to indicate sync started
       toast({
@@ -290,20 +313,20 @@ const ChannelList: React.FC = () => {
         duration: 5000,
         isClosable: true,
       });
-      
+
       // Use query parameters for the endpoint
       const queryParams = new URLSearchParams({
         limit: '1000', // Maximum limit for efficiency
         sync_all_pages: '1', // Use 1 instead of true
         batch_size: '200', // Process in batches of 200 channels
       });
-      
+
       // Start the background sync process
       const response = await fetch(
         `${import.meta.env.VITE_API_URL}/slack/workspaces/${workspaceId}/channels/sync?${queryParams}`,
         { method: 'POST' }
       );
-      
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         if (errorData.detail && errorData.detail.includes('missing_scope')) {
@@ -312,9 +335,9 @@ const ChannelList: React.FC = () => {
           throw new Error(errorData.detail || 'Failed to sync channels');
         }
       }
-      
+
       const data: SyncResponse = await response.json();
-      
+
       // Show a toast indicating background processing started
       toast({
         title: 'Channel Sync Started',
@@ -323,13 +346,13 @@ const ChannelList: React.FC = () => {
         duration: 7000,
         isClosable: true,
       });
-      
+
       // Start checking sync status instead of simple polling
       checkSyncStatus();
-      
+
       // Don't set isSyncing to false here, as we want to keep the syncing indicator
       // while the background process and polling are running
-      
+
     } catch (error) {
       console.error('Error syncing channels:', error);
       toast({
@@ -342,25 +365,25 @@ const ChannelList: React.FC = () => {
       setIsSyncing(false);
     }
   };
-  
+
   /**
    * Save selected channels for analysis
    */
   const saveSelectedChannels = async () => {
     if (!workspaceId) return;
-    
+
     // Check if any selected channels don't have bot membership
     const nonMemberChannels = channels.filter(
       channel => selectedChannels.includes(channel.id) && !channel.is_bot_member
     );
-    
-    if (nonMemberChannels.length > 0) {
+
+    if (nonMemberChannels.length > 0 && !installBot) {
       onOpen(); // Open alert dialog
       return;
     }
-    
+
     setIsSaving(true);
-    
+
     try {
       const response = await fetch(
         `${import.meta.env.VITE_API_URL}/slack/workspaces/${workspaceId}/channels/select`,
@@ -371,24 +394,41 @@ const ChannelList: React.FC = () => {
           },
           body: JSON.stringify({
             channel_ids: selectedChannels,
+            install_bot: installBot,
           }),
         }
       );
-      
+
       if (!response.ok) {
         throw new Error('Failed to save channel selection');
       }
-      
-      const data = await response.json();
-      
+
+      const data: SelectChannelsResponse = await response.json();
+
+      // Create custom success message that includes bot installation results
+      let successMessage = `Selected ${data.selected_count} channels for analysis`;
+
+      if (data.bot_installation) {
+        const successCount = data.bot_installation.results.filter((r: BotInstallationResult) => r.status === 'success').length;
+        const failCount = data.bot_installation.results.filter((r: BotInstallationResult) => r.status === 'error').length;
+
+        if (successCount > 0) {
+          successMessage += `, bot installed in ${successCount} new channel${successCount !== 1 ? 's' : ''}`;
+        }
+
+        if (failCount > 0) {
+          successMessage += `. Failed to install in ${failCount} channel${failCount !== 1 ? 's' : ''}.`;
+        }
+      }
+
       toast({
         title: 'Channels Selected',
-        description: `Selected ${data.selected_count} channels for analysis`,
+        description: successMessage,
         status: 'success',
         duration: 5000,
         isClosable: true,
       });
-      
+
       // Navigate to the next step
       navigate(`/dashboard/slack/workspaces/${workspaceId}`);
     } catch (error) {
@@ -404,7 +444,7 @@ const ChannelList: React.FC = () => {
       setIsSaving(false);
     }
   };
-  
+
   /**
    * Handle channel selection
    */
@@ -417,17 +457,17 @@ const ChannelList: React.FC = () => {
       }
     });
   };
-  
+
   /**
    * Handle bulk selection
    */
   const handleSelectAll = (select: boolean) => {
     if (select) {
-      // Only select visible channels on this page that are supported and have bot membership
+      // Select all visible channels on this page that are supported
       const selectableChannels = channels
-        .filter(channel => channel.is_supported && channel.is_bot_member)
+        .filter(channel => channel.is_supported)
         .map(channel => channel.id);
-      
+
       setSelectedChannels(prev => {
         const newSelection = [...prev];
         selectableChannels.forEach(id => {
@@ -443,7 +483,7 @@ const ChannelList: React.FC = () => {
       setSelectedChannels(prev => prev.filter(id => !currentPageIds.includes(id)));
     }
   };
-  
+
   /**
    * Filter channels by search term
    */
@@ -452,7 +492,7 @@ const ChannelList: React.FC = () => {
     return channel.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
            channel.purpose.toLowerCase().includes(searchTerm.toLowerCase());
   });
-  
+
   /**
    * Change page
    */
@@ -464,7 +504,7 @@ const ChannelList: React.FC = () => {
       });
     }
   };
-  
+
   /**
    * Format channel type for display
    */
@@ -482,7 +522,7 @@ const ChannelList: React.FC = () => {
         return type;
     }
   };
-  
+
   /**
    * Get color for channel type badge
    */
@@ -499,7 +539,7 @@ const ChannelList: React.FC = () => {
         return 'gray';
     }
   };
-  
+
   return (
     <Box p={6} maxWidth="1200px" mx="auto">
       <HStack justifyContent="space-between" mb={6}>
@@ -585,11 +625,11 @@ const ChannelList: React.FC = () => {
                   <Th width="50px">
                     <Checkbox
                       isChecked={filteredChannels.length > 0 && filteredChannels.every(channel =>
-                        selectedChannels.includes(channel.id) || !channel.is_bot_member
+                        selectedChannels.includes(channel.id)
                       )}
                       isIndeterminate={
                         filteredChannels.some(channel => selectedChannels.includes(channel.id)) &&
-                        !filteredChannels.every(channel => selectedChannels.includes(channel.id) || !channel.is_bot_member)
+                        !filteredChannels.every(channel => selectedChannels.includes(channel.id))
                       }
                       onChange={(e) => handleSelectAll(e.target.checked)}
                     />
@@ -632,7 +672,6 @@ const ChannelList: React.FC = () => {
                         <Checkbox
                           isChecked={selectedChannels.includes(channel.id)}
                           onChange={() => handleSelectChannel(channel.id)}
-                          isDisabled={!channel.is_bot_member}
                         />
                       </Td>
                       <Td>
@@ -791,14 +830,34 @@ const ChannelList: React.FC = () => {
                     <Text key={channel.id}>#{channel.name}</Text>
                   ))}
               </VStack>
-              <Text mt={4}>
-                Please invite the bot to these channels and try again, or remove them from your selection.
+              <Text mt={4} mb={2}>
+                Would you like to automatically install the bot in these channels?
               </Text>
+              <Checkbox
+                isChecked={installBot}
+                onChange={(e) => setInstallBot(e.target.checked)}
+                colorScheme="purple"
+                size="lg"
+                mt={2}
+              >
+                Auto-install bot in selected channels
+              </Checkbox>
             </AlertDialogBody>
 
             <AlertDialogFooter>
-              <Button ref={cancelRef} onClick={onClose}>
-                Go Back
+              <Button ref={cancelRef} onClick={onClose} mr={3}>
+                Cancel
+              </Button>
+              <Button
+                colorScheme="purple"
+                onClick={() => {
+                  onClose();
+                  if (installBot) {
+                    saveSelectedChannels();
+                  }
+                }}
+              >
+                {installBot ? "Continue with Installation" : "Continue without Bot"}
               </Button>
             </AlertDialogFooter>
           </AlertDialogContent>

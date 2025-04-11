@@ -218,10 +218,10 @@ async def test_sync_channels_from_slack(mock_db_session, mock_workspace):
 
 
 @pytest.mark.asyncio
-async def test_select_channels_for_analysis(
+async def test_select_channels_for_analysis_without_bot_install(
     mock_db_session, mock_workspace, mock_channel
 ):
-    """Test selecting channels for analysis."""
+    """Test selecting channels for analysis without bot installation."""
     # Mock the workspace query
     mock_workspace_result = MagicMock()
     mock_workspace_result.scalars = MagicMock()
@@ -256,11 +256,12 @@ async def test_select_channels_for_analysis(
     # Mock db commit
     mock_db_session.commit = AsyncMock()
 
-    # Call the service method
+    # Call the service method with install_bot=False
     result = await ChannelService.select_channels_for_analysis(
         db=mock_db_session,
         workspace_id=str(mock_workspace.id),
         channel_ids=[str(mock_channel.id)],
+        install_bot=False,
     )
 
     # Verify the result
@@ -268,7 +269,103 @@ async def test_select_channels_for_analysis(
     assert result["selected_count"] == 1
     assert len(result["selected_channels"]) == 1
     assert result["selected_channels"][0]["id"] == str(mock_channel.id)
+    assert "bot_installation" not in result
 
     # Verify the db operations
     assert mock_db_session.execute.call_count == 4
     assert mock_db_session.commit.called
+
+
+@pytest.mark.asyncio
+async def test_select_channels_for_analysis_with_bot_install(
+    mock_db_session, mock_workspace, mock_channel
+):
+    """Test selecting channels for analysis with bot installation."""
+    # Mock the workspace query
+    mock_workspace_result = MagicMock()
+    mock_workspace_result.scalars = MagicMock()
+    mock_workspace_result.scalars.return_value = MagicMock()
+    mock_workspace_result.scalars.return_value.first = MagicMock(
+        return_value=mock_workspace
+    )
+
+    # Mock update results
+    mock_update_result1 = MagicMock()
+    mock_update_result2 = MagicMock()
+
+    # Mock the selected channels query - make a copy of mock_channel that isn't a bot member
+    channel_without_bot = SlackChannel(
+        id=uuid.uuid4(),
+        slack_id="C67890",
+        name="without-bot",
+        type="public",
+        purpose="Testing channel",
+        topic="Testing stuff",
+        member_count=5,
+        is_archived=False,
+        is_bot_member=False,
+        is_selected_for_analysis=True,
+        is_supported=True,
+        workspace_id=mock_workspace.id,
+    )
+
+    # Both channels are selected for analysis
+    mock_channel.is_selected_for_analysis = True
+    mock_selected_result = MagicMock()
+    mock_selected_result.scalars = MagicMock()
+    mock_selected_result.scalars.return_value = MagicMock()
+    mock_selected_result.scalars.return_value.all = MagicMock(
+        return_value=[mock_channel, channel_without_bot]
+    )
+
+    # Set up the db.execute mock
+    mock_db_session.execute = AsyncMock()
+    mock_db_session.execute.side_effect = [
+        mock_workspace_result,  # First call (workspace query)
+        mock_update_result1,  # Second call (update unselect all)
+        mock_update_result2,  # Third call (update select specific)
+        mock_selected_result,  # Fourth call (get selected count)
+    ]
+
+    # Mock db commit
+    mock_db_session.commit = AsyncMock()
+
+    # Mock SlackApiClient for join_channel
+    with patch("app.services.slack.channels.SlackApiClient") as mock_client_class:
+        mock_client = AsyncMock(spec=SlackApiClient)
+
+        # Mock join_channel to succeed
+        mock_client.join_channel = AsyncMock(
+            return_value={"ok": True, "channel": {"id": "C67890"}}
+        )
+
+        mock_client_class.return_value = mock_client
+
+        # Call the service method with install_bot=True
+        result = await ChannelService.select_channels_for_analysis(
+            db=mock_db_session,
+            workspace_id=str(mock_workspace.id),
+            channel_ids=[str(mock_channel.id), str(channel_without_bot.id)],
+            install_bot=True,
+        )
+
+        # Verify the result
+        assert result["status"] == "success"
+        assert result["selected_count"] == 2
+        assert len(result["selected_channels"]) == 2
+
+        # Verify bot installation was attempted on the channel without bot
+        assert "bot_installation" in result
+        assert result["bot_installation"]["attempted_count"] == 1
+        assert len(result["bot_installation"]["results"]) == 1
+        assert result["bot_installation"]["results"][0]["status"] == "success"
+
+        # Verify the bot is now a member of the channel
+        assert channel_without_bot.is_bot_member is True
+
+        # Verify the API client was called
+        mock_client.join_channel.assert_called_once_with(channel_without_bot.slack_id)
+
+        # Verify the db operations
+        assert mock_db_session.execute.call_count == 4
+        assert mock_db_session.commit.called
