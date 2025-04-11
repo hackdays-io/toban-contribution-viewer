@@ -73,23 +73,25 @@ def test_list_channels(mock_workspace, mock_channels):
     app = FastAPI()
     # The channels_router already has the /workspaces/{workspace_id} pattern
     app.include_router(channels_router, prefix="")
-    
+
     # Create a test client
     client = TestClient(app)
-    
+
     # Mock the database session
     with patch("app.api.v1.slack.channels.get_async_db") as mock_get_db:
         # Create a mock session
         mock_session = MagicMock(spec=AsyncSession)
-        
+
         # Configure mock_get_db to be an async generator
         async def mock_get_db_impl():
             yield mock_session
-        
+
         mock_get_db.return_value = mock_get_db_impl()
-        
+
         # Mock ChannelService.get_channels_for_workspace
-        with patch("app.api.v1.slack.channels.ChannelService.get_channels_for_workspace") as mock_get_channels:
+        with patch(
+            "app.api.v1.slack.channels.ChannelService.get_channels_for_workspace"
+        ) as mock_get_channels:
             # Set up the mock to return some test data
             mock_get_channels.return_value = {
                 "channels": [
@@ -116,13 +118,17 @@ def test_list_channels(mock_workspace, mock_channels):
                     "total_pages": 1,
                 },
             }
-            
+
             # Make the request
             response = client.get(
                 f"/workspaces/{mock_workspace.id}/channels",
-                params={"types": ["public", "private"], "page": "1", "page_size": "100"},
+                params={
+                    "types": ["public", "private"],
+                    "page": "1",
+                    "page_size": "100",
+                },
             )
-            
+
             # Verify the response
             assert response.status_code == 200
             data = response.json()
@@ -130,7 +136,7 @@ def test_list_channels(mock_workspace, mock_channels):
             assert len(data["channels"]) == len(mock_channels)
             assert "pagination" in data
             assert data["pagination"]["page"] == 1
-            
+
             # Verify the service was called with correct parameters
             mock_get_channels.assert_called_once()
 
@@ -140,34 +146,36 @@ def test_sync_channels():
     app = FastAPI()
     # The channels_router already has the /workspaces/{workspace_id} pattern
     app.include_router(channels_router, prefix="")
-    
+
     # Create a test client
     client = TestClient(app)
-    
+
     # Mock the database session
     with patch("app.api.v1.slack.channels.get_async_db") as mock_get_db:
         # Create a mock session
         mock_session = MagicMock(spec=AsyncSession)
-        
+
         # Configure mock_get_db to be an async generator
         async def mock_get_db_impl():
             yield mock_session
-        
+
         mock_get_db.return_value = mock_get_db_impl()
-        
+
         # Mock ChannelService.sync_channels_from_slack
-        with patch("app.api.v1.slack.channels.ChannelService.sync_channels_from_slack") as mock_sync:
+        with patch(
+            "app.api.v1.slack.channels.ChannelService.sync_channels_from_slack"
+        ) as mock_sync:
             # Set up the mock to return some test data
             mock_sync.return_value = (5, 10, 15)  # created, updated, total
-            
+
             workspace_id = str(uuid.uuid4())
-            
+
             # Make the request
             response = client.post(
                 f"/workspaces/{workspace_id}/channels/sync",
                 params={"limit": 500, "sync_all_pages": "true"},
             )
-            
+
             # Verify the response
             assert response.status_code == 200
             data = response.json()
@@ -175,7 +183,7 @@ def test_sync_channels():
             assert data["created_count"] == 5
             assert data["updated_count"] == 10
             assert data["total_count"] == 15
-            
+
             # Verify the service was called
             mock_sync.assert_called_once()
 
@@ -185,23 +193,25 @@ def test_select_channels_for_analysis(mock_workspace, mock_channels):
     app = FastAPI()
     # The channels_router already has the /workspaces/{workspace_id} pattern
     app.include_router(channels_router, prefix="")
-    
+
     # Create a test client
     client = TestClient(app)
-    
+
     # Mock the database session
     with patch("app.api.v1.slack.channels.get_async_db") as mock_get_db:
         # Create a mock session
         mock_session = MagicMock(spec=AsyncSession)
-        
+
         # Configure mock_get_db to be an async generator
         async def mock_get_db_impl():
             yield mock_session
-        
+
         mock_get_db.return_value = mock_get_db_impl()
-        
+
         # Mock ChannelService.select_channels_for_analysis
-        with patch("app.api.v1.slack.channels.ChannelService.select_channels_for_analysis") as mock_select:
+        with patch(
+            "app.api.v1.slack.channels.ChannelService.select_channels_for_analysis"
+        ) as mock_select:
             # Set up the mock to return some test data
             selected_channels = [mock_channels[1]]  # Only the 'random' channel
             mock_select.return_value = {
@@ -218,13 +228,13 @@ def test_select_channels_for_analysis(mock_workspace, mock_channels):
                     for channel in selected_channels
                 ],
             }
-            
+
             # Make the request
             response = client.post(
                 f"/workspaces/{mock_workspace.id}/channels/select",
                 json={"channel_ids": [str(mock_channels[1].id)]},
             )
-            
+
             # Verify the response
             assert response.status_code == 200
             data = response.json()
@@ -232,6 +242,6 @@ def test_select_channels_for_analysis(mock_workspace, mock_channels):
             assert data["selected_count"] == 1
             assert len(data["selected_channels"]) == 1
             assert data["selected_channels"][0]["name"] == "random"
-            
+
             # Verify the service was called
             mock_select.assert_called_once()

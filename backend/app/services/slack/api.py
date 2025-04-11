@@ -206,83 +206,81 @@ class SlackApiClient:
             logger.error(f"Unexpected error during token verification: {str(e)}")
             # Re-raise the exception to be handled by the caller
             raise
-            
+
     async def get_channels(
-        self, 
-        cursor: Optional[str] = None, 
+        self,
+        cursor: Optional[str] = None,
         limit: int = 100,
         types: Optional[str] = "public_channel,private_channel",
-        exclude_archived: Any = True
+        exclude_archived: Any = True,
     ) -> Dict[str, Any]:
         """
         Get a list of channels from the workspace.
-        
+
         Note: This method supports cursor-based pagination. The cursor should be
         extracted from the response_metadata.next_cursor field of the previous response.
-        
+
         Args:
             cursor: Pagination cursor from a previous response
             limit: Maximum number of channels to return (max 1000)
             types: Comma-separated list of channel types to include
                   (public_channel, private_channel, mpim, im)
             exclude_archived: Whether to exclude archived channels
-            
+
         Returns:
             Dictionary containing channels list and pagination metadata
         """
         try:
             params = {
                 "limit": min(limit, 1000),  # Enforce Slack API limit
-                "exclude_archived": str(exclude_archived).lower(),  # Convert to string "true" or "false"
+                "exclude_archived": str(
+                    exclude_archived
+                ).lower(),  # Convert to string "true" or "false"
             }
-            
+
             if cursor and cursor.strip():
                 params["cursor"] = cursor.strip()
                 logger.info(f"Using cursor for pagination: {cursor}")
-                
+
             if types:
                 params["types"] = types
-                
+
             response = await self._make_request(
-                "GET",
-                "conversations.list",
-                params=params
+                "GET", "conversations.list", params=params
             )
-            
+
             return response
         except SlackApiError as e:
             logger.error(f"Error getting channels list: {str(e)}")
             raise
-            
+
     async def get_channel_info(self, channel_id: str) -> Dict[str, Any]:
         """
         Get detailed information about a specific channel.
-        
+
         Args:
             channel_id: Slack ID of the channel
-            
+
         Returns:
             Dictionary containing channel information
         """
         try:
             response = await self._make_request(
-                "GET",
-                "conversations.info",
-                params={"channel": channel_id}
+                "GET", "conversations.info", params={"channel": channel_id}
             )
-            
+
             return response.get("channel", {})
         except SlackApiError as e:
             logger.error(f"Error getting channel info for {channel_id}: {str(e)}")
             raise
-            
+
     async def check_bot_in_channel(self, channel_id: str) -> bool:
         """
         Check if the bot is a member of the specified channel.
-        
+
         Args:
             channel_id: Slack ID of the channel
-            
+
         Returns:
             True if the bot is a member of the channel, False otherwise
         """
@@ -290,11 +288,11 @@ class SlackApiClient:
             # First get auth info to know the bot's user ID
             auth_info = await self._make_request("GET", "auth.test")
             bot_user_id = auth_info.get("user_id")
-            
+
             if not bot_user_id:
                 logger.error("Could not determine bot user ID")
                 return False
-                
+
             # Check if the bot is in the channel
             try:
                 # For public channels, we can check directly
@@ -302,39 +300,42 @@ class SlackApiClient:
                 # Some channels report bot membership directly
                 if "is_member" in channel_info:
                     return channel_info["is_member"]
-                    
+
                 # Otherwise check member list
                 response = await self._make_request(
                     "GET",
                     "conversations.members",
-                    params={
-                        "channel": channel_id,
-                        "limit": 100
-                    }
+                    params={"channel": channel_id, "limit": 100},
                 )
-                
+
                 # Check first page of members
                 if bot_user_id in response.get("members", []):
                     return True
-                    
+
                 # If not found and there are more pages, we'd need to paginate
                 # through all members, but for efficiency we'll join the channel
                 # later if needed instead of checking all members
-                
+
                 return False
-                
+
             except SlackApiError as e:
                 # If we get a channel_not_found error, the bot is definitely not in the channel
                 if e.error_code == "channel_not_found":
                     return False
                 # For some private channels, we might get an access error
-                if e.error_code in ["not_in_channel", "channel_not_found", "missing_scope"]:
+                if e.error_code in [
+                    "not_in_channel",
+                    "channel_not_found",
+                    "missing_scope",
+                ]:
                     return False
                 # For other errors, re-raise
                 raise
-                
+
         except SlackApiError as e:
-            logger.error(f"Error checking bot membership in channel {channel_id}: {str(e)}")
+            logger.error(
+                f"Error checking bot membership in channel {channel_id}: {str(e)}"
+            )
             if e.error_code in ["channel_not_found", "not_in_channel"]:
                 return False
             raise
