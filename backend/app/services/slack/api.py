@@ -2,15 +2,9 @@
 Slack API client service for interacting with the Slack API.
 """
 import logging
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, Optional
 
 import aiohttp
-from fastapi import HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.config import settings
-from app.models.slack import SlackWorkspace
 
 # Configure logging
 logger = logging.getLogger(__name__)

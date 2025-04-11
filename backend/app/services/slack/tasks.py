@@ -3,14 +3,9 @@ Background tasks for Slack integration.
 """
 import asyncio
 import logging
-from datetime import datetime, timedelta
-from typing import List, Optional
-
-from fastapi import Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.session import get_async_db
 from app.models.slack import SlackWorkspace
 from app.services.slack.workspace import WorkspaceService
 

@@ -1,10 +1,8 @@
 """
 Tests for Slack API client.
 """
-import json
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
-import aiohttp
 import pytest
 from aiohttp.client_reqrep import ClientResponse
 

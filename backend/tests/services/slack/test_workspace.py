@@ -2,8 +2,7 @@
 Tests for Slack workspace service.
 """
 from datetime import datetime
-from typing import Any, Dict, List
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -90,7 +89,7 @@ async def test_update_workspace_metadata_api_error(mock_client_class, mock_db_se
     mock_client_class.return_value = mock_client
     
     # Execute the service method and expect an exception
-    with pytest.raises(Exception) as exc_info:
+    with pytest.raises(Exception):
         await WorkspaceService.update_workspace_metadata(mock_db_session, mock_workspace)
     
     # Verify workspace was marked as disconnected due to token error

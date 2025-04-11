@@ -8,7 +8,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.router import router as api_router
 from app.config import settings
 from app.core.env_test import check_env
-from app.db.session import engine
 
 # Configure logging
 logging.basicConfig(
