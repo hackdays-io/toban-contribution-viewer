@@ -62,6 +62,28 @@ interface ChannelResponse {
   pagination: PaginationInfo;
 }
 
+// Installation result type
+interface BotInstallationResult {
+  channel_id: string;
+  name: string;
+  status: 'success' | 'error';
+  error_code?: string;
+  error_message?: string;
+}
+
+interface BotInstallation {
+  attempted_count: number;
+  results: BotInstallationResult[];
+}
+
+interface SelectChannelsResponse {
+  status: string;
+  message: string;
+  selected_count: number;
+  selected_channels: Partial<Channel>[];
+  bot_installation?: BotInstallation;
+}
+
 // Response type for sync operation
 interface SyncResponse {
   status: string;
@@ -381,14 +403,14 @@ const ChannelList: React.FC = () => {
         throw new Error('Failed to save channel selection');
       }
 
-      const data = await response.json();
+      const data: SelectChannelsResponse = await response.json();
 
       // Create custom success message that includes bot installation results
       let successMessage = `Selected ${data.selected_count} channels for analysis`;
 
       if (data.bot_installation) {
-        const successCount = data.bot_installation.results.filter(r => r.status === 'success').length;
-        const failCount = data.bot_installation.results.filter(r => r.status === 'error').length;
+        const successCount = data.bot_installation.results.filter((r: BotInstallationResult) => r.status === 'success').length;
+        const failCount = data.bot_installation.results.filter((r: BotInstallationResult) => r.status === 'error').length;
 
         if (successCount > 0) {
           successMessage += `, bot installed in ${successCount} new channel${successCount !== 1 ? 's' : ''}`;
