@@ -7,6 +7,7 @@ from sqlalchemy.orm import sessionmaker
 
 from app.config import settings
 
+
 # Convert SQL Alchemy URL to async version if needed
 def get_async_db_url(url):
     if url.startswith("postgresql://"):
