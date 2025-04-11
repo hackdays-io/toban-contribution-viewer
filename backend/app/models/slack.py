@@ -57,7 +57,9 @@ class SlackWorkspace(Base, BaseModel):
     # Workspace metadata
     icon_url = Column(String(1024), nullable=True)
     team_size = Column(Integer, nullable=True)
-    workspace_metadata = Column(JSONB, nullable=True)  # Renamed from metadata (reserved name)
+    workspace_metadata = Column(
+        JSONB, nullable=True
+    )  # Renamed from metadata (reserved name)
 
     # Connection status
     is_connected = Column(Boolean, default=True, nullable=False)

@@ -17,7 +17,7 @@ export const signIn = async (email: string, password: string) => {
     email,
     password,
   });
-  
+
   return { data, error };
 };
 
@@ -25,7 +25,7 @@ export const signUp = async (email: string, password: string) => {
   // In development, provide auto-confirmation option if desired
   if (env.isDev) {
     console.log('Development mode: Proceeding with standard signup. You may need to verify via the Supabase dashboard.');
-    
+
     // Use standard flow for consistency
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -36,10 +36,10 @@ export const signUp = async (email: string, password: string) => {
         emailRedirectTo: `${window.location.origin}/auth/callback`
       }
     });
-    
+
     return { data, error };
   }
-  
+
   // In production, use normal sign-up flow with email confirmation
   const { data, error } = await supabase.auth.signUp({
     email,
@@ -48,7 +48,7 @@ export const signUp = async (email: string, password: string) => {
       emailRedirectTo: `${window.location.origin}/auth/callback`
     }
   });
-  
+
   return { data, error };
 };
 
@@ -70,7 +70,7 @@ export const signInWithGithub = async () => {
       redirectTo: `${window.location.origin}/auth/callback`,
     },
   });
-  
+
   return { data, error };
 };
 
@@ -81,7 +81,7 @@ export const signInWithGoogle = async () => {
       redirectTo: `${window.location.origin}/auth/callback`,
     },
   });
-  
+
   return { data, error };
 };
 

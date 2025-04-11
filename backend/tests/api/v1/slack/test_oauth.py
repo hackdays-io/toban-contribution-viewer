@@ -1,6 +1,7 @@
 """
 Tests for Slack OAuth integration.
 """
+
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -13,10 +14,10 @@ def test_get_oauth_url(client, monkeypatch):
     """Test getting Slack OAuth URL."""
     # Mock settings
     monkeypatch.setattr(settings, "SLACK_CLIENT_ID", "test_client_id")
-    
+
     # Make request
     response = client.get("/api/v1/slack/oauth-url")
-    
+
     # Check response
     assert response.status_code == 200
     assert "url" in response.json()
@@ -29,10 +30,10 @@ def test_get_oauth_url_missing_client_id(client, monkeypatch):
     """Test error when client ID is missing."""
     # Mock settings
     monkeypatch.setattr(settings, "SLACK_CLIENT_ID", None)
-    
+
     # Make request
     response = client.get("/api/v1/slack/oauth-url")
-    
+
     # Check response
     assert response.status_code == 500
     assert "not properly configured" in response.json()["detail"]
@@ -43,10 +44,10 @@ def oauth_test_client():
     """Create a test client specifically for OAuth tests with dependencies mocked."""
     # Create a new FastAPI app
     app = FastAPI()
-    
+
     # Add the Slack OAuth router
     app.include_router(slack_router, prefix="/api/v1/slack")
-    
+
     # Create and return the test client
     return TestClient(app)
 
@@ -54,7 +55,9 @@ def oauth_test_client():
 def test_oauth_callback_success():
     """Test successful OAuth callback."""
     # Skip this test for now as it requires complex async mocking
-    pytest.skip("This test needs more complex dependency overrides for async database sessions")
+    pytest.skip(
+        "This test needs more complex dependency overrides for async database sessions"
+    )
 
 
 def test_oauth_callback_error():

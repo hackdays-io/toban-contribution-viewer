@@ -35,11 +35,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         setLoading(true);
         const { session, error } = await getSession();
-        
+
         if (error) {
           throw error;
         }
-        
+
         setSession(session);
         setUser(session?.user || null);
       } catch (error) {

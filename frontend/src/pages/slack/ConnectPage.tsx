@@ -24,11 +24,11 @@ const ConnectPage: React.FC = () => {
           <BreadcrumbLink>Connect</BreadcrumbLink>
         </BreadcrumbItem>
       </Breadcrumb>
-      
+
       <Heading size="xl" mb={8}>
         Connect Slack Workspace
       </Heading>
-      
+
       <ConnectWorkspace />
     </Box>
   );

@@ -1,6 +1,7 @@
 """
 Database session and connection management.
 """
+
 from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
@@ -13,6 +14,7 @@ def get_async_db_url(url):
     if url.startswith("postgresql://"):
         return url.replace("postgresql://", "postgresql+asyncpg://")
     return url
+
 
 # Create SQLAlchemy engines
 engine = create_engine(str(settings.DATABASE_URL))

@@ -39,7 +39,7 @@ function parseEnvFile(filePath) {
 function checkEnvVars(envVars) {
   // Check for missing required variables
   const missingVars = REQUIRED_ENV_VARS.filter(varName => !envVars[varName]);
-  
+
   if (missingVars.length > 0) {
     console.error('Missing required environment variables:');
     missingVars.forEach(varName => {
@@ -47,7 +47,7 @@ function checkEnvVars(envVars) {
     });
     process.exit(1);
   }
-  
+
   console.log('✅ All required environment variables are present.');
   return true;
 }
@@ -57,7 +57,7 @@ function checkEnv() {
   // Determine which environment file to check
   const envFile = process.argv[2] || '.env';
   const envPath = path.resolve(process.cwd(), envFile);
-  
+
   // Check if the environment file exists - if CI, create a temp file from env vars
   if (!fs.existsSync(envPath)) {
     if (process.env.CI === 'true') {
@@ -69,12 +69,12 @@ function checkEnv() {
       process.exit(1);
     }
   }
-  
+
   console.log(`Checking environment variables in: ${envPath}`);
-  
+
   // Parse the environment file
   const envVars = parseEnvFile(envPath);
-  
+
   // Check variables
   return checkEnvVars(envVars);
 }

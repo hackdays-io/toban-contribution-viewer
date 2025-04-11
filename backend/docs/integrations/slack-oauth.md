@@ -24,8 +24,8 @@ This guide explains how to set up and test the Slack OAuth integration in the To
 5. In the "Redirect URLs" section, add the following URLs:
    - For local development: `http://localhost:8000/api/v1/slack/oauth-callback`
    - For production: `https://yourdomain.com/api/v1/slack/oauth-callback`
-   
-   **Important**: 
+
+   **Important**:
    - Slack requires an exact match between the redirect_uri in the OAuth request and the configured URLs
    - Our application always uses the backend URL for callbacks, even when the OAuth flow is initiated from the frontend
    - For non-localhost URLs, Slack REQUIRES HTTPS (http:// URLs will be rejected)

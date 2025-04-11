@@ -87,7 +87,7 @@ backend_exec() {
     print_error "Please provide a command to execute in the backend container."
     exit 1
   fi
-  
+
   print_message "Executing in backend container: $*"
   docker compose exec backend "$@"
 }
@@ -98,7 +98,7 @@ frontend_exec() {
     print_error "Please provide a command to execute in the frontend container."
     exit 1
   fi
-  
+
   print_message "Executing in frontend container: $*"
   docker compose exec frontend "$@"
 }

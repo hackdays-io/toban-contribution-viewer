@@ -23,6 +23,7 @@ if not check_env(exit_on_error=False):
 # Background task for Slack token verification
 background_tasks = set()
 
+
 # Define lifespan context manager to handle startup/shutdown events
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -35,19 +36,20 @@ async def lifespan(app: FastAPI):
         task = asyncio.create_task(schedule_background_tasks())
         background_tasks.add(task)
         task.add_done_callback(background_tasks.discard)
-        
+
         logger.info("Started Slack background tasks")
-    
+
     yield
-    
+
     # Shutdown: Cancel any running background tasks
     for task in background_tasks:
         task.cancel()
-    
+
     # Wait for all tasks to complete with a timeout
     if background_tasks:
         await asyncio.gather(*background_tasks, return_exceptions=True)
         logger.info("Background tasks cancelled")
+
 
 # Create FastAPI application
 app = FastAPI(

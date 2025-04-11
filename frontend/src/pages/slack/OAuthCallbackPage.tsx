@@ -11,7 +11,7 @@ const OAuthCallbackPage: React.FC = () => {
       <Heading size="xl" mb={8} textAlign="center">
         Connecting Slack Workspace
       </Heading>
-      
+
       <OAuthCallback />
     </Box>
   );

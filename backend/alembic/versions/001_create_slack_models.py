@@ -21,7 +21,7 @@ depends_on = None
 def upgrade() -> None:
     # Create the uuid-ossp extension for uuid_generate_v4() function
     op.execute('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"')
-    
+
     # Create SlackWorkspace table
     op.create_table(
         "slackworkspace",

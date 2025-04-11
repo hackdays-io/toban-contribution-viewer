@@ -12,7 +12,7 @@ const rootElement = document.getElementById('root');
 
 if (rootElement) {
   const root = createRoot(rootElement);
-  
+
   root.render(
     <StrictMode>
       {envValid ? (
@@ -21,7 +21,7 @@ if (rootElement) {
         <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
           <h1>Environment Configuration Error</h1>
           <p>
-            The application is missing required environment variables. 
+            The application is missing required environment variables.
             Please check the console for more information.
           </p>
           {import.meta.env.DEV && (

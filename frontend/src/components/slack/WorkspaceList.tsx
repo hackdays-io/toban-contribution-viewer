@@ -63,11 +63,11 @@ const WorkspaceList: React.FC = () => {
     try {
       setIsLoading(true);
       const response = await fetch(`${import.meta.env.VITE_API_URL}/slack/workspaces`);
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch workspaces');
       }
-      
+
       const data = await response.json();
       setWorkspaces(data.workspaces || []);
     } catch (error) {
@@ -89,19 +89,19 @@ const WorkspaceList: React.FC = () => {
    */
   const refreshWorkspace = async (workspaceId: string) => {
     setIsRefreshing(workspaceId);
-    
+
     try {
       const response = await fetch(
         `${import.meta.env.VITE_API_URL}/slack/workspaces/${workspaceId}/verify`
       );
-      
+
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.detail || 'Failed to verify workspace');
       }
-      
+
       const data = await response.json();
-      
+
       toast({
         title: 'Workspace Refreshed',
         description: data.message || 'Workspace metadata refreshed successfully',
@@ -109,7 +109,7 @@ const WorkspaceList: React.FC = () => {
         duration: 5000,
         isClosable: true,
       });
-      
+
       // Refresh the workspace list
       fetchWorkspaces();
     } catch (error) {
@@ -131,7 +131,7 @@ const WorkspaceList: React.FC = () => {
    */
   const handleDisconnect = async () => {
     if (!selectedWorkspace) return;
-    
+
     try {
       const response = await fetch(
         `${import.meta.env.VITE_API_URL}/slack/workspaces/${selectedWorkspace.id}`,
@@ -139,12 +139,12 @@ const WorkspaceList: React.FC = () => {
           method: 'DELETE',
         }
       );
-      
+
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.detail || 'Failed to disconnect workspace');
       }
-      
+
       toast({
         title: 'Workspace Disconnected',
         description: `${selectedWorkspace.name} has been disconnected successfully.`,
@@ -152,7 +152,7 @@ const WorkspaceList: React.FC = () => {
         duration: 5000,
         isClosable: true,
       });
-      
+
       // Refresh the list
       fetchWorkspaces();
     } catch (error) {
@@ -190,9 +190,9 @@ const WorkspaceList: React.FC = () => {
           Connect Workspace
         </Button>
       </HStack>
-      
+
       <Divider mb={6} />
-      
+
       {isLoading ? (
         <Flex justify="center" align="center" minHeight="200px">
           <Spinner size="xl" color="purple.500" thickness="4px" />
@@ -229,17 +229,17 @@ const WorkspaceList: React.FC = () => {
             >
               <HStack mb={3} spacing={4} align="start">
                 {workspace.icon_url ? (
-                  <Box 
-                    width="48px" 
-                    height="48px" 
-                    borderRadius="md" 
+                  <Box
+                    width="48px"
+                    height="48px"
+                    borderRadius="md"
                     overflow="hidden"
                     flexShrink={0}
                   >
-                    <img 
-                      src={workspace.icon_url} 
-                      alt={`${workspace.name} icon`} 
-                      width="100%" 
+                    <img
+                      src={workspace.icon_url}
+                      alt={`${workspace.name} icon`}
+                      width="100%"
                       height="100%"
                       style={{ objectFit: 'cover' }}
                       onError={(e) => {
@@ -265,7 +265,7 @@ const WorkspaceList: React.FC = () => {
                     />
                   </Box>
                 ) : (
-                  <Box 
+                  <Box
                     width="48px"
                     height="48px"
                     borderRadius="md"
@@ -281,7 +281,7 @@ const WorkspaceList: React.FC = () => {
                     {workspace.name.charAt(0).toUpperCase()}
                   </Box>
                 )}
-                
+
                 <Box flex="1">
                   <HStack mb={1} justify="space-between">
                     <Heading size="md">{workspace.name}</Heading>
@@ -301,11 +301,11 @@ const WorkspaceList: React.FC = () => {
                         : 'Disconnected'}
                     </Badge>
                   </HStack>
-                  
+
                   <Text color="gray.600" mb={1}>
                     {workspace.domain ? `${workspace.domain}.slack.com` : `Workspace ${workspace.slack_id}`}
                   </Text>
-                  
+
                   {workspace.team_size && (
                     <Text fontSize="sm" color="gray.600" mb={1}>
                       Team size: {workspace.team_size} members
@@ -313,7 +313,7 @@ const WorkspaceList: React.FC = () => {
                   )}
                 </Box>
               </HStack>
-              
+
               <VStack align="start" spacing={1} mb={4}>
                 <Text fontSize="sm" color="gray.600">
                   Connected: {new Date(workspace.last_connected_at).toLocaleString()}
@@ -324,7 +324,7 @@ const WorkspaceList: React.FC = () => {
                   </Text>
                 )}
               </VStack>
-              
+
               <HStack spacing={4} mt={4}>
                 <Button
                   size="sm"
@@ -350,7 +350,7 @@ const WorkspaceList: React.FC = () => {
           ))}
         </SimpleGrid>
       )}
-      
+
       {/* Disconnect Confirmation Dialog */}
       <AlertDialog isOpen={isOpen} leastDestructiveRef={cancelRef} onClose={onClose}>
         <AlertDialogOverlay>
@@ -358,7 +358,7 @@ const WorkspaceList: React.FC = () => {
             <AlertDialogHeader fontSize="lg" fontWeight="bold">
               Disconnect Workspace
             </AlertDialogHeader>
-            
+
             <AlertDialogBody>
               Are you sure you want to disconnect{' '}
               <Text as="span" fontWeight="bold">
@@ -366,7 +366,7 @@ const WorkspaceList: React.FC = () => {
               </Text>
               ? This will remove access to the workspace data.
             </AlertDialogBody>
-            
+
             <AlertDialogFooter>
               <Button ref={cancelRef} onClick={onClose}>
                 Cancel

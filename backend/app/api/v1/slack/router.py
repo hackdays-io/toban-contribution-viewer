@@ -1,6 +1,7 @@
 """
 Main router for Slack API endpoints.
 """
+
 from fastapi import APIRouter
 
 from app.api.v1.slack.oauth import router as oauth_router

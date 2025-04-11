@@ -1,6 +1,7 @@
 """
 Main API router for the application.
 """
+
 from fastapi import APIRouter
 
 from app.api.v1.router import router as v1_router

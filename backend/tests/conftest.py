@@ -1,6 +1,7 @@
 """
 Pytest configuration file with shared fixtures.
 """
+
 import asyncio
 import os
 from typing import AsyncGenerator
@@ -32,8 +33,8 @@ test_engine = create_async_engine(
 # Create session factory
 TestingSessionLocal = sessionmaker(
     class_=AsyncSession,
-    autocommit=False, 
-    autoflush=False, 
+    autocommit=False,
+    autoflush=False,
     bind=test_engine,
     expire_on_commit=False,
 )
@@ -84,13 +85,14 @@ def override_get_db(db_session: AsyncSession):
     """
     Override the get_db dependency to use the test database.
     """
+
     # Create a non-async wrapper function
     async def _get_test_db():
         try:
             yield db_session
         finally:
             pass
-    
+
     return _get_test_db
 
 
@@ -101,12 +103,12 @@ def app(override_get_db):
     """
     app = FastAPI()
     app.include_router(api_router)
-    
+
     # Override the get_async_db dependency
     app.dependency_overrides[get_async_db] = override_get_db
-    
+
     yield app
-    
+
     # Clear the override after test is done
     app.dependency_overrides.clear()
 
@@ -117,6 +119,7 @@ def client(app):
     Create a test client for the app.
     """
     from fastapi.testclient import TestClient
+
     return TestClient(app)
 
 
@@ -136,9 +139,9 @@ def mock_slack_api_success():
         "access_token": "xoxb-test-token",
         "bot_user_id": "B12345",
         "team": {"id": "T12345", "name": "Test Team", "domain": "test"},
-        "is_enterprise_install": False
+        "is_enterprise_install": False,
     }
-    
+
     with patch("requests.post", return_value=mock_response):
         yield
 
@@ -150,10 +153,7 @@ def mock_slack_api_error():
     """
     mock_response = MagicMock()
     mock_response.raise_for_status = MagicMock()
-    mock_response.json.return_value = {
-        "ok": False,
-        "error": "invalid_code"
-    }
-    
+    mock_response.json.return_value = {"ok": False, "error": "invalid_code"}
+
     with patch("requests.post", return_value=mock_response):
         yield

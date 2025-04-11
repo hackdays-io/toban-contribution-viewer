@@ -15,30 +15,38 @@ class Settings(BaseSettings):
     PROJECT_VERSION: str = "0.1.0"
     API_PREFIX: str = "/api/v1"
     DEBUG: bool = False
-    API_URL: Optional[str] = None  # Base URL for the API, used for constructing callback URLs (e.g., ngrok URL)
-    FRONTEND_URL: Optional[str] = None  # Base URL for the frontend, used for redirects (e.g., ngrok app URL)
+    API_URL: Optional[str] = (
+        None  # Base URL for the API, used for constructing callback URLs (e.g., ngrok URL)
+    )
+    FRONTEND_URL: Optional[str] = (
+        None  # Base URL for the frontend, used for redirects (e.g., ngrok app URL)
+    )
     ADDITIONAL_CORS_ORIGINS: str = ""  # Comma-separated list of additional CORS origins
     ALLOWED_HOSTS: List[str] = [
-        "http://localhost:5173", 
-        "http://localhost:8000", 
-        "http://127.0.0.1:5173", 
+        "http://localhost:5173",
+        "http://localhost:8000",
+        "http://127.0.0.1:5173",
         "http://127.0.0.1:8000",
         # Allow ngrok domains for development
         "https://*.ngrok-free.app",
         "https://*.ngrok.io",
     ]
-    
+
     @validator("ALLOWED_HOSTS", pre=True)
     def add_additional_cors_origins(cls, v, values):
         """Add any additional CORS origins from the environment."""
         allowed_hosts = list(v)
         additional_cors = values.get("ADDITIONAL_CORS_ORIGINS", "")
-        
+
         if additional_cors:
             # Split by comma and filter out empty strings
-            origins = [origin.strip() for origin in additional_cors.split(",") if origin.strip()]
+            origins = [
+                origin.strip()
+                for origin in additional_cors.split(",")
+                if origin.strip()
+            ]
             allowed_hosts.extend(origins)
-            
+
         return allowed_hosts
 
     # Secret Keys

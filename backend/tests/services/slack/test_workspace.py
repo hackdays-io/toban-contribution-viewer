@@ -1,6 +1,7 @@
 """
 Tests for Slack workspace service.
 """
+
 from datetime import datetime
 from unittest.mock import AsyncMock, patch
 
@@ -38,7 +39,9 @@ def mock_workspace():
 
 @pytest.mark.asyncio
 @patch("app.services.slack.workspace.SlackApiClient")
-async def test_update_workspace_metadata_success(mock_client_class, mock_db_session, mock_workspace):
+async def test_update_workspace_metadata_success(
+    mock_client_class, mock_db_session, mock_workspace
+):
     """Test updating workspace metadata successfully."""
     # Mock API responses
     mock_client = AsyncMock(spec=SlackApiClient)
@@ -56,10 +59,12 @@ async def test_update_workspace_metadata_success(mock_client_class, mock_db_sess
     }
     mock_client.get_user_count.return_value = 42
     mock_client_class.return_value = mock_client
-    
+
     # Execute the service method
-    result = await WorkspaceService.update_workspace_metadata(mock_db_session, mock_workspace)
-    
+    result = await WorkspaceService.update_workspace_metadata(
+        mock_db_session, mock_workspace
+    )
+
     # Verify results
     assert result.name == "Updated Name"
     assert result.domain == "updatedworkspace"
@@ -69,7 +74,7 @@ async def test_update_workspace_metadata_success(mock_client_class, mock_db_sess
     assert result.workspace_metadata["icon_default"] is False
     assert result.workspace_metadata["enterprise_id"] == "E12345"
     assert result.workspace_metadata["enterprise_name"] == "Enterprise"
-    
+
     # Verify DB operations
     mock_db_session.add.assert_called_once_with(mock_workspace)
     mock_db_session.commit.assert_called_once()
@@ -78,7 +83,9 @@ async def test_update_workspace_metadata_success(mock_client_class, mock_db_sess
 
 @pytest.mark.asyncio
 @patch("app.services.slack.workspace.SlackApiClient")
-async def test_update_workspace_metadata_api_error(mock_client_class, mock_db_session, mock_workspace):
+async def test_update_workspace_metadata_api_error(
+    mock_client_class, mock_db_session, mock_workspace
+):
     """Test handling API errors during metadata update."""
     # Mock API error
     mock_client = AsyncMock(spec=SlackApiClient)
@@ -87,11 +94,13 @@ async def test_update_workspace_metadata_api_error(mock_client_class, mock_db_se
         error_code="invalid_auth",
     )
     mock_client_class.return_value = mock_client
-    
+
     # Execute the service method and expect an exception
     with pytest.raises(Exception):
-        await WorkspaceService.update_workspace_metadata(mock_db_session, mock_workspace)
-    
+        await WorkspaceService.update_workspace_metadata(
+            mock_db_session, mock_workspace
+        )
+
     # Verify workspace was marked as disconnected due to token error
     assert mock_workspace.is_connected is False
     assert mock_workspace.connection_status == "token_expired"
@@ -104,17 +113,19 @@ async def test_update_workspace_metadata_api_error(mock_client_class, mock_db_se
 @pytest.mark.skip(reason="Need to fix async mock chain")
 @pytest.mark.asyncio
 @patch("app.services.slack.workspace.SlackApiClient")
-async def test_verify_workspace_tokens(mock_client_class, mock_db_session, mock_workspace):
+async def test_verify_workspace_tokens(
+    mock_client_class, mock_db_session, mock_workspace
+):
     """Test token verification."""
     # Mock API client and response
     mock_client = AsyncMock(spec=SlackApiClient)
     mock_client.verify_token.return_value = True
     mock_client_class.return_value = mock_client
-    
+
     # Mock database query
     # This is where we hit mocking issues with AsyncMock chains
     # Will fix in a follow-up PR
-    
+
     # Skip the actual test for now
     assert True
 
@@ -122,7 +133,9 @@ async def test_verify_workspace_tokens(mock_client_class, mock_db_session, mock_
 @pytest.mark.skip(reason="Need to fix async mock chain")
 @pytest.mark.asyncio
 @patch("app.services.slack.workspace.SlackApiClient")
-async def test_verify_workspace_tokens_invalid(mock_client_class, mock_db_session, mock_workspace):
+async def test_verify_workspace_tokens_invalid(
+    mock_client_class, mock_db_session, mock_workspace
+):
     """Test handling invalid tokens."""
     # Skip the actual test for now
     assert True

@@ -9,11 +9,11 @@ const Home: React.FC = () => {
 
   return (
     <Box>
-      <Box 
-        as="section" 
-        bg={bgColor} 
-        py={20} 
-        px={8} 
+      <Box
+        as="section"
+        bg={bgColor}
+        py={20}
+        px={8}
         borderRadius="lg"
         textAlign="center"
       >
@@ -25,16 +25,16 @@ const Home: React.FC = () => {
             Visualize and track contributions across various platforms.
             Get insights into your team's activity and improve collaboration.
           </Text>
-          <Stack 
-            direction={{ base: 'column', md: 'row' }} 
-            spacing={4} 
+          <Stack
+            direction={{ base: 'column', md: 'row' }}
+            spacing={4}
             justify="center"
           >
             {user ? (
-              <Button 
+              <Button
                 as={RouterLink}
                 to="/dashboard"
-                colorScheme="blue" 
+                colorScheme="blue"
                 size="lg"
                 fontWeight="bold"
               >
@@ -42,19 +42,19 @@ const Home: React.FC = () => {
               </Button>
             ) : (
               <>
-                <Button 
+                <Button
                   as={RouterLink}
                   to="/login"
-                  colorScheme="blue" 
+                  colorScheme="blue"
                   size="lg"
                   fontWeight="bold"
                 >
                   Login
                 </Button>
-                <Button 
+                <Button
                   as={RouterLink}
                   to="/signup"
-                  colorScheme="teal" 
+                  colorScheme="teal"
                   size="lg"
                   fontWeight="bold"
                 >
@@ -71,22 +71,22 @@ const Home: React.FC = () => {
           <Heading as="h2" size="xl" mb={10} textAlign="center">
             Key Features
           </Heading>
-          
-          <Stack 
+
+          <Stack
             direction={{ base: 'column', md: 'row' }}
             spacing={10}
             justify="center"
             align="flex-start"
           >
-            <Feature 
+            <Feature
               title="Integration"
               description="Connect with Slack, GitHub, and Notion to collect activity data across multiple platforms."
             />
-            <Feature 
+            <Feature
               title="Analysis"
               description="AI-powered analysis identifies meaningful contributions and patterns in team communication."
             />
-            <Feature 
+            <Feature
               title="Visualization"
               description="Interactive dashboards with customizable views to showcase team contributions."
             />
@@ -104,7 +104,7 @@ interface FeatureProps {
 
 const Feature: React.FC<FeatureProps> = ({ title, description }) => {
   return (
-    <Box 
+    <Box
       bg={useColorModeValue('white', 'gray.700')}
       borderRadius="lg"
       boxShadow="md"

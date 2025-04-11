@@ -44,17 +44,17 @@ const validateEnv = (): { valid: boolean; missing: string[] } => {
 // Get a specific environment variable with fallback to defaults for optional ones
 export const getEnvVar = <T extends EnvVar>(name: T): string => {
   const value = import.meta.env[name];
-  
+
   // If it's a required environment variable and it's missing, throw an error
   if (!value && REQUIRED_ENV_VARS.includes(name as RequiredEnvVar)) {
     throw new Error(`Missing required environment variable: ${name}`);
   }
-  
+
   // For optional environment variables, use the default value if not provided
   if (!value && name in OPTIONAL_ENV_VARS) {
     return OPTIONAL_ENV_VARS[name as OptionalEnvVar];
   }
-  
+
   return value as string;
 };
 
@@ -67,13 +67,13 @@ export const getBooleanEnvVar = (name: EnvVar): boolean => {
 // Validate environment on load
 export const validateEnvironment = (): boolean => {
   const { valid, missing } = validateEnv();
-  
+
   if (!valid) {
     console.error(
       'The app is missing required environment variables:',
       missing.join(', ')
     );
-    
+
     // Only show alert in development mode to avoid exposing errors to users
     if (getBooleanEnvVar('VITE_DEV_MODE')) {
       alert(
@@ -82,7 +82,7 @@ export const validateEnvironment = (): boolean => {
       );
     }
   }
-  
+
   return valid;
 };
 
