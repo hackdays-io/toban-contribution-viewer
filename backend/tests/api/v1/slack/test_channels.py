@@ -4,6 +4,7 @@ These tests are skipped because the channels API is not yet implemented.
 """
 
 import uuid
+
 import pytest
 
 # Import the models we need for the tests
