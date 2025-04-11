@@ -30,7 +30,7 @@ async def lifespan(app: FastAPI):
     if settings.ENABLE_SLACK_INTEGRATION:
         # Import here to avoid circular imports
         from app.services.slack.tasks import schedule_background_tasks
-        
+
         # Start background task for token verification
         task = asyncio.create_task(schedule_background_tasks())
         background_tasks.add(task)
