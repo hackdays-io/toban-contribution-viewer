@@ -2,11 +2,12 @@
 Slack OAuth integration routes.
 """
 import logging
-from typing import Dict, Optional
+from datetime import datetime
+from typing import Any, Dict, Optional
 from urllib.parse import urlencode
 
 import requests
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from pydantic import BaseModel, Field, validator
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -14,6 +15,7 @@ from sqlalchemy.future import select
 from app.config import settings
 from app.db.session import get_async_db
 from app.models.slack import SlackWorkspace
+from app.services.slack.workspace import WorkspaceService
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -124,20 +126,23 @@ async def get_oauth_url(
 
 @router.get("/oauth-callback")
 async def slack_oauth_callback(
+    background_tasks: BackgroundTasks,
+    db: AsyncSession = Depends(get_async_db),
     code: str = Query(...),
     state: Optional[str] = Query(None),
     error: Optional[str] = Query(None),
     redirect_from_frontend: Optional[bool] = Query(False),
-    db: AsyncSession = Depends(get_async_db),
 ) -> Dict[str, str]:
     """
     Handle Slack OAuth callback.
 
     Args:
+        background_tasks: FastAPI background tasks
+        db: Database session
         code: Authorization code from Slack
         state: Optional state parameter for CSRF validation
         error: Error message if authorization failed
-        db: Database session
+        redirect_from_frontend: Whether the request came from the frontend
 
     Returns:
         Dictionary with status message
@@ -189,26 +194,49 @@ async def slack_oauth_callback(
         existing_workspace = result.scalars().first()
         
         # Create or update the workspace
+        now = datetime.utcnow()
+        
         if existing_workspace:
             # Update existing workspace
-            existing_workspace.name = team_name
-            existing_workspace.domain = team_domain
-            existing_workspace.access_token = oauth_response.access_token
-            existing_workspace.is_connected = True
-            existing_workspace.connection_status = "active"
+            workspace = existing_workspace
+            workspace.name = team_name
+            workspace.domain = team_domain
+            workspace.access_token = oauth_response.access_token
+            workspace.is_connected = True
+            workspace.connection_status = "active"
+            workspace.last_connected_at = now
         else:
             # Create new workspace
-            new_workspace = SlackWorkspace(
+            workspace = SlackWorkspace(
                 slack_id=team_id,
                 name=team_name,
                 domain=team_domain,
                 access_token=oauth_response.access_token,
                 is_connected=True,
                 connection_status="active",
+                last_connected_at=now,
             )
-            db.add(new_workspace)
+            db.add(workspace)
         
+        # Save the basic workspace information
         await db.commit()
+        await db.refresh(workspace)
+        
+        # Add background task to fetch additional workspace metadata
+        # This keeps the OAuth flow fast while still getting the additional data we need
+        async def fetch_workspace_metadata(workspace_id: str):
+            try:
+                async with AsyncSession(bind=db.bind) as session:
+                    result = await session.execute(
+                        select(SlackWorkspace).where(SlackWorkspace.id == workspace_id)
+                    )
+                    workspace = result.scalars().first()
+                    if workspace:
+                        await WorkspaceService.update_workspace_metadata(session, workspace)
+            except Exception as e:
+                logger.error(f"Error fetching workspace metadata: {str(e)}")
+        
+        background_tasks.add_task(fetch_workspace_metadata, str(workspace.id))
         
         return {"status": "success", "message": f"Connected to {team_name}"}
         
@@ -237,7 +265,7 @@ async def list_workspaces(
         db: Database session
 
     Returns:
-        Dictionary containing list of workspaces
+        Dictionary containing list of workspaces with metadata
     """
     try:
         result = await db.execute(
@@ -251,10 +279,14 @@ async def list_workspaces(
                 "slack_id": workspace.slack_id,
                 "name": workspace.name,
                 "domain": workspace.domain,
+                "icon_url": workspace.icon_url,
+                "team_size": workspace.team_size,
                 "is_connected": workspace.is_connected,
                 "connection_status": workspace.connection_status,
                 "last_connected_at": workspace.last_connected_at,
                 "last_sync_at": workspace.last_sync_at,
+                # Include additional metadata if available
+                "metadata": workspace.workspace_metadata or {},
             }
             for workspace in workspaces
         ]
@@ -266,6 +298,74 @@ async def list_workspaces(
         raise HTTPException(
             status_code=500,
             detail="An error occurred while retrieving workspace data",
+        )
+
+
+@router.get("/workspaces/{workspace_id}/verify")
+async def verify_workspace_token(
+    workspace_id: str,
+    db: AsyncSession = Depends(get_async_db),
+) -> Dict[str, Any]:
+    """
+    Verify a workspace token and refresh metadata.
+    
+    Args:
+        workspace_id: UUID of the workspace to verify
+        db: Database session
+    
+    Returns:
+        Dictionary with verification status
+    """
+    try:
+        # Check if workspace exists
+        result = await db.execute(
+            select(SlackWorkspace).where(SlackWorkspace.id == workspace_id)
+        )
+        workspace = result.scalars().first()
+        
+        if not workspace:
+            raise HTTPException(status_code=404, detail="Workspace not found")
+        
+        # Verify the token
+        results = await WorkspaceService.verify_workspace_tokens(db, workspace_id)
+        
+        if results and results[0]["status"] == "verified":
+            # If token is valid, update workspace metadata
+            await WorkspaceService.update_workspace_metadata(db, workspace)
+            
+            return {
+                "status": "success",
+                "message": f"Token verified for {workspace.name}",
+                "workspace": {
+                    "id": str(workspace.id),
+                    "name": workspace.name,
+                    "domain": workspace.domain,
+                    "icon_url": workspace.icon_url,
+                    "team_size": workspace.team_size,
+                    "is_connected": workspace.is_connected,
+                    "connection_status": workspace.connection_status,
+                }
+            }
+        else:
+            # Return the verification result
+            return {
+                "status": "error",
+                "message": results[0]["message"] if results else "Token verification failed",
+                "workspace": {
+                    "id": str(workspace.id),
+                    "name": workspace.name,
+                    "is_connected": workspace.is_connected,
+                    "connection_status": workspace.connection_status,
+                }
+            }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error verifying workspace token: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail="An error occurred while verifying the workspace token",
         )
 
 
