@@ -5,7 +5,15 @@ repos:
     -   id: trailing-whitespace
     -   id: end-of-file-fixer
     -   id: check-yaml
+    -   id: check-json
     -   id: check-added-large-files
+    -   id: check-ast
+    -   id: check-merge-conflict
+    -   id: debug-statements
+    -   id: detect-private-key
+    -   id: double-quote-string-fixer
+    -   id: name-tests-test
+        args: ['--pytest-test-first']
 
 # Black formatter
 -   repo: https://github.com/psf/black
@@ -31,4 +39,36 @@ repos:
     -   id: flake8
         files: ^backend/
         types: [python]
-        args: [--max-complexity=10, --max-line-length=120]
+        additional_dependencies:
+        -   flake8-bugbear
+        -   flake8-comprehensions
+        -   flake8-docstrings
+        -   flake8-simplify
+        args: [
+            '--max-complexity=10',
+            '--max-line-length=120',
+            '--ignore=E203,W503,D100,D104,D107',  # E203, W503: conflict with black, D100, D104, D107: docstring in public module/package/init
+            '--exclude=alembic/*,venv/*,__pycache__/*'
+        ]
+
+# mypy
+-   repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.8.0
+    hooks:
+    -   id: mypy
+        files: ^backend/
+        exclude: ^backend/(alembic/|tests/|venv/)
+        additional_dependencies:
+        -   pydantic
+        -   types-requests
+        -   sqlalchemy-stubs
+        args: ['--ignore-missing-imports', '--disallow-untyped-defs', '--disallow-incomplete-defs', '--check-untyped-defs']
+
+# bandit (security linter)
+-   repo: https://github.com/PyCQA/bandit
+    rev: 1.7.8
+    hooks:
+    -   id: bandit
+        files: ^backend/
+        exclude: ^backend/(tests/|venv/)
+        args: ['--skip=B101,B311', '--recursive']
