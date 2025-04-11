@@ -74,6 +74,12 @@ class ChannelService:
 
         # Apply filters
         if channel_types:
+            # Check and log the actual values in the database for debugging
+            existing_types_query = select(SlackChannel.type).where(SlackChannel.workspace_id == workspace_id).distinct()
+            existing_types_result = await db.execute(existing_types_query)
+            existing_types = [row[0] for row in existing_types_result.fetchall()]
+            logger.info(f"Existing channel types in database: {existing_types}")
+            
             query = query.where(SlackChannel.type.in_(channel_types))
             logger.info(f"Applied channel type filter: {channel_types}")
 
@@ -101,8 +107,10 @@ class ChannelService:
         )
         if channel_types:
             count_query = count_query.where(SlackChannel.type.in_(channel_types))
+            logger.info(f"Applied channel type filter to count query: {channel_types}")
         if not include_archived:
             count_query = count_query.where(SlackChannel.is_archived.is_(False))
+            logger.info("Excluded archived channels from count query")
 
         try:
             count_result = await db.execute(count_query)
@@ -236,7 +244,7 @@ class ChannelService:
 
                     # Map the type field
                     channel_type = "unknown"
-                    if channel_data.get("is_channel"):
+                    if channel_data.get("is_channel") or channel_data.get("is_general"):
                         channel_type = "public"
                     elif channel_data.get("is_group") or channel_data.get("is_private"):
                         channel_type = "private"
@@ -244,6 +252,15 @@ class ChannelService:
                         channel_type = "mpim"
                     elif channel_data.get("is_im"):
                         channel_type = "im"
+                    
+                    # Log the mapping for debugging
+                    logger.info(f"Channel {channel_data.get('name', 'unknown')}: " +
+                               f"is_channel={channel_data.get('is_channel')}, " +
+                               f"is_private={channel_data.get('is_private')}, " +
+                               f"is_group={channel_data.get('is_group')}, " +
+                               f"is_mpim={channel_data.get('is_mpim')}, " +
+                               f"is_im={channel_data.get('is_im')} " +
+                               f"→ mapped to: {channel_type}")
 
                     # Check if channel already exists
                     channel_result = await db.execute(
@@ -800,7 +817,7 @@ class ChannelService:
 
             # Map the type field
             channel_type = "unknown"
-            if channel_data.get("is_channel"):
+            if channel_data.get("is_channel") or channel_data.get("is_general"):
                 channel_type = "public"
             elif channel_data.get("is_group") or channel_data.get("is_private"):
                 channel_type = "private"
@@ -808,6 +825,15 @@ class ChannelService:
                 channel_type = "mpim"
             elif channel_data.get("is_im"):
                 channel_type = "im"
+            
+            # Log the mapping for debugging
+            logger.info(f"Batch process - Channel {channel_data.get('name', 'unknown')}: " +
+                        f"is_channel={channel_data.get('is_channel')}, " +
+                        f"is_private={channel_data.get('is_private')}, " +
+                        f"is_group={channel_data.get('is_group')}, " +
+                        f"is_mpim={channel_data.get('is_mpim')}, " +
+                        f"is_im={channel_data.get('is_im')} " +
+                        f"→ mapped to: {channel_type}")
 
             # Check if channel already exists
             channel_result = await session.execute(

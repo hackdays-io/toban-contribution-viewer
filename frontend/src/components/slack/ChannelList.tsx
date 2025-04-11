@@ -168,8 +168,10 @@ const ChannelList: React.FC = () => {
 
       const typeFilters = getTypeFilters();
       if (typeFilters) {
+        console.log("Applying type filters:", typeFilters);
         typeFilters.forEach(type => queryParams.append('types', type));
       }
+      console.log("API query params:", queryParams.toString());
 
       const response = await fetch(
         `${import.meta.env.VITE_API_URL}/slack/workspaces/${workspaceId}/channels?${queryParams}`
