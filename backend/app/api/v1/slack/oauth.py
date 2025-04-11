@@ -268,8 +268,9 @@ async def list_workspaces(
         Dictionary containing list of workspaces with metadata
     """
     try:
+        # We want to show all workspaces, both connected and disconnected
         result = await db.execute(
-            select(SlackWorkspace).where(SlackWorkspace.is_active.is_(True))
+            select(SlackWorkspace)
         )
         workspaces = result.scalars().all()
         
