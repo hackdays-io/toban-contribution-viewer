@@ -173,7 +173,7 @@ def test_sync_channels():
             # Make the request
             response = client.post(
                 f"/workspaces/{workspace_id}/channels/sync",
-                params={"limit": 500, "sync_all_pages": "true"},
+                params={"limit": 100, "sync_all_pages": "1"},
             )
 
             # Verify the response
