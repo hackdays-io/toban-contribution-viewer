@@ -374,20 +374,22 @@ class ChannelService:
         db: AsyncSession,
         workspace_id: str,
         channel_ids: List[str],
+        install_bot: bool = True,
     ) -> Dict[str, Any]:
         """
-        Select channels for analysis.
+        Select channels for analysis and optionally install the bot in channels where it's not already a member.
 
         Args:
             db: Database session
             workspace_id: UUID of the workspace
             channel_ids: List of channel UUIDs to select for analysis
+            install_bot: Whether to attempt to install the bot in selected channels where it's not already a member
 
         Returns:
             Dictionary with status information
         """
         try:
-            # Verify workspace exists
+            # Verify workspace exists and get access token
             workspace_result = await db.execute(
                 select(SlackWorkspace).where(SlackWorkspace.id == workspace_id)
             )
@@ -396,6 +398,17 @@ class ChannelService:
             if not workspace:
                 logger.error(f"Workspace not found: {workspace_id}")
                 raise HTTPException(status_code=404, detail="Workspace not found")
+
+            if install_bot and not workspace.access_token:
+                logger.error(f"Workspace has no access token: {workspace_id}")
+                raise HTTPException(
+                    status_code=400, detail="Workspace is not properly connected"
+                )
+
+            # Create API client if we need to install the bot
+            api_client = None
+            if install_bot:
+                api_client = SlackApiClient(workspace.access_token)
 
             # First, unselect all channels
             await db.execute(
@@ -415,7 +428,7 @@ class ChannelService:
                     .values(is_selected_for_analysis=True)
                 )
 
-            # Get count of selected channels
+            # Get selected channels
             selected_count_result = await db.execute(
                 select(SlackChannel).where(
                     SlackChannel.workspace_id == workspace_id,
@@ -424,10 +437,62 @@ class ChannelService:
             )
             selected_channels = selected_count_result.scalars().all()
 
+            # Install bot in selected channels if requested
+            bot_installation_results = []
+            if install_bot and api_client and selected_channels:
+                for channel in selected_channels:
+                    # Skip channels where bot is already a member or types that don't need installation (like DMs)
+                    if channel.is_bot_member or channel.type not in [
+                        "public",
+                        "private",
+                    ]:
+                        continue
+
+                    try:
+                        # Try to join the channel
+                        logger.info(
+                            f"Attempting to join channel {channel.name} ({channel.slack_id})"
+                        )
+                        await api_client.join_channel(channel.slack_id)
+
+                        # Update channel record
+                        channel.is_bot_member = True
+                        channel.bot_joined_at = datetime.utcnow()
+
+                        bot_installation_results.append(
+                            {
+                                "channel_id": str(channel.id),
+                                "name": channel.name,
+                                "status": "success",
+                            }
+                        )
+                        logger.info(f"Successfully joined channel {channel.name}")
+
+                    except SlackApiError as e:
+                        error_message = str(e)
+                        if hasattr(e, "error_code"):
+                            error_code = e.error_code
+                        else:
+                            error_code = "unknown_error"
+
+                        bot_installation_results.append(
+                            {
+                                "channel_id": str(channel.id),
+                                "name": channel.name,
+                                "status": "error",
+                                "error_code": error_code,
+                                "error_message": error_message,
+                            }
+                        )
+                        logger.error(
+                            f"Failed to join channel {channel.name}: {error_message}"
+                        )
+
             # Commit the changes
             await db.commit()
 
-            return {
+            # Prepare response
+            response = {
                 "status": "success",
                 "message": f"Selected {len(selected_channels)} channels for analysis",
                 "selected_count": len(selected_channels),
@@ -441,6 +506,15 @@ class ChannelService:
                     for channel in selected_channels
                 ],
             }
+
+            # Add bot installation results if applicable
+            if install_bot and bot_installation_results:
+                response["bot_installation"] = {
+                    "attempted_count": len(bot_installation_results),
+                    "results": bot_installation_results,
+                }
+
+            return response
 
         except HTTPException:
             await db.rollback()

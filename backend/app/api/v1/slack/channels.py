@@ -25,6 +25,7 @@ class ChannelSelectionRequest(BaseModel):
     """Request model for selecting channels for analysis."""
 
     channel_ids: List[str]
+    install_bot: Optional[bool] = True
 
 
 @router.get("/workspaces/{workspace_id}/sync-status")
@@ -268,19 +269,22 @@ async def select_channels_for_analysis(
     db: AsyncSession = Depends(get_async_db),
 ) -> Dict[str, Any]:
     """
-    Select channels for analysis.
+    Select channels for analysis and optionally install the bot in channels where it's not already a member.
 
     Args:
         workspace_id: UUID of the workspace
-        selection: Channel selection request
+        selection: Channel selection request with channel_ids and install_bot flag
         db: Database session
 
     Returns:
-        Dictionary with selection results
+        Dictionary with selection results and bot installation details if applicable
     """
     try:
         result = await ChannelService.select_channels_for_analysis(
-            db=db, workspace_id=workspace_id, channel_ids=selection.channel_ids
+            db=db,
+            workspace_id=workspace_id,
+            channel_ids=selection.channel_ids,
+            install_bot=selection.install_bot,
         )
 
         return result
