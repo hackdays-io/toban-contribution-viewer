@@ -22,7 +22,7 @@ import {
   AlertDialogOverlay,
 } from '@chakra-ui/react';
 import { Link } from 'react-router-dom';
-import { FiPlus, FiTrash2 } from 'react-icons/fi';
+import { FiPlus, FiTrash2, FiRefreshCw } from 'react-icons/fi';
 
 interface Workspace {
   id: string;
@@ -33,6 +33,9 @@ interface Workspace {
   connection_status: string;
   last_connected_at: string;
   last_sync_at: string | null;
+  icon_url?: string;
+  team_size?: number;
+  metadata?: Record<string, any>;
 }
 
 /**
@@ -41,6 +44,7 @@ interface Workspace {
 const WorkspaceList: React.FC = () => {
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState<string | null>(null);
   const [selectedWorkspace, setSelectedWorkspace] = useState<Workspace | null>(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const cancelRef = React.useRef<HTMLButtonElement>(null);
@@ -77,6 +81,48 @@ const WorkspaceList: React.FC = () => {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  /**
+   * Verify a workspace token and refresh its metadata.
+   */
+  const refreshWorkspace = async (workspaceId: string) => {
+    setIsRefreshing(workspaceId);
+    
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/slack/workspaces/${workspaceId}/verify`
+      );
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || 'Failed to verify workspace');
+      }
+      
+      const data = await response.json();
+      
+      toast({
+        title: 'Workspace Refreshed',
+        description: data.message || 'Workspace metadata refreshed successfully',
+        status: data.status === 'success' ? 'success' : 'warning',
+        duration: 5000,
+        isClosable: true,
+      });
+      
+      // Refresh the workspace list
+      fetchWorkspaces();
+    } catch (error) {
+      console.error('Error refreshing workspace:', error);
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to refresh workspace',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setIsRefreshing(null);
     }
   };
 
@@ -181,28 +227,92 @@ const WorkspaceList: React.FC = () => {
               borderRadius="lg"
               position="relative"
             >
-              <HStack mb={2} justify="space-between">
-                <Heading size="md">{workspace.name}</Heading>
-                <Badge
-                  colorScheme={
-                    workspace.is_connected
-                      ? 'green'
-                      : workspace.connection_status === 'error'
-                      ? 'red'
-                      : 'yellow'
-                  }
-                >
-                  {workspace.is_connected
-                    ? 'Connected'
-                    : workspace.connection_status === 'error'
-                    ? 'Error'
-                    : 'Disconnected'}
-                </Badge>
+              <HStack mb={3} spacing={4} align="start">
+                {workspace.icon_url ? (
+                  <Box 
+                    width="48px" 
+                    height="48px" 
+                    borderRadius="md" 
+                    overflow="hidden"
+                    flexShrink={0}
+                  >
+                    <img 
+                      src={workspace.icon_url} 
+                      alt={`${workspace.name} icon`} 
+                      width="100%" 
+                      height="100%"
+                      style={{ objectFit: 'cover' }}
+                      onError={(e) => {
+                        // If image fails to load, replace with fallback
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        // Force re-render to show fallback
+                        if (target.parentElement) {
+                          const fallback = document.createElement('div');
+                          fallback.style.width = '100%';
+                          fallback.style.height = '100%';
+                          fallback.style.backgroundColor = '#E9D8FD'; // purple.100
+                          fallback.style.color = '#805AD5'; // purple.600
+                          fallback.style.display = 'flex';
+                          fallback.style.alignItems = 'center';
+                          fallback.style.justifyContent = 'center';
+                          fallback.style.fontSize = '1.25rem';
+                          fallback.style.fontWeight = 'bold';
+                          fallback.innerText = workspace.name.charAt(0).toUpperCase();
+                          target.parentElement.appendChild(fallback);
+                        }
+                      }}
+                    />
+                  </Box>
+                ) : (
+                  <Box 
+                    width="48px"
+                    height="48px"
+                    borderRadius="md"
+                    bg="purple.100"
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="center"
+                    color="purple.600"
+                    fontSize="xl"
+                    fontWeight="bold"
+                    flexShrink={0}
+                  >
+                    {workspace.name.charAt(0).toUpperCase()}
+                  </Box>
+                )}
+                
+                <Box flex="1">
+                  <HStack mb={1} justify="space-between">
+                    <Heading size="md">{workspace.name}</Heading>
+                    <Badge
+                      colorScheme={
+                        workspace.is_connected
+                          ? 'green'
+                          : workspace.connection_status === 'error'
+                          ? 'red'
+                          : 'yellow'
+                      }
+                    >
+                      {workspace.is_connected
+                        ? 'Connected'
+                        : workspace.connection_status === 'error'
+                        ? 'Error'
+                        : 'Disconnected'}
+                    </Badge>
+                  </HStack>
+                  
+                  <Text color="gray.600" mb={1}>
+                    {workspace.domain ? `${workspace.domain}.slack.com` : `Workspace ${workspace.slack_id}`}
+                  </Text>
+                  
+                  {workspace.team_size && (
+                    <Text fontSize="sm" color="gray.600" mb={1}>
+                      Team size: {workspace.team_size} members
+                    </Text>
+                  )}
+                </Box>
               </HStack>
-              
-              <Text color="gray.600" mb={3}>
-                {workspace.domain ? `${workspace.domain}.slack.com` : `Workspace ${workspace.slack_id}`}
-              </Text>
               
               <VStack align="start" spacing={1} mb={4}>
                 <Text fontSize="sm" color="gray.600">
@@ -216,6 +326,16 @@ const WorkspaceList: React.FC = () => {
               </VStack>
               
               <HStack spacing={4} mt={4}>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  colorScheme="purple"
+                  leftIcon={<Icon as={FiRefreshCw} />}
+                  isLoading={isRefreshing === workspace.id}
+                  onClick={() => refreshWorkspace(workspace.id)}
+                >
+                  Refresh
+                </Button>
                 <Button
                   size="sm"
                   variant="outline"

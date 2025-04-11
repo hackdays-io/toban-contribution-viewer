@@ -21,16 +21,39 @@ const OAuthCallback: React.FC = () => {
         return;
       }
       
-      // Instead of trying to exchange the code again, assume success if we have a code
-      // The code is exchanged by Slack's redirect to the backend
-      if (searchParams.get('code')) {
-        // Slack has redirected here with a code, which means OAuth was successful
-        setStatus('success');
-        
-        // Navigate to workspace list after a short delay
-        setTimeout(() => {
-          navigate('/dashboard/slack/workspaces');
-        }, 2000);
+      const code = searchParams.get('code');
+      if (code) {
+        try {
+          // Forward the code to our backend to exchange it for an access token
+          const response = await fetch(
+            `${import.meta.env.VITE_API_URL}/slack/oauth-callback?code=${code}&redirect_from_frontend=true`,
+            {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+            }
+          );
+          
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.detail || 'Failed to complete OAuth process');
+          }
+          
+          const data = await response.json();
+          console.log('OAuth successful:', data);
+          
+          setStatus('success');
+          
+          // Navigate to workspace list after a short delay
+          setTimeout(() => {
+            navigate('/dashboard/slack/workspaces');
+          }, 2000);
+        } catch (err) {
+          console.error('Error during OAuth process:', err);
+          setStatus('error');
+          setErrorMessage(err instanceof Error ? err.message : 'Failed to connect workspace');
+        }
       } else {
         // Neither error nor code in the parameters suggests something went wrong
         setStatus('error');
