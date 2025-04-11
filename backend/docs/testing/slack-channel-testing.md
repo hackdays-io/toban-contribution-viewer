@@ -110,6 +110,7 @@ A successful test means that:
 2. **Authentication errors**:
    - Verify that your token has the required scopes:
      - `channels:read`
+     - `channels:join` - Required for auto-installing the bot in channels
      - `groups:read`
      - `im:read`
      - `mpim:read`

@@ -14,6 +14,7 @@ This guide explains how to set up and test the Slack OAuth integration in the To
 3. Provide an app name (e.g., "Toban Contribution Viewer") and select your development workspace
 4. In the "OAuth & Permissions" section, add the following scopes:
    - `channels:history`
+   - `channels:join` - Required for auto-installing the bot in channels
    - `channels:read`
    - `groups:history`
    - `groups:read`
