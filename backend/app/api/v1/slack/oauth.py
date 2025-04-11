@@ -174,11 +174,31 @@ async def slack_oauth_callback(
         token_data = token_response.json()
         
         if not token_data.get("ok"):
-            logger.error(f"Slack API error: {token_data.get('error')}")
-            raise HTTPException(
-                status_code=400, 
-                detail=f"Slack API error: {token_data.get('error')}"
-            )
+            error_code = token_data.get('error')
+            error_message = token_data.get('error_description', 'Unknown error')
+            logger.error(f"Slack API error: {error_code} - {error_message}")
+            
+            # Handle common Slack OAuth errors with user-friendly messages
+            if error_code == "invalid_code":
+                raise HTTPException(
+                    status_code=400, 
+                    detail="The authentication code has expired or was already used. Please try connecting again."
+                )
+            elif error_code == "invalid_client_id":
+                raise HTTPException(
+                    status_code=400, 
+                    detail="Invalid application configuration. Please contact support."
+                )
+            elif error_code == "invalid_client_secret":
+                raise HTTPException(
+                    status_code=400, 
+                    detail="Invalid application configuration. Please contact support."
+                )
+            else:
+                raise HTTPException(
+                    status_code=400, 
+                    detail=f"Slack authorization error: {error_message}"
+                )
 
         # Validate the token response
         oauth_response = SlackOAuthResponse(**token_data)
