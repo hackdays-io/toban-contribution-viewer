@@ -35,7 +35,7 @@ interface Workspace {
   last_sync_at: string | null;
   icon_url?: string;
   team_size?: number;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 /**

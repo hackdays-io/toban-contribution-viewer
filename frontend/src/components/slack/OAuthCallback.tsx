@@ -50,7 +50,7 @@ const OAuthCallback: React.FC = () => {
             throw new Error(errorData.detail || 'Failed to complete OAuth process');
           }
 
-          const data = await response.json();
+          await response.json();
 
           setStatus('success');
 

@@ -7,7 +7,7 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd());
 
   // Extract domain from NGROK_URL if it exists
-  let allowedHosts = [];
+  const allowedHosts = [];
   if (env.VITE_FRONTEND_URL || process.env.NGROK_URL) {
     try {
       const url = new URL(env.VITE_FRONTEND_URL || process.env.NGROK_URL || '');
