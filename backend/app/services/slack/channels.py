@@ -81,10 +81,10 @@ class ChannelService:
         existing_types_result = await db.execute(existing_types_query)
         existing_types = [row[0] for row in existing_types_result.fetchall()]
         logger.info(f"Existing channel types in database: {existing_types}")
-        
+
         # Apply filters
         if channel_types:
-            if set(channel_types) == set(['public', 'private', 'im', 'mpim']):
+            if set(channel_types) == set(["public", "private", "im", "mpim"]):
                 # When all types are requested, don't apply the filter
                 logger.info("All channel types requested, not applying type filter")
             else:
@@ -115,13 +115,17 @@ class ChannelService:
             SlackChannel.workspace_id == workspace_id
         )
         if channel_types:
-            if set(channel_types) == set(['public', 'private', 'im', 'mpim']):
+            if set(channel_types) == set(["public", "private", "im", "mpim"]):
                 # When all types are requested, don't apply the filter to count query
-                logger.info("All channel types requested, not applying type filter to count query")
+                logger.info(
+                    "All channel types requested, not applying type filter to count query"
+                )
             else:
                 # Apply filter for specific types
                 count_query = count_query.where(SlackChannel.type.in_(channel_types))
-                logger.info(f"Applied channel type filter to count query: {channel_types}")
+                logger.info(
+                    f"Applied channel type filter to count query: {channel_types}"
+                )
         if not include_archived:
             count_query = count_query.where(SlackChannel.is_archived.is_(False))
             logger.info("Excluded archived channels from count query")
