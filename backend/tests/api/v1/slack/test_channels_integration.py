@@ -15,15 +15,14 @@ Run with: pytest -xvs tests/api/v1/slack/test_channels_integration.py
 """
 
 # When running outside Docker but connecting to Docker database
+import asyncio
 import os
+import uuid
+from unittest.mock import patch
 
 if "DATABASE_URL" in os.environ and "postgres" in os.environ["DATABASE_URL"]:
     # Replace internal Docker hostname with localhost
     os.environ["DATABASE_URL"] = os.environ["DATABASE_URL"].replace("postgres", "localhost")
-
-import os
-import uuid
-from unittest.mock import patch
 
 import pytest
 from fastapi import FastAPI
@@ -73,7 +72,7 @@ async def setup_test_db(test_workspace):
 
     # Get a real database session
     async_session = get_async_session()
-    session = await anext(async_session)
+    session = await asyncio.anext(async_session)
 
     # Check if we're using an existing workspace or need to create one
     if TEST_WORKSPACE_ID:
@@ -248,7 +247,7 @@ async def test_channel_service_direct(setup_test_db, test_workspace):
     from app.db.session import get_async_session
 
     # Get a database session
-    session = await anext(get_async_session())
+    session = await asyncio.anext(get_async_session())
     
     try:
         # First sync the channels to ensure we have data
