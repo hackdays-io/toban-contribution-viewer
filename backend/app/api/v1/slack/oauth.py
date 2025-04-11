@@ -10,6 +10,7 @@ import requests
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from pydantic import BaseModel, Field, validator
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.db.session import AsyncSessionLocal
 from sqlalchemy.future import select
 
 from app.config import settings
@@ -310,6 +311,7 @@ async def list_workspaces(
 async def verify_workspace_token(
     workspace_id: str,
     db: AsyncSession = Depends(get_async_db),
+    background_tasks: BackgroundTasks = None,
 ) -> Dict[str, Any]:
     """
     Verify a workspace token and refresh metadata.
@@ -352,6 +354,45 @@ async def verify_workspace_token(
         if results and results[0]["status"] == "verified":
             # If token is valid, update workspace metadata
             logger.info(f"Token verified successfully. Updating metadata for {workspace.name}")
+            
+            # If background_tasks is available, use it for better user experience
+            if background_tasks:
+                logger.info(f"Using background task to update metadata for {workspace.name}")
+                
+                # Create a background task for metadata update
+                async def update_metadata_background(workspace_id_bg: str):
+                    try:
+                        async with AsyncSessionLocal() as session:
+                            result = await session.execute(
+                                select(SlackWorkspace).where(SlackWorkspace.id == workspace_id_bg)
+                            )
+                            ws = result.scalars().first()
+                            if ws:
+                                logger.info(f"Background task: updating metadata for {ws.name}")
+                                await WorkspaceService.update_workspace_metadata(session, ws)
+                                logger.info(f"Background task: metadata updated for {ws.name}")
+                    except Exception as e:
+                        logger.error(f"Error in background metadata update: {str(e)}")
+                
+                # Add the task to the background tasks
+                background_tasks.add_task(update_metadata_background, workspace_id)
+                
+                # Return success immediately for better UX
+                return {
+                    "status": "success",
+                    "message": f"Token verified for {workspace.name}. Metadata update started in background.",
+                    "workspace": {
+                        "id": str(workspace.id),
+                        "name": workspace.name,
+                        "domain": workspace.domain,
+                        "icon_url": workspace.icon_url,
+                        "team_size": workspace.team_size,
+                        "is_connected": workspace.is_connected,
+                        "connection_status": workspace.connection_status,
+                    }
+                }
+            
+            # If no background tasks, do it synchronously
             try:
                 await WorkspaceService.update_workspace_metadata(db, workspace)
                 logger.info(f"Metadata updated for {workspace.name}. Icon URL: {workspace.icon_url}, Team size: {workspace.team_size}")
