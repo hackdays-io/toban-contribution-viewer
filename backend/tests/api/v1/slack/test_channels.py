@@ -3,7 +3,7 @@ Tests for Slack channels API.
 """
 
 import uuid
-from unittest.mock import ANY, AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi import FastAPI

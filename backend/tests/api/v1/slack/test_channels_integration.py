@@ -16,6 +16,7 @@ Run with: pytest -xvs tests/api/v1/slack/test_channels_integration.py
 
 # When running outside Docker but connecting to Docker database
 import os
+
 if "DATABASE_URL" in os.environ and "postgres" in os.environ["DATABASE_URL"]:
     # Replace internal Docker hostname with localhost
     os.environ["DATABASE_URL"] = os.environ["DATABASE_URL"].replace("postgres", "localhost")
@@ -30,9 +31,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.slack.channels import router as channels_router
-from app.db.session import get_async_db
-from app.models.slack import SlackChannel, SlackWorkspace
-from app.services.slack.api import SlackApiClient
+from app.models.slack import SlackWorkspace
 from app.services.slack.channels import ChannelService
 
 # Flag to control real API usage - set to True to use actual Slack API
@@ -247,7 +246,7 @@ async def test_channel_service_direct(setup_test_db, test_workspace):
         pytest.skip("Skipping real service test. Set env vars to run.")
     
     from app.db.session import get_async_session
-    
+
     # Get a database session
     session = await anext(get_async_session())
     

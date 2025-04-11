@@ -328,7 +328,7 @@ class ChannelService:
                 await db.rollback()
                 error_detail = f"Error syncing channels from Slack: {str(e)}"
                 if hasattr(e, "error_code") and e.error_code == "missing_scope":
-                    error_detail = f"Missing required Slack permissions (scopes). The Slack app needs additional permissions like channels:read, groups:read, im:read, and mpim:read to list channels."
+                    error_detail = "Missing required Slack permissions (scopes). The Slack app needs additional permissions like channels:read, groups:read, im:read, and mpim:read to list channels."
                 logger.error(error_detail)
                 raise HTTPException(status_code=500, detail=error_detail)
 

@@ -12,7 +12,7 @@ from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_async_db
-from app.models.slack import SlackWorkspace
+from app.models.slack import SlackChannel, SlackWorkspace
 from app.services.slack.channels import ChannelService
 
 # Configure logging

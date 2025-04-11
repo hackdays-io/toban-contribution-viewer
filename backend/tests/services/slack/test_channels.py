@@ -8,11 +8,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi import HTTPException
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.slack import SlackChannel, SlackWorkspace
-from app.services.slack.api import SlackApiClient, SlackApiError
+from app.services.slack.api import SlackApiClient
 from app.services.slack.channels import ChannelService
 
 
