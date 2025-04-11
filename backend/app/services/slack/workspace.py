@@ -77,14 +77,11 @@ class WorkspaceService:
             
             # Get the icon URL - try different sizes if the standard one isn't available
             icon_data = team_info.get("icon", {})
-            # Log the available icon data for debugging
-            logger.info(f"Workspace icon data: {icon_data}")
             
             # Try different icon sizes in order of preference
             for size in ["image_132", "image_230", "image_88", "image_68", "image_44", "image_34"]:
                 if size in icon_data and icon_data[size]:
                     workspace.icon_url = icon_data[size]
-                    logger.info(f"Using icon size {size}: {workspace.icon_url}")
                     break
             
             workspace.team_size = user_count

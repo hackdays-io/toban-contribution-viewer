@@ -105,21 +105,19 @@ async def schedule_background_tasks():
     try:
         while True:
             try:
-                # Get a new DB session using the factory
+                # Create a new async session using the factory
                 from app.db.session import AsyncSessionLocal
                 
-                # Create a new async session using the factory
+                # Run maintenance tasks with a new session
                 async with AsyncSessionLocal() as db:
-                    # Run token verification every 6 hours
+                    # Verify tokens and update metadata
                     await verify_all_tokens(db)
-                    
-                    # Update workspace metadata daily
                     await update_all_workspace_metadata(db)
             except Exception as e:
                 logger.error(f"Error running scheduled tasks: {str(e)}")
             
-            # Wait for 6 hours before running again
-            await asyncio.sleep(6 * 60 * 60)  # 6 hours
+            # Wait before running again (6 hours)
+            await asyncio.sleep(6 * 60 * 60)
             
     except asyncio.CancelledError:
         logger.info("Background task scheduler was cancelled")

@@ -208,9 +208,8 @@ async def slack_oauth_callback(
         team_name = oauth_response.team["name"]
         team_domain = oauth_response.team.get("domain", "")
         
-        # Log OAuth response data for debugging
-        logger.info(f"OAuth response for workspace {team_name}: ID={team_id}, domain={team_domain}")
-        logger.info(f"Access token received (first 5 chars): {oauth_response.access_token[:5]}")
+        # Log workspace identification
+        logger.info(f"OAuth successful for workspace: {team_name}")
         
         # Check if workspace already exists
         result = await db.execute(
@@ -344,9 +343,6 @@ async def verify_workspace_token(
         Dictionary with verification status
     """
     try:
-        # Log the verification attempt
-        logger.info(f"Verifying workspace token for workspace ID: {workspace_id}")
-        
         # Check if workspace exists
         result = await db.execute(
             select(SlackWorkspace).where(SlackWorkspace.id == workspace_id)
@@ -357,28 +353,15 @@ async def verify_workspace_token(
             logger.error(f"Workspace not found: {workspace_id}")
             raise HTTPException(status_code=404, detail="Workspace not found")
         
-        logger.info(f"Found workspace: {workspace.name} (slack_id: {workspace.slack_id})")
-        logger.info(f"Current connection status: {workspace.connection_status}, is_connected: {workspace.is_connected}")
-        logger.info(f"Access token exists: {bool(workspace.access_token)}")
-        
         # Verify the token
-        logger.info(f"Verifying token for workspace {workspace.name}")
+        logger.info(f"Verifying token for workspace: {workspace.name}")
         results = await WorkspaceService.verify_workspace_tokens(db, workspace_id)
-        
-        # Log verification results
-        if results:
-            logger.info(f"Token verification results: {results}")
-        else:
-            logger.error("No verification results returned")
         
         if results and results[0]["status"] == "verified":
             # If token is valid, update workspace metadata
-            logger.info(f"Token verified successfully. Updating metadata for {workspace.name}")
             
             # If background_tasks is available, use it for better user experience
             if background_tasks:
-                logger.info(f"Using background task to update metadata for {workspace.name}")
-                
                 # Create a background task for metadata update
                 async def update_metadata_background(workspace_id_bg: str):
                     try:
@@ -388,7 +371,6 @@ async def verify_workspace_token(
                             )
                             ws = result.scalars().first()
                             if ws:
-                                logger.info(f"Background task: updating metadata for {ws.name}")
                                 await WorkspaceService.update_workspace_metadata(session, ws)
                                 logger.info(f"Background task: metadata updated for {ws.name}")
                     except Exception as e:
