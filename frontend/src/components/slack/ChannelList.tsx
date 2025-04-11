@@ -62,7 +62,14 @@ interface ChannelResponse {
   pagination: PaginationInfo;
 }
 
-// This type isn't used yet but will be useful for future development when handling sync response
+// Response type for sync operation
+interface SyncResponse {
+  status: string;
+  message: string;
+  created_count: number;
+  updated_count: number;
+  total_count: number;
+}
 
 /**
  * Component to display and select Slack channels for analysis.
@@ -296,7 +303,7 @@ const ChannelList: React.FC = () => {
         }
       }
 
-      const data = await response.json();
+      const data: SyncResponse = await response.json();
 
       // Show a toast indicating background processing started
       toast({
