@@ -7,8 +7,8 @@ This scenario describes the end-to-end process for analyzing team contributions 
 Before using the Toban Contribution Viewer for Slack analysis, the user must:
 
 1. Have administrative access to a Slack workspace
-2. Have installed the Toban bot in the target Slack channels
-3. Have an account on the Toban Contribution Viewer platform
+2. Have an account on the Toban Contribution Viewer platform
+3. Have authorized the Toban application with appropriate Slack permissions
 
 ## Scenario Flow
 
@@ -43,13 +43,14 @@ Before using the Toban Contribution Viewer for Slack analysis, the user must:
    - #team-frontend
    - #project-redesign
    - #general
-3. For each channel, Mika verifies that:
-   - The Toban bot is already installed in the channel
-   - The bot has necessary permissions (if not, a warning is shown)
+3. The system shows which channels already have the Toban bot installed and which don't
 4. Mika clicks "Save Selection" to confirm the channels for analysis
+5. If any selected channels don't have the bot installed, the system offers to automatically install the bot in those channels
+6. Mika confirms the automatic installation
 
 **System Actions:**
-- Verify that the Toban bot is a member of each selected channel
+- For channels where the bot is not yet a member, automatically install the bot
+- Report success/failure of bot installation to the user
 - Check read permissions for historical messages
 - Save channel selection preferences to Mika's account
 
