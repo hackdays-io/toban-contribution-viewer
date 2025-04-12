@@ -92,6 +92,7 @@ async def test_update_workspace_metadata_api_error(
     mock_client.get_workspace_info.side_effect = SlackApiError(
         message="API Error",
         error_code="invalid_auth",
+        response_data={"error": "invalid_auth", "ok": False},
     )
     mock_client_class.return_value = mock_client
 

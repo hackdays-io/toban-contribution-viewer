@@ -271,11 +271,13 @@ class SlackMessage(Base, BaseModel):
     reactions: Mapped[List["SlackReaction"]] = relationship(
         "SlackReaction", back_populates="message"
     )
-    # Temporarily comment out the relationship to allow for testing
-    # This will be fixed in a separate issue/PR
-    # parent: Mapped[Optional["SlackMessage"]] = relationship(
-    #     "SlackMessage", remote_side=["SlackMessage.id"], backref="replies"
-    # )
+    # Self-referential relationship for threading
+    parent: Mapped[Optional["SlackMessage"]] = relationship(
+        "SlackMessage",
+        foreign_keys=[parent_id],
+        backref="replies",
+        remote_side="SlackMessage.id",
+    )
 
     # Indexes for efficient querying
     __table_args__ = (
