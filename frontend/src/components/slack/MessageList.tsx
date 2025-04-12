@@ -432,7 +432,7 @@ const MessageList: React.FC<MessageListProps> = ({
             colorScheme="teal"
             size="md"
             onClick={() => {
-              // First fix any thread parent flags
+              // Fix thread parent flags first
               fetch(`${import.meta.env.VITE_API_URL}/slack/fix-thread-parent-flags`, { method: 'POST' })
                 .then(response => {
                   if (!response.ok) {
@@ -441,9 +441,9 @@ const MessageList: React.FC<MessageListProps> = ({
                   return response.json();
                 })
                 .then(() => {
-                  // Then sync thread replies
-                  const url = `${import.meta.env.VITE_API_URL}/slack/workspaces/${workspaceId}/channels/${channelId}/sync-threads`;
-                  return fetch(url, { method: 'POST' });
+                  // Then sync thread replies with Slack API
+                  const syncUrl = `${import.meta.env.VITE_API_URL}/slack/workspaces/${workspaceId}/channels/${channelId}/sync-threads`;
+                  return fetch(syncUrl, { method: 'POST' });
                 })
                 .then(response => {
                   if (!response.ok) {
