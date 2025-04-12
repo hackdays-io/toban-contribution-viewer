@@ -419,7 +419,9 @@ async def sync_users_from_messages(
         )
 
         # First find all messages with user mentions but no user_id
-        from sqlalchemy import text  # Import locally to avoid clash with imported modules
+        from sqlalchemy import (  # Import locally to avoid clash with imported modules
+            text,
+        )
 
         # Build query to find messages with user mentions
         query_conditions = ["m.text LIKE '<@%'", "c.workspace_id = :workspace_id"]
