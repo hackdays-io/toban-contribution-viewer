@@ -191,13 +191,18 @@ const MessageList: React.FC<MessageListProps> = ({ workspaceId, channelId, chann
       }
       
       const data = await response.json();
-      const newUsers = new Map<string, SlackUser>();
+      // Create a new Map to store merged user data (preserving existing entries)
+      const newUsers = new Map<string, SlackUser>(users);
       
       // Process the users from the API response
+      console.log('API response data:', data);
       if (data.users && Array.isArray(data.users)) {
+        console.log(`Processing ${data.users.length} users from API response`);
         data.users.forEach((user: SlackUser) => {
+          console.log('Processing user:', user);
           if (user && user.id) {
             newUsers.set(user.id, user);
+            console.log(`Added user ${user.id} to map with name: ${user.display_name || user.real_name || user.name || 'Unknown'}`);
           }
         });
       }
@@ -223,10 +228,11 @@ const MessageList: React.FC<MessageListProps> = ({ workspaceId, channelId, chann
     } catch (error) {
       console.error('Error fetching user data:', error);
       // Create placeholder users for all IDs if the API call fails
-      const newUsers = new Map<string, SlackUser>();
+      // Create a new Map to store merged user data (preserving existing entries)
+      const newUsers = new Map<string, SlackUser>(users);
       
       userIds.forEach(userId => {
-        if (userId) {
+        if (userId && !newUsers.has(userId)) {
           const placeholderUser: SlackUser = {
             id: userId,
             slack_id: '',

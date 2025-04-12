@@ -205,6 +205,9 @@ async def get_users_by_ids(
 
         from app.models.slack import SlackUser
 
+        # Log valid user IDs
+        logger.info(f"Querying for {len(valid_user_ids)} users: {valid_user_ids}")
+
         # Query users from database
         query = select(SlackUser).where(
             SlackUser.id.in_(valid_user_ids), SlackUser.workspace_id == workspace_id
@@ -213,18 +216,30 @@ async def get_users_by_ids(
         result = await db.execute(query)
         users = result.scalars().all()
 
+        # Log found users with details
+        logger.info(f"Found {len(users)} users in database")
+        for user in users:
+            logger.info(
+                f"User found - ID: {user.id}, slack_id: {user.slack_id}, "
+                f"name: {user.name}, display_name: {user.display_name}, "
+                f"real_name: {user.real_name}"
+            )
+
         # Convert users to dictionaries
         user_dicts = []
         for user in users:
-            user_dicts.append(
-                {
-                    "id": str(user.id),
-                    "slack_id": user.slack_id,
-                    "name": user.name,
-                    "display_name": user.display_name,
-                    "real_name": user.real_name,
-                    "profile_image_url": user.profile_image_url,
-                }
+            user_dict = {
+                "id": str(user.id),
+                "slack_id": user.slack_id,
+                "name": user.name,
+                "display_name": user.display_name,
+                "real_name": user.real_name,
+                "profile_image_url": user.profile_image_url,
+            }
+            user_dicts.append(user_dict)
+            logger.info(
+                f"User found - ID: {user.id}, name: {user.name}, "
+                f"display_name: {user.display_name}, real_name: {user.real_name}"
             )
 
         logger.info(f"Retrieved {len(user_dicts)} users for workspace {workspace_id}")
