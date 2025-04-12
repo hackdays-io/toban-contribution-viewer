@@ -20,6 +20,15 @@ interface Channel {
   type: string;
 }
 
+interface Workspace {
+  id: string;
+  name: string;
+  slack_id: string;
+  domain?: string;
+  is_connected: boolean;
+  connection_status: string;
+}
+
 /**
  * Page component to display messages from a Slack channel.
  */
@@ -86,7 +95,7 @@ const MessagesPage: React.FC = () => {
         if (workspacesResponse.ok) {
           const workspacesData = await workspacesResponse.json();
           if (workspacesData.workspaces) {
-            const workspace = workspacesData.workspaces.find((w: any) => w.id === workspaceId);
+            const workspace = workspacesData.workspaces.find((w: Workspace) => w.id === workspaceId);
             if (workspace) {
               setWorkspaceName(workspace.name || 'Slack Workspace');
             }
