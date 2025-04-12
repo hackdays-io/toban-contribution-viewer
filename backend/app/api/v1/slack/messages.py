@@ -68,12 +68,27 @@ async def get_channel_messages(
             f"date range: {start_date} to {end_date}, limit: {limit}, cursor: {cursor}"
         )
 
+        # Strip timezone info from datetime objects if present
+        # Database uses timezone-naive datetimes
+        safe_start_date = None
+        safe_end_date = None
+
+        if start_date:
+            safe_start_date = start_date.replace(tzinfo=None)
+
+        if end_date:
+            safe_end_date = end_date.replace(tzinfo=None)
+
+        logger.info(
+            f"Using timezone-naive dates: start_date={safe_start_date}, end_date={safe_end_date}"
+        )
+
         result = await SlackMessageService.get_channel_messages(
             db=db,
             workspace_id=workspace_id,
             channel_id=channel_id,
-            start_date=start_date,
-            end_date=end_date,
+            start_date=safe_start_date,
+            end_date=safe_end_date,
             limit=limit,
             cursor=cursor,
             include_replies=include_replies,
@@ -126,12 +141,21 @@ async def get_messages_by_date_range(
             f"date range: {start_date} to {end_date}, page: {page}, page_size: {page_size}"
         )
 
+        # Strip timezone info from datetime objects if present
+        # Database uses timezone-naive datetimes
+        safe_start_date = start_date.replace(tzinfo=None)
+        safe_end_date = end_date.replace(tzinfo=None)
+
+        logger.info(
+            f"Using timezone-naive dates: start_date={safe_start_date}, end_date={safe_end_date}"
+        )
+
         result = await SlackMessageService.get_messages_by_date_range(
             db=db,
             workspace_id=workspace_id,
             channel_ids=channel_ids,
-            start_date=start_date,
-            end_date=end_date,
+            start_date=safe_start_date,
+            end_date=safe_end_date,
             page=page,
             page_size=page_size,
         )
@@ -188,14 +212,36 @@ async def sync_channel_messages(
             f"{date_range.end_date if date_range else None}, batch_size: {batch_size}"
         )
 
+        # Prepare safe dates (timezone-naive) for the background task
+        safe_start_date = None
+        safe_end_date = None
+
+        if date_range and date_range.start_date:
+            safe_start_date = (
+                date_range.start_date.replace(tzinfo=None)
+                if date_range.start_date.tzinfo
+                else date_range.start_date
+            )
+
+        if date_range and date_range.end_date:
+            safe_end_date = (
+                date_range.end_date.replace(tzinfo=None)
+                if date_range.end_date.tzinfo
+                else date_range.end_date
+            )
+
+        logger.info(
+            f"Using timezone-naive dates for sync: start_date={safe_start_date}, end_date={safe_end_date}"
+        )
+
         # Start the sync process in a background task
         background_tasks.add_task(
             SlackMessageService.sync_channel_messages,
             db=db,
             workspace_id=workspace_id,
             channel_id=channel_id,
-            start_date=date_range.start_date if date_range else None,
-            end_date=date_range.end_date if date_range else None,
+            start_date=safe_start_date,
+            end_date=safe_end_date,
             include_replies=include_replies,
             batch_size=batch_size,
         )

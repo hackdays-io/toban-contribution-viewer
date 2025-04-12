@@ -88,16 +88,29 @@ class SlackMessageService:
 
         # Apply date filtering if specified, handling timezone-aware datetimes
         if start_date:
-            # Convert timezone-aware datetime to naive by replacing tzinfo with None
-            naive_start_date = (
-                start_date.replace(tzinfo=None) if start_date.tzinfo else start_date
-            )
+            # Dates should already be timezone-naive at this point from the API layer
+            # But we'll check again just to be sure
+            if hasattr(start_date, "tzinfo") and start_date.tzinfo:
+                logger.warning(
+                    "start_date still has tzinfo, converting to naive datetime"
+                )
+                naive_start_date = start_date.replace(tzinfo=None)
+            else:
+                naive_start_date = start_date
+
             query = query.where(SlackMessage.message_datetime >= naive_start_date)
+
         if end_date:
-            # Convert timezone-aware datetime to naive by replacing tzinfo with None
-            naive_end_date = (
-                end_date.replace(tzinfo=None) if end_date.tzinfo else end_date
-            )
+            # Dates should already be timezone-naive at this point from the API layer
+            # But we'll check again just to be sure
+            if hasattr(end_date, "tzinfo") and end_date.tzinfo:
+                logger.warning(
+                    "end_date still has tzinfo, converting to naive datetime"
+                )
+                naive_end_date = end_date.replace(tzinfo=None)
+            else:
+                naive_end_date = end_date
+
             query = query.where(SlackMessage.message_datetime <= naive_end_date)
 
         # Apply pagination
@@ -109,14 +122,23 @@ class SlackMessageService:
 
         # If we have no messages, or start date is earlier than oldest message,
         # fetch from Slack API
+
+        # Ensure start_date is timezone-naive for comparison with message_datetime
+        safe_start_date = None
+        if start_date:
+            if hasattr(start_date, "tzinfo") and start_date.tzinfo:
+                logger.warning(
+                    "start_date has tzinfo during comparison, converting to naive"
+                )
+                safe_start_date = start_date.replace(tzinfo=None)
+            else:
+                safe_start_date = start_date
+
         should_fetch_from_api = len(messages) == 0 or (
             start_date
             and (
                 not channel.oldest_synced_ts
-                or (
-                    start_date.replace(tzinfo=None) if start_date.tzinfo else start_date
-                )
-                < messages[-1].message_datetime
+                or safe_start_date < messages[-1].message_datetime
             )
         )
 
