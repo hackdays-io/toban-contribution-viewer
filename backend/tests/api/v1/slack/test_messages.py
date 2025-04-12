@@ -2,19 +2,16 @@
 Tests for the Slack messages API endpoints.
 """
 
-import json
 import uuid
 from datetime import datetime, timedelta
 from typing import Dict
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.slack.messages import router as messages_router
-from app.models.slack import SlackChannel, SlackMessage, SlackWorkspace
 
 
 @pytest.fixture
