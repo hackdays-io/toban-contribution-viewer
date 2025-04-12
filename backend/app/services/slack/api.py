@@ -207,6 +207,26 @@ class SlackApiClient:
         response = await self._make_request("GET", "users.list", params={"limit": 1})
         return response.get("response_metadata", {}).get("total_count", 0)
 
+    async def get_users(
+        self, cursor: Optional[str] = None, limit: int = 1000
+    ) -> Dict[str, Any]:
+        """
+        Get users in the workspace with pagination.
+
+        Args:
+            cursor: Pagination cursor
+            limit: Number of users to fetch per page (max 1000)
+
+        Returns:
+            Dictionary with users and pagination info
+        """
+        params = {"limit": min(limit, 1000)}
+
+        if cursor:
+            params["cursor"] = cursor
+
+        return await self._make_request("GET", "users.list", params=params)
+
     async def verify_token(self) -> bool:
         """
         Verify if the access token is valid.

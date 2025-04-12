@@ -420,6 +420,7 @@ class SlackMessageService:
         # Get user record if user_id is available
         db_user_id = None
         if user_id:
+            # First, check if we already have this user in the database
             user_result = await db.execute(
                 select(SlackUser).where(
                     SlackUser.workspace_id == workspace_id,
@@ -427,8 +428,69 @@ class SlackMessageService:
                 )
             )
             user = user_result.scalars().first()
+
+            # If we found the user, use their ID
             if user:
                 db_user_id = user.id
+            else:
+                # User not found in database - attempt to fetch user info from Slack
+                # and create a new user record
+                logger.info(
+                    f"User with Slack ID {user_id} not found in database, creating new record"
+                )
+
+                try:
+                    # Get workspace for API token
+                    workspace_result = await db.execute(
+                        select(SlackWorkspace).where(SlackWorkspace.id == workspace_id)
+                    )
+                    workspace = workspace_result.scalars().first()
+
+                    if workspace and workspace.access_token:
+                        # Create API client
+                        api_client = SlackApiClient(workspace.access_token)
+
+                        # Fetch user info from Slack API
+                        user_info_response = await api_client._make_request(
+                            "GET", "users.info", params={"user": user_id}
+                        )
+
+                        if user_info_response.get(
+                            "ok", False
+                        ) and user_info_response.get("user"):
+                            user_data = user_info_response["user"]
+                            profile = user_data.get("profile", {})
+
+                            # Create new user record
+                            new_user = SlackUser(
+                                workspace_id=workspace_id,
+                                slack_id=user_id,
+                                name=user_data.get("name", ""),
+                                display_name=profile.get("display_name", ""),
+                                real_name=profile.get(
+                                    "real_name", user_data.get("real_name", "")
+                                ),
+                                email=profile.get("email"),
+                                title=profile.get("title"),
+                                phone=profile.get("phone"),
+                                timezone=user_data.get("tz"),
+                                timezone_offset=user_data.get("tz_offset"),
+                                profile_image_url=profile.get("image_72"),
+                                is_bot=user_data.get("is_bot", False),
+                                is_admin=user_data.get("is_admin", False),
+                                is_deleted=user_data.get("deleted", False),
+                                profile_data=profile,
+                            )
+
+                            db.add(new_user)
+                            await db.flush()  # Make the user ID available
+
+                            db_user_id = new_user.id
+                            logger.info(
+                                f"Created new user record for {user_id} with UUID {db_user_id}"
+                            )
+                except Exception as e:
+                    logger.error(f"Error fetching user info from Slack API: {str(e)}")
 
         # Extract message metadata
         message_type = "message"

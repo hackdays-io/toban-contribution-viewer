@@ -320,6 +320,196 @@ async def get_users_by_ids(
         )
 
 
+@router.post("/workspaces/{workspace_id}/users/sync")
+async def sync_users(
+    workspace_id: str,
+    background_tasks: BackgroundTasks = BackgroundTasks(),
+    db: AsyncSession = Depends(get_async_db),
+) -> Dict[str, Any]:
+    """
+    Sync users from Slack to the database.
+
+    This endpoint initiates a background task for syncing users to prevent timeouts.
+    It returns immediately with a status message while the sync continues in the background.
+
+    Args:
+        workspace_id: UUID of the workspace
+        background_tasks: FastAPI background tasks handler
+        db: Database session
+
+    Returns:
+        Dictionary with status information
+    """
+    try:
+        logger.info(f"Initiating user sync for workspace {workspace_id}")
+
+        # Verify workspace exists and get access token
+        workspace_result = await db.execute(
+            select(SlackWorkspace).where(SlackWorkspace.id == workspace_id)
+        )
+        workspace = workspace_result.scalars().first()
+
+        if not workspace:
+            logger.error(f"Workspace not found: {workspace_id}")
+            raise HTTPException(status_code=404, detail="Workspace not found")
+
+        if not workspace.access_token:
+            logger.error(f"Workspace has no access token: {workspace_id}")
+            raise HTTPException(
+                status_code=400, detail="Workspace is not properly connected"
+            )
+
+        # Define the background task function
+        async def sync_users_task(
+            db: AsyncSession, workspace_id: str, access_token: str
+        ):
+            logger.info(f"Starting user sync task for workspace {workspace_id}")
+
+            # Create API client
+            from app.services.slack.api import SlackApiClient
+
+            api_client = SlackApiClient(access_token)
+
+            try:
+                # Get total user count
+                user_count = await api_client.get_user_count()
+                logger.info(f"Found {user_count} users in Slack workspace")
+
+                # Initialize pagination
+                cursor = None
+                processed_users = 0
+                created_users = 0
+                updated_users = 0
+
+                # Process all pages of users
+                while True:
+                    # Fetch a page of users
+                    users_response = await api_client.get_users(
+                        cursor=cursor, limit=1000
+                    )
+
+                    slack_users = users_response.get("members", [])
+                    logger.info(f"Processing {len(slack_users)} users from page")
+
+                    # Process each user
+                    for slack_user in slack_users:
+                        processed_users += 1
+
+                        # Skip deleted or bot users if needed
+                        # if slack_user.get("deleted", False) or slack_user.get("is_bot", False):
+                        #    continue
+
+                        slack_id = slack_user.get("id")
+                        if not slack_id:
+                            continue
+
+                        # Check if user already exists
+                        user_result = await db.execute(
+                            select(SlackUser).where(
+                                SlackUser.workspace_id == workspace_id,
+                                SlackUser.slack_id == slack_id,
+                            )
+                        )
+                        user = user_result.scalars().first()
+
+                        profile = slack_user.get("profile", {})
+
+                        if user:
+                            # Update existing user
+                            user.name = slack_user.get("name", "")
+                            user.display_name = profile.get("display_name", "")
+                            user.real_name = profile.get(
+                                "real_name", slack_user.get("real_name", "")
+                            )
+                            user.email = profile.get("email")
+                            user.title = profile.get("title")
+                            user.phone = profile.get("phone")
+                            user.timezone = slack_user.get("tz")
+                            user.timezone_offset = slack_user.get("tz_offset")
+                            user.profile_image_url = profile.get("image_72")
+                            user.is_bot = slack_user.get("is_bot", False)
+                            user.is_admin = slack_user.get("is_admin", False)
+                            user.is_deleted = slack_user.get("deleted", False)
+                            user.profile_data = profile
+
+                            updated_users += 1
+                        else:
+                            # Create new user
+                            new_user = SlackUser(
+                                workspace_id=workspace_id,
+                                slack_id=slack_id,
+                                name=slack_user.get("name", ""),
+                                display_name=profile.get("display_name", ""),
+                                real_name=profile.get(
+                                    "real_name", slack_user.get("real_name", "")
+                                ),
+                                email=profile.get("email"),
+                                title=profile.get("title"),
+                                phone=profile.get("phone"),
+                                timezone=slack_user.get("tz"),
+                                timezone_offset=slack_user.get("tz_offset"),
+                                profile_image_url=profile.get("image_72"),
+                                is_bot=slack_user.get("is_bot", False),
+                                is_admin=slack_user.get("is_admin", False),
+                                is_deleted=slack_user.get("deleted", False),
+                                profile_data=profile,
+                            )
+
+                            db.add(new_user)
+                            created_users += 1
+
+                    # Commit changes for this page
+                    await db.commit()
+
+                    # Check if there are more pages
+                    response_metadata = users_response.get("response_metadata", {})
+                    next_cursor = response_metadata.get("next_cursor")
+
+                    if not next_cursor:
+                        break
+
+                    cursor = next_cursor
+
+                # Final stats
+                logger.info(
+                    f"User sync completed. Processed {processed_users} users, "
+                    f"created {created_users} new users, updated {updated_users} existing users."
+                )
+
+            except Exception as e:
+                logger.error(f"Error syncing users: {str(e)}")
+                # Don't re-raise to avoid crashing the background task
+
+            # Using a fresh session is generally recommended for long-running background tasks
+            await db.close()
+
+        # Start the sync process in a background task
+        # We need to create a fresh session for the background task
+        from app.db.session import get_async_session_factory
+
+        session_factory = get_async_session_factory()
+        background_tasks.add_task(
+            sync_users_task,
+            db=session_factory(),
+            workspace_id=workspace_id,
+            access_token=workspace.access_token,
+        )
+
+        return {
+            "status": "syncing",
+            "message": "User synchronization started. This process will continue in the background.",
+            "workspace_id": workspace_id,
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error initiating user sync: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail="An error occurred while initiating user sync"
+        )
+
+
 @router.post("/workspaces/{workspace_id}/channels/{channel_id}/sync")
 async def sync_channel_messages(
     workspace_id: str,
