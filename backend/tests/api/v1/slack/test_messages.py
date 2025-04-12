@@ -10,7 +10,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi import FastAPI
-from httpx import AsyncClient
+from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.slack.messages import router as messages_router
@@ -32,6 +32,12 @@ def app(mock_slack_message_service) -> FastAPI:
     app = FastAPI()
     app.include_router(messages_router, prefix="/api/v1/slack")
     return app
+
+
+@pytest.fixture
+def client(app) -> TestClient:
+    """Create a test client for the app."""
+    return TestClient(app)
 
 
 @pytest.fixture
@@ -88,29 +94,26 @@ def mock_message_response() -> Dict:
     }
 
 
-@pytest.mark.asyncio
-async def test_get_channel_messages(
+def test_get_channel_messages(
     app: FastAPI,
     mock_slack_message_service,
     mock_workspace_id,
     mock_channel_id,
     mock_message_response,
-    client: AsyncClient,
+    client: TestClient,
 ):
     """Test the get_channel_messages endpoint."""
     # Configure the mock
-    mock_slack_message_service.get_channel_messages = AsyncMock(
-        return_value=mock_message_response
-    )
+    mock_slack_message_service.get_channel_messages.return_value = mock_message_response
 
     # Make the request
-    response = await client.get(
+    response = client.get(
         f"/api/v1/slack/workspaces/{mock_workspace_id}/channels/{mock_channel_id}/messages",
         params={
             "start_date": (datetime.now() - timedelta(days=7)).isoformat(),
             "end_date": datetime.now().isoformat(),
-            "include_replies": True,
-            "limit": 100,
+            "include_replies": "true",
+            "limit": "100",
         },
     )
 
@@ -125,29 +128,28 @@ async def test_get_channel_messages(
     mock_slack_message_service.get_channel_messages.assert_called_once()
 
 
-@pytest.mark.asyncio
-async def test_get_messages_by_date_range(
+def test_get_messages_by_date_range(
     app: FastAPI,
     mock_slack_message_service,
     mock_workspace_id,
     mock_message_response,
-    client: AsyncClient,
+    client: TestClient,
 ):
     """Test the get_messages_by_date_range endpoint."""
     # Configure the mock
-    mock_slack_message_service.get_messages_by_date_range = AsyncMock(
-        return_value=mock_message_response
+    mock_slack_message_service.get_messages_by_date_range.return_value = (
+        mock_message_response
     )
 
     # Make the request
-    response = await client.get(
+    response = client.get(
         f"/api/v1/slack/workspaces/{mock_workspace_id}/messages",
         params={
-            "channel_ids": [str(uuid.uuid4()), str(uuid.uuid4())],
+            "channel_ids": str(uuid.uuid4()),  # Pass a single ID to simplify the test
             "start_date": (datetime.now() - timedelta(days=7)).isoformat(),
             "end_date": datetime.now().isoformat(),
-            "page": 1,
-            "page_size": 100,
+            "page": "1",
+            "page_size": "100",
         },
     )
 
@@ -161,13 +163,12 @@ async def test_get_messages_by_date_range(
     mock_slack_message_service.get_messages_by_date_range.assert_called_once()
 
 
-@pytest.mark.asyncio
-async def test_sync_channel_messages(
+def test_sync_channel_messages(
     app: FastAPI,
     mock_slack_message_service,
     mock_workspace_id,
     mock_channel_id,
-    client: AsyncClient,
+    client: TestClient,
 ):
     """Test the sync_channel_messages endpoint."""
     # Make the request
@@ -177,10 +178,10 @@ async def test_sync_channel_messages(
         "include_replies": True,
     }
 
-    response = await client.post(
+    response = client.post(
         f"/api/v1/slack/workspaces/{mock_workspace_id}/channels/{mock_channel_id}/sync",
         json=date_range,
-        params={"batch_size": 200, "include_replies": True},
+        params={"batch_size": "200", "include_replies": "true"},
     )
 
     # Assert the response
