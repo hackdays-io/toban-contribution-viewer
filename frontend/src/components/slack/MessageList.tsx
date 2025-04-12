@@ -104,21 +104,32 @@ const MessageList: React.FC<MessageListProps> = ({ workspaceId, channelId, chann
       let url = `${import.meta.env.VITE_API_URL}/slack/workspaces/${workspaceId}/channels/${channelId}/messages?include_replies=${includeReplies}`;
       
       if (startDate) {
-        url += `&start_date=${new Date(startDate).toISOString()}`;
+        // Create a date at the beginning of the selected day (00:00:00)
+        const startDateTime = new Date(startDate);
+        startDateTime.setHours(0, 0, 0, 0);
+        url += `&start_date=${startDateTime.toISOString()}`;
       }
       
       if (endDate) {
-        url += `&end_date=${new Date(endDate).toISOString()}`;
+        // Create a date at the end of the selected day (23:59:59)
+        const endDateTime = new Date(endDate);
+        endDateTime.setHours(23, 59, 59, 999);
+        url += `&end_date=${endDateTime.toISOString()}`;
       }
       
       if (cursor) {
         url += `&cursor=${cursor}`;
       }
 
+      // Log the URL being called (for debugging)
+      console.log('Fetching messages from:', url);
+      
       const response = await fetch(url);
 
       if (!response.ok) {
-        throw new Error('Failed to fetch messages');
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
+        throw new Error(`Failed to fetch messages: ${response.status} ${response.statusText}`);
       }
 
       const data = await response.json();
@@ -185,14 +196,31 @@ const MessageList: React.FC<MessageListProps> = ({ workspaceId, channelId, chann
     try {
       setIsSyncing(true);
       
+      // Prepare dates with proper time boundaries
+      let startDateTime = null;
+      let endDateTime = null;
+      
+      if (startDate) {
+        startDateTime = new Date(startDate);
+        startDateTime.setHours(0, 0, 0, 0);
+      }
+      
+      if (endDate) {
+        endDateTime = new Date(endDate);
+        endDateTime.setHours(23, 59, 59, 999);
+      }
+      
       const dateRange = {
-        start_date: startDate ? new Date(startDate).toISOString() : null,
-        end_date: endDate ? new Date(endDate).toISOString() : null,
+        start_date: startDateTime ? startDateTime.toISOString() : null,
+        end_date: endDateTime ? endDateTime.toISOString() : null,
         include_replies: includeReplies
       };
       
+      const syncUrl = `${import.meta.env.VITE_API_URL}/slack/workspaces/${workspaceId}/channels/${channelId}/sync`;
+      console.log('Syncing messages with:', syncUrl, dateRange);
+      
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/slack/workspaces/${workspaceId}/channels/${channelId}/sync`,
+        syncUrl,
         {
           method: 'POST',
           headers: {
@@ -203,7 +231,9 @@ const MessageList: React.FC<MessageListProps> = ({ workspaceId, channelId, chann
       );
 
       if (!response.ok) {
-        throw new Error('Failed to sync messages');
+        const errorText = await response.text();
+        console.error('Sync error response:', errorText);
+        throw new Error(`Failed to sync messages: ${response.status} ${response.statusText}`);
       }
 
       await response.json(); // Process response but we don't need to use it

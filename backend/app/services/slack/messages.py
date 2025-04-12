@@ -11,12 +11,7 @@ from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.slack import (
-    SlackChannel,
-    SlackMessage,
-    SlackUser,
-    SlackWorkspace,
-)
+from app.models.slack import SlackChannel, SlackMessage, SlackUser, SlackWorkspace
 from app.services.slack.api import SlackApiClient, SlackApiError, SlackApiRateLimitError
 
 # Configure logging
@@ -91,11 +86,32 @@ class SlackMessageService:
             .order_by(SlackMessage.message_datetime.desc())
         )
 
-        # Apply date filtering if specified
+        # Apply date filtering if specified, handling timezone-aware datetimes
         if start_date:
-            query = query.where(SlackMessage.message_datetime >= start_date)
+            # Dates should already be timezone-naive at this point from the API layer
+            # But we'll check again just to be sure
+            if hasattr(start_date, "tzinfo") and start_date.tzinfo:
+                logger.warning(
+                    "start_date still has tzinfo, converting to naive datetime"
+                )
+                naive_start_date = start_date.replace(tzinfo=None)
+            else:
+                naive_start_date = start_date
+
+            query = query.where(SlackMessage.message_datetime >= naive_start_date)
+
         if end_date:
-            query = query.where(SlackMessage.message_datetime <= end_date)
+            # Dates should already be timezone-naive at this point from the API layer
+            # But we'll check again just to be sure
+            if hasattr(end_date, "tzinfo") and end_date.tzinfo:
+                logger.warning(
+                    "end_date still has tzinfo, converting to naive datetime"
+                )
+                naive_end_date = end_date.replace(tzinfo=None)
+            else:
+                naive_end_date = end_date
+
+            query = query.where(SlackMessage.message_datetime <= naive_end_date)
 
         # Apply pagination
         query = query.limit(limit)
@@ -106,11 +122,23 @@ class SlackMessageService:
 
         # If we have no messages, or start date is earlier than oldest message,
         # fetch from Slack API
+
+        # Ensure start_date is timezone-naive for comparison with message_datetime
+        safe_start_date = None
+        if start_date:
+            if hasattr(start_date, "tzinfo") and start_date.tzinfo:
+                logger.warning(
+                    "start_date has tzinfo during comparison, converting to naive"
+                )
+                safe_start_date = start_date.replace(tzinfo=None)
+            else:
+                safe_start_date = start_date
+
         should_fetch_from_api = len(messages) == 0 or (
             start_date
             and (
                 not channel.oldest_synced_ts
-                or start_date < messages[-1].message_datetime
+                or safe_start_date < messages[-1].message_datetime
             )
         )
 
@@ -538,13 +566,19 @@ class SlackMessageService:
             logger.error(f"Some channels not found in workspace {workspace_id}")
             raise HTTPException(status_code=404, detail="Some channels not found")
 
+        # Convert timezone-aware datetimes to naive for database compatibility
+        naive_start_date = (
+            start_date.replace(tzinfo=None) if start_date.tzinfo else start_date
+        )
+        naive_end_date = end_date.replace(tzinfo=None) if end_date.tzinfo else end_date
+
         # Query messages from database
         query = (
             select(SlackMessage)
             .where(
                 SlackMessage.channel_id.in_(channel_ids),
-                SlackMessage.message_datetime >= start_date,
-                SlackMessage.message_datetime <= end_date,
+                SlackMessage.message_datetime >= naive_start_date,
+                SlackMessage.message_datetime <= naive_end_date,
             )
             .order_by(SlackMessage.message_datetime.desc())
             .offset((page - 1) * page_size)
@@ -558,8 +592,8 @@ class SlackMessageService:
         # Count total messages for pagination
         count_query = select(SlackMessage).where(
             SlackMessage.channel_id.in_(channel_ids),
-            SlackMessage.message_datetime >= start_date,
-            SlackMessage.message_datetime <= end_date,
+            SlackMessage.message_datetime >= naive_start_date,
+            SlackMessage.message_datetime <= naive_end_date,
         )
         count_result = await db.execute(count_query)
         total_count = len(count_result.scalars().all())
