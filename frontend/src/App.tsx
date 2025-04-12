@@ -19,6 +19,7 @@ import {
   OAuthCallbackPage as SlackOAuthCallbackPage,
   WorkspacesPage as SlackWorkspacesPage,
   ChannelsPage as SlackChannelsPage,
+  MessagesPage as SlackMessagesPage,
 } from './pages/slack'
 
 // Create a default theme
@@ -81,6 +82,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <SlackWorkspacesPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard/slack/workspaces/:workspaceId/channels/:channelId/messages"
+                element={
+                  <ProtectedRoute>
+                    <SlackMessagesPage />
                   </ProtectedRoute>
                 }
               />
