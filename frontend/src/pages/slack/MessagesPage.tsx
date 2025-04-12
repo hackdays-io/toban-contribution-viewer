@@ -57,39 +57,50 @@ const MessagesPage: React.FC = () => {
     try {
       setIsLoading(true);
 
-      // If we need detailed channel info
-      const channelResponse = await fetch(
-        `${import.meta.env.VITE_API_URL}/slack/workspaces/${workspaceId}/channels?id=${channelId}`
-      );
-
-      if (!channelResponse.ok) {
-        throw new Error('Failed to fetch channel information');
+      try {
+        // Try to fetch detailed channel info
+        const channelResponse = await fetch(
+          `${import.meta.env.VITE_API_URL}/slack/workspaces/${workspaceId}/channels`
+        );
+        
+        if (channelResponse.ok) {
+          const channelData = await channelResponse.json();
+          if (channelData.channels) {
+            const channelInfo = channelData.channels.find((c: Channel) => c.id === channelId) || null;
+            if (channelInfo) {
+              setChannel(channelInfo);
+            }
+          }
+        }
+      } catch (channelError) {
+        console.log('Channel details not available:', channelError);
+        // Continue without detailed channel info
       }
 
-      const channelData = await channelResponse.json();
-      const channelInfo = channelData.channels.find((c: Channel) => c.id === channelId) || null;
-      setChannel(channelInfo);
-
-      // If we need workspace info
-      const workspaceResponse = await fetch(
-        `${import.meta.env.VITE_API_URL}/slack/workspaces/${workspaceId}`
-      );
-
-      if (!workspaceResponse.ok) {
-        throw new Error('Failed to fetch workspace information');
+      try {
+        // Try to fetch workspace info from the workspaces list endpoint
+        const workspacesResponse = await fetch(
+          `${import.meta.env.VITE_API_URL}/slack/workspaces`
+        );
+        
+        if (workspacesResponse.ok) {
+          const workspacesData = await workspacesResponse.json();
+          if (workspacesData.workspaces) {
+            const workspace = workspacesData.workspaces.find((w: any) => w.id === workspaceId);
+            if (workspace) {
+              setWorkspaceName(workspace.name || 'Slack Workspace');
+            }
+          }
+        }
+      } catch (workspaceError) {
+        console.log('Workspace details not available:', workspaceError);
+        // Set a default name if we can't fetch the workspace name
+        setWorkspaceName('Slack Workspace');
       }
-
-      const workspaceData = await workspaceResponse.json();
-      setWorkspaceName(workspaceData.workspace.name || 'Slack Workspace');
     } catch (error) {
       console.error('Error fetching data:', error);
-      toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to load data',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
+      // We don't show a toast error anymore, just log the error
+      // and continue with default values
     } finally {
       setIsLoading(false);
     }
