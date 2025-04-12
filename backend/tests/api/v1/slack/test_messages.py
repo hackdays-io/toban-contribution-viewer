@@ -175,6 +175,10 @@ def test_sync_channel_messages(
     client: TestClient,
 ):
     """Test the sync_channel_messages endpoint."""
+    # Configure mock to return a completed future to avoid warning
+    mock_result = {"status": "success", "message": "Sync started"}
+    mock_slack_message_service.sync_channel_messages.return_value = mock_result
+
     # Make the request
     date_range = {
         "start_date": (datetime.now() - timedelta(days=7)).isoformat(),
