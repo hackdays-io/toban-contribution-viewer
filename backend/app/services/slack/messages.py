@@ -395,6 +395,18 @@ class SlackMessageService:
         text = message.get("text", "")
         user_id = message.get("user")
 
+        # Try to extract user ID from the text if not provided in the message
+        extracted_user_id = None
+        if not user_id and text and text.startswith("<@"):
+            # Extract user ID from a message starting with <@USER_ID>
+            import re
+
+            match = re.match(r"^<@([A-Z0-9]+)>", text)
+            if match:
+                extracted_user_id = match.group(1)
+                logger.info(f"Extracted user ID from message text: {extracted_user_id}")
+                user_id = extracted_user_id
+
         # Convert Slack timestamp to datetime
         message_datetime = datetime.fromtimestamp(float(slack_ts))
 
@@ -420,6 +432,7 @@ class SlackMessageService:
         # Get user record if user_id is available
         db_user_id = None
         if user_id:
+            # Try to find user in database first
             user_result = await db.execute(
                 select(SlackUser).where(
                     SlackUser.workspace_id == workspace_id,
@@ -427,8 +440,33 @@ class SlackMessageService:
                 )
             )
             user = user_result.scalars().first()
+
             if user:
+                # User exists in database, use their ID
                 db_user_id = user.id
+                logger.debug(
+                    f"Found existing user in database: {user.name} ({user.slack_id})"
+                )
+            else:
+                # User not found in database, fetch from Slack API and create
+                try:
+                    logger.info(
+                        f"User {user_id} not found in database, fetching from Slack API"
+                    )
+                    new_user = await SlackMessageService._fetch_and_create_user(
+                        db=db,
+                        workspace_id=workspace_id,
+                        slack_user_id=user_id,
+                        access_token=channel.workspace.access_token,
+                    )
+                    if new_user:
+                        db_user_id = new_user.id
+                        logger.info(
+                            f"Created new user: {new_user.name} ({new_user.slack_id})"
+                        )
+                except Exception as e:
+                    logger.error(f"Error fetching user data from Slack API: {str(e)}")
+                    # Continue without user ID, it will be None
 
         # Extract message metadata
         message_type = "message"
@@ -480,6 +518,83 @@ class SlackMessageService:
         }
 
         return message_data
+
+    @staticmethod
+    async def _fetch_and_create_user(
+        db: AsyncSession,
+        workspace_id: str,
+        slack_user_id: str,
+        access_token: str,
+    ) -> Optional[SlackUser]:
+        """
+        Fetch user info from Slack API and create a new SlackUser record in the database.
+
+        Args:
+            db: Database session
+            workspace_id: UUID of the workspace
+            slack_user_id: Slack user ID to fetch
+            access_token: Slack access token for API requests
+
+        Returns:
+            Newly created SlackUser instance, or None if creation failed
+        """
+        try:
+            # Create API client
+            api_client = SlackApiClient(access_token)
+
+            # Fetch user info from Slack API
+            user_response = await api_client.get_user_info(slack_user_id)
+
+            if not user_response.get("ok", False):
+                logger.error(f"Error fetching user data: {user_response.get('error')}")
+                return None
+
+            user_data = user_response.get("user", {})
+            if not user_data:
+                logger.error("No user data returned from Slack API")
+                return None
+
+            # Extract user profile data
+            profile = user_data.get("profile", {})
+
+            # Prepare user data - truncate strings to avoid DB constraint errors
+            def safe_str(s: Optional[str], max_len: int = 255) -> Optional[str]:
+                if not s:
+                    return None
+                return s[:max_len] if len(s) > max_len else s
+
+            # Create new user record
+            new_user = SlackUser(
+                workspace_id=workspace_id,
+                slack_id=slack_user_id,
+                name=safe_str(user_data.get("name")),
+                display_name=safe_str(profile.get("display_name")),
+                real_name=safe_str(profile.get("real_name")),
+                email=safe_str(profile.get("email")),
+                title=safe_str(profile.get("title")),
+                phone=safe_str(profile.get("phone"), 50),
+                timezone=safe_str(profile.get("tz"), 100),
+                timezone_offset=user_data.get("tz_offset"),
+                profile_image_url=safe_str(
+                    profile.get("image_original") or profile.get("image_192"), 1024
+                ),
+                is_bot=user_data.get("is_bot", False),
+                is_admin=user_data.get("is_admin", False),
+                is_deleted=user_data.get("deleted", False),
+                profile_data=profile,  # Store full profile data
+            )
+
+            # Add to database
+            db.add(new_user)
+            await db.commit()
+            await db.refresh(new_user)
+
+            return new_user
+
+        except Exception as e:
+            logger.error(f"Error creating user record: {str(e)}")
+            await db.rollback()
+            return None
 
     @staticmethod
     def _message_to_dict(message: SlackMessage) -> Dict[str, Any]:
@@ -619,6 +734,69 @@ class SlackMessageService:
         }
 
     @staticmethod
+    async def fix_message_user_references(
+        db: AsyncSession,
+        workspace_id: str,
+        channel_id: Optional[str] = None,
+    ) -> int:
+        """
+        Fix message user references by extracting user IDs from message text.
+
+        This is a repair function that scans messages with null user_id but that
+        contain references to users in the text (like "<@USER123>: message text")
+        and links them to the appropriate SlackUser record.
+
+        Args:
+            db: Database session
+            workspace_id: UUID of the workspace
+            channel_id: Optional UUID of a specific channel (if None, fix all channels)
+
+        Returns:
+            Number of message references fixed
+        """
+        try:
+            logger.info(f"Fixing message user references for workspace {workspace_id}")
+
+            # Build query conditions
+            conditions = [
+                "m.user_id IS NULL",
+                "m.text ~ '^<@([A-Z0-9]+)>'",
+                "u.workspace_id = :workspace_id",
+            ]
+
+            if channel_id:
+                conditions.append("m.channel_id = :channel_id")
+
+            # Construct the SQL query to fix message user references
+            query = f"""
+            UPDATE slackmessage m
+            SET user_id = u.id
+            FROM slackuser u
+            WHERE {' AND '.join(conditions)}
+            AND u.slack_id = regexp_replace(m.text, '^<@([A-Z0-9]+)>.*', '\\1')
+            """
+
+            # Prepare parameters
+            params = {"workspace_id": workspace_id}
+            if channel_id:
+                params["channel_id"] = channel_id
+
+            # Execute the query
+            result = await db.execute(query, params)
+            await db.commit()
+
+            # Get the number of rows affected
+            rows_affected = result.rowcount if hasattr(result, "rowcount") else 0
+            logger.info(f"Fixed {rows_affected} message user references")
+
+            return rows_affected
+
+        except Exception as e:
+            logger.error(f"Error fixing message user references: {str(e)}")
+            await db.rollback()
+            return 0
+
+    @staticmethod
     async def sync_channel_messages(
         db: AsyncSession,
         workspace_id: str,
@@ -752,6 +930,18 @@ class SlackMessageService:
         channel.last_sync_at = datetime.utcnow()
         await db.commit()
 
+        # Try to fix any messages that might be missing user_id references
+        try:
+            fixed_count = await SlackMessageService.fix_message_user_references(
+                db=db, workspace_id=workspace_id, channel_id=channel_id
+            )
+            logger.info(
+                f"Fixed {fixed_count} message user references for channel {channel.name}"
+            )
+        except Exception as e:
+            logger.error(f"Error fixing message user references: {str(e)}")
+            fixed_count = 0
+
         # Calculate sync stats
         elapsed_time = time.time() - start_time
         return {
@@ -762,5 +952,6 @@ class SlackMessageService:
             "new_message_count": new_message_count,
             "updated_message_count": updated_message_count,
             "error_count": error_count,
+            "fixed_references_count": fixed_count,
             "elapsed_time": elapsed_time,
         }

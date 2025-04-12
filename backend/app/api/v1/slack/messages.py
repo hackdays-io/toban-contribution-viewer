@@ -323,3 +323,52 @@ async def sync_channel_messages(
         raise HTTPException(
             status_code=500, detail="An error occurred while initiating message sync"
         )
+
+
+@router.post("/workspaces/{workspace_id}/fix-message-users")
+async def fix_message_user_references(
+    workspace_id: str,
+    channel_id: Optional[str] = Query(None, description="Optional channel ID to fix"),
+    db: AsyncSession = Depends(get_async_db),
+) -> Dict[str, Any]:
+    """
+    Fix message user references by extracting user IDs from message text.
+
+    This endpoint scans messages with null user_id but that contain references
+    to users in the text (like "<@USER123>: message text") and links them to
+    the appropriate SlackUser records.
+
+    Args:
+        workspace_id: UUID of the workspace
+        channel_id: Optional UUID of a specific channel
+        db: Database session
+
+    Returns:
+        Dictionary with fix results
+    """
+    try:
+        logger.info(
+            f"Fixing message user references for workspace {workspace_id}"
+            + (f", channel {channel_id}" if channel_id else ", all channels")
+        )
+
+        fixed_count = await SlackMessageService.fix_message_user_references(
+            db=db, workspace_id=workspace_id, channel_id=channel_id
+        )
+
+        return {
+            "status": "success",
+            "message": f"Fixed {fixed_count} message user references",
+            "fixed_count": fixed_count,
+            "workspace_id": workspace_id,
+            "channel_id": channel_id,
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fixing message user references: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail="An error occurred while fixing message user references",
+        )
