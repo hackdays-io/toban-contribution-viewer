@@ -273,7 +273,10 @@ class SlackMessage(Base, BaseModel):
     )
     # Self-referential relationship for threading
     parent: Mapped[Optional["SlackMessage"]] = relationship(
-        "SlackMessage", remote_side=[id], backref="replies"
+        "SlackMessage",
+        foreign_keys=[parent_id],
+        backref="replies",
+        remote_side="SlackMessage.id",
     )
 
     # Indexes for efficient querying
