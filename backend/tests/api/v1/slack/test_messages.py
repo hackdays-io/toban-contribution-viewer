@@ -169,15 +169,14 @@ def test_get_messages_by_date_range(
 
 def test_sync_channel_messages(
     app: FastAPI,
-    mock_slack_message_service,
     mock_workspace_id,
     mock_channel_id,
     client: TestClient,
 ):
     """Test the sync_channel_messages endpoint."""
-    # Configure mock to return a completed future to avoid warning
-    mock_result = {"status": "success", "message": "Sync started"}
-    mock_slack_message_service.sync_channel_messages.return_value = mock_result
+    # For this test, we don't need to mock SlackMessageService.sync_channel_messages
+    # since we're testing the API endpoint that uses a BackgroundTask, not the actual
+    # synchronization function
 
     # Make the request
     date_range = {
