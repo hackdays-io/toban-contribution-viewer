@@ -97,11 +97,10 @@ Before using the Toban Contribution Viewer for Slack analysis, the user must:
 
 **System Actions (background):**
 
-1. For each conversation thread, the AI analyzes:
-   - Message intent and purpose (question, answer, information sharing)
-   - Problem identification and resolution patterns
-   - Knowledge sharing quality and depth
-   - Coordination and facilitation activities
+1. For each channles, the AI analyzes:
+   - What kind of topics have been discussed and what decisions were made.
+   - What kind of achievement have done by whom.
+   - Top tier coordination and facilitation activities.
 
 2. For each team member, the AI evaluates:
    - Problem-solving contributions
