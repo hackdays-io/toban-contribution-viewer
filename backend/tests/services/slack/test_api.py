@@ -154,7 +154,9 @@ async def test_verify_token_invalid(mock_make_request):
     """Test token verification with invalid token."""
     # Setup mock to raise an auth error
     mock_make_request.side_effect = SlackApiError(
-        message="Invalid authentication", error_code="invalid_auth"
+        message="Invalid authentication",
+        error_code="invalid_auth",
+        response_data={"error": "invalid_auth"},
     )
 
     # Create client and call method

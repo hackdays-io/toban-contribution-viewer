@@ -1,9 +1,10 @@
 """
-Slack API client service for interacting with the Slack API.
+Slack API client for making requests to the Slack API.
 """
 
+import json
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional, Union
 
 import aiohttp
 
@@ -12,40 +13,37 @@ logger = logging.getLogger(__name__)
 
 
 class SlackApiError(Exception):
-    """Exception raised for Slack API errors."""
+    """Base exception for Slack API errors."""
 
     def __init__(
-        self,
-        message: str,
-        error_code: Optional[str] = None,
-        response_data: Optional[Dict[str, Any]] = None,
-    ):
+        self, message: str, error_code: str, response_data: Dict[str, Any]
+    ) -> None:
         self.message = message
         self.error_code = error_code
         self.response_data = response_data
-        super().__init__(self.message)
+        super().__init__(message)
 
 
 class SlackApiRateLimitError(SlackApiError):
-    """Exception raised for Slack API rate limit errors."""
+    """Exception for Slack API rate limiting errors."""
 
     def __init__(
         self,
         message: str,
-        retry_after: Optional[int] = None,
-        response_data: Optional[Dict[str, Any]] = None,
-    ):
-        super().__init__(message, "rate_limited", response_data)
+        error_code: str,
+        response_data: Dict[str, Any],
+        retry_after: int = 60,
+    ) -> None:
         self.retry_after = retry_after
+        super().__init__(message, error_code, response_data)
 
 
 class SlackApiClient:
     """
-    Client for interacting with the Slack API.
-    Handles authentication, rate limiting, and error handling.
+    Client for making requests to the Slack API.
     """
 
-    def __init__(self, access_token: str):
+    def __init__(self, access_token: str) -> None:
         """
         Initialize the Slack API client.
 
@@ -58,50 +56,56 @@ class SlackApiClient:
     async def _make_request(
         self,
         method: str,
-        url_path: str,
+        path: str,
         params: Optional[Dict[str, Any]] = None,
         data: Optional[Dict[str, Any]] = None,
         json_data: Optional[Dict[str, Any]] = None,
         headers: Optional[Dict[str, str]] = None,
     ) -> Dict[str, Any]:
         """
-        Make a request to the Slack API with error handling and rate limiting.
+        Make a request to the Slack API.
 
         Args:
             method: HTTP method (GET, POST, etc.)
-            url_path: API endpoint path
+            path: API endpoint path
             params: Query parameters
             data: Form data
             json_data: JSON data
             headers: HTTP headers
 
         Returns:
-            API response as dictionary
+            Parsed JSON response
 
         Raises:
             SlackApiError: If the API returns an error
-            SlackApiRateLimitError: If rate limited
+            SlackApiRateLimitError: If the API rate limit is exceeded
         """
-        full_url = f"{self.base_url}/{url_path}"
-
-        # Prepare headers
+        # Prepare headers with authorization
         request_headers = {
             "Authorization": f"Bearer {self.access_token}",
+            "Content-Type": "application/json; charset=utf-8",
         }
 
+        # Add custom headers if provided
         if headers:
             request_headers.update(headers)
 
+        # Build full URL
+        url = f"{self.base_url}/{path}"
+
+        logger.debug(f"Making {method} request to {url}")
+
         try:
+            # Make the request
             async with aiohttp.ClientSession() as session:
                 async with session.request(
                     method=method,
-                    url=full_url,
+                    url=url,
                     params=params,
                     data=data,
                     json=json_data,
                     headers=request_headers,
-                    timeout=10,  # Set a reasonable timeout
+                    timeout=10,
                 ) as response:
                     # Check for rate limiting
                     if response.status == 429:
@@ -109,37 +113,67 @@ class SlackApiClient:
                         logger.warning(
                             f"Rate limited by Slack API. Retry after {retry_after} seconds."
                         )
+
+                        # Try to parse response data for error details
+                        try:
+                            response_data = await response.json()
+                        except:
+                            response_data = {"error": "rate_limited"}
+
                         raise SlackApiRateLimitError(
-                            message="Rate limited by Slack API", retry_after=retry_after
+                            message=f"Rate limited by Slack API. Retry after {retry_after} seconds.",
+                            error_code="rate_limited",
+                            response_data=response_data,
+                            retry_after=retry_after,
                         )
 
-                    # Get response data
+                    # Handle other HTTP errors
+                    if response.status >= 400:
+                        try:
+                            response_data = await response.json()
+                        except:
+                            response_data = {"error": f"HTTP error {response.status}"}
+
+                        error_code = response_data.get(
+                            "error", f"http_{response.status}"
+                        )
+                        error_message = response_data.get(
+                            "error_description", f"HTTP error {response.status}"
+                        )
+
+                        raise SlackApiError(
+                            message=f"Slack API error: {error_message}",
+                            error_code=error_code,
+                            response_data=response_data,
+                        )
+
+                    # Parse JSON response
                     response_data = await response.json()
 
-                    # Check for API errors
+                    # Check for API errors in response data
                     if not response_data.get("ok", False):
                         error_code = response_data.get("error", "unknown_error")
-                        error_msg = response_data.get(
-                            "error_description", "Unknown API error"
+                        error_message = response_data.get(
+                            "error_description", f"Slack API error: {error_code}"
                         )
 
-                        # Specific error handling
-                        if (
-                            error_code == "invalid_auth"
-                            or error_code == "token_expired"
-                        ):
-                            logger.error(
-                                f"Authentication error: {error_code} - {error_msg}"
-                            )
+                        # Handle authentication errors specially
+                        if error_code in [
+                            "invalid_auth",
+                            "token_expired",
+                            "not_authed",
+                        ]:
+                            logger.error(f"Authentication error: {error_code}")
                             raise SlackApiError(
-                                message=f"Slack authentication error: {error_msg}",
+                                message=f"Slack API authentication error: {error_message}",
                                 error_code=error_code,
                                 response_data=response_data,
                             )
 
-                        logger.error(f"Slack API error: {error_code} - {error_msg}")
+                        # Handle other API errors
+                        logger.error(f"Slack API error: {error_code} - {error_message}")
                         raise SlackApiError(
-                            message=f"Slack API error: {error_msg}",
+                            message=f"Slack API error: {error_message}",
                             error_code=error_code,
                             response_data=response_data,
                         )
@@ -147,221 +181,121 @@ class SlackApiClient:
                     return response_data
 
         except aiohttp.ClientError as e:
-            logger.error(f"HTTP error during Slack API request: {str(e)}")
+            logger.error(f"HTTP client error: {str(e)}")
             raise SlackApiError(
-                message=f"HTTP error during Slack API request: {str(e)}"
+                message=f"HTTP client error: {str(e)}",
+                error_code="http_client_error",
+                response_data={},
             )
 
     async def get_workspace_info(self) -> Dict[str, Any]:
         """
-        Get information about the current workspace.
+        Get information about the workspace.
 
         Returns:
-            Workspace information including name, domain, and icon
+            Workspace information
         """
-        try:
-            response = await self._make_request("GET", "team.info")
-            return response.get("team", {})
-        except SlackApiError as e:
-            logger.error(f"Error getting workspace info: {str(e)}")
-            raise
+        response = await self._make_request("GET", "team.info")
+        return response.get("team", {})
 
     async def get_user_count(self) -> int:
         """
         Get the number of users in the workspace.
 
         Returns:
-            Team size (number of users)
+            Number of users
         """
-        try:
-            response = await self._make_request(
-                "GET",
-                "users.list",
-                params={"limit": 1},  # Just need the count, not actual users
-            )
-            return response.get("response_metadata", {}).get("total_count", 0)
-        except SlackApiError as e:
-            logger.error(f"Error getting user count: {str(e)}")
-            # Return 0 as a fallback
-            return 0
+        response = await self._make_request("GET", "users.list", params={"limit": 1})
+        return response.get("response_metadata", {}).get("total_count", 0)
 
     async def verify_token(self) -> bool:
         """
-        Verify that the access token is valid.
+        Verify if the access token is valid.
 
         Returns:
             True if the token is valid, False otherwise
         """
         try:
-            # Call a simple API endpoint that requires authentication
             await self._make_request("GET", "auth.test")
             return True
-        except SlackApiError as e:
-            logger.warning(f"Token verification failed: {e.error_code}")
-            if e.error_code in ["invalid_auth", "token_expired"]:
-                return False
-            # For other errors, the token might still be valid
-            raise
-        except Exception as e:
-            logger.error(f"Unexpected error during token verification: {str(e)}")
-            # Re-raise the exception to be handled by the caller
-            raise
+        except SlackApiError:
+            return False
 
     async def get_channels(
-        self,
-        cursor: Optional[str] = None,
-        limit: int = 100,
-        types: Optional[str] = "public_channel,private_channel",
-        exclude_archived: Any = True,
+        self, cursor: Optional[str] = None, limit: int = 100
     ) -> Dict[str, Any]:
         """
-        Get a list of channels from the workspace.
-
-        Note: This method supports cursor-based pagination. The cursor should be
-        extracted from the response_metadata.next_cursor field of the previous response.
+        Get channels in the workspace.
 
         Args:
-            cursor: Pagination cursor from a previous response
-            limit: Maximum number of channels to return (max 1000)
-            types: Comma-separated list of channel types to include
-                  (public_channel, private_channel, mpim, im)
-            exclude_archived: Whether to exclude archived channels
+            cursor: Pagination cursor
+            limit: Number of channels to fetch
 
         Returns:
-            Dictionary containing channels list and pagination metadata
+            Channels and pagination info
         """
-        try:
-            params = {
-                "limit": min(limit, 1000),  # Enforce Slack API limit
-                "exclude_archived": str(
-                    exclude_archived
-                ).lower(),  # Convert to string "true" or "false"
-            }
+        params = {
+            "types": "public_channel,private_channel",
+            "limit": limit,
+        }
 
-            if cursor and cursor.strip():
-                params["cursor"] = cursor.strip()
-                logger.info(f"Using cursor for pagination: {cursor}")
+        if cursor:
+            params["cursor"] = cursor
 
-            if types:
-                params["types"] = types
-
-            response = await self._make_request(
-                "GET", "conversations.list", params=params
-            )
-
-            return response
-        except SlackApiError as e:
-            logger.error(f"Error getting channels list: {str(e)}")
-            raise
+        return await self._make_request("GET", "conversations.list", params=params)
 
     async def get_channel_info(self, channel_id: str) -> Dict[str, Any]:
         """
-        Get detailed information about a specific channel.
+        Get information about a channel.
 
         Args:
-            channel_id: Slack ID of the channel
+            channel_id: Slack channel ID
 
         Returns:
-            Dictionary containing channel information
+            Channel information
         """
-        try:
-            response = await self._make_request(
-                "GET", "conversations.info", params={"channel": channel_id}
-            )
-
-            return response.get("channel", {})
-        except SlackApiError as e:
-            logger.error(f"Error getting channel info for {channel_id}: {str(e)}")
-            raise
+        return await self._make_request(
+            "GET", "conversations.info", params={"channel": channel_id}
+        )
 
     async def check_bot_in_channel(self, channel_id: str) -> bool:
         """
-        Check if the bot is a member of the specified channel.
+        Check if the bot is in the channel.
 
         Args:
-            channel_id: Slack ID of the channel
+            channel_id: Slack channel ID
 
         Returns:
-            True if the bot is a member of the channel, False otherwise
+            True if the bot is in the channel, False otherwise
         """
         try:
-            # First get auth info to know the bot's user ID
+            # Get bot user info
             auth_info = await self._make_request("GET", "auth.test")
-            bot_user_id = auth_info.get("user_id")
+            bot_user_id = auth_info.get("bot_id")
 
             if not bot_user_id:
-                logger.error("Could not determine bot user ID")
                 return False
 
-            # Check if the bot is in the channel
-            try:
-                # For public channels, we can check directly
-                channel_info = await self.get_channel_info(channel_id)
-                # Some channels report bot membership directly
-                if "is_member" in channel_info:
-                    return channel_info["is_member"]
+            # Check if bot is in channel
+            channel_info = await self.get_channel_info(channel_id)
+            return channel_info.get("is_member", False)
+        except SlackApiError:
+            return False
 
-                # Otherwise check member list
-                response = await self._make_request(
-                    "GET",
-                    "conversations.members",
-                    params={"channel": channel_id, "limit": 100},
-                )
-
-                # Check first page of members
-                if bot_user_id in response.get("members", []):
-                    return True
-
-                # If not found and there are more pages, we'd need to paginate
-                # through all members, but for efficiency we'll join the channel
-                # later if needed instead of checking all members
-
-                return False
-
-            except SlackApiError as e:
-                # If we get a channel_not_found error, the bot is definitely not in the channel
-                if e.error_code == "channel_not_found":
-                    return False
-                # For some private channels, we might get an access error
-                if e.error_code in [
-                    "not_in_channel",
-                    "channel_not_found",
-                    "missing_scope",
-                ]:
-                    return False
-                # For other errors, re-raise
-                raise
-
-        except SlackApiError as e:
-            logger.error(
-                f"Error checking bot membership in channel {channel_id}: {str(e)}"
-            )
-            if e.error_code in ["channel_not_found", "not_in_channel"]:
-                return False
-            raise
-        except Exception as e:
-            logger.error(f"Unexpected error checking bot membership: {str(e)}")
-            raise
-
-    async def join_channel(self, channel_id: str) -> Dict[str, Any]:
+    async def join_channel(self, channel_id: str) -> bool:
         """
-        Join a channel using conversations.join API.
+        Join a channel.
 
         Args:
-            channel_id: Slack ID of the channel to join
+            channel_id: Slack channel ID
 
         Returns:
-            Dictionary with the API response
-
-        Raises:
-            SlackApiError: If the API returns an error
+            True if joined successfully, False otherwise
         """
         try:
             response = await self._make_request(
-                "POST", "conversations.join", data={"channel": channel_id}
+                "POST", "conversations.join", json_data={"channel": channel_id}
             )
-            return response
-        except SlackApiError as e:
-            logger.error(f"Error joining channel {channel_id}: {str(e)}")
-            # Rethrow the error to be handled by the caller
-            raise
+            return response.get("ok", False)
+        except SlackApiError:
+            return False
