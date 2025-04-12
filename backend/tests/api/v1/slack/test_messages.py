@@ -21,6 +21,10 @@ from app.models.slack import SlackChannel, SlackMessage, SlackWorkspace
 def mock_slack_message_service():
     """Create a mock for the SlackMessageService."""
     with patch("app.api.v1.slack.messages.SlackMessageService") as mock:
+        # Setup async methods to return awaitable objects
+        mock.get_channel_messages = AsyncMock()
+        mock.get_messages_by_date_range = AsyncMock()
+        mock.sync_channel_messages = AsyncMock()
         yield mock
 
 
