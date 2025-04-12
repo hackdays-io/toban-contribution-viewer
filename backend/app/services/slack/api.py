@@ -2,9 +2,8 @@
 Slack API client for making requests to the Slack API.
 """
 
-import json
 import logging
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, Optional
 
 import aiohttp
 
@@ -117,7 +116,7 @@ class SlackApiClient:
                         # Try to parse response data for error details
                         try:
                             response_data = await response.json()
-                        except:
+                        except Exception:
                             response_data = {"error": "rate_limited"}
 
                         raise SlackApiRateLimitError(
@@ -131,7 +130,7 @@ class SlackApiClient:
                     if response.status >= 400:
                         try:
                             response_data = await response.json()
-                        except:
+                        except Exception:
                             response_data = {"error": f"HTTP error {response.status}"}
 
                         error_code = response_data.get(

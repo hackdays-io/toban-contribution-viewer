@@ -5,17 +5,15 @@ Slack message retrieval and processing service.
 import logging
 import time
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 from fastapi import HTTPException
-from sqlalchemy import select, update
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload
 
 from app.models.slack import (
     SlackChannel,
     SlackMessage,
-    SlackReaction,
     SlackUser,
     SlackWorkspace,
 )
