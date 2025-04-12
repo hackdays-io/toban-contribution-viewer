@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Box,
   Button,
@@ -9,7 +9,6 @@ import {
   Input,
   InputGroup,
   InputLeftElement,
-  Select,
   Spinner,
   Text,
   useToast,
@@ -22,12 +21,10 @@ import {
   Avatar,
   Stack,
   StackDivider,
-  CircularProgress,
   FormControl,
   FormLabel,
 } from '@chakra-ui/react';
 import { FiSearch, FiRefreshCw, FiMessageSquare, FiCalendar } from 'react-icons/fi';
-import { useParams, useNavigate } from 'react-router-dom';
 
 // Define types
 interface SlackMessage {
@@ -86,8 +83,7 @@ const MessageList: React.FC<MessageListProps> = ({ workspaceId, channelId, chann
   const [searchQuery, setSearchQuery] = useState('');
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
-  const [includeReplies, setIncludeReplies] = useState(true);
-  const navigate = useNavigate();
+  const [includeReplies] = useState(true);
   const toast = useToast();
   const [users, setUsers] = useState<Map<string, SlackUser>>(new Map());
 
@@ -210,7 +206,7 @@ const MessageList: React.FC<MessageListProps> = ({ workspaceId, channelId, chann
         throw new Error('Failed to sync messages');
       }
 
-      const data = await response.json();
+      await response.json(); // Process response but we don't need to use it
       
       toast({
         title: 'Sync Started',
@@ -256,13 +252,13 @@ const MessageList: React.FC<MessageListProps> = ({ workspaceId, channelId, chann
     return date.toLocaleString();
   };
 
-  /**
-   * Truncate text if it's too long.
-   */
+  // We're not using truncateText now, but keeping it commented for future use
+  /*
   const truncateText = (text: string, maxLength: number = 150) => {
     if (text.length <= maxLength) return text;
     return text.substring(0, maxLength) + '...';
   };
+  */
 
   /**
    * Load more messages when available.
