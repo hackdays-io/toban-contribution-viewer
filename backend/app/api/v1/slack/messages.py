@@ -390,6 +390,56 @@ async def fix_message_user_references(
         )
 
 
+@router.post("/fix-thread-parent-flags")
+async def fix_thread_parent_flags(
+    db: AsyncSession = Depends(get_async_db),
+) -> Dict[str, Any]:
+    """
+    Fix thread parent flags for all messages in the database.
+    
+    This endpoint updates all messages to correctly mark thread parents based
+    on the logic that a message is a thread parent if:
+    1. It has replies (reply_count > 0) AND
+    2. Either thread_ts equals its own ts (it started a thread) OR thread_ts is None
+    
+    Returns:
+        Dictionary with fix results
+    """
+    try:
+        logger.info("Fixing thread parent flags for all messages")
+        
+        # Use a direct SQL update for efficiency
+        from sqlalchemy import text
+        
+        sql = """
+        UPDATE slackmessage 
+        SET is_thread_parent = TRUE
+        WHERE reply_count > 0 
+          AND (thread_ts = slack_ts OR thread_ts IS NULL)
+          AND is_thread_parent = FALSE
+        """
+        
+        result = await db.execute(text(sql))
+        updated_count = result.rowcount
+        await db.commit()
+        
+        logger.info(f"Fixed {updated_count} thread parent flags")
+        
+        return {
+            "status": "success",
+            "message": f"Fixed {updated_count} thread parent flags",
+            "updated_count": updated_count,
+        }
+        
+    except Exception as e:
+        logger.error(f"Error fixing thread parent flags: {str(e)}")
+        await db.rollback()
+        raise HTTPException(
+            status_code=500,
+            detail="An error occurred while fixing thread parent flags",
+        )
+
+
 @router.post("/workspaces/{workspace_id}/sync-users-from-messages")
 async def sync_users_from_messages(
     workspace_id: str,

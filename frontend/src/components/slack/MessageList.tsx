@@ -471,6 +471,48 @@ const MessageList: React.FC<MessageListProps> = ({
           </Button>
           <Button
             leftIcon={<Icon as={FiRefreshCw} />}
+            colorScheme="orange"
+            size="md"
+            onClick={() => {
+              const url = `${import.meta.env.VITE_API_URL}/slack/fix-thread-parent-flags`;
+              console.log('Fixing thread parent flags with:', url);
+              fetch(url, { method: 'POST' })
+                .then(response => {
+                  if (!response.ok) {
+                    throw new Error(`Error fixing thread parent flags: ${response.status}`);
+                  }
+                  return response.json();
+                })
+                .then(data => {
+                  console.log('Thread parent fix result:', data);
+                  toast({
+                    title: 'Thread Fix',
+                    description: `Fixed ${data.updated_count} thread parent flags`,
+                    status: 'success',
+                    duration: 5000,
+                    isClosable: true,
+                  });
+                  // Refresh messages after fix
+                  setTimeout(() => {
+                    fetchMessages();
+                  }, 1000);
+                })
+                .catch(error => {
+                  console.error('Error fixing thread parent flags:', error);
+                  toast({
+                    title: 'Error',
+                    description: 'Failed to fix thread parent flags',
+                    status: 'error',
+                    duration: 5000,
+                    isClosable: true,
+                  });
+                });
+            }}
+          >
+            Fix Thread Flags
+          </Button>
+          <Button
+            leftIcon={<Icon as={FiRefreshCw} />}
             colorScheme="purple"
             isLoading={isSyncing}
             onClick={syncMessages}

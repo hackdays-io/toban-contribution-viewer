@@ -515,7 +515,13 @@ class SlackMessageService:
 
         # Determine if message is part of a thread
         thread_ts = message.get("thread_ts")
-        is_thread_parent = thread_ts is None and message.get("reply_count", 0) > 0
+        # A message is a thread parent if either:
+        # 1. It has replies (reply_count > 0) AND
+        # 2. Either thread_ts equals its own ts (it started a thread) OR thread_ts is None (not yet marked as thread)
+        is_thread_parent = message.get("reply_count", 0) > 0 and (
+            thread_ts == slack_ts or thread_ts is None
+        )
+        # A message is a thread reply if it has a thread_ts that's different from its own ts
         is_thread_reply = thread_ts is not None and thread_ts != slack_ts
 
         # Handle threading
