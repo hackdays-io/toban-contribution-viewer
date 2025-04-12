@@ -157,6 +157,9 @@ const MessageList: React.FC<MessageListProps> = ({
 
       const data = await response.json()
 
+      // Log to check if we have thread parents with replies
+      console.log('Messages with thread info:', data.messages?.filter(m => m.is_thread_parent && m.reply_count > 0))
+
       setMessages(data.messages || [])
       setPagination(data.pagination || null)
 
@@ -423,14 +426,58 @@ const MessageList: React.FC<MessageListProps> = ({
         <Heading size="lg">
           {channelName ? `#${channelName} Messages` : 'Channel Messages'}
         </Heading>
-        <Button
-          leftIcon={<Icon as={FiRefreshCw} />}
-          colorScheme="purple"
-          isLoading={isSyncing}
-          onClick={syncMessages}
-        >
-          Sync Messages
-        </Button>
+        <HStack spacing={3}>
+          <Button
+            leftIcon={<Icon as={FiMessageSquare} />}
+            colorScheme="teal"
+            size="md"
+            onClick={() => {
+              const url = `${import.meta.env.VITE_API_URL}/slack/workspaces/${workspaceId}/channels/${channelId}/sync-threads`;
+              console.log('Syncing threads with:', url);
+              fetch(url, { method: 'POST' })
+                .then(response => {
+                  if (!response.ok) {
+                    throw new Error(`Error syncing threads: ${response.status}`);
+                  }
+                  return response.json();
+                })
+                .then(data => {
+                  console.log('Thread sync result:', data);
+                  toast({
+                    title: 'Thread Sync',
+                    description: `Synced ${data.replies_synced} replies for ${data.threads_synced} threads`,
+                    status: 'success',
+                    duration: 5000,
+                    isClosable: true,
+                  });
+                  // Refresh messages after sync
+                  setTimeout(() => {
+                    fetchMessages();
+                  }, 1000);
+                })
+                .catch(error => {
+                  console.error('Error syncing threads:', error);
+                  toast({
+                    title: 'Error',
+                    description: 'Failed to sync thread replies',
+                    status: 'error',
+                    duration: 5000,
+                    isClosable: true,
+                  });
+                });
+            }}
+          >
+            Sync Threads
+          </Button>
+          <Button
+            leftIcon={<Icon as={FiRefreshCw} />}
+            colorScheme="purple"
+            isLoading={isSyncing}
+            onClick={syncMessages}
+          >
+            Sync Messages
+          </Button>
+        </HStack>
       </HStack>
 
       <Divider mb={6} />
@@ -567,6 +614,17 @@ const MessageList: React.FC<MessageListProps> = ({
                                 </Tooltip>
                               </HStack>
                             )}
+                          
+                          {/* Debug message properties */}
+                          {import.meta.env.DEV && (
+                            <Box mt={1} p={2} fontSize="xs" bg="gray.100" borderRadius="md">
+                              <Text fontWeight="bold">Debug Info:</Text>
+                              <Text>is_thread_parent: {String(message.is_thread_parent)}</Text>
+                              <Text>reply_count: {message.reply_count}</Text>
+                              <Text>thread_ts: {message.thread_ts || 'null'}</Text>
+                              <Text>message_id: {message.id}</Text>
+                            </Box>
+                          )}
 
                           {/* Reactions */}
                           {message.reaction_count > 0 && (
