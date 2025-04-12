@@ -3,14 +3,17 @@ Slack messages API routes.
 """
 
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.db.session import get_async_db
+from app.models.slack import SlackChannel, SlackMessage
 from app.services.slack.messages import SlackMessageService
 
 # Configure logging
@@ -40,6 +43,12 @@ async def get_channel_messages(
     include_replies: bool = Query(
         True, description="Whether to include thread replies"
     ),
+    thread_only: bool = Query(
+        False, description="Only retrieve thread parent messages"
+    ),
+    thread_ts: Optional[str] = Query(
+        None, description="Filter by specific thread timestamp"
+    ),
     limit: int = Query(
         100, ge=1, le=1000, description="Maximum number of messages to retrieve"
     ),
@@ -55,6 +64,8 @@ async def get_channel_messages(
         start_date: Optional start date for filtering messages
         end_date: Optional end date for filtering messages
         include_replies: Whether to include thread replies
+        thread_only: Only retrieve thread parent messages
+        thread_ts: Filter by specific thread timestamp
         limit: Maximum number of messages to retrieve
         cursor: Pagination cursor for retrieving the next set of results
         db: Database session
@@ -65,7 +76,8 @@ async def get_channel_messages(
     try:
         logger.info(
             f"Fetching messages for channel {channel_id} in workspace {workspace_id}, "
-            f"date range: {start_date} to {end_date}, limit: {limit}, cursor: {cursor}"
+            f"date range: {start_date} to {end_date}, limit: {limit}, cursor: {cursor}, "
+            f"thread_only: {thread_only}, thread_ts: {thread_ts}"
         )
 
         # Strip timezone info from datetime objects if present
@@ -92,6 +104,8 @@ async def get_channel_messages(
             limit=limit,
             cursor=cursor,
             include_replies=include_replies,
+            thread_only=thread_only,
+            thread_ts=thread_ts,
         )
 
         logger.info(
@@ -201,8 +215,7 @@ async def get_users_by_ids(
         if not valid_user_ids:
             return {"users": []}
 
-        from sqlalchemy import select
-
+        # Import locally to avoid clash with unused import warning
         from app.models.slack import SlackUser
 
         # Query users from database
@@ -312,7 +325,10 @@ async def sync_channel_messages(
 
         return {
             "status": "syncing",
-            "message": "Message synchronization started. This process will continue in the background and may take a few minutes depending on the date range and message volume.",
+            "message": (
+                "Message synchronization started. This process will continue in the background "
+                "and may take a few minutes depending on the date range and message volume."
+            ),
             "workspace_id": workspace_id,
             "channel_id": channel_id,
         }
@@ -347,9 +363,9 @@ async def fix_message_user_references(
         Dictionary with fix results
     """
     try:
+        channel_info = f", channel {channel_id}" if channel_id else ", all channels"
         logger.info(
-            f"Fixing message user references for workspace {workspace_id}"
-            + (f", channel {channel_id}" if channel_id else ", all channels")
+            f"Fixing message user references for workspace {workspace_id}{channel_info}"
         )
 
         fixed_count = await SlackMessageService.fix_message_user_references(
@@ -397,13 +413,15 @@ async def sync_users_from_messages(
         Dictionary with sync results
     """
     try:
+        channel_info = f", channel {channel_id}" if channel_id else ", all channels"
         logger.info(
-            f"Syncing users from message mentions for workspace {workspace_id}"
-            + (f", channel {channel_id}" if channel_id else ", all channels")
+            f"Syncing users from message mentions for workspace {workspace_id}{channel_info}"
         )
 
         # First find all messages with user mentions but no user_id
-        from sqlalchemy import text
+        from sqlalchemy import (  # Import locally to avoid clash with imported modules
+            text,
+        )
 
         # Build query to find messages with user mentions
         query_conditions = ["m.text LIKE '<@%'", "c.workspace_id = :workspace_id"]
@@ -487,4 +505,229 @@ async def sync_users_from_messages(
         raise HTTPException(
             status_code=500,
             detail="An error occurred while syncing users from messages",
+        )
+
+
+@router.post("/workspaces/{workspace_id}/channels/{channel_id}/sync-threads")
+async def sync_thread_replies(
+    workspace_id: str,
+    channel_id: str,
+    days: int = Query(
+        7, ge=1, le=30, description="Days of messages to scan for threads"
+    ),
+    db: AsyncSession = Depends(get_async_db),
+) -> Dict[str, Any]:
+    """
+    Sync thread replies for messages in a channel.
+
+    Args:
+        workspace_id: UUID of the workspace
+        channel_id: UUID of the channel
+        days: Number of days of messages to scan for threads
+        db: Database session
+
+    Returns:
+        Dictionary with sync results
+    """
+    try:
+        # Find all thread parent messages in the channel within timeframe
+        end_date = datetime.utcnow()
+        start_date = end_date - timedelta(days=days)
+
+        # Get the channel
+        channel_result = await db.execute(
+            select(SlackChannel)
+            .options(selectinload(SlackChannel.workspace))
+            .where(SlackChannel.id == channel_id)
+        )
+        channel = channel_result.scalars().first()
+
+        if not channel:
+            raise HTTPException(
+                status_code=404, detail=f"Channel not found: {channel_id}"
+            )
+
+        # Get thread parent messages in the timeframe
+        parent_result = await db.execute(
+            select(SlackMessage).where(
+                SlackMessage.channel_id == channel_id,
+                SlackMessage.is_thread_parent.is_(True),
+                SlackMessage.message_datetime >= start_date,
+                SlackMessage.message_datetime <= end_date,
+            )
+        )
+        parents = parent_result.scalars().all()
+
+        if not parents:
+            return {
+                "status": "success",
+                "message": "No thread parent messages found in timeframe",
+                "threads_synced": 0,
+                "replies_synced": 0,
+            }
+
+        # Sync each thread
+        total_threads = len(parents)
+        total_replies = 0
+
+        for parent in parents:
+            # Fetch and store thread replies
+            logger.info(
+                f"Processing thread {parent.slack_ts} in channel {channel.name}"
+            )
+            thread_replies = (
+                await SlackMessageService._fetch_thread_replies_with_pagination(
+                    access_token=channel.workspace.access_token,
+                    channel_id=channel.slack_id,
+                    thread_ts=parent.slack_ts,
+                )
+            )
+
+            # Process and store replies
+            reply_count = 0
+            for reply in thread_replies:
+                # Skip if it's the parent message
+                if reply.get("ts") == parent.slack_ts:
+                    continue
+
+                # Check if reply already exists
+                existing_result = await db.execute(
+                    select(SlackMessage).where(
+                        SlackMessage.channel_id == channel_id,
+                        SlackMessage.slack_ts == reply.get("ts"),
+                    )
+                )
+                existing = existing_result.scalars().first()
+
+                if existing:
+                    # Skip already stored replies
+                    continue
+
+                # Process reply
+                reply_data = await SlackMessageService._prepare_message_data(
+                    db=db,
+                    workspace_id=workspace_id,
+                    channel=channel,
+                    message=reply,
+                )
+
+                # Create new reply
+                db_reply = SlackMessage(**reply_data)
+                db.add(db_reply)
+                reply_count += 1
+
+            if reply_count > 0:
+                # Update parent message with latest counts
+                parent.reply_count = (
+                    len(thread_replies) - 1
+                )  # Subtract 1 for parent message
+                logger.info(
+                    f"Stored {reply_count} replies for thread {parent.slack_ts}"
+                )
+                total_replies += reply_count
+
+                # Commit changes for this thread
+                await db.commit()
+
+        return {
+            "status": "success",
+            "message": f"Synced {total_replies} replies for {total_threads} threads",
+            "threads_synced": total_threads,
+            "replies_synced": total_replies,
+            "workspace_id": workspace_id,
+            "channel_id": channel_id,
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error syncing thread replies: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail="An error occurred while syncing thread replies",
+        )
+
+
+@router.get("/workspaces/{workspace_id}/channels/{channel_id}/threads/{thread_ts}")
+async def get_thread_replies(
+    workspace_id: str,
+    channel_id: str,
+    thread_ts: str,
+    limit: int = Query(100, ge=1, le=1000),
+    db: AsyncSession = Depends(get_async_db),
+) -> Dict[str, Any]:
+    """
+    Get all replies for a specific thread.
+
+    Args:
+        workspace_id: UUID of the workspace
+        channel_id: UUID of the channel
+        thread_ts: Thread parent timestamp
+        limit: Maximum number of replies to retrieve
+        db: Database session
+
+    Returns:
+        Dictionary with thread parent and replies
+    """
+    try:
+        # Fetch the parent message
+        parent_result = await db.execute(
+            select(SlackMessage).where(
+                SlackMessage.channel_id == channel_id,
+                SlackMessage.slack_ts == thread_ts,
+            )
+        )
+        parent = parent_result.scalars().first()
+
+        if not parent:
+            raise HTTPException(
+                status_code=404, detail=f"Thread parent message not found: {thread_ts}"
+            )
+
+        # Fetch replies from database
+        replies_result = await db.execute(
+            select(SlackMessage)
+            .where(
+                SlackMessage.channel_id == channel_id,
+                SlackMessage.thread_ts == thread_ts,
+                SlackMessage.is_thread_reply.is_(True),
+            )
+            .order_by(SlackMessage.message_datetime)
+            .limit(limit)
+        )
+        replies = replies_result.scalars().all()
+
+        # Format messages for API response
+        def format_message(message):
+            return {
+                "id": str(message.id),
+                "slack_id": message.slack_id,
+                "slack_ts": message.slack_ts,
+                "text": message.text,
+                "user_id": str(message.user_id) if message.user_id else None,
+                "message_datetime": message.message_datetime.isoformat(),
+                "is_thread_parent": message.is_thread_parent,
+                "is_thread_reply": message.is_thread_reply,
+                "thread_ts": message.thread_ts,
+                "reply_count": message.reply_count,
+                "reply_users_count": message.reply_users_count,
+                "message_type": message.message_type,
+                "is_edited": message.is_edited,
+            }
+
+        # Build the response
+        return {
+            "parent": format_message(parent),
+            "replies": [format_message(reply) for reply in replies],
+            "total_replies": parent.reply_count,
+            "has_more": len(replies) < parent.reply_count,
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching thread replies: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail="An error occurred while fetching thread replies",
         )
