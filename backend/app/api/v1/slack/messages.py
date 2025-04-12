@@ -372,3 +372,119 @@ async def fix_message_user_references(
             status_code=500,
             detail="An error occurred while fixing message user references",
         )
+
+
+@router.post("/workspaces/{workspace_id}/sync-users-from-messages")
+async def sync_users_from_messages(
+    workspace_id: str,
+    channel_id: Optional[str] = Query(
+        None, description="Optional channel ID to process"
+    ),
+    db: AsyncSession = Depends(get_async_db),
+) -> Dict[str, Any]:
+    """
+    Create users from message mentions.
+
+    This endpoint extracts Slack user IDs from messages that mention users
+    and creates corresponding SlackUser records in the database.
+
+    Args:
+        workspace_id: UUID of the workspace
+        channel_id: Optional UUID of a specific channel
+        db: Database session
+
+    Returns:
+        Dictionary with sync results
+    """
+    try:
+        logger.info(
+            f"Syncing users from message mentions for workspace {workspace_id}"
+            + (f", channel {channel_id}" if channel_id else ", all channels")
+        )
+
+        # First find all messages with user mentions but no user_id
+        from sqlalchemy import text
+
+        # Build query to find messages with user mentions
+        query_conditions = ["m.text LIKE '<@%'", "c.workspace_id = :workspace_id"]
+        if channel_id:
+            query_conditions.append("m.channel_id = :channel_id")
+
+        query = f"""
+        SELECT m.id, m.text, c.workspace_id, c.slack_id as channel_slack_id, w.access_token
+        FROM slackmessage m
+        JOIN slackchannel c ON m.channel_id = c.id
+        JOIN slackworkspace w ON c.workspace_id = w.id
+        WHERE {' AND '.join(query_conditions)}
+        """
+
+        params = {"workspace_id": workspace_id}
+        if channel_id:
+            params["channel_id"] = channel_id
+
+        # Execute the query
+        result = await db.execute(text(query), params)
+        messages = result.fetchall()
+
+        logger.info(f"Found {len(messages)} messages with user mentions")
+
+        import re
+
+        # Pattern to extract user IDs from messages
+        pattern = r"<@([A-Z0-9]+)>"
+
+        # Process each message
+        created_users = 0
+        for message in messages:
+            # Extract all user IDs from message text
+            matches = re.findall(pattern, message.text)
+            for slack_user_id in matches:
+                try:
+                    # Check if user already exists
+                    user_result = await db.execute(
+                        text(
+                            "SELECT id FROM slackuser WHERE slack_id = :slack_id AND workspace_id = :workspace_id"
+                        ),
+                        {"slack_id": slack_user_id, "workspace_id": workspace_id},
+                    )
+                    user = user_result.fetchone()
+
+                    if not user:
+                        # Create new user
+                        new_user = await SlackMessageService._fetch_and_create_user(
+                            db=db,
+                            workspace_id=workspace_id,
+                            slack_user_id=slack_user_id,
+                            access_token=message.access_token,
+                        )
+
+                        if new_user:
+                            created_users += 1
+                            logger.info(
+                                f"Created new user: {new_user.name} ({new_user.slack_id})"
+                            )
+                except Exception as e:
+                    logger.error(f"Error creating user {slack_user_id}: {str(e)}")
+
+        # Try to fix message references now that we have created users
+        fixed_count = await SlackMessageService.fix_message_user_references(
+            db=db, workspace_id=workspace_id, channel_id=channel_id
+        )
+
+        return {
+            "status": "success",
+            "message": f"Created {created_users} users and fixed {fixed_count} message references",
+            "created_users": created_users,
+            "fixed_references": fixed_count,
+            "workspace_id": workspace_id,
+            "channel_id": channel_id,
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error syncing users from messages: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail="An error occurred while syncing users from messages",
+        )

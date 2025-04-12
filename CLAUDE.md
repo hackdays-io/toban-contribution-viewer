@@ -20,7 +20,7 @@
   - 2-space indentation
   - Max line length: 100 characters
   - Imports sorted by module type
-
+  
 - Backend (Python/FastAPI):
   - Follow Black code style
   - Max line length: 120 characters
@@ -34,6 +34,29 @@
 
 ## Development
 - Backend: Activate venv before running python.
+
+## Database Access
+- The PostgreSQL database running in Docker can be accessed with these credentials:
+  - Host: localhost
+  - Port: 5432
+  - Username: toban_admin
+  - Password: postgres
+  - Database: tobancv
+  
+- Connect using Docker:
+  ```bash
+  docker compose exec postgres psql -U toban_admin -d tobancv
+  ```
+  
+- Execute SQL query through Docker:
+  ```bash
+  docker compose exec postgres psql -U toban_admin -d tobancv -c "SELECT * FROM slackuser LIMIT 5;"
+  ```
+  
+- Alternative connection with external PostgreSQL client:
+  ```
+  postgresql://toban_admin:postgres@localhost:5432/tobancv
+  ```
 
 ## Do test before creating new pull requests
 - Run above test, lint, format, black, isort, flake8, mypy when you create new pull requests.
