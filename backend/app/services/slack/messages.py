@@ -768,7 +768,9 @@ class SlackMessageService:
                 conditions.append("m.channel_id = :channel_id")
 
             # Construct the SQL query to fix message user references
-            query = f"""
+            from sqlalchemy import text
+
+            sql_text = f"""
             UPDATE slackmessage m
             SET user_id = u.id
             FROM slackuser u
@@ -781,8 +783,8 @@ class SlackMessageService:
             if channel_id:
                 params["channel_id"] = channel_id
 
-            # Execute the query
-            result = await db.execute(query, params)
+            # Execute the query using SQLAlchemy text() function
+            result = await db.execute(text(sql_text), params)
             await db.commit()
 
             # Get the number of rows affected
