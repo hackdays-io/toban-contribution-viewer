@@ -192,21 +192,69 @@ async def get_users_by_ids(
     """
     try:
         logger.info(
-            f"Fetching user details for workspace {workspace_id}, user_ids: {user_ids}"
+            f"[DEBUG] Fetching user details for workspace {workspace_id}, user_ids input: {user_ids}"
         )
 
         # Strip out any empty strings or None values
         valid_user_ids = [user_id for user_id in user_ids if user_id]
 
+        logger.info(f"[DEBUG] Filtered valid user_ids: {valid_user_ids}")
+        logger.info(
+            f"[DEBUG] Filtered out {len(user_ids) - len(valid_user_ids)} invalid user IDs"
+        )
+
         if not valid_user_ids:
+            logger.warning("[DEBUG] No valid user IDs provided, returning empty list")
             return {"users": []}
 
         from sqlalchemy import select
 
-        from app.models.slack import SlackUser
+        from app.models.slack import SlackUser, SlackWorkspace
+
+        # Verify workspace exists
+        workspace_query = select(SlackWorkspace).where(
+            SlackWorkspace.id == workspace_id
+        )
+        workspace_result = await db.execute(workspace_query)
+        workspace = workspace_result.scalars().first()
+
+        if not workspace:
+            logger.error(f"[DEBUG] ❌ Workspace not found: {workspace_id}")
+            return {"users": [], "error": "Workspace not found"}
+
+        logger.info(f"[DEBUG] Workspace found: {workspace.id} ({workspace.name})")
 
         # Log valid user IDs
-        logger.info(f"Querying for {len(valid_user_ids)} users: {valid_user_ids}")
+        logger.info(
+            f"[DEBUG] Querying for {len(valid_user_ids)} users: {valid_user_ids}"
+        )
+
+        try:
+            # Verify UUIDs are valid format before querying
+            from uuid import UUID
+
+            valid_uuid_ids = []
+            for user_id in valid_user_ids:
+                try:
+                    UUID(user_id)
+                    valid_uuid_ids.append(user_id)
+                except ValueError:
+                    logger.error(f"[DEBUG] ❌ Invalid UUID format: {user_id}")
+
+            if len(valid_uuid_ids) != len(valid_user_ids):
+                logger.warning(
+                    f"[DEBUG] Filtered out {len(valid_user_ids) - len(valid_uuid_ids)} invalid UUID formats"
+                )
+
+            if not valid_uuid_ids:
+                logger.warning(
+                    "[DEBUG] No valid UUID formatted user IDs, returning empty list"
+                )
+                return {"users": []}
+
+            valid_user_ids = valid_uuid_ids
+        except Exception as e:
+            logger.error(f"[DEBUG] Error validating UUIDs: {str(e)}")
 
         # Query users from database
         query = select(SlackUser).where(
@@ -217,10 +265,22 @@ async def get_users_by_ids(
         users = result.scalars().all()
 
         # Log found users with details
-        logger.info(f"Found {len(users)} users in database")
+        logger.info(
+            f"[DEBUG] Found {len(users)} users in database out of {len(valid_user_ids)} requested"
+        )
+
+        # Log missing user IDs
+        found_ids = [str(user.id) for user in users]
+        missing_ids = [id for id in valid_user_ids if id not in found_ids]
+
+        if missing_ids:
+            logger.warning(
+                f"[DEBUG] ⚠️ Could not find {len(missing_ids)} requested users: {missing_ids}"
+            )
+
         for user in users:
             logger.info(
-                f"User found - ID: {user.id}, slack_id: {user.slack_id}, "
+                f"[DEBUG] User found - ID: {user.id}, slack_id: {user.slack_id}, "
                 f"name: {user.name}, display_name: {user.display_name}, "
                 f"real_name: {user.real_name}"
             )
@@ -236,13 +296,21 @@ async def get_users_by_ids(
                 "real_name": user.real_name,
                 "profile_image_url": user.profile_image_url,
             }
-            user_dicts.append(user_dict)
-            logger.info(
-                f"User found - ID: {user.id}, name: {user.name}, "
-                f"display_name: {user.display_name}, real_name: {user.real_name}"
-            )
 
-        logger.info(f"Retrieved {len(user_dicts)} users for workspace {workspace_id}")
+            # Check if user has valid name information
+            has_valid_name = bool(
+                user.display_name
+                or user.real_name
+                or (user.name and user.name != "Unknown User")
+            )
+            if not has_valid_name:
+                logger.warning(f"[DEBUG] ⚠️ User {user.id} has no valid name data")
+
+            user_dicts.append(user_dict)
+
+        logger.info(
+            f"[DEBUG] Returning {len(user_dicts)} users for workspace {workspace_id}"
+        )
         return {"users": user_dicts}
 
     except Exception as e:

@@ -98,6 +98,7 @@ const MessageList: React.FC<MessageListProps> = ({ workspaceId, channelId, chann
    */
   const fetchMessages = async () => {
     try {
+      console.log('[DEBUG] fetchMessages called');
       setIsLoading(true);
       
       // Construct the URL with query parameters
@@ -121,37 +122,53 @@ const MessageList: React.FC<MessageListProps> = ({ workspaceId, channelId, chann
         url += `&cursor=${cursor}`;
       }
 
-      // Log the URL being called (for debugging)
-      console.log('Fetching messages from:', url);
+      console.log('[DEBUG] Fetching messages from:', url);
       
       const response = await fetch(url);
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Error response:', errorText);
+        console.error('[DEBUG] Error response:', errorText);
         throw new Error(`Failed to fetch messages: ${response.status} ${response.statusText}`);
       }
 
       const data = await response.json();
+      console.log(`[DEBUG] Received ${data.messages?.length || 0} messages from API`);
+      
+      // Log a sample of the messages for debugging
+      if (data.messages && data.messages.length > 0) {
+        console.log('[DEBUG] First message sample:', JSON.stringify(data.messages[0]));
+      }
       
       setMessages(data.messages || []);
       setPagination(data.pagination || null);
       
       // Extract user IDs from messages to fetch user data
       const userIds = new Set<string>();
-      data.messages.forEach((message: SlackMessage) => {
-        if (message.user_id) {
-          userIds.add(message.user_id);
-        }
-      });
+      if (data.messages) {
+        data.messages.forEach((message: SlackMessage, index: number) => {
+          if (message.user_id) {
+            userIds.add(message.user_id);
+            console.log(`[DEBUG] Message ${index} has user_id: ${message.user_id}`);
+          } else {
+            console.log(`[DEBUG] Message ${index} has no user_id`);
+          }
+        });
+      }
+      
+      console.log(`[DEBUG] Found ${userIds.size} unique user IDs from messages`);
+      console.log('[DEBUG] User IDs:', JSON.stringify(Array.from(userIds)));
       
       // Fetch user data for the messages
       if (userIds.size > 0) {
+        console.log('[DEBUG] Calling fetchUserData with user IDs');
         await fetchUserData(Array.from(userIds));
+      } else {
+        console.log('[DEBUG] No user IDs to fetch');
       }
       
     } catch (error) {
-      console.error('Error fetching messages:', error);
+      console.error('[DEBUG] Error in fetchMessages:', error);
       toast({
         title: 'Error',
         description: 'Failed to load messages',
@@ -169,100 +186,164 @@ const MessageList: React.FC<MessageListProps> = ({ workspaceId, channelId, chann
    */
   const fetchUserData = async (userIds: string[]) => {
     try {
+      console.log(`[DEBUG] fetchUserData called with ${userIds.length} userIds:`, JSON.stringify(userIds));
+      console.log(`[DEBUG] Current users Map has ${users.size} users`);
+      
+      // Log current users in the Map
+      if (users.size > 0) {
+        console.log('[DEBUG] First 3 users in the current Map:');
+        let count = 0;
+        users.forEach((user, id) => {
+          if (count < 3) {
+            console.log(`[DEBUG] User ${id}:`, JSON.stringify(user));
+            count++;
+          }
+        });
+      }
+      
       // Filter out empty or undefined userIds
       const validUserIds = userIds.filter(id => id);
+      console.log(`[DEBUG] ${validUserIds.length} valid userIds after filtering out empty/undefined values`);
       
       if (validUserIds.length === 0) {
+        console.log('[DEBUG] No valid userIds to fetch, returning early');
         return;
       }
       
       // Extract only user IDs that we don't already have in our map
       const missingUserIds = validUserIds.filter(id => !users.has(id));
+      console.log(`[DEBUG] Found ${missingUserIds.length} missing user IDs that need to be fetched`);
       
       // If we already have all the users, don't make an API call
       if (missingUserIds.length === 0) {
-        console.log('All user data already loaded, skipping API call');
+        console.log('[DEBUG] All user data already loaded, skipping API call');
         return;
       }
-      
-      console.log(`Fetching data for ${missingUserIds.length} missing users`);
       
       // Create URL with query parameters for all user IDs
       const userIdsParam = missingUserIds.map(id => `user_ids=${encodeURIComponent(id)}`).join('&');
       const url = `${import.meta.env.VITE_API_URL}/slack/workspaces/${workspaceId}/users?${userIdsParam}`;
       
-      console.log('Fetching user data from:', url);
+      console.log('[DEBUG] Fetching user data from:', url);
+      console.log('[DEBUG] User IDs being fetched:', JSON.stringify(missingUserIds));
       
       const response = await fetch(url);
       
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Error fetching user data:', errorText);
+        console.error('[DEBUG] Error fetching user data:', errorText);
         throw new Error(`Failed to fetch user data: ${response.status} ${response.statusText}`);
       }
       
       const data = await response.json();
+      console.log('[DEBUG] Raw API response:', JSON.stringify(data));
+      
       // Create a new Map to store merged user data (preserving existing entries)
       const newUsers = new Map<string, SlackUser>(users);
+      console.log(`[DEBUG] Created new Map with ${newUsers.size} users (copied from existing Map)`);
       
       // Process the users from the API response
-      console.log('API response data:', data);
+      let processedCount = 0;
       if (data.users && Array.isArray(data.users)) {
-        console.log(`Processing ${data.users.length} users from API response`);
+        console.log(`[DEBUG] Processing ${data.users.length} users from API response`);
+        
+        if (data.users.length === 0) {
+          console.warn('[DEBUG] ⚠️ API returned empty users array despite valid request');
+        }
+        
         data.users.forEach((user: SlackUser) => {
-          console.log('Processing user:', user);
+          console.log(`[DEBUG] Processing user from API:`, JSON.stringify(user));
+          
           if (user && user.id) {
+            processedCount++;
+            const oldUser = newUsers.get(user.id);
+            if (oldUser) {
+              console.log(`[DEBUG] Replacing existing user ${user.id} in Map`, {
+                old: JSON.stringify(oldUser),
+                new: JSON.stringify(user)
+              });
+            } else {
+              console.log(`[DEBUG] Adding new user ${user.id} to Map`);
+            }
+            
             newUsers.set(user.id, user);
-            console.log(`Added user ${user.id} to map with name: ${user.display_name || user.real_name || user.name || 'Unknown'}`);
+            console.log(`[DEBUG] User ${user.id} now has name: ${user.display_name || user.real_name || user.name || 'Unknown'}`);
+          } else {
+            console.warn('[DEBUG] ⚠️ Received user without ID from API:', user);
           }
         });
+      } else {
+        console.warn(`[DEBUG] ⚠️ API response did not contain users array:`, data);
       }
       
+      console.log(`[DEBUG] Processed ${processedCount} users from API response`);
+      
       // For any userIds not found in the API response, create placeholder users
+      let placeholderCount = 0;
       missingUserIds.forEach(userId => {
         if (!newUsers.has(userId)) {
-          console.log(`Creating placeholder for missing user ${userId}`);
+          placeholderCount++;
+          console.log(`[DEBUG] Creating placeholder for missing user ${userId}`);
+          
+          // Use a more identifiable name for placeholders (including part of the ID)
           const placeholderUser: SlackUser = {
             id: userId,
             slack_id: '',
-            name: 'Unknown User',
+            name: `Missing (${userId.substring(0, 8)})`,  // Include part of UUID for easier debugging
             display_name: null,
             real_name: null,
             profile_image_url: null
           };
           newUsers.set(userId, placeholderUser);
+          console.log(`[DEBUG] Added placeholder for ${userId} to Map`);
         }
       });
       
-      console.log(`Loaded ${newUsers.size} users for ${validUserIds.length} messages`);
+      console.log(`[DEBUG] Created ${placeholderCount} placeholder users for missing IDs`);
+      console.log(`[DEBUG] Final Map has ${newUsers.size} users total`);
       
       // Check if any user IDs still have unknown names
       let unknownUsers = 0;
+      let unknownList: string[] = [];
       newUsers.forEach((user, id) => {
         if (!user.name || (user.name === 'Unknown User' && !user.display_name && !user.real_name)) {
           unknownUsers++;
-          console.warn(`User ${id} has no name data`);
+          unknownList.push(id);
+          console.warn(`[DEBUG] ⚠️ User ${id} has no name data:`, JSON.stringify(user));
         }
       });
       
       if (unknownUsers > 0) {
-        console.warn(`${unknownUsers} users still have unknown names after loading`);
+        console.warn(`[DEBUG] ⚠️ ${unknownUsers} users still have unknown names after loading:`, unknownList);
       }
       
+      // Verify that all requested IDs are in the Map
+      const missingAfterFetch = validUserIds.filter(id => !newUsers.has(id));
+      if (missingAfterFetch.length > 0) {
+        console.error(`[DEBUG] ❌ ${missingAfterFetch.length} requested users still missing after fetch:`, missingAfterFetch);
+      } else {
+        console.log('[DEBUG] ✅ All requested users are now in the Map');
+      }
+      
+      // Update the state with the new Map
+      console.log('[DEBUG] Setting users state with new Map');
       setUsers(newUsers);
       
     } catch (error) {
-      console.error('Error fetching user data:', error);
-      // Create placeholder users for all IDs if the API call fails
-      // Create a new Map to store merged user data (preserving existing entries)
-      const newUsers = new Map<string, SlackUser>(users);
+      console.error('[DEBUG] Error in fetchUserData:', error);
       
+      // Create placeholder users for all IDs if the API call fails
+      const newUsers = new Map<string, SlackUser>(users);
+      console.log(`[DEBUG] Error recovery: creating placeholders for missing users`);
+      
+      let recoveryCount = 0;
       userIds.forEach(userId => {
         if (userId && !newUsers.has(userId)) {
+          recoveryCount++;
           const placeholderUser: SlackUser = {
             id: userId,
             slack_id: '',
-            name: 'Unknown User',
+            name: `Error (${userId.substring(0, 8)})`,  // Mark as error recovery
             display_name: null,
             real_name: null,
             profile_image_url: null
@@ -271,6 +352,7 @@ const MessageList: React.FC<MessageListProps> = ({ workspaceId, channelId, chann
         }
       });
       
+      console.log(`[DEBUG] Added ${recoveryCount} error recovery placeholders`);
       setUsers(newUsers);
     }
   };
@@ -389,19 +471,54 @@ const MessageList: React.FC<MessageListProps> = ({ workspaceId, channelId, chann
    * Get user information for a message.
    */
   const getUserInfo = (userId: string | null) => {
-    if (!userId) return { name: 'Unknown User', avatar: null };
+    console.log(`[DEBUG] getUserInfo called for userId: ${userId}`);
+    
+    if (!userId) {
+      console.log(`[DEBUG] No userId provided, returning "Unknown User"`);
+      return { name: 'Unknown User', avatar: null };
+    }
+    
     const user = users.get(userId);
+    console.log(`[DEBUG] User data for ${userId}:`, user ? JSON.stringify(user) : 'NOT FOUND');
+    
+    if (!user) {
+      console.warn(`[DEBUG] ⚠️ No user found for ID: ${userId}`);
+      // Add the missing user ID to our user Map as a placeholder
+      const placeholderUser: SlackUser = {
+        id: userId,
+        slack_id: '',
+        name: `Missing (${userId.substring(0, 6)})`,
+        display_name: null,
+        real_name: null,
+        profile_image_url: null
+      };
+      
+      console.log(`[DEBUG] Adding placeholder for ${userId}:`, placeholderUser);
+      
+      // Clone the map to trigger a re-render
+      const newUsers = new Map(users);
+      newUsers.set(userId, placeholderUser);
+      setUsers(newUsers);
+      
+      return { 
+        name: placeholderUser.name, 
+        avatar: null 
+      };
+    }
     
     // Choose the best name to display in this order of preference:
     // 1. display_name (what appears in Slack UI)
     // 2. real_name (full name if available)
     // 3. name (username/handle)
     // If none available, fallback to "Unknown User"
-    const displayName = user?.display_name || user?.real_name || user?.name || 'Unknown User';
+    const displayName = user.display_name || user.real_name || user.name || 'Unknown User';
+    
+    console.log(`[DEBUG] Returning display name: "${displayName}" for user ${userId}`);
+    console.log(`[DEBUG] Name sources - display_name: "${user.display_name}", real_name: "${user.real_name}", name: "${user.name}"`);
     
     return {
       name: displayName,
-      avatar: user?.profile_image_url
+      avatar: user.profile_image_url
     };
   };
 
