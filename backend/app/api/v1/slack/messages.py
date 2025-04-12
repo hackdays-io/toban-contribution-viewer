@@ -363,9 +363,9 @@ async def fix_message_user_references(
         Dictionary with fix results
     """
     try:
+        channel_info = f", channel {channel_id}" if channel_id else ", all channels"
         logger.info(
-            f"Fixing message user references for workspace {workspace_id}"
-            + (f", channel {channel_id}" if channel_id else ", all channels")
+            f"Fixing message user references for workspace {workspace_id}{channel_info}"
         )
 
         fixed_count = await SlackMessageService.fix_message_user_references(
@@ -413,9 +413,9 @@ async def sync_users_from_messages(
         Dictionary with sync results
     """
     try:
+        channel_info = f", channel {channel_id}" if channel_id else ", all channels"
         logger.info(
-            f"Syncing users from message mentions for workspace {workspace_id}"
-            + (f", channel {channel_id}" if channel_id else ", all channels")
+            f"Syncing users from message mentions for workspace {workspace_id}{channel_info}"
         )
 
         # First find all messages with user mentions but no user_id
