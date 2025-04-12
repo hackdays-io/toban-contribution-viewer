@@ -221,7 +221,11 @@ class SlackApiClient:
             return False
 
     async def get_channels(
-        self, cursor: Optional[str] = None, limit: int = 100
+        self,
+        cursor: Optional[str] = None,
+        limit: int = 100,
+        types: str = "public_channel,private_channel",
+        exclude_archived: bool = False,
     ) -> Dict[str, Any]:
         """
         Get channels in the workspace.
@@ -229,14 +233,19 @@ class SlackApiClient:
         Args:
             cursor: Pagination cursor
             limit: Number of channels to fetch
+            types: Channel types to include (comma-separated)
+            exclude_archived: Whether to exclude archived channels
 
         Returns:
             Channels and pagination info
         """
         params = {
-            "types": "public_channel,private_channel",
+            "types": types,
             "limit": limit,
         }
+
+        if exclude_archived:
+            params["exclude_archived"] = "true"
 
         if cursor:
             params["cursor"] = cursor
