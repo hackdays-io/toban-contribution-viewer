@@ -165,28 +165,82 @@ const MessageList: React.FC<MessageListProps> = ({ workspaceId, channelId, chann
   };
 
   /**
-   * Fetch user data for message authors.
+   * Fetch user data for message authors from the API.
    */
   const fetchUserData = async (userIds: string[]) => {
-    // This is a placeholder. In a real implementation, you would fetch user data 
-    // from an API endpoint. For now, we'll create mock data.
-    const newUsers = new Map<string, SlackUser>();
-    
-    userIds.forEach(userId => {
-      // Create a mock user for demonstration purposes
-      const mockUser: SlackUser = {
-        id: userId,
-        slack_id: `U${userId.substring(0, 8)}`,
-        name: `user_${userId.substring(0, 5)}`,
-        display_name: `User ${userId.substring(0, 5)}`,
-        real_name: `User ${userId.substring(0, 5)}`,
-        profile_image_url: null
-      };
+    try {
+      // Filter out empty or undefined userIds
+      const validUserIds = userIds.filter(id => id);
       
-      newUsers.set(userId, mockUser);
-    });
-    
-    setUsers(newUsers);
+      if (validUserIds.length === 0) {
+        return;
+      }
+      
+      // Create URL with query parameters for all user IDs
+      const userIdsParam = validUserIds.map(id => `user_ids=${encodeURIComponent(id)}`).join('&');
+      const url = `${import.meta.env.VITE_API_URL}/slack/workspaces/${workspaceId}/users?${userIdsParam}`;
+      
+      console.log('Fetching user data from:', url);
+      
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Error fetching user data:', errorText);
+        throw new Error(`Failed to fetch user data: ${response.status} ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      const newUsers = new Map<string, SlackUser>();
+      
+      // Process the users from the API response
+      if (data.users && Array.isArray(data.users)) {
+        data.users.forEach((user: SlackUser) => {
+          if (user && user.id) {
+            newUsers.set(user.id, user);
+          }
+        });
+      }
+      
+      // For any userIds not found in the API response, create placeholder users
+      validUserIds.forEach(userId => {
+        if (!newUsers.has(userId)) {
+          const placeholderUser: SlackUser = {
+            id: userId,
+            slack_id: '',
+            name: 'Unknown User',
+            display_name: null,
+            real_name: null,
+            profile_image_url: null
+          };
+          newUsers.set(userId, placeholderUser);
+        }
+      });
+      
+      console.log(`Loaded ${newUsers.size} users for ${validUserIds.length} messages`);
+      setUsers(newUsers);
+      
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      // Create placeholder users for all IDs if the API call fails
+      const newUsers = new Map<string, SlackUser>();
+      
+      userIds.forEach(userId => {
+        if (userId) {
+          const placeholderUser: SlackUser = {
+            id: userId,
+            slack_id: '',
+            name: 'Unknown User',
+            display_name: null,
+            real_name: null,
+            profile_image_url: null
+          };
+          newUsers.set(userId, placeholderUser);
+        }
+      });
+      
+      setUsers(newUsers);
+    }
   };
 
   /**
@@ -305,8 +359,16 @@ const MessageList: React.FC<MessageListProps> = ({ workspaceId, channelId, chann
   const getUserInfo = (userId: string | null) => {
     if (!userId) return { name: 'Unknown User', avatar: null };
     const user = users.get(userId);
+    
+    // Choose the best name to display in this order of preference:
+    // 1. display_name (what appears in Slack UI)
+    // 2. real_name (full name if available)
+    // 3. name (username/handle)
+    // If none available, fallback to "Unknown User"
+    const displayName = user?.display_name || user?.real_name || user?.name || 'Unknown User';
+    
     return {
-      name: user?.display_name || user?.real_name || user?.name || 'Unknown User',
+      name: displayName,
       avatar: user?.profile_image_url
     };
   };

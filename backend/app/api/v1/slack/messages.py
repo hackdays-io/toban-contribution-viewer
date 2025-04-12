@@ -173,6 +173,70 @@ async def get_messages_by_date_range(
         )
 
 
+@router.get("/workspaces/{workspace_id}/users")
+async def get_users_by_ids(
+    workspace_id: str,
+    user_ids: List[str] = Query(..., description="List of user UUIDs to retrieve"),
+    db: AsyncSession = Depends(get_async_db),
+) -> Dict[str, Any]:
+    """
+    Get user details for a list of user IDs within a workspace.
+
+    Args:
+        workspace_id: UUID of the workspace
+        user_ids: List of user UUIDs to retrieve
+        db: Database session
+
+    Returns:
+        Dictionary with user details
+    """
+    try:
+        logger.info(
+            f"Fetching user details for workspace {workspace_id}, user_ids: {user_ids}"
+        )
+
+        # Strip out any empty strings or None values
+        valid_user_ids = [user_id for user_id in user_ids if user_id]
+
+        if not valid_user_ids:
+            return {"users": []}
+
+        from sqlalchemy import select
+
+        from app.models.slack import SlackUser
+
+        # Query users from database
+        query = select(SlackUser).where(
+            SlackUser.id.in_(valid_user_ids), SlackUser.workspace_id == workspace_id
+        )
+
+        result = await db.execute(query)
+        users = result.scalars().all()
+
+        # Convert users to dictionaries
+        user_dicts = []
+        for user in users:
+            user_dicts.append(
+                {
+                    "id": str(user.id),
+                    "slack_id": user.slack_id,
+                    "name": user.name,
+                    "display_name": user.display_name,
+                    "real_name": user.real_name,
+                    "profile_image_url": user.profile_image_url,
+                }
+            )
+
+        logger.info(f"Retrieved {len(user_dicts)} users for workspace {workspace_id}")
+        return {"users": user_dicts}
+
+    except Exception as e:
+        logger.error(f"Error fetching users: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail="An error occurred while retrieving user data"
+        )
+
+
 @router.post("/workspaces/{workspace_id}/channels/{channel_id}/sync")
 async def sync_channel_messages(
     workspace_id: str,
