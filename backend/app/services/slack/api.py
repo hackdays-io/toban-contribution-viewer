@@ -323,3 +323,43 @@ class SlackApiClient:
         """
         logger.debug(f"Fetching user info for user_id: {user_id}")
         return await self._make_request("GET", "users.info", params={"user": user_id})
+
+    async def get_thread_replies(
+        self,
+        channel_id: str,
+        thread_ts: str,
+        cursor: Optional[str] = None,
+        limit: int = 100,
+        inclusive: bool = True,
+    ) -> Dict[str, Any]:
+        """
+        Get replies in a thread.
+
+        Args:
+            channel_id: Slack channel ID
+            thread_ts: Thread parent message timestamp
+            cursor: Pagination cursor
+            limit: Number of messages to fetch (max 1000)
+            inclusive: Include the parent message in the replies
+
+        Returns:
+            Thread replies and pagination info
+
+        Raises:
+            SlackApiError: If the API returns an error
+        """
+        logger.debug(
+            f"Fetching thread replies for ts: {thread_ts} in channel: {channel_id}"
+        )
+
+        params = {
+            "channel": channel_id,
+            "ts": thread_ts,
+            "limit": min(limit, 1000),  # Enforce Slack API limit
+            "inclusive": inclusive,
+        }
+
+        if cursor:
+            params["cursor"] = cursor
+
+        return await self._make_request("GET", "conversations.replies", params=params)

@@ -33,6 +33,8 @@ class SlackMessageService:
         limit: int = 100,
         cursor: Optional[str] = None,
         include_replies: bool = True,
+        thread_only: bool = False,
+        thread_ts: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Get messages from a channel with pagination, optionally filtered by date range.
@@ -46,6 +48,8 @@ class SlackMessageService:
             limit: Maximum number of messages to fetch per page
             cursor: Pagination cursor (message timestamp)
             include_replies: Whether to include thread replies
+            thread_only: Only retrieve thread parent messages
+            thread_ts: Filter by specific thread timestamp
 
         Returns:
             Dictionary with messages and pagination information
@@ -80,11 +84,24 @@ class SlackMessageService:
             raise HTTPException(status_code=404, detail="Channel not found")
 
         # First check if we already have messages for this channel in the database
-        query = (
-            select(SlackMessage)
-            .where(SlackMessage.channel_id == channel_id)
-            .order_by(SlackMessage.message_datetime.desc())
-        )
+        query = select(SlackMessage).where(SlackMessage.channel_id == channel_id)
+
+        # Apply thread filtering if specified
+        if thread_only:
+            query = query.where(SlackMessage.is_thread_parent.is_(True))
+
+        if thread_ts:
+            # If specific thread is requested, get parent and replies
+            query = query.where(
+                (SlackMessage.slack_ts == thread_ts)  # Get the parent
+                | (
+                    (SlackMessage.thread_ts == thread_ts)
+                    & (SlackMessage.is_thread_reply.is_(True))
+                )  # Get replies
+            )
+
+        # Sort by datetime descending (newest first)
+        query = query.order_by(SlackMessage.message_datetime.desc())
 
         # Apply date filtering if specified, handling timezone-aware datetimes
         if start_date:
@@ -369,7 +386,93 @@ class SlackMessageService:
             f"Stored {stored_message_count} messages for channel {channel.name}"
         )
 
-        # TODO: Implement thread reply fetching based on thread_ts_set
+        # Fetch and store thread replies if requested
+        if include_replies and thread_ts_set:
+            logger.info(f"Fetching replies for {len(thread_ts_set)} threads")
+            total_replies_stored = 0
+
+            for thread_ts in thread_ts_set:
+                # Fetch thread replies from Slack API
+                logger.info(
+                    f"Fetching thread replies for thread {thread_ts} in channel {channel.name}"
+                )
+                thread_replies = (
+                    await SlackMessageService._fetch_thread_replies_with_pagination(
+                        access_token=channel.workspace.access_token,
+                        channel_id=channel.slack_id,
+                        thread_ts=thread_ts,
+                        limit=100,  # Fetch up to 100 replies per page
+                        max_pages=10,  # Maximum 10 pages (1000 replies)
+                    )
+                )
+
+                # Get the parent message to associate replies with
+                parent_result = await db.execute(
+                    select(SlackMessage).where(
+                        SlackMessage.channel_id == channel.id,
+                        SlackMessage.slack_ts == thread_ts,
+                    )
+                )
+                parent_message = parent_result.scalars().first()
+
+                if not parent_message:
+                    logger.warning(
+                        f"Parent message for thread {thread_ts} not found, skipping replies"
+                    )
+                    continue
+
+                # Track replies stored for this thread
+                thread_reply_count = 0
+
+                # Process and store each reply
+                for reply in thread_replies:
+                    # Skip if it's the parent message (which is included in replies)
+                    if reply.get("ts") == thread_ts:
+                        continue
+
+                    # Check if this reply already exists in the database
+                    existing_result = await db.execute(
+                        select(SlackMessage).where(
+                            SlackMessage.channel_id == channel.id,
+                            SlackMessage.slack_ts == reply.get("ts"),
+                        )
+                    )
+                    existing_reply = existing_result.scalars().first()
+
+                    if existing_reply:
+                        # Skip already stored replies
+                        logger.debug(
+                            f"Reply {reply.get('ts')} already exists, skipping"
+                        )
+                        continue
+
+                    # Process and store the reply
+                    reply_data = await SlackMessageService._prepare_message_data(
+                        db=db,
+                        workspace_id=workspace_id,
+                        channel=channel,
+                        message=reply,
+                    )
+
+                    # Create new message for the reply
+                    db_reply = SlackMessage(**reply_data)
+                    db.add(db_reply)
+                    thread_reply_count += 1
+
+                if thread_reply_count > 0:
+                    # Update parent message with latest counts
+                    parent_message.reply_count = (
+                        len(thread_replies) - 1
+                    )  # Subtract 1 for parent message
+                    logger.info(
+                        f"Stored {thread_reply_count} replies for thread {thread_ts}"
+                    )
+                    total_replies_stored += thread_reply_count
+
+            # Commit all thread replies
+            if total_replies_stored > 0:
+                await db.commit()
+                logger.info(f"Total thread replies stored: {total_replies_stored}")
 
     @staticmethod
     async def _prepare_message_data(
@@ -518,6 +621,74 @@ class SlackMessageService:
         }
 
         return message_data
+
+    @staticmethod
+    async def _fetch_thread_replies_with_pagination(
+        access_token: str,
+        channel_id: str,
+        thread_ts: str,
+        limit: int = 100,
+        max_pages: int = 10,  # Limit to prevent excessive API calls
+    ) -> List[Dict[str, Any]]:
+        """
+        Fetch thread replies with pagination support for deep threads.
+
+        Args:
+            access_token: Slack access token
+            channel_id: Slack channel ID
+            thread_ts: Thread parent timestamp
+            limit: Maximum replies per page
+            max_pages: Maximum number of pages to fetch
+
+        Returns:
+            List of all thread replies from Slack API
+        """
+        all_replies = []
+        cursor = None
+        page_count = 0
+
+        client = SlackApiClient(access_token)
+
+        while page_count < max_pages:
+            try:
+                # Fetch replies for this page
+                response = await client.get_thread_replies(
+                    channel_id=channel_id,
+                    thread_ts=thread_ts,
+                    cursor=cursor,
+                    limit=limit,
+                    inclusive=True,  # Include parent message
+                )
+
+                # Add replies to our collection
+                replies = response.get("messages", [])
+                if replies:
+                    all_replies.extend(replies)
+
+                # Check for more pages
+                response_metadata = response.get("response_metadata", {})
+                next_cursor = response_metadata.get("next_cursor")
+
+                if not next_cursor:
+                    break  # No more pages
+
+                cursor = next_cursor
+                page_count += 1
+
+                # Log progress for long threads
+                if page_count % 3 == 0:
+                    logger.info(
+                        f"Fetched {len(all_replies)} replies so far (page {page_count})"
+                    )
+
+            except Exception as e:
+                logger.error(f"Error fetching thread replies: {str(e)}")
+                break
+
+        logger.info(
+            f"Fetched {len(all_replies)} total replies across {page_count + 1} pages"
+        )
+        return all_replies
 
     @staticmethod
     async def _fetch_and_create_user(
