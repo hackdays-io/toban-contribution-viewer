@@ -83,6 +83,7 @@ const ThreadView: React.FC<ThreadViewProps> = ({
   const [hasMore, setHasMore] = useState(false)
   const borderColor = useColorModeValue('gray.200', 'gray.700')
   const bgColor = useColorModeValue('gray.50', 'gray.700')
+  const textBgColor = useColorModeValue('white', 'gray.800')
   const toast = useToast()
 
   // Fetch thread replies when the modal opens
@@ -269,7 +270,7 @@ const ThreadView: React.FC<ThreadViewProps> = ({
                   top="50%"
                   left="50%"
                   transform="translate(-50%, -50%)"
-                  bg={useColorModeValue('white', 'gray.800')}
+                  bg={textBgColor}
                   px={2}
                   fontSize="sm"
                   color="gray.500"
