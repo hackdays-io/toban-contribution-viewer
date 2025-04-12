@@ -176,8 +176,19 @@ const MessageList: React.FC<MessageListProps> = ({ workspaceId, channelId, chann
         return;
       }
       
+      // Extract only user IDs that we don't already have in our map
+      const missingUserIds = validUserIds.filter(id => !users.has(id));
+      
+      // If we already have all the users, don't make an API call
+      if (missingUserIds.length === 0) {
+        console.log('All user data already loaded, skipping API call');
+        return;
+      }
+      
+      console.log(`Fetching data for ${missingUserIds.length} missing users`);
+      
       // Create URL with query parameters for all user IDs
-      const userIdsParam = validUserIds.map(id => `user_ids=${encodeURIComponent(id)}`).join('&');
+      const userIdsParam = missingUserIds.map(id => `user_ids=${encodeURIComponent(id)}`).join('&');
       const url = `${import.meta.env.VITE_API_URL}/slack/workspaces/${workspaceId}/users?${userIdsParam}`;
       
       console.log('Fetching user data from:', url);
@@ -208,8 +219,9 @@ const MessageList: React.FC<MessageListProps> = ({ workspaceId, channelId, chann
       }
       
       // For any userIds not found in the API response, create placeholder users
-      validUserIds.forEach(userId => {
+      missingUserIds.forEach(userId => {
         if (!newUsers.has(userId)) {
+          console.log(`Creating placeholder for missing user ${userId}`);
           const placeholderUser: SlackUser = {
             id: userId,
             slack_id: '',
@@ -223,6 +235,20 @@ const MessageList: React.FC<MessageListProps> = ({ workspaceId, channelId, chann
       });
       
       console.log(`Loaded ${newUsers.size} users for ${validUserIds.length} messages`);
+      
+      // Check if any user IDs still have unknown names
+      let unknownUsers = 0;
+      newUsers.forEach((user, id) => {
+        if (!user.name || (user.name === 'Unknown User' && !user.display_name && !user.real_name)) {
+          unknownUsers++;
+          console.warn(`User ${id} has no name data`);
+        }
+      });
+      
+      if (unknownUsers > 0) {
+        console.warn(`${unknownUsers} users still have unknown names after loading`);
+      }
+      
       setUsers(newUsers);
       
     } catch (error) {
