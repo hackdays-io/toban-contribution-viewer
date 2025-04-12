@@ -307,3 +307,19 @@ class SlackApiClient:
             return response.get("ok", False)
         except SlackApiError:
             return False
+
+    async def get_user_info(self, user_id: str) -> Dict[str, Any]:
+        """
+        Get information about a specific user.
+
+        Args:
+            user_id: Slack user ID
+
+        Returns:
+            User information
+
+        Raises:
+            SlackApiError: If the API returns an error
+        """
+        logger.debug(f"Fetching user info for user_id: {user_id}")
+        return await self._make_request("GET", "users.info", params={"user": user_id})
