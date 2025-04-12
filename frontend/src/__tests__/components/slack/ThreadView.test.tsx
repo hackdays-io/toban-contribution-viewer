@@ -3,23 +3,24 @@ import { render, screen } from '@testing-library/react';
 import ThreadView from '../../../components/slack/ThreadView';
 import '../../../__tests__/setup';
 import { ChakraProvider } from '@chakra-ui/react';
+import React from 'react';
 
 // Mock Chakra Modal component to avoid framer-motion issues in tests
 vi.mock('@chakra-ui/react', async () => {
   const actual = await vi.importActual('@chakra-ui/react');
   return {
     ...actual,
-    Modal: ({ children, isOpen, onClose }) => isOpen ? (
+    Modal: ({ children, isOpen, onClose }: { children: React.ReactNode, isOpen: boolean, onClose: () => void }) => isOpen ? (
       <div data-testid="modal">
         <button onClick={onClose} data-testid="close-button">Close</button>
         <div data-testid="modal-content">{children}</div>
       </div>
     ) : null,
     ModalOverlay: () => <div data-testid="modal-overlay" />,
-    ModalContent: ({ children }) => <div data-testid="modal-content">{children}</div>,
-    ModalHeader: ({ children }) => <div data-testid="modal-header">{children}</div>,
-    ModalBody: ({ children }) => <div data-testid="modal-body">{children}</div>,
-    ModalFooter: ({ children }) => <div data-testid="modal-footer">{children}</div>,
+    ModalContent: ({ children }: { children: React.ReactNode }) => <div data-testid="modal-content">{children}</div>,
+    ModalHeader: ({ children }: { children: React.ReactNode }) => <div data-testid="modal-header">{children}</div>,
+    ModalBody: ({ children }: { children: React.ReactNode }) => <div data-testid="modal-body">{children}</div>,
+    ModalFooter: ({ children }: { children: React.ReactNode }) => <div data-testid="modal-footer">{children}</div>,
     ModalCloseButton: () => <button data-testid="modal-close-button">X</button>,
   };
 });
@@ -136,7 +137,7 @@ const defaultProps = {
 };
 
 // Wrapper component with ChakraProvider
-const Wrapper = ({ children }) => (
+const Wrapper = ({ children }: { children: React.ReactNode }) => (
   <ChakraProvider>{children}</ChakraProvider>
 );
 
