@@ -147,11 +147,23 @@ const MessageList: React.FC<MessageListProps> = ({ workspaceId, channelId, chann
       const userIds = new Set<string>();
       if (data.messages) {
         data.messages.forEach((message: SlackMessage, index: number) => {
+          // Check for messages with "user_id" field
           if (message.user_id) {
             userIds.add(message.user_id);
             console.log(`[DEBUG] Message ${index} has user_id: ${message.user_id}`);
           } else {
             console.log(`[DEBUG] Message ${index} has no user_id`);
+            
+            // For system messages or join/leave messages, try to extract user ID from text
+            if (message.subtype === 'channel_join' || message.subtype === 'channel_leave') {
+              // Many system messages have format "<@USERXXX>..."
+              const userMention = message.text.match(/<@([A-Z0-9]+)>/);
+              if (userMention && userMention[1]) {
+                console.log(`[DEBUG] Extracted user ID from message text: ${userMention[1]}`);
+                // This is a Slack ID, not a UUID, so we can't directly use it
+                // But we can log it for reference
+              }
+            }
           }
         });
       }
@@ -633,6 +645,27 @@ const MessageList: React.FC<MessageListProps> = ({ workspaceId, channelId, chann
             <CardBody>
               <Stack divider={<StackDivider />} spacing={4}>
                 {filteredMessages.map((message) => {
+                  // Handle system messages differently
+                  if (message.subtype === 'channel_join' || message.subtype === 'channel_leave' || !message.user_id) {
+                    return (
+                      <Box key={message.id} p={2}>
+                        <HStack spacing={4} align="start" mb={2}>
+                          <Avatar size="sm" name="System" src={undefined} />
+                          <Box>
+                            <HStack mb={1}>
+                              <Text fontWeight="bold" color="gray.500">System</Text>
+                              <Text fontSize="sm" color="gray.500">
+                                {formatDateTime(message.message_datetime)}
+                              </Text>
+                            </HStack>
+                            <Text color="gray.500">{message.text}</Text>
+                          </Box>
+                        </HStack>
+                      </Box>
+                    );
+                  }
+
+                  // Normal user messages
                   const user = getUserInfo(message.user_id);
                   return (
                     <Box key={message.id} p={2}>
