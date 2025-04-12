@@ -125,7 +125,7 @@ const ThreadView: React.FC<ThreadViewProps> = ({
   const fetchThreadReplies = async () => {
     try {
       setIsLoading(true)
-      const url = `${import.meta.env.VITE_API_URL}/slack/workspaces/${workspaceId}/channels/${channelId}/threads/${threadTs}`
+      const url = `${import.meta.env.VITE_API_URL}/slack/workspaces/${workspaceId}/channels/${channelId}/threads/${threadTs}?limit=500`
 
       console.log('Fetching thread replies from:', url)
       const response = await fetch(url)
@@ -294,10 +294,46 @@ const ThreadView: React.FC<ThreadViewProps> = ({
               {/* Has more indicator */}
               {hasMore && (
                 <Box textAlign="center" py={2}>
-                  <Text fontSize="sm" color="gray.500">
-                    Some replies couldn't be loaded. View the full thread in
-                    Slack.
-                  </Text>
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    colorScheme="purple" 
+                    mb={2}
+                    onClick={() => {
+                      // Load more replies by increasing the limit
+                      const url = `${import.meta.env.VITE_API_URL}/slack/workspaces/${workspaceId}/channels/${channelId}/threads/${threadTs}?limit=1000`;
+                      
+                      fetch(url)
+                        .then(response => {
+                          if (!response.ok) {
+                            throw new Error(`Error loading more replies: ${response.status}`);
+                          }
+                          return response.json();
+                        })
+                        .then(data => {
+                          setReplies(data.replies || []);
+                          setTotalReplies(data.total_replies || 0);
+                          setHasMore(data.has_more || false);
+                        })
+                        .catch(error => {
+                          console.error('Error loading more replies:', error);
+                          toast({
+                            title: 'Error',
+                            description: 'Failed to load more replies',
+                            status: 'error',
+                            duration: 5000,
+                            isClosable: true,
+                          });
+                        });
+                    }}
+                  >
+                    Load More Replies
+                  </Button>
+                  {hasMore && (
+                    <Text fontSize="sm" color="gray.500">
+                      Some replies couldn't be loaded. View the full thread in Slack.
+                    </Text>
+                  )}
                 </Box>
               )}
             </VStack>
