@@ -31,7 +31,7 @@ import {
   AlertDialogOverlay,
   useDisclosure,
 } from '@chakra-ui/react';
-import { FiSearch, FiRefreshCw, FiCheck, FiAlertTriangle, FiArrowLeft, FiArrowRight } from 'react-icons/fi';
+import { FiSearch, FiRefreshCw, FiCheck, FiAlertTriangle, FiArrowLeft, FiArrowRight, FiMessageSquare } from 'react-icons/fi';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 
 // Define types
@@ -705,18 +705,19 @@ const ChannelList: React.FC = () => {
                   <Th>Purpose</Th>
                   <Th>Members</Th>
                   <Th>Status</Th>
+                  <Th>Actions</Th>
                 </Tr>
               </Thead>
               <Tbody>
                 {isLoading ? (
                   <Tr>
-                    <Td colSpan={6} textAlign="center" py={8}>
+                    <Td colSpan={7} textAlign="center" py={8}>
                       <Spinner size="md" color="purple.500" />
                     </Td>
                   </Tr>
                 ) : paginatedChannels.length === 0 ? (
                   <Tr>
-                    <Td colSpan={6} textAlign="center" py={8}>
+                    <Td colSpan={7} textAlign="center" py={8}>
                       <VStack spacing={4}>
                         <Text color="gray.500">No channels found. You may need to sync channels from Slack first.</Text>
                         <Button
@@ -766,6 +767,18 @@ const ChannelList: React.FC = () => {
                             <Text fontSize="sm" color="orange.500">Bot Not Installed</Text>
                           </HStack>
                         )}
+                      </Td>
+                      <Td>
+                        <Button
+                          as={Link}
+                          to={`/dashboard/slack/workspaces/${workspaceId}/channels/${channel.id}/messages`}
+                          size="sm"
+                          colorScheme="purple"
+                          variant="outline"
+                          leftIcon={<Icon as={FiMessageSquare} />}
+                        >
+                          View Messages
+                        </Button>
                       </Td>
                     </Tr>
                   ))
