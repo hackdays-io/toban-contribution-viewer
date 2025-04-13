@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext, createContext } from 'react';
 import {
-  // Box, // Uncomment if needed
+  Box,
   Avatar,
   Text,
   Flex,
