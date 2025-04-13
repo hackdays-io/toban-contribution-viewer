@@ -14,7 +14,70 @@ const isPlaceholder = (value: string) => {
 const usesMockClient = isPlaceholder(supabaseUrl) || isPlaceholder(supabaseAnonKey);
 
 // Choose between real client or completely mocked implementation
-let supabase;
+// Import Session type from Supabase for better compatibility
+import { Session as SupabaseSession } from '@supabase/supabase-js';
+
+// Define types for our mock data
+type MockSession = SupabaseSession & {
+  access_token: string;
+  refresh_token: string;
+  expires_in: number;
+  expires_at: number;
+  user: MockUser;
+  // Add required fields from Session type
+  token_type: string;
+};
+
+type MockUser = {
+  id: string;
+  email: string;
+  app_metadata: Record<string, unknown>;
+  user_metadata: Record<string, unknown>;
+  aud: string;
+  created_at: string;
+};
+
+// Define a simplified client that mimics Supabase client
+interface MockSupabaseClient {
+  auth: {
+    getSession(): Promise<{ data: { session: MockSession | null }; error: null | Error }>;
+    getUser(): Promise<{ data: { user: MockUser | null }; error: null | Error }>;
+    signInWithPassword(params: { email: string; password: string }): Promise<{ 
+      data: { user: MockUser; session: MockSession } | null; 
+      error: null | Error 
+    }>;
+    signInWithOAuth(params: { 
+      provider: string; 
+      options?: Record<string, unknown> 
+    }): Promise<{ 
+      data: { provider: string; url: string }; 
+      error: null | Error 
+    }>;
+    signUp(params: { 
+      email: string; 
+      password: string; 
+      options?: Record<string, unknown> 
+    }): Promise<{ 
+      data: { user: MockUser; session: MockSession } | null; 
+      error: null | Error 
+    }>;
+    signOut(): Promise<{ error: null | Error }>;
+    onAuthStateChange(callback: (event: string, session: MockSession | null) => void): { 
+      data: { subscription: { unsubscribe(): void } } 
+    };
+  };
+  from(table: string): {
+    select(): { data: any[]; error: null | Error };
+    insert(): { data: any; error: null | Error };
+    update(): { data: any; error: null | Error };
+    delete(): { data: any; error: null | Error };
+  };
+}
+
+// Define a type that can be either our mock client or the real Supabase client
+type SupabaseClientType = ReturnType<typeof createClient> | MockSupabaseClient;
+
+let supabase: SupabaseClientType;
 
 if (usesMockClient) {
   console.info('Using mock Supabase client in development mode. Authentication is bypassed for easier testing.');
@@ -24,7 +87,7 @@ if (usesMockClient) {
   
   // Create a comprehensive mock client for development mode
   // This provides a more realistic experience without real auth
-  const mockUser = {
+  const mockUser: MockUser = {
     id: 'mock-user-id',
     email: 'dev@example.com',
     app_metadata: { provider: 'email' },
@@ -33,20 +96,21 @@ if (usesMockClient) {
     created_at: new Date().toISOString(),
   };
 
-  const mockSession = {
+  const mockSession: MockSession = {
     access_token: 'mock-jwt-token',
     refresh_token: 'mock-refresh-token',
     expires_in: 3600,
     expires_at: Math.floor(Date.now() / 1000) + 3600,
     user: mockUser,
+    token_type: 'bearer',
   };
 
   // Store mock auth state
   const mockAuthState = {
     isAuthenticated: false,
-    session: null as typeof mockSession | null,
-    user: null as typeof mockUser | null,
-    authChangeCallbacks: [] as Array<(event: string, session: typeof mockSession | null) => void>,
+    session: null as MockSession | null,
+    user: null as MockUser | null,
+    authChangeCallbacks: [] as Array<(event: string, session: MockSession | null) => void>,
   };
 
   supabase = {
@@ -176,7 +240,7 @@ if (usesMockClient) {
   };
 } else {
   // Use actual Supabase client with real credentials
-  supabase = createClient(supabaseUrl, supabaseAnonKey) as typeof supabase;
+  supabase = createClient(supabaseUrl, supabaseAnonKey);
 }
 
 export { supabase };
@@ -293,7 +357,7 @@ export const signInWithGithub = async () => {
       },
     });
 
-    return { data, error };
+    return { data: data || null, error };
   } catch (e) {
     console.error('Error in signInWithGithub:', e);
     return { data: null, error: e instanceof Error ? e : new Error('Unknown error during GitHub sign in') };
@@ -309,7 +373,7 @@ export const signInWithGoogle = async () => {
       },
     });
 
-    return { data, error };
+    return { data: data || null, error };
   } catch (e) {
     console.error('Error in signInWithGoogle:', e);
     return { data: null, error: e instanceof Error ? e : new Error('Unknown error during Google sign in') };
@@ -324,6 +388,11 @@ export function isUsingMockClient(): boolean {
   };
   
   return isPlaceholder(env.supabase.url) || isPlaceholder(env.supabase.anonKey);
+}
+
+// This type guard helps TypeScript understand if we're using a mock client
+export function isMockSupabaseClient(client: SupabaseClientType): client is MockSupabaseClient {
+  return !('http' in client);
 }
 
 export default supabase;

@@ -42,12 +42,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           throw error;
         }
 
-        setSession(session);
-        setUser(session?.user || null);
+        // Cast session type to satisfy TypeScript
+        if (session) {
+          setSession(session as unknown as Session);
+          setUser(session.user || null);
+        } else {
+          setSession(null);
+          setUser(null);
+        }
 
         // For mock clients, inform the developer
         // Check if we're using a mock client and in a development environment
-        const isMockClient = !session && !('http' in (supabase as { http?: unknown }));
+        const isMockClient = !session && ('auth' in supabase) && !('http' in supabase);
         const isDevelopmentHost = window.location.hostname.includes('ngrok') || 
                                  window.location.hostname === 'localhost';
                                  
@@ -70,8 +76,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const listener = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.info(`Auth state changed: ${event}`);
-        setSession(session);
-        setUser(session?.user || null);
+        // Cast session type to satisfy TypeScript
+        if (session) {
+          setSession(session as unknown as Session);
+          setUser(session.user || null);
+        } else {
+          setSession(null);
+          setUser(null);
+        }
         setLoading(false);
       }
     );
