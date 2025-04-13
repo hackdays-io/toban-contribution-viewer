@@ -92,7 +92,15 @@ class SlackApiClient:
         # Build full URL
         url = f"{self.base_url}/{path}"
 
-        logger.debug(f"Making {method} request to {url}")
+        logger.info(f"Making {method} request to {url}")
+        logger.info(f"Request params: {params}")
+
+        # Redact token information from logs but show format
+        headers_log = {
+            k: (v[:10] + "..." + v[-4:] if k == "Authorization" else v)
+            for k, v in request_headers.items()
+        }
+        logger.info(f"Headers: {headers_log}")
 
         try:
             # Make the request
@@ -104,8 +112,13 @@ class SlackApiClient:
                     data=data,
                     json=json_data,
                     headers=request_headers,
-                    timeout=10,
+                    timeout=30,  # Increased timeout for reliability
                 ) as response:
+                    status = response.status
+                    logger.info(f"Slack API response status: {status}")
+
+                    # Log response headers
+                    logger.info(f"Response headers: {dict(response.headers)}")
                     # Check for rate limiting
                     if response.status == 429:
                         retry_after = int(response.headers.get("Retry-After", 60))
@@ -149,12 +162,39 @@ class SlackApiClient:
                     # Parse JSON response
                     response_data = await response.json()
 
+                    # Add detailed logging for debugging
+                    logger.info(f"Response data keys: {list(response_data.keys())}")
+
+                    # Detailed logging for debugging thread replies
+                    ok = response_data.get("ok", False)
+                    has_messages = "messages" in response_data
+                    msg_count = len(response_data.get("messages", []))
+                    error = response_data.get("error", "none")
+                    warning = response_data.get("warning", "none")
+                    has_metadata = "response_metadata" in response_data
+
+                    logger.info(
+                        f"Response summary: ok={ok}, has_messages={has_messages}, msg_count={msg_count}, error='{error}', warning='{warning}', has_metadata={has_metadata}"
+                    )
+
+                    # If we have messages, log some details about them
+                    if has_messages and msg_count > 0:
+                        messages = response_data.get("messages", [])
+                        logger.info(
+                            f"First message type: {messages[0].get('type', 'unknown')}"
+                        )
+                        logger.info(
+                            f"Message timestamps: {[msg.get('ts') for msg in messages[:3]]}"
+                        )
+
                     # Check for API errors in response data
                     if not response_data.get("ok", False):
                         error_code = response_data.get("error", "unknown_error")
                         error_message = response_data.get(
                             "error_description", f"Slack API error: {error_code}"
                         )
+                        logger.error(f"Slack API error: {error_code} - {error_message}")
+                        logger.error(f"Full error response: {response_data}")
 
                         # Handle authentication errors specially
                         if error_code in [
@@ -356,7 +396,7 @@ class SlackApiClient:
             "channel": channel_id,
             "ts": thread_ts,
             "limit": min(limit, 1000),  # Enforce Slack API limit
-            "inclusive": inclusive,
+            "inclusive": "true" if inclusive else "false",  # Convert boolean to string
         }
 
         if cursor:

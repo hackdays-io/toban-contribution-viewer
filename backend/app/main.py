@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -63,9 +64,18 @@ app = FastAPI(
 )
 
 # Configure CORS
+allowed_origins = [str(origin) for origin in settings.ALLOWED_HOSTS]
+# Log all allowed origins for debugging
+logger.info(f"CORS allowed origins: {allowed_origins}")
+# Fix for ngrok domains - ensure specific ngrok domain is included
+ngrok_url = os.environ.get("NGROK_URL")
+if ngrok_url and ngrok_url not in allowed_origins:
+    allowed_origins.append(ngrok_url)
+    logger.info(f"Added ngrok URL to allowed origins: {ngrok_url}")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[str(origin) for origin in settings.ALLOWED_HOSTS],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -82,6 +92,20 @@ async def root():
 @app.get("/health")
 async def health_check():
     return {"status": "ok"}
+
+
+# CORS debug endpoint - useful for troubleshooting CORS issues
+@app.get("/cors-debug")
+async def cors_debug():
+    """Return CORS configuration for debugging."""
+    return {
+        "allowed_origins": [str(origin) for origin in settings.ALLOWED_HOSTS],
+        "additional_cors_origins": os.environ.get("ADDITIONAL_CORS_ORIGINS", ""),
+        "ngrok_url": os.environ.get("NGROK_URL", ""),
+        "api_url": settings.API_URL,
+        "frontend_url": settings.FRONTEND_URL,
+        "debug_mode": settings.DEBUG,
+    }
 
 
 # Include API routes

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import env from '../../config/env';
 import {
   Box,
   Heading,
@@ -20,6 +21,8 @@ import {
   AlertDialogHeader,
   AlertDialogContent,
   AlertDialogOverlay,
+  Alert,
+  AlertIcon,
 } from '@chakra-ui/react';
 import { Link } from 'react-router-dom';
 import { FiPlus, FiTrash2, FiRefreshCw } from 'react-icons/fi';
@@ -46,13 +49,18 @@ const WorkspaceList: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState<string | null>(null);
   const [selectedWorkspace, setSelectedWorkspace] = useState<Workspace | null>(null);
+  const [corsError, setCorsError] = useState(false);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const cancelRef = React.useRef<HTMLButtonElement>(null);
   const toast = useToast();
 
+  // Detect if we're running in an environment that might have CORS issues
+  const isNgrokOrRemote = window.location.hostname.includes('ngrok') || 
+                         (!window.location.hostname.includes('localhost') && 
+                          env.apiUrl.includes('localhost'));
+  
   useEffect(() => {
     fetchWorkspaces();
-    // fetchWorkspaces is defined inside the component and doesn't depend on any props or state
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -60,9 +68,21 @@ const WorkspaceList: React.FC = () => {
    * Fetch connected workspaces from the API.
    */
   const fetchWorkspaces = async () => {
+    setIsLoading(true);
+    setCorsError(false);
+    
     try {
-      setIsLoading(true);
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/slack/workspaces`);
+      // Make the API request with explicit CORS settings
+      const response = await fetch(`${env.apiUrl}/slack/workspaces`, {
+        method: 'GET',
+        mode: 'cors',
+        credentials: 'include',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Origin': window.location.origin
+        }
+      });
 
       if (!response.ok) {
         throw new Error('Failed to fetch workspaces');
@@ -72,13 +92,31 @@ const WorkspaceList: React.FC = () => {
       setWorkspaces(data.workspaces || []);
     } catch (error) {
       console.error('Error fetching workspaces:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load connected workspaces',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
+      
+      // Check if this is likely a CORS error
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const isCorsError = errorMessage.includes('NetworkError') || 
+                         errorMessage.includes('Failed to fetch') ||
+                         errorMessage.includes('CORS');
+      
+      if (isCorsError && isNgrokOrRemote) {
+        setCorsError(true);
+        toast({
+          title: 'CORS Error',
+          description: 'Unable to connect to API due to CORS restrictions. This commonly happens when accessing the application through ngrok while the API is running on localhost.',
+          status: 'error',
+          duration: 10000,
+          isClosable: true,
+        });
+      } else {
+        toast({
+          title: 'Error',
+          description: 'Failed to load connected workspaces',
+          status: 'error',
+          duration: 5000,
+          isClosable: true,
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -89,10 +127,20 @@ const WorkspaceList: React.FC = () => {
    */
   const refreshWorkspace = async (workspaceId: string) => {
     setIsRefreshing(workspaceId);
-
+    
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/slack/workspaces/${workspaceId}/verify`
+        `${env.apiUrl}/slack/workspaces/${workspaceId}/verify`,
+        {
+          method: 'GET',
+          mode: 'cors',
+          credentials: 'include',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Origin': window.location.origin
+          }
+        }
       );
 
       if (!response.ok) {
@@ -114,13 +162,31 @@ const WorkspaceList: React.FC = () => {
       fetchWorkspaces();
     } catch (error) {
       console.error('Error refreshing workspace:', error);
-      toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to refresh workspace',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
+      
+      // Check if this is likely a CORS error
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const isCorsError = errorMessage.includes('NetworkError') || 
+                         errorMessage.includes('Failed to fetch') ||
+                         errorMessage.includes('CORS');
+      
+      if (isCorsError && isNgrokOrRemote) {
+        setCorsError(true);
+        toast({
+          title: 'CORS Error',
+          description: 'Unable to connect to API due to CORS restrictions. Try accessing the application directly on localhost.',
+          status: 'error',
+          duration: 10000,
+          isClosable: true,
+        });
+      } else {
+        toast({
+          title: 'Error',
+          description: error instanceof Error ? error.message : 'Failed to refresh workspace',
+          status: 'error',
+          duration: 5000,
+          isClosable: true,
+        });
+      }
     } finally {
       setIsRefreshing(null);
     }
@@ -134,7 +200,7 @@ const WorkspaceList: React.FC = () => {
 
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/slack/workspaces/${selectedWorkspace.id}`,
+        `${env.apiUrl}/slack/workspaces/${selectedWorkspace.id}`,
         {
           method: 'DELETE',
         }
@@ -157,13 +223,31 @@ const WorkspaceList: React.FC = () => {
       fetchWorkspaces();
     } catch (error) {
       console.error('Error disconnecting workspace:', error);
-      toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to disconnect workspace',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
+      
+      // Check if this is likely a CORS error
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const isCorsError = errorMessage.includes('NetworkError') || 
+                         errorMessage.includes('Failed to fetch') ||
+                         errorMessage.includes('CORS');
+      
+      if (isCorsError && isNgrokOrRemote) {
+        setCorsError(true);
+        toast({
+          title: 'CORS Error',
+          description: 'Unable to connect to API due to CORS restrictions. Try accessing the application directly on localhost.',
+          status: 'error',
+          duration: 10000,
+          isClosable: true,
+        });
+      } else {
+        toast({
+          title: 'Error',
+          description: error instanceof Error ? error.message : 'Failed to disconnect workspace',
+          status: 'error',
+          duration: 5000,
+          isClosable: true,
+        });
+      }
     } finally {
       onClose();
     }
@@ -192,6 +276,23 @@ const WorkspaceList: React.FC = () => {
       </HStack>
 
       <Divider mb={6} />
+      
+      {corsError && (
+        <Alert status="warning" mb={6}>
+          <AlertIcon />
+          <VStack align="start" spacing={2} width="100%">
+            <Text fontWeight="bold">CORS Error Detected</Text>
+            <Text>
+              Unable to connect to the API due to browser security restrictions (CORS).
+              This commonly happens when accessing the app through ngrok while the API is running on localhost.
+            </Text>
+            <Text fontWeight="bold">Try one of these solutions:</Text>
+            <Text>1. Run the frontend directly on localhost</Text>
+            <Text>2. Run the backend on a public URL</Text>
+            <Text>3. Configure the backend to accept requests from {window.location.origin}</Text>
+          </VStack>
+        </Alert>
+      )}
 
       {isLoading ? (
         <Flex justify="center" align="center" minHeight="200px">
@@ -206,16 +307,28 @@ const WorkspaceList: React.FC = () => {
           bg="gray.50"
         >
           <Text fontSize="lg" mb={4}>
-            No workspaces connected yet
+            {corsError 
+              ? "Unable to load workspaces due to CORS restrictions" 
+              : "No workspaces connected yet"}
           </Text>
-          <Button
-            as={Link}
-            to="/dashboard/slack/connect"
-            colorScheme="purple"
-            leftIcon={<Icon as={FiPlus} />}
-          >
-            Connect Your First Workspace
-          </Button>
+          {!corsError && (
+            <Button
+              as={Link}
+              to="/dashboard/slack/connect"
+              colorScheme="purple"
+              leftIcon={<Icon as={FiPlus} />}
+            >
+              Connect Your First Workspace
+            </Button>
+          )}
+          {corsError && (
+            <Button
+              colorScheme="blue"
+              onClick={fetchWorkspaces}
+            >
+              Retry Connection
+            </Button>
+          )}
         </Box>
       ) : (
         <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>

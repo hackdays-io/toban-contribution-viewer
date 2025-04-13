@@ -34,14 +34,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const initializeAuth = async () => {
       try {
         setLoading(true);
+        
+        // Always try to get the session, whether real or mock
         const { session, error } = await getSession();
 
         if (error) {
           throw error;
         }
 
-        setSession(session);
-        setUser(session?.user || null);
+        // Cast session type to satisfy TypeScript
+        if (session) {
+          setSession(session as unknown as Session);
+          setUser(session.user || null);
+        } else {
+          setSession(null);
+          setUser(null);
+        }
+
+        // For mock clients, inform the developer
+        // Check if we're using a mock client and in a development environment
+        const isMockClient = !session && ('auth' in supabase) && !('http' in supabase);
+        const isDevelopmentHost = window.location.hostname.includes('ngrok') || 
+                                 window.location.hostname === 'localhost';
+                                 
+        if (isMockClient && isDevelopmentHost) {
+          console.info('Running in development mode with mock authentication. This is normal when using placeholder Supabase credentials.');
+          console.info('You can proceed without authentication or use the login/signup forms with any credentials.');
+        }
       } catch (error) {
         setError(error as Error);
         console.error('Error initializing auth:', error);
@@ -53,18 +72,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     initializeAuth();
 
     // Set up auth state change listener
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        setSession(session);
-        setUser(session?.user || null);
+    // Our mock client now also supports this
+    const listener = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.info(`Auth state changed: ${event}`);
+        // Cast session type to satisfy TypeScript
+        if (session) {
+          setSession(session as unknown as Session);
+          setUser(session.user || null);
+        } else {
+          setSession(null);
+          setUser(null);
+        }
         setLoading(false);
       }
     );
-
+    
     // Clean up the subscription
     return () => {
-      if (authListener && authListener.subscription) {
-        authListener.subscription.unsubscribe();
+      if (listener && listener.data && listener.data.subscription) {
+        listener.data.subscription.unsubscribe();
       }
     };
   }, []);

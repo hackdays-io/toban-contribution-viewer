@@ -20,7 +20,7 @@ const AuthCallback: React.FC = () => {
 
         // Redirect to the home page or dashboard after successful login
         navigate('/', { replace: true });
-      } catch (err) {
+      } catch (err: unknown) {
         console.error('Error processing auth callback:', err);
         setError(err instanceof Error ? err.message : 'An unknown error occurred');
       }

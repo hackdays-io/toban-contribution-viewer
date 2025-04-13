@@ -5,6 +5,42 @@ import '../../../__tests__/setup';
 import { ChakraProvider } from '@chakra-ui/react';
 import React from 'react';
 
+// Mock the env config
+vi.mock('../../../config/env', async () => {
+  return {
+    default: {
+      apiUrl: 'http://localhost:8000/api/v1',
+      isDev: true,
+      features: {
+        enableSlack: true,
+      },
+      supabase: {
+        url: 'mock-url',
+        anonKey: 'mock-key',
+        redirectUri: 'http://localhost:3000/auth/callback',
+      }
+    },
+    getEnvVar: (name: string) => {
+      if (name === 'VITE_API_URL') return 'http://localhost:8000/api/v1';
+      return 'mock-value';
+    },
+    getBooleanEnvVar: () => true,
+    validateEnvironment: () => true,
+    env: {
+      apiUrl: 'http://localhost:8000/api/v1',
+      isDev: true,
+      features: {
+        enableSlack: true,
+      },
+      supabase: {
+        url: 'mock-url',
+        anonKey: 'mock-key',
+        redirectUri: 'http://localhost:3000/auth/callback',
+      }
+    }
+  };
+});
+
 // Mock Chakra Modal component to avoid framer-motion issues in tests
 vi.mock('@chakra-ui/react', async () => {
   const actual = await vi.importActual('@chakra-ui/react');
@@ -25,12 +61,7 @@ vi.mock('@chakra-ui/react', async () => {
   };
 });
 
-// Mock environment variables
-vi.mock('../../../config/env.ts', () => ({
-  env: {
-    VITE_API_URL: 'http://localhost:8000/api/v1',
-  }
-}));
+// This mock was duplicated - removed to avoid conflicts
 
 // Mock data
 const mockParentMessage = {
@@ -168,8 +199,13 @@ describe('ThreadView', () => {
   it('calls fetch with the correct URL', () => {
     render(<ThreadView {...defaultProps} />, { wrapper: Wrapper });
     
-    expect(global.fetch).toHaveBeenCalledWith(
-      `http://localhost:8000/api/v1/slack/workspaces/W123/channels/C123/threads/1617984000.000100`
+    expect(global.fetch).toHaveBeenCalled();
+    // Use vi.mocked to properly type the mock function
+    const mockedFetch = vi.mocked(global.fetch);
+    const fetchCalls = mockedFetch.mock.calls;
+    expect(fetchCalls.length).toBeGreaterThan(0);
+    expect(fetchCalls[0][0]).toBe(
+      `http://localhost:8000/api/v1/slack/workspaces/W123/channels/C123/threads/1617984000.000100?limit=1000`
     );
   });
 

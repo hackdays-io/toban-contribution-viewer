@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import env from '../../config/env';
 import {
   Box,
   Button,
@@ -122,7 +123,7 @@ const MessageList: React.FC<MessageListProps> = ({
       setIsLoading(true)
 
       // Construct the URL with query parameters
-      let url = `${import.meta.env.VITE_API_URL}/slack/workspaces/${workspaceId}/channels/${channelId}/messages?include_replies=${includeReplies}`
+      let url = `${env.apiUrl}/slack/workspaces/${workspaceId}/channels/${channelId}/messages?include_replies=${includeReplies}`
 
       if (startDate) {
         // Create a date at the beginning of the selected day (00:00:00)
@@ -142,10 +143,17 @@ const MessageList: React.FC<MessageListProps> = ({
         url += `&cursor=${cursor}`
       }
 
-      // Log the URL being called (for debugging)
-      console.log('Fetching messages from:', url)
-
-      const response = await fetch(url)
+      // Fetch messages from API with CORS headers
+      const response = await fetch(url, {
+        method: 'GET',
+        mode: 'cors',
+        credentials: 'include',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Origin': window.location.origin
+        }
+      })
 
       if (!response.ok) {
         const errorText = await response.text()
@@ -156,6 +164,8 @@ const MessageList: React.FC<MessageListProps> = ({
       }
 
       const data = await response.json()
+
+      // Process messages from API response
 
       setMessages(data.messages || [])
       setPagination(data.pagination || null)
@@ -202,11 +212,19 @@ const MessageList: React.FC<MessageListProps> = ({
       const userIdsParam = validUserIds
         .map((id) => `user_ids=${encodeURIComponent(id)}`)
         .join('&')
-      const url = `${import.meta.env.VITE_API_URL}/slack/workspaces/${workspaceId}/users?${userIdsParam}`
+      const url = `${env.apiUrl}/slack/workspaces/${workspaceId}/users?${userIdsParam}`
 
-      console.log('Fetching user data from:', url)
-
-      const response = await fetch(url)
+      // Fetch user data from API with CORS headers
+      const response = await fetch(url, {
+        method: 'GET',
+        mode: 'cors',
+        credentials: 'include',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Origin': window.location.origin
+        }
+      })
 
       if (!response.ok) {
         const errorText = await response.text()
@@ -243,9 +261,7 @@ const MessageList: React.FC<MessageListProps> = ({
         }
       })
 
-      console.log(
-        `Loaded ${newUsers.size} users for ${validUserIds.length} messages`
-      )
+      // User data loaded successfully
       setUsers(newUsers)
     } catch (error) {
       console.error('Error fetching user data:', error)
@@ -295,10 +311,12 @@ const MessageList: React.FC<MessageListProps> = ({
         start_date: startDateTime ? startDateTime.toISOString() : null,
         end_date: endDateTime ? endDateTime.toISOString() : null,
         include_replies: includeReplies,
+        sync_threads: true, // Always sync threads
+        thread_days: 30, // Sync last 30 days of threads by default
       }
 
-      const syncUrl = `${import.meta.env.VITE_API_URL}/slack/workspaces/${workspaceId}/channels/${channelId}/sync`
-      console.log('Syncing messages with:', syncUrl, dateRange)
+      const syncUrl = `${env.apiUrl}/slack/workspaces/${workspaceId}/channels/${channelId}/sync`
+      // Start the sync process
 
       const response = await fetch(syncUrl, {
         method: 'POST',
@@ -316,11 +334,13 @@ const MessageList: React.FC<MessageListProps> = ({
         )
       }
 
-      await response.json() // Process response but we don't need to use it
+      const result = await response.json() // Process response
 
       toast({
         title: 'Sync Started',
-        description: 'Messages are being synchronized in the background.',
+        description: result.sync_threads 
+          ? 'Messages and thread replies are being synchronized in the background.' 
+          : 'Messages are being synchronized in the background.',
         status: 'info',
         duration: 5000,
         isClosable: true,
@@ -361,13 +381,6 @@ const MessageList: React.FC<MessageListProps> = ({
     return date.toLocaleString()
   }
 
-  // We're not using truncateText now, but keeping it commented for future use
-  /*
-  const truncateText = (text: string, maxLength: number = 150) => {
-    if (text.length <= maxLength) return text;
-    return text.substring(0, maxLength) + '...';
-  };
-  */
 
   /**
    * Load more messages when available.
@@ -423,14 +436,19 @@ const MessageList: React.FC<MessageListProps> = ({
         <Heading size="lg">
           {channelName ? `#${channelName} Messages` : 'Channel Messages'}
         </Heading>
-        <Button
-          leftIcon={<Icon as={FiRefreshCw} />}
-          colorScheme="purple"
-          isLoading={isSyncing}
-          onClick={syncMessages}
-        >
-          Sync Messages
-        </Button>
+        <HStack spacing={3}>
+          <Button
+            leftIcon={<Icon as={FiRefreshCw} />}
+            colorScheme="purple"
+            isLoading={isSyncing}
+            onClick={() => {
+              // Use the unified sync endpoint that handles both messages and threads
+              syncMessages();
+            }}
+          >
+            Sync Messages & Threads
+          </Button>
+        </HStack>
       </HStack>
 
       <Divider mb={6} />

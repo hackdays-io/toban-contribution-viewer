@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import env from '../../config/env';
 import {
   Box,
   Button,
@@ -125,10 +126,19 @@ const ThreadView: React.FC<ThreadViewProps> = ({
   const fetchThreadReplies = async () => {
     try {
       setIsLoading(true)
-      const url = `${import.meta.env.VITE_API_URL}/slack/workspaces/${workspaceId}/channels/${channelId}/threads/${threadTs}`
-
-      console.log('Fetching thread replies from:', url)
-      const response = await fetch(url)
+      const limit = 1000 // Increased limit to get more replies
+      const url = `${env.apiUrl}/slack/workspaces/${workspaceId}/channels/${channelId}/threads/${threadTs}?limit=${limit}`
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        mode: 'cors',
+        credentials: 'include',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Origin': window.location.origin
+        }
+      })
 
       if (!response.ok) {
         throw new Error(
@@ -137,6 +147,7 @@ const ThreadView: React.FC<ThreadViewProps> = ({
       }
 
       const data = await response.json()
+      
       setReplies(data.replies || [])
       setTotalReplies(data.total_replies || 0)
       setHasMore(data.has_more || false)
@@ -160,7 +171,7 @@ const ThreadView: React.FC<ThreadViewProps> = ({
    */
   const refreshThreadReplies = () => {
     setIsRefreshing(true)
-    fetchThreadReplies()
+    fetchThreadReplies() // No parameter needed anymore
   }
 
   /**
@@ -294,10 +305,24 @@ const ThreadView: React.FC<ThreadViewProps> = ({
               {/* Has more indicator */}
               {hasMore && (
                 <Box textAlign="center" py={2}>
-                  <Text fontSize="sm" color="gray.500">
-                    Some replies couldn't be loaded. View the full thread in
-                    Slack.
-                  </Text>
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    colorScheme="purple" 
+                    mb={2}
+                    onClick={() => {
+                      // Load more replies by increasing the limit
+                      // Now uses the same fetchThreadReplies function for consistency
+                      fetchThreadReplies();
+                    }}
+                  >
+                    Load More Replies
+                  </Button>
+                  {hasMore && (
+                    <Text fontSize="sm" color="gray.500">
+                      Some replies couldn't be loaded. View the full thread in Slack.
+                    </Text>
+                  )}
                 </Box>
               )}
             </VStack>
@@ -307,12 +332,13 @@ const ThreadView: React.FC<ThreadViewProps> = ({
           <Button
             leftIcon={<Icon as={FiRefreshCw} />}
             colorScheme="purple"
-            mr={3}
             onClick={refreshThreadReplies}
             isLoading={isRefreshing}
+            mr={3}
           >
             Refresh
           </Button>
+          
           <Button variant="ghost" onClick={onClose}>
             Close
           </Button>
