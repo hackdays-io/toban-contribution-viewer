@@ -47,14 +47,7 @@ interface SlackMessage {
   parent_id: string | null
 }
 
-interface SlackUser {
-  id: string
-  slack_id: string
-  name: string
-  display_name: string | null
-  real_name: string | null
-  profile_image_url: string | null
-}
+// SlackUser interface removed as it's no longer used
 
 interface ThreadViewProps {
   isOpen: boolean
@@ -63,7 +56,6 @@ interface ThreadViewProps {
   channelId: string
   threadTs: string
   parentMessage: SlackMessage | null
-  users: Map<string, SlackUser>
 }
 
 /**
@@ -75,8 +67,8 @@ const ThreadView: React.FC<ThreadViewProps> = ({
   workspaceId,
   channelId,
   threadTs,
-  parentMessage,
-  users,
+  parentMessage
+  // users parameter removed as it's not used
 }) => {
   const [replies, setReplies] = useState<SlackMessage[]>([])
   const [isLoading, setIsLoading] = useState(true)
