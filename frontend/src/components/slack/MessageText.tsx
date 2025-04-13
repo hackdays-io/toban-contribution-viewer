@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { Text, Box } from '@chakra-ui/react';
+import { Box } from '@chakra-ui/react';
 import SlackUserDisplay from './SlackUserDisplay';
 
 interface MessageTextProps {
@@ -62,9 +62,9 @@ const MessageText: React.FC<MessageTextProps> = ({
       ));
     
     return (
-      <Text textAlign="left">
+      <Box textAlign="left">
         {formattedText}
-      </Text>
+      </Box>
     );
   }
   
@@ -147,9 +147,9 @@ const MessageText: React.FC<MessageTextProps> = ({
   }
   
   return (
-    <Text textAlign="left">
+    <Box textAlign="left">
       {segments}
-    </Text>
+    </Box>
   );
 };
 
