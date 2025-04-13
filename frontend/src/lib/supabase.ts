@@ -67,10 +67,10 @@ interface MockSupabaseClient {
     };
   };
   from(table: string): {
-    select(): { data: any[]; error: null | Error };
-    insert(): { data: any; error: null | Error };
-    update(): { data: any; error: null | Error };
-    delete(): { data: any; error: null | Error };
+    select(): { data: unknown[]; error: null | Error };
+    insert(): { data: Record<string, unknown> | null; error: null | Error };
+    update(): { data: Record<string, unknown> | null; error: null | Error };
+    delete(): { data: Record<string, unknown> | null; error: null | Error };
   };
 }
 
