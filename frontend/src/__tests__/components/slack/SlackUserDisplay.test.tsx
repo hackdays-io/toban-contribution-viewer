@@ -5,7 +5,7 @@ import SlackUserDisplay from '../../../components/slack/SlackUserDisplay';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Mock fetch
-global.fetch = vi.fn((url) => {
+global.fetch = vi.fn().mockImplementation((url) => {
   // Check if fetch_from_slack parameter is present
   const fetchFromSlack = url.toString().includes('fetch_from_slack=true');
   
@@ -31,15 +31,16 @@ describe('SlackUserDisplay', () => {
     vi.clearAllMocks();
   });
 
-  it('should render loading state', () => {
-    render(
+  it('should render loading state', async () => {
+    const { findByText } = render(
       <ChakraProvider>
         <SlackUserDisplay userId="test-user-id" workspaceId="test-workspace-id" />
       </ChakraProvider>
     );
     
-    // Check that loading state is shown
-    expect(screen.getByText('Loading...')).toBeInTheDocument();
+    // Use findByText to wait for the loading state to appear
+    const loadingElement = await findByText('Loading...');
+    expect(loadingElement).toBeInTheDocument();
   });
 
   it('should render user name when data is available', () => {
@@ -160,8 +161,8 @@ describe('SlackUserDisplay', () => {
     expect(screen.getByText('Test User Real Name (testuser)')).toBeInTheDocument();
   });
 
-  it('should include fetch_from_slack parameter when fetchFromSlack is true', () => {
-    render(
+  it('should include fetch_from_slack parameter when fetchFromSlack is true', async () => {
+    const { findByText } = render(
       <ChakraProvider>
         <SlackUserDisplay 
           userId="test-user-id" 
@@ -171,13 +172,14 @@ describe('SlackUserDisplay', () => {
       </ChakraProvider>
     );
     
+    // Wait for the component to render
+    const loadingElement = await findByText('Loading...');
+    expect(loadingElement).toBeInTheDocument();
+    
     // Check that fetch was called with the right URL
     expect(global.fetch).toHaveBeenCalledWith(
       expect.stringContaining('fetch_from_slack=true'),
       expect.any(Object)
     );
-    
-    // Check for loading state initially
-    expect(screen.getByText('Loading...')).toBeInTheDocument();
   });
 });
