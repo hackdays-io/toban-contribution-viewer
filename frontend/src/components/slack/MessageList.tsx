@@ -142,8 +142,7 @@ const MessageList: React.FC<MessageListProps> = ({
         url += `&cursor=${cursor}`
       }
 
-      // Log the URL being called (for debugging)
-      console.log('Fetching messages from:', url)
+      // Fetch messages from API
 
       const response = await fetch(url)
 
@@ -157,8 +156,7 @@ const MessageList: React.FC<MessageListProps> = ({
 
       const data = await response.json()
 
-      // Log to check if we have thread parents with replies
-      console.log('Messages with thread info:', data.messages?.filter(m => m.is_thread_parent && m.reply_count > 0))
+      // Process messages from API response
 
       setMessages(data.messages || [])
       setPagination(data.pagination || null)
@@ -207,7 +205,7 @@ const MessageList: React.FC<MessageListProps> = ({
         .join('&')
       const url = `${import.meta.env.VITE_API_URL}/slack/workspaces/${workspaceId}/users?${userIdsParam}`
 
-      console.log('Fetching user data from:', url)
+      // Fetch user data from API
 
       const response = await fetch(url)
 
@@ -246,9 +244,7 @@ const MessageList: React.FC<MessageListProps> = ({
         }
       })
 
-      console.log(
-        `Loaded ${newUsers.size} users for ${validUserIds.length} messages`
-      )
+      // User data loaded successfully
       setUsers(newUsers)
     } catch (error) {
       console.error('Error fetching user data:', error)
@@ -303,7 +299,7 @@ const MessageList: React.FC<MessageListProps> = ({
       }
 
       const syncUrl = `${import.meta.env.VITE_API_URL}/slack/workspaces/${workspaceId}/channels/${channelId}/sync`
-      console.log('Syncing messages and threads with:', syncUrl, dateRange)
+      // Start the sync process
 
       const response = await fetch(syncUrl, {
         method: 'POST',
@@ -368,13 +364,6 @@ const MessageList: React.FC<MessageListProps> = ({
     return date.toLocaleString()
   }
 
-  // We're not using truncateText now, but keeping it commented for future use
-  /*
-  const truncateText = (text: string, maxLength: number = 150) => {
-    if (text.length <= maxLength) return text;
-    return text.substring(0, maxLength) + '...';
-  };
-  */
 
   /**
    * Load more messages when available.

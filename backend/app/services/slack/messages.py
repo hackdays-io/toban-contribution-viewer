@@ -655,15 +655,9 @@ class SlackMessageService:
 
         client = SlackApiClient(access_token)
 
-        # Add detailed logging for debugging
+        # Log the thread fetch operation
         logger.info(
             f"Attempting to fetch thread replies for thread {thread_ts} in channel {channel_id}"
-        )
-        logger.info(
-            f"Using access token: {access_token[:10]}...{access_token[-4:]} (length: {len(access_token)})"
-        )
-        logger.info(
-            f"Request parameters: channel_id={channel_id}, thread_ts={thread_ts}, limit={limit}"
         )
 
         while page_count < max_pages:
@@ -680,16 +674,9 @@ class SlackMessageService:
                     inclusive=True,  # Include parent message
                 )
 
-                # Log the response structure for debugging
-                has_messages = "messages" in response
-                message_count = len(response.get("messages", []))
+                # Check for API errors
                 has_error = "error" in response
                 error_message = response.get("error", "None")
-                has_metadata = "response_metadata" in response
-
-                logger.info(
-                    f"API Response stats: has_messages={has_messages}, message_count={message_count}, has_error={has_error}, error={error_message}"
-                )
 
                 if has_error:
                     logger.error(
@@ -700,40 +687,23 @@ class SlackMessageService:
                 # Add replies to our collection
                 replies = response.get("messages", [])
                 if replies:
-                    logger.info(f"Got {len(replies)} replies in this page")
                     all_replies.extend(replies)
                 else:
-                    logger.warning(
-                        f"No replies found in API response for thread {thread_ts}"
-                    )
+                    logger.info(f"No replies found for thread {thread_ts}")
 
                 # Check for more pages
                 response_metadata = response.get("response_metadata", {})
                 next_cursor = response_metadata.get("next_cursor")
 
                 if not next_cursor:
-                    logger.info(f"No more pages available (no next_cursor)")
                     break  # No more pages
 
                 cursor = next_cursor
                 page_count += 1
 
-                # Log progress for long threads
-                if page_count % 3 == 0:
-                    logger.info(
-                        f"Fetched {len(all_replies)} replies so far (page {page_count})"
-                    )
-
             except Exception as e:
                 logger.error(f"Exception fetching thread replies: {str(e)}")
-                import traceback
-
-                logger.error(f"Traceback: {traceback.format_exc()}")
                 break
-
-        logger.info(
-            f"Fetched {len(all_replies)} total replies across {page_count + 1} pages"
-        )
         return all_replies
 
     @staticmethod

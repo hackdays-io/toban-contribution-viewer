@@ -128,7 +128,6 @@ const ThreadView: React.FC<ThreadViewProps> = ({
       const limit = 1000 // Increased limit to get more replies
       const url = `${import.meta.env.VITE_API_URL}/slack/workspaces/${workspaceId}/channels/${channelId}/threads/${threadTs}?limit=${limit}`
       
-      console.log('Fetching thread replies from:', url)
       const response = await fetch(url)
 
       if (!response.ok) {
@@ -138,7 +137,6 @@ const ThreadView: React.FC<ThreadViewProps> = ({
       }
 
       const data = await response.json()
-      console.log(`Thread data received: total_replies=${data.total_replies}, replies.length=${data.replies?.length}`)
       
       setReplies(data.replies || [])
       setTotalReplies(data.total_replies || 0)
