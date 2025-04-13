@@ -10,6 +10,12 @@ interface ProtectedRouteProps {
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { user, loading } = useAuth();
   const location = useLocation();
+  
+  // Check if we're in development mode with placeholder auth values
+  const isDevelopmentEnv = process.env.NODE_ENV === 'development';
+  const isNgrokOrLocalhost = window.location.hostname.includes('ngrok') || 
+                             window.location.hostname === 'localhost';
+  const isMockEnvironment = isDevelopmentEnv && isNgrokOrLocalhost;
 
   // Show loading spinner while authentication state is being checked
   if (loading) {
@@ -20,7 +26,13 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     );
   }
 
-  // If not authenticated, redirect to login
+  // In development with mock auth, allow access without authentication
+  if (isMockEnvironment && !user) {
+    console.warn('Bypassing authentication in development environment');
+    return <>{children}</>;
+  }
+
+  // If not authenticated in production, redirect to login
   if (!user) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }

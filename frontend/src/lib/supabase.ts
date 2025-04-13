@@ -10,20 +10,42 @@ const isPlaceholder = (value: string) => {
   return !value || value === 'your_supabase_url' || value === 'your_supabase_anon_key';
 };
 
-// Create Supabase client with real or mock credentials
-let clientUrl = supabaseUrl;
-let clientKey = supabaseAnonKey;
+// Check if we need to use mock implementation
+const usesMockClient = isPlaceholder(supabaseUrl) || isPlaceholder(supabaseAnonKey);
 
-// Use mock credentials if needed
-if (isPlaceholder(supabaseUrl) || isPlaceholder(supabaseAnonKey)) {
-  console.warn('Using mock Supabase client. Authentication will not work.');
-  // Use a valid URL format for the mock client
-  clientUrl = 'https://example.com';
-  clientKey = 'mock_key';
+// Choose between real client or completely mocked implementation
+let supabase;
+
+if (usesMockClient) {
+  console.warn('Using fully mocked Supabase client. Authentication and database operations will not work.');
+  
+  // Create a fully mocked Supabase client to prevent CORS errors
+  // This approach prevents any actual network requests
+  const mockResponse = { error: null, data: null };
+  
+  // Create a dummy client with all methods mocked
+  supabase = {
+    auth: {
+      getSession: async () => ({ data: { session: null }, error: null }),
+      getUser: async () => ({ data: { user: null }, error: null }),
+      signInWithPassword: async () => ({ data: null, error: { message: "Authentication is disabled with mock client" } }),
+      signInWithOAuth: async () => ({ data: null, error: { message: "Authentication is disabled with mock client" } }),
+      signUp: async () => ({ data: null, error: { message: "Authentication is disabled with mock client" } }),
+      signOut: async () => ({ error: null }),
+    },
+    from: () => ({
+      select: () => ({ data: [], error: null }),
+      insert: () => ({ data: null, error: null }),
+      update: () => ({ data: null, error: null }),
+      delete: () => ({ data: null, error: null }),
+    }),
+  };
+} else {
+  // Use actual Supabase client with real credentials
+  supabase = createClient(supabaseUrl, supabaseAnonKey);
 }
 
-// Create the client
-export const supabase = createClient(clientUrl, clientKey);
+export { supabase };
 
 // Auth helpers
 export const signIn = async (email: string, password: string) => {

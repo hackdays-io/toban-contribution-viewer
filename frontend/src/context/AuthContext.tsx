@@ -34,6 +34,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const initializeAuth = async () => {
       try {
         setLoading(true);
+        
+        // Check if we have a mock implementation (environment with missing Supabase credentials)
+        const isMockEnvironment = !('onAuthStateChange' in supabase.auth);
+        
+        if (isMockEnvironment) {
+          console.warn('Running in development mode with mock authentication. Bypassing auth checks.');
+          // In mock mode, allow access without authentication
+          setLoading(false);
+          return;
+        }
+        
+        // Normal auth flow with real Supabase client
         const { session, error } = await getSession();
 
         if (error) {
@@ -52,14 +64,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     initializeAuth();
 
-    // Set up auth state change listener
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        setSession(session);
-        setUser(session?.user || null);
-        setLoading(false);
-      }
-    );
+    // Set up auth state change listener only if we have a real Supabase client
+    let authListener: { subscription?: { unsubscribe: () => void } } = {};
+    
+    if ('onAuthStateChange' in supabase.auth) {
+      const listener = supabase.auth.onAuthStateChange(
+        async (_event, session) => {
+          setSession(session);
+          setUser(session?.user || null);
+          setLoading(false);
+        }
+      );
+      
+      authListener = listener.data;
+    }
 
     // Clean up the subscription
     return () => {
