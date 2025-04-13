@@ -1,27 +1,30 @@
 // No need to import React when using JSX without explicit React APIs
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { ChakraProvider } from '@chakra-ui/react';
-import SlackUserDisplay, { SlackUserCacheProvider } from '../../../components/slack/SlackUserDisplay';
+import SlackUserDisplay from '../../../components/slack/SlackUserDisplay';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Mock fetch
-global.fetch = vi.fn(() =>
-  Promise.resolve({
+global.fetch = vi.fn((url) => {
+  // Check if fetch_from_slack parameter is present
+  const fetchFromSlack = url.toString().includes('fetch_from_slack=true');
+  
+  return Promise.resolve({
     ok: true,
     json: () => Promise.resolve({
       users: [
         {
           id: 'test-user-id',
           slack_id: 'U12345678',
-          name: 'testuser',
-          display_name: 'Test User',
-          real_name: 'Test User Real Name',
+          name: fetchFromSlack ? 'slackuser' : 'testuser',
+          display_name: fetchFromSlack ? 'Slack User' : 'Test User',
+          real_name: fetchFromSlack ? 'Slack User Real Name' : 'Test User Real Name',
           profile_image_url: 'https://example.com/avatar.jpg'
         }
       ]
     })
-  })
-) as unknown as typeof global.fetch;
+  });
+}) as unknown as typeof global.fetch;
 
 describe('SlackUserDisplay', () => {
   beforeEach(() => {
@@ -156,4 +159,26 @@ describe('SlackUserDisplay', () => {
     expect(screen.getByText('Test User Real Name')).toBeInTheDocument();
     expect(screen.getByText('Test User Real Name (testuser)')).toBeInTheDocument();
   });
+
+  it('should include fetch_from_slack parameter when fetchFromSlack is true', () => {
+    render(
+      <ChakraProvider>
+        <SlackUserDisplay 
+          userId="test-user-id" 
+          workspaceId="test-workspace-id"
+          fetchFromSlack={true}
+        />
+      </ChakraProvider>
+    );
+    
+    // Check that fetch was called with the right URL
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining('fetch_from_slack=true'),
+      expect.any(Object)
+    );
+    
+    // Check for loading state initially
+    expect(screen.getByText('Loading...')).toBeInTheDocument();
+  });
 });
+EOF < /dev/null
