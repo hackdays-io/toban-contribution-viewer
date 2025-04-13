@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { Text, Box } from '@chakra-ui/react';
+import { Box } from '@chakra-ui/react';
 import SlackUserDisplay from './SlackUserDisplay';
 
 interface MessageTextProps {
