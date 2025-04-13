@@ -4,7 +4,6 @@ Tests for the Slack channel analysis API endpoints.
 
 import uuid
 from datetime import datetime, timedelta
-from typing import Any, Dict
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -12,7 +11,7 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from app.api.v1.slack.analysis import router as analysis_router
-from app.models.slack import SlackChannel, SlackMessage, SlackUser, SlackWorkspace
+from app.models.slack import SlackChannel, SlackMessage, SlackUser
 from app.services.llm.openrouter import OpenRouterService
 
 

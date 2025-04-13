@@ -2,13 +2,22 @@
 Service for managing Slack channels.
 """
 
-# Export the get_channel_by_id function at the module level
-from typing import Optional
+import asyncio
+import logging
+import time
+from datetime import datetime
+from typing import Any, Dict, List, Optional, Set, Tuple
 
-from sqlalchemy import select
+from fastapi import HTTPException
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.slack import SlackChannel
+from app.db.session import AsyncSessionLocal
+from app.models.slack import SlackChannel, SlackWorkspace
+from app.services.slack.api import SlackApiClient, SlackApiError
+
+# Configure logging
+logger = logging.getLogger(__name__)
 
 
 async def get_channel_by_id(
@@ -31,24 +40,6 @@ async def get_channel_by_id(
         )
     )
     return result.scalars().first()
-
-
-import asyncio
-import logging
-import time
-from datetime import datetime
-from typing import Any, Dict, List, Optional, Set, Tuple
-
-from fastapi import HTTPException
-from sqlalchemy import select, update
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.db.session import AsyncSessionLocal
-from app.models.slack import SlackChannel, SlackWorkspace
-from app.services.slack.api import SlackApiClient, SlackApiError
-
-# Configure logging
-logger = logging.getLogger(__name__)
 
 
 class ChannelService:

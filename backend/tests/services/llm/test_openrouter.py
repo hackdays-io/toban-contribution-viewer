@@ -3,15 +3,13 @@ Tests for the OpenRouter service.
 """
 
 import json
-import os
 from datetime import datetime
-from typing import Any, Dict
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import httpx
 import pytest
 
-from app.services.llm.openrouter import OpenRouterMessage, OpenRouterRequest, OpenRouterService
+from app.services.llm.openrouter import OpenRouterService
 
 
 @pytest.fixture
@@ -333,7 +331,7 @@ async def test_analyze_channel_messages_with_datetime(
         start_date = datetime(2023, 5, 1)
         end_date = datetime(2023, 5, 31, 23, 59, 59)
 
-        result = await mock_openrouter_service.analyze_channel_messages(
+        await mock_openrouter_service.analyze_channel_messages(
             channel_name="general",
             messages_data=mock_messages_data,
             start_date=start_date,
