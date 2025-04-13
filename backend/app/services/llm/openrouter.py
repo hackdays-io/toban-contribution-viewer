@@ -14,7 +14,6 @@ import httpx
 from pydantic import BaseModel
 
 from app.config import settings
-
 from app.services.llm.prompt_templates import CHANNEL_ANALYSIS_PROMPT
 
 logger = logging.getLogger(__name__)
@@ -44,7 +43,11 @@ class OpenRouterService:
 
     def __init__(self):
         """Initialize the OpenRouter service with configuration from settings."""
-        self.api_key = settings.OPENROUTER_API_KEY.get_secret_value() if settings.OPENROUTER_API_KEY else None
+        self.api_key = (
+            settings.OPENROUTER_API_KEY.get_secret_value()
+            if settings.OPENROUTER_API_KEY
+            else None
+        )
         if not self.api_key:
             logger.warning("OPENROUTER_API_KEY not set in environment variables")
 
@@ -56,7 +59,8 @@ class OpenRouterService:
         # App info for OpenRouter headers
         self.app_name = "Toban Contribution Viewer"
         self.app_site = os.environ.get(
-            "SITE_DOMAIN", "toban-contribution-viewer.example.com")
+            "SITE_DOMAIN", "toban-contribution-viewer.example.com"
+        )
 
     async def analyze_channel_messages(
         self,
@@ -134,7 +138,7 @@ Provide insightful, specific, and actionable observations based on actual messag
                         "HTTP-Referer": f"https://{self.app_site}",
                         "X-Title": self.app_name,
                     },
-                    json=request.dict(),
+                    json=request.model_dump(),
                     timeout=60.0,  # Longer timeout for LLM processing
                 )
 

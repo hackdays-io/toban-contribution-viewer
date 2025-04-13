@@ -2,6 +2,37 @@
 Service for managing Slack channels.
 """
 
+# Export the get_channel_by_id function at the module level
+from typing import Optional
+
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.models.slack import SlackChannel
+
+
+async def get_channel_by_id(
+    db: AsyncSession, workspace_id: str, channel_id: str
+) -> Optional[SlackChannel]:
+    """
+    Get a channel by its ID.
+
+    Args:
+        db: Database session
+        workspace_id: UUID of the workspace
+        channel_id: UUID of the channel
+
+    Returns:
+        SlackChannel or None if not found
+    """
+    result = await db.execute(
+        select(SlackChannel).where(
+            SlackChannel.workspace_id == workspace_id, SlackChannel.id == channel_id
+        )
+    )
+    return result.scalars().first()
+
+
 import asyncio
 import logging
 import time

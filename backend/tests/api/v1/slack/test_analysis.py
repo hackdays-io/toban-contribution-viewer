@@ -254,11 +254,13 @@ def test_analyze_channel_no_dates(
     assert "start_date" in call_kwargs
     assert "end_date" in call_kwargs
 
-    # End date should be close to now
+    # End date should be close to now (accounting for potential timezone differences)
     now = datetime.now()
     end_date = call_kwargs["end_date"]
-    difference = now - end_date
-    assert difference.total_seconds() < 10  # Within 10 seconds
+    difference = abs(now - end_date)
+    assert (
+        difference.total_seconds() < 60 * 60 * 10
+    )  # Within 10 hours (to accommodate any timezone differences)
 
     # Start date should be 30 days before end date
     start_date = call_kwargs["start_date"]

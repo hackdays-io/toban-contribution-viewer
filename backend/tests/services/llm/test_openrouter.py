@@ -17,7 +17,13 @@ from app.services.llm.openrouter import OpenRouterMessage, OpenRouterRequest, Op
 @pytest.fixture
 def mock_openrouter_service():
     """Create an OpenRouter service with mocked API key."""
-    with patch.dict(os.environ, {"OPENROUTER_API_KEY": "test-api-key"}):
+    with patch("app.services.llm.openrouter.settings") as mock_settings:
+        # Mock the settings with test values
+        mock_settings.OPENROUTER_API_KEY.get_secret_value.return_value = "test-api-key"
+        mock_settings.OPENROUTER_DEFAULT_MODEL = "anthropic/claude-3-sonnet:20240229"
+        mock_settings.OPENROUTER_MAX_TOKENS = 4000
+        mock_settings.OPENROUTER_TEMPERATURE = 0.7
+
         service = OpenRouterService()
         return service
 
