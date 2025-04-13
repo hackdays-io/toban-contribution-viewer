@@ -23,16 +23,151 @@ if (usesMockClient) {
   // This approach prevents any actual network requests
   const mockResponse = { error: null, data: null };
   
-  // Create a dummy client with all methods mocked
+  // Create a comprehensive mock client for development mode
+  // This provides a more realistic experience without real auth
+  const mockUser = {
+    id: 'mock-user-id',
+    email: 'dev@example.com',
+    app_metadata: { provider: 'email' },
+    user_metadata: { name: 'Development User' },
+    aud: 'authenticated',
+    created_at: new Date().toISOString(),
+  };
+
+  const mockSession = {
+    access_token: 'mock-jwt-token',
+    refresh_token: 'mock-refresh-token',
+    expires_in: 3600,
+    expires_at: Math.floor(Date.now() / 1000) + 3600,
+    user: mockUser,
+  };
+
+  // Store mock auth state
+  let mockAuthState = {
+    isAuthenticated: false,
+    session: null as typeof mockSession | null,
+    user: null as typeof mockUser | null,
+    authChangeCallbacks: [] as Array<(event: string, session: any) => void>,
+  };
+
   supabase = {
     auth: {
-      getSession: async () => ({ data: { session: null }, error: null }),
-      getUser: async () => ({ data: { user: null }, error: null }),
-      signInWithPassword: async () => ({ data: null, error: { message: "Authentication is disabled with mock client" } }),
-      signInWithOAuth: async () => ({ data: null, error: { message: "Authentication is disabled with mock client" } }),
-      signUp: async () => ({ data: null, error: { message: "Authentication is disabled with mock client" } }),
-      signOut: async () => ({ error: null }),
+      // Get the current session
+      getSession: async () => {
+        console.info('Mock auth: getSession called');
+        return { 
+          data: { session: mockAuthState.session }, 
+          error: null 
+        };
+      },
+      
+      // Get the current user
+      getUser: async () => {
+        console.info('Mock auth: getUser called');
+        return { 
+          data: { user: mockAuthState.user }, 
+          error: null 
+        };
+      },
+      
+      // Sign in with email/password
+      signInWithPassword: async ({ email, password }: { email: string, password: string }) => {
+        console.info(`Mock auth: Signing in user ${email} in development mode`);
+        
+        // Mock successful login
+        mockAuthState.isAuthenticated = true;
+        mockAuthState.user = { ...mockUser, email };
+        mockAuthState.session = { ...mockSession, user: { ...mockUser, email } };
+        
+        // Notify listeners
+        mockAuthState.authChangeCallbacks.forEach(cb => 
+          cb('SIGNED_IN', mockAuthState.session)
+        );
+
+        return { 
+          data: { 
+            user: mockAuthState.user, 
+            session: mockAuthState.session 
+          }, 
+          error: null 
+        };
+      },
+      
+      // Sign in with OAuth provider
+      signInWithOAuth: async ({ provider }: { provider: string, options?: any }) => {
+        console.info(`Mock auth: OAuth sign-in with ${provider} in development mode`);
+        
+        // Since we can't do real OAuth flow, just redirect to dashboard in dev
+        setTimeout(() => {
+          window.location.href = '/dashboard';
+        }, 1000);
+        
+        return { 
+          data: { provider, url: '#' }, 
+          error: null 
+        };
+      },
+      
+      // Sign up with email/password
+      signUp: async ({ email, password }: { email: string, password: string, options?: any }) => {
+        console.info(`Mock auth: Registering user ${email} in development mode`);
+        
+        // In development, we'll simulate instant verification
+        mockAuthState.isAuthenticated = true;
+        mockAuthState.user = { ...mockUser, email };
+        mockAuthState.session = { ...mockSession, user: { ...mockUser, email } };
+        
+        // Notify listeners
+        mockAuthState.authChangeCallbacks.forEach(cb => 
+          cb('SIGNED_IN', mockAuthState.session)
+        );
+        
+        return { 
+          data: { 
+            user: mockAuthState.user, 
+            session: mockAuthState.session 
+          }, 
+          error: null 
+        };
+      },
+      
+      // Sign out
+      signOut: async () => {
+        console.info('Mock auth: Signing out in development mode');
+        
+        // Reset auth state
+        mockAuthState.isAuthenticated = false;
+        mockAuthState.user = null;
+        mockAuthState.session = null;
+        
+        // Notify listeners
+        mockAuthState.authChangeCallbacks.forEach(cb => 
+          cb('SIGNED_OUT', null)
+        );
+        
+        return { error: null };
+      },
+      
+      // Auth state change listener
+      onAuthStateChange: (callback: (event: string, session: any) => void) => {
+        console.info('Mock auth: Registered auth state change listener');
+        mockAuthState.authChangeCallbacks.push(callback);
+        
+        // Return mock subscription
+        return {
+          data: {
+            subscription: {
+              unsubscribe: () => {
+                mockAuthState.authChangeCallbacks = 
+                  mockAuthState.authChangeCallbacks.filter(cb => cb !== callback);
+              }
+            }
+          }
+        };
+      }
     },
+    
+    // Mock database operations
     from: () => ({
       select: () => ({ data: [], error: null }),
       insert: () => ({ data: null, error: null }),
@@ -47,78 +182,149 @@ if (usesMockClient) {
 
 export { supabase };
 
-// Auth helpers
+// Auth helpers - these work with both real and mock clients
 export const signIn = async (email: string, password: string) => {
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-  return { data, error };
+    // In development mode with mock client, redirect to dashboard after successful login
+    if (!error && data?.user && isUsingMockClient()) {
+      console.info('Mock auth successful, redirecting to dashboard');
+      setTimeout(() => {
+        window.location.href = '/dashboard';
+      }, 500);
+    }
+
+    return { data, error };
+  } catch (e) {
+    console.error('Error in signIn:', e);
+    return { data: null, error: e instanceof Error ? e : new Error('Unknown error during sign in') };
+  }
 };
 
 export const signUp = async (email: string, password: string) => {
-  // In development, provide auto-confirmation option if desired
-  if (env.isDev) {
-    console.log('Development mode: Proceeding with standard signup. You may need to verify via the Supabase dashboard.');
+  try {
+    // Determine if we're using the mock client
+    const usingMockClient = isUsingMockClient();
+    
+    // In mock mode, we'll provide a seamless experience
+    if (usingMockClient) {
+      console.info('Development mode: Using mock signup with auto-confirmation');
+      
+      // Use the appropriate method depending on the mock client structure
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`
+        }
+      });
+      
+      // Redirect to dashboard after fake signup 
+      if (!error) {
+        console.info('Mock signup successful, redirecting to dashboard shortly');
+        setTimeout(() => {
+          window.location.href = '/dashboard';
+        }, 1500);
+      }
+      
+      return { data, error };
+    }
+    
+    // In development with real client, provide info about email confirmation
+    if (env.isDev) {
+      console.info('Development mode: Proceeding with standard signup. Verification via Supabase dashboard may be needed.');
+    }
 
-    // Use standard flow for consistency
+    // Standard flow for all environments
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        // For development only - set this to true to bypass email confirmation
-        // This requires "Confirm email" to be disabled in Supabase Auth settings
         emailRedirectTo: `${window.location.origin}/auth/callback`
       }
     });
 
     return { data, error };
+  } catch (e) {
+    console.error('Error in signUp:', e);
+    return { data: null, error: e instanceof Error ? e : new Error('Unknown error during sign up') };
   }
-
-  // In production, use normal sign-up flow with email confirmation
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      emailRedirectTo: `${window.location.origin}/auth/callback`
-    }
-  });
-
-  return { data, error };
 };
 
 export const signOut = async () => {
-  const { error } = await supabase.auth.signOut();
-  return { error };
+  try {
+    const { error } = await supabase.auth.signOut();
+    
+    // In mock mode, redirect to login after signout
+    if (!error && isUsingMockClient()) {
+      console.info('Mock sign out successful, redirecting to login');
+      setTimeout(() => {
+        window.location.href = '/login';
+      }, 500);
+    }
+    
+    return { error };
+  } catch (e) {
+    console.error('Error in signOut:', e);
+    return { error: e instanceof Error ? e : new Error('Unknown error during sign out') };
+  }
 };
 
 export const getSession = async () => {
-  const { data, error } = await supabase.auth.getSession();
-  return { session: data.session, error };
+  try {
+    const { data, error } = await supabase.auth.getSession();
+    return { session: data.session, error };
+  } catch (e) {
+    console.error('Error in getSession:', e);
+    return { session: null, error: e instanceof Error ? e : new Error('Unknown error getting session') };
+  }
 };
 
 // Social login helpers
 export const signInWithGithub = async () => {
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: 'github',
-    options: {
-      redirectTo: `${window.location.origin}/auth/callback`,
-    },
-  });
+  try {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'github',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
 
-  return { data, error };
+    return { data, error };
+  } catch (e) {
+    console.error('Error in signInWithGithub:', e);
+    return { data: null, error: e instanceof Error ? e : new Error('Unknown error during GitHub sign in') };
+  }
 };
 
 export const signInWithGoogle = async () => {
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: {
-      redirectTo: `${window.location.origin}/auth/callback`,
-    },
-  });
+  try {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
 
-  return { data, error };
+    return { data, error };
+  } catch (e) {
+    console.error('Error in signInWithGoogle:', e);
+    return { data: null, error: e instanceof Error ? e : new Error('Unknown error during Google sign in') };
+  }
 };
+
+// Helper to detect if we're using mock client
+function isUsingMockClient(): boolean {
+  // Check if we have placeholder credentials
+  const isPlaceholder = (value: string) => {
+    return !value || value === 'your_supabase_url' || value === 'your_supabase_anon_key';
+  };
+  
+  return isPlaceholder(env.supabase.url) || isPlaceholder(env.supabase.anonKey);
+}
 
 export default supabase;

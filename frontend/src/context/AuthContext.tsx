@@ -35,17 +35,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         setLoading(true);
         
-        // Check if we have a mock implementation (environment with missing Supabase credentials)
-        const isMockEnvironment = !('onAuthStateChange' in supabase.auth);
-        
-        if (isMockEnvironment) {
-          console.info('Running in development mode with mock authentication. This is normal when using placeholder Supabase credentials.');
-          // In mock mode, allow access without authentication
-          setLoading(false);
-          return;
-        }
-        
-        // Normal auth flow with real Supabase client
+        // Always try to get the session, whether real or mock
         const { session, error } = await getSession();
 
         if (error) {
@@ -54,6 +44,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         setSession(session);
         setUser(session?.user || null);
+
+        // For mock clients, inform the developer
+        if (!session && 
+            !('http' in (supabase as any)) &&  // A way to detect mock client
+            window.location.hostname.includes('ngrok') || 
+            window.location.hostname === 'localhost') {
+          console.info('Running in development mode with mock authentication. This is normal when using placeholder Supabase credentials.');
+          console.info('You can proceed without authentication or use the login/signup forms with any credentials.');
+        }
       } catch (error) {
         setError(error as Error);
         console.error('Error initializing auth:', error);
@@ -64,25 +63,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     initializeAuth();
 
-    // Set up auth state change listener only if we have a real Supabase client
-    let authListener: { subscription?: { unsubscribe: () => void } } = {};
+    // Set up auth state change listener
+    // Our mock client now also supports this
+    const listener = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.info(`Auth state changed: ${event}`);
+        setSession(session);
+        setUser(session?.user || null);
+        setLoading(false);
+      }
+    );
     
-    if ('onAuthStateChange' in supabase.auth) {
-      const listener = supabase.auth.onAuthStateChange(
-        async (_event, session) => {
-          setSession(session);
-          setUser(session?.user || null);
-          setLoading(false);
-        }
-      );
-      
-      authListener = listener.data;
-    }
-
     // Clean up the subscription
     return () => {
-      if (authListener && authListener.subscription) {
-        authListener.subscription.unsubscribe();
+      if (listener && listener.data && listener.data.subscription) {
+        listener.data.subscription.unsubscribe();
       }
     };
   }, []);

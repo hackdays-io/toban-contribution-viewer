@@ -48,13 +48,30 @@ const Login: React.FC = () => {
         isClosable: true,
       });
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to login',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
+      // Check if we're using mock auth in development
+      const isMockEnv = process.env.NODE_ENV === 'development' && 
+                       (window.location.hostname.includes('ngrok') || 
+                        window.location.hostname === 'localhost');
+      
+      if (isMockEnv) {
+        // In development with mock auth, show a more helpful message
+        toast({
+          title: 'Development Mode',
+          description: 'Login functionality is mocked in development. Try any credentials or click "Sign In".',
+          status: 'info',
+          duration: 5000,
+          isClosable: true,
+        });
+      } else {
+        // Normal error handling in production
+        toast({
+          title: 'Error',
+          description: error instanceof Error ? error.message : 'Failed to login',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
+      }
     } finally {
       setLoading(false);
     }
