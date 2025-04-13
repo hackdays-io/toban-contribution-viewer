@@ -28,16 +28,12 @@ services:
       - ./backend:/app:cached
       # Create anonymous volume to prevent overwriting container directories
       - /app/__pycache__
+    env_file:
+      - ./.env.docker
+    # Explicit environment variables that override env_file
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER:-toban_admin}:${POSTGRES_PASSWORD:-postgres}@postgres/${POSTGRES_DB:-tobancv}
-      - SECRET_KEY=development_secret_key_change_in_production
-      - SUPABASE_URL=${SUPABASE_URL:-your_supabase_url}
-      - SUPABASE_KEY=${SUPABASE_KEY:-your_supabase_service_role_key}
-      - SUPABASE_JWT_SECRET=${SUPABASE_JWT_SECRET:-your_supabase_jwt_secret}
-      - OPENAI_API_KEY=${OPENAI_API_KEY:-your_openai_api_key}
-      - PYTHONDONTWRITEBYTECODE=1
-      - PYTHONUNBUFFERED=1
-      # Integration environment variables
+      # Use Slack variables from .env.docker file
       - SLACK_CLIENT_ID=${SLACK_CLIENT_ID}
       - SLACK_CLIENT_SECRET=${SLACK_CLIENT_SECRET}
       - SLACK_SIGNING_SECRET=${SLACK_SIGNING_SECRET}
@@ -46,11 +42,6 @@ services:
       - FRONTEND_URL=${NGROK_URL:-http://localhost:5173}
       # Add ngrok URL to CORS allowed origins
       - ADDITIONAL_CORS_ORIGINS=${NGROK_URL:-}
-      # For debugging
-      - DEBUG_NGROK_URL=${NGROK_URL:-}
-      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID:-}
-      - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET:-}
-      - NOTION_API_KEY=${NOTION_API_KEY:-}
     ports:
       - "8000:8000"
     depends_on:
@@ -69,6 +60,8 @@ services:
       - ./frontend:/app:cached
       # Use anonymous volume to prevent node_modules from being overwritten
       - /app/node_modules
+    env_file:
+      - ./.env.docker
     environment:
       # API URL for browser requests - always use localhost since we're in a browser context
       - VITE_API_URL=http://localhost:8000/api/v1
@@ -81,6 +74,8 @@ services:
       - VITE_ENABLE_NOTION_INTEGRATION=true
       - VITE_ENABLE_SLACK_INTEGRATION=true
       - VITE_ENABLE_GITHUB_INTEGRATION=true
+      # Variables for Slack integration in the frontend
+      - VITE_SLACK_CLIENT_ID=${SLACK_CLIENT_ID}
     ports:
       - "5173:5173"
     depends_on:
