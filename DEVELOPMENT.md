@@ -46,6 +46,32 @@ This document contains information and guides for developers working on the Toba
 
 ### Running the Application
 
+#### Using Docker (Recommended)
+
+The easiest way to run the application is using Docker:
+
+```bash
+# Make the script executable if needed
+chmod +x docker-dev.sh
+
+# Start the development environment
+./docker-dev.sh start
+```
+
+This will start both the frontend and backend containers, along with a PostgreSQL database.
+
+**Important Note about Environment Variables:** 
+- The Docker containers read environment variables from the `.env.docker` file in the project root.
+- If you're encountering issues with services not finding environment variables (particularly SLACK_CLIENT_ID, etc.), ensure these are correctly set in the `.env.docker` file.
+- You can check which environment variables are loaded by running:
+  ```bash
+  docker compose exec backend printenv | grep VARIABLE_NAME
+  ```
+
+#### Manual Setup
+
+If you prefer to run the application without Docker:
+
 1. Start the backend:
    ```bash
    cd backend
