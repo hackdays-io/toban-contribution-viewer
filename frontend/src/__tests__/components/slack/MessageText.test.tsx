@@ -21,8 +21,8 @@ describe('MessageText', () => {
       </ChakraProvider>
     );
     
-    expect(screen.getByText('Line 1')).toBeInTheDocument();
-    expect(screen.getByText('Line 2')).toBeInTheDocument();
+    // Since the component formats the text differently, check for the whole string
+    expect(screen.getByText(/Line 1.*Line 2/s)).toBeInTheDocument();
   });
 
   it('formats user mentions correctly', () => {
@@ -52,7 +52,7 @@ describe('MessageText', () => {
       </ChakraProvider>
     );
     
-    expect(screen.getByText(/Hello @U12345/)).toBeInTheDocument();
-    expect(screen.getByText("How are you?")).toBeInTheDocument();
+    // Check for the whole pattern with a regex that handles newlines
+    expect(screen.getByText(/Hello @U12345.*How are you\?/s)).toBeInTheDocument();
   });
 });

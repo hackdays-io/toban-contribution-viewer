@@ -38,6 +38,7 @@ import {
 // Import ThreadView component
 import ThreadView from './ThreadView'
 import SlackUserDisplay, { SlackUserCacheProvider } from './SlackUserDisplay'
+import MessageText from './MessageText'
 
 // Define types
 interface SlackMessage {
@@ -448,7 +449,7 @@ const MessageList: React.FC<MessageListProps> = ({
                               </Badge>
                             )}
                           </HStack>
-                          <Text>{message.text}</Text>
+                          <MessageText text={message.text} />
 
                           {/* Thread info */}
                           {message.is_thread_parent &&

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import env from '../../config/env';
 import SlackUserDisplay, { SlackUserCacheProvider } from './SlackUserDisplay'
+import MessageText from './MessageText'
 import {
   Box,
   Button,
@@ -189,7 +190,7 @@ const ThreadView: React.FC<ThreadViewProps> = ({
                 </Badge>
               )}
             </HStack>
-            <Text>{parentMessage.text}</Text>
+            <MessageText text={parentMessage.text} />
 
             {/* Reactions */}
             {parentMessage.reaction_count > 0 && (
@@ -229,7 +230,7 @@ const ThreadView: React.FC<ThreadViewProps> = ({
                 </Badge>
               )}
             </HStack>
-            <Text>{message.text}</Text>
+            <MessageText text={message.text} />
 
             {/* Reactions */}
             {message.reaction_count > 0 && (
