@@ -36,6 +36,7 @@ import {
 import { FiChevronRight, FiArrowLeft, FiClock, FiFileText } from 'react-icons/fi';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import env from '../../config/env';
+import MessageText from '../../components/slack/MessageText';
 
 interface StoredAnalysisResponse {
   id: string;
@@ -262,7 +263,22 @@ const ChannelAnalysisHistoryPage: React.FC = () => {
           <TabPanel>
             <Box>
               <Heading as="h3" size="md" mb={4}>Channel Summary</Heading>
-              <Text whiteSpace="pre-wrap">{selectedAnalysis.channel_summary}</Text>
+              <Box>
+                {selectedAnalysis.channel_summary.split('\n').map((paragraph, index) => (
+                  <Box key={index} mb={2}>
+                    {paragraph.trim() ? (
+                      <MessageText
+                        text={paragraph}
+                        workspaceId={workspaceId || ''}
+                        resolveMentions={true}
+                        fallbackToSimpleFormat={true}
+                      />
+                    ) : (
+                      <Box height="1em" />
+                    )}
+                  </Box>
+                ))}
+              </Box>
               
               <SimpleGrid columns={{ base: 2, md: 4 }} spacing={4} mt={6}>
                 <Stat>
@@ -289,7 +305,22 @@ const ChannelAnalysisHistoryPage: React.FC = () => {
           <TabPanel>
             <Box>
               <Heading as="h3" size="md" mb={4}>Topic Analysis</Heading>
-              <Text whiteSpace="pre-wrap">{selectedAnalysis.topic_analysis}</Text>
+              <Box>
+                {selectedAnalysis.topic_analysis.split('\n').map((paragraph, index) => (
+                  <Box key={index} mb={2}>
+                    {paragraph.trim() ? (
+                      <MessageText
+                        text={paragraph}
+                        workspaceId={workspaceId || ''}
+                        resolveMentions={true}
+                        fallbackToSimpleFormat={true}
+                      />
+                    ) : (
+                      <Box height="1em" />
+                    )}
+                  </Box>
+                ))}
+              </Box>
             </Box>
           </TabPanel>
           
@@ -297,7 +328,22 @@ const ChannelAnalysisHistoryPage: React.FC = () => {
           <TabPanel>
             <Box>
               <Heading as="h3" size="md" mb={4}>Contributor Insights</Heading>
-              <Text whiteSpace="pre-wrap">{selectedAnalysis.contributor_insights}</Text>
+              <Box>
+                {selectedAnalysis.contributor_insights.split('\n').map((paragraph, index) => (
+                  <Box key={index} mb={2}>
+                    {paragraph.trim() ? (
+                      <MessageText
+                        text={paragraph}
+                        workspaceId={workspaceId || ''}
+                        resolveMentions={true}
+                        fallbackToSimpleFormat={true}
+                      />
+                    ) : (
+                      <Box height="1em" />
+                    )}
+                  </Box>
+                ))}
+              </Box>
             </Box>
           </TabPanel>
           
@@ -305,7 +351,22 @@ const ChannelAnalysisHistoryPage: React.FC = () => {
           <TabPanel>
             <Box>
               <Heading as="h3" size="md" mb={4}>Key Highlights</Heading>
-              <Text whiteSpace="pre-wrap">{selectedAnalysis.key_highlights}</Text>
+              <Box>
+                {selectedAnalysis.key_highlights.split('\n').map((paragraph, index) => (
+                  <Box key={index} mb={2}>
+                    {paragraph.trim() ? (
+                      <MessageText
+                        text={paragraph}
+                        workspaceId={workspaceId || ''}
+                        resolveMentions={true}
+                        fallbackToSimpleFormat={true}
+                      />
+                    ) : (
+                      <Box height="1em" />
+                    )}
+                  </Box>
+                ))}
+              </Box>
             </Box>
           </TabPanel>
         </TabPanels>
