@@ -90,6 +90,10 @@ class Settings(BaseSettings):
 
     # Third-Party API Keys
     OPENAI_API_KEY: SecretStr
+    OPENROUTER_API_KEY: Optional[SecretStr] = None
+    OPENROUTER_DEFAULT_MODEL: str = "anthropic/claude-3-sonnet:20240229"
+    OPENROUTER_MAX_TOKENS: int = 4000
+    OPENROUTER_TEMPERATURE: float = 0.7
     SLACK_CLIENT_ID: Optional[str] = None
     SLACK_CLIENT_SECRET: Optional[SecretStr] = None
     SLACK_SIGNING_SECRET: Optional[SecretStr] = None

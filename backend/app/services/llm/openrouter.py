@@ -13,6 +13,8 @@ from typing import Any, Dict, List, Optional, Union
 import httpx
 from pydantic import BaseModel
 
+from app.config import settings
+
 from app.services.llm.prompt_templates import CHANNEL_ANALYSIS_PROMPT
 
 logger = logging.getLogger(__name__)
@@ -41,25 +43,20 @@ class OpenRouterService:
     API_URL = "https://openrouter.ai/api/v1/chat/completions"
 
     def __init__(self):
-        """Initialize the OpenRouter service with configuration from environment variables."""
-        self.api_key = os.environ.get("OPENROUTER_API_KEY")
+        """Initialize the OpenRouter service with configuration from settings."""
+        self.api_key = settings.OPENROUTER_API_KEY.get_secret_value() if settings.OPENROUTER_API_KEY else None
         if not self.api_key:
             logger.warning("OPENROUTER_API_KEY not set in environment variables")
 
         # Default configuration
-        self.default_model = os.environ.get(
-            "OPENROUTER_DEFAULT_MODEL", "anthropic/claude-3-sonnet:20240229"
-        )
-        self.default_max_tokens = int(os.environ.get("OPENROUTER_MAX_TOKENS", "4000"))
-        self.default_temperature = float(
-            os.environ.get("OPENROUTER_TEMPERATURE", "0.7")
-        )
+        self.default_model = settings.OPENROUTER_DEFAULT_MODEL
+        self.default_max_tokens = settings.OPENROUTER_MAX_TOKENS
+        self.default_temperature = settings.OPENROUTER_TEMPERATURE
 
         # App info for OpenRouter headers
         self.app_name = "Toban Contribution Viewer"
         self.app_site = os.environ.get(
-            "SITE_DOMAIN", "toban-contribution-viewer.example.com"
-        )
+            "SITE_DOMAIN", "toban-contribution-viewer.example.com")
 
     async def analyze_channel_messages(
         self,
