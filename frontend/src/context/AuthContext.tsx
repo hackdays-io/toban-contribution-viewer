@@ -46,10 +46,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(session?.user || null);
 
         // For mock clients, inform the developer
-        if (!session && 
-            !('http' in (supabase as any)) &&  // A way to detect mock client
-            window.location.hostname.includes('ngrok') || 
-            window.location.hostname === 'localhost') {
+        // Check if we're using a mock client and in a development environment
+        const isMockClient = !session && !('http' in (supabase as { http?: unknown }));
+        const isDevelopmentHost = window.location.hostname.includes('ngrok') || 
+                                 window.location.hostname === 'localhost';
+                                 
+        if (isMockClient && isDevelopmentHost) {
           console.info('Running in development mode with mock authentication. This is normal when using placeholder Supabase credentials.');
           console.info('You can proceed without authentication or use the login/signup forms with any credentials.');
         }

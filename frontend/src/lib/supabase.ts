@@ -21,7 +21,6 @@ if (usesMockClient) {
   
   // Create a fully mocked Supabase client to prevent CORS errors
   // This approach prevents any actual network requests
-  const mockResponse = { error: null, data: null };
   
   // Create a comprehensive mock client for development mode
   // This provides a more realistic experience without real auth
@@ -43,11 +42,11 @@ if (usesMockClient) {
   };
 
   // Store mock auth state
-  let mockAuthState = {
+  const mockAuthState = {
     isAuthenticated: false,
     session: null as typeof mockSession | null,
     user: null as typeof mockUser | null,
-    authChangeCallbacks: [] as Array<(event: string, session: any) => void>,
+    authChangeCallbacks: [] as Array<(event: string, session: typeof mockSession | null) => void>,
   };
 
   supabase = {
@@ -71,7 +70,7 @@ if (usesMockClient) {
       },
       
       // Sign in with email/password
-      signInWithPassword: async ({ email, password }: { email: string, password: string }) => {
+      signInWithPassword: async ({ email }: { email: string, password: string }) => {
         console.info(`Mock auth: Signing in user ${email} in development mode`);
         
         // Mock successful login
@@ -94,7 +93,7 @@ if (usesMockClient) {
       },
       
       // Sign in with OAuth provider
-      signInWithOAuth: async ({ provider }: { provider: string, options?: any }) => {
+      signInWithOAuth: async ({ provider }: { provider: string, options?: Record<string, unknown> }) => {
         console.info(`Mock auth: OAuth sign-in with ${provider} in development mode`);
         
         // Since we can't do real OAuth flow, just redirect to dashboard in dev
@@ -109,7 +108,7 @@ if (usesMockClient) {
       },
       
       // Sign up with email/password
-      signUp: async ({ email, password }: { email: string, password: string, options?: any }) => {
+      signUp: async ({ email }: { email: string, password: string, options?: Record<string, unknown> }) => {
         console.info(`Mock auth: Registering user ${email} in development mode`);
         
         // In development, we'll simulate instant verification
@@ -149,7 +148,7 @@ if (usesMockClient) {
       },
       
       // Auth state change listener
-      onAuthStateChange: (callback: (event: string, session: any) => void) => {
+      onAuthStateChange: (callback: (event: string, session: typeof mockSession | null) => void) => {
         console.info('Mock auth: Registered auth state change listener');
         mockAuthState.authChangeCallbacks.push(callback);
         
@@ -177,7 +176,7 @@ if (usesMockClient) {
   };
 } else {
   // Use actual Supabase client with real credentials
-  supabase = createClient(supabaseUrl, supabaseAnonKey);
+  supabase = createClient(supabaseUrl, supabaseAnonKey) as typeof supabase;
 }
 
 export { supabase };

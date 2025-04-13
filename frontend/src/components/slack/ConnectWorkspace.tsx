@@ -7,7 +7,15 @@ import env from '../../config/env';
  */
 const ConnectWorkspace: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const [corsDebugInfo, setCorsDebugInfo] = useState<any>(null);
+  interface CorsDebugInfo {
+    allowed_origins: string[];
+    additional_cors_origins: string;
+    ngrok_url: string;
+    api_url: string | null;
+    frontend_url: string | null;
+    debug_mode: boolean;
+  }
+  const [corsDebugInfo, setCorsDebugInfo] = useState<CorsDebugInfo | null>(null);
   const [showDebugInfo, setShowDebugInfo] = useState(false);
   const [corsError, setCorsError] = useState(false);
   const toast = useToast();
