@@ -614,7 +614,6 @@ const MessageList: React.FC<MessageListProps> = ({
         channelId={channelId}
         threadTs={selectedThreadTs}
         parentMessage={selectedThreadParent}
-        users={users}
       />
     </Box>
     </SlackUserCacheProvider>

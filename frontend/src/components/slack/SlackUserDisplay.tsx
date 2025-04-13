@@ -34,6 +34,7 @@ export interface SlackUserDisplayProps {
   isLink?: boolean;            // Optional: Whether to make the name a clickable link to profile (default: false)
   asComponent?: React.ElementType; // Optional: Render as a different component (default: 'span')
   hideOnError?: boolean;       // Optional: Hide component if there's an error fetching user info (default: false)
+  fetchFromSlack?: boolean;    // Optional: Fetch user data from Slack API if not found in DB (default: false)
   // For testing only - don't use in production
   _skipLoading?: boolean;      // Skip loading state (for testing)
   _testUser?: SlackUser | null; // Provide test user (for testing)
