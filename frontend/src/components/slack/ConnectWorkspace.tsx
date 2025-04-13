@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Button, Box, Heading, Text, VStack, useToast, Spinner } from '@chakra-ui/react';
+import env from '../../config/env';
 
 /**
  * Component to connect a Slack workspace using OAuth.
@@ -16,7 +17,7 @@ const ConnectWorkspace: React.FC = () => {
       setIsLoading(true);
 
       // Get OAuth URL from backend without a redirect URI (let the backend determine it)
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/slack/oauth-url`);
+      const response = await fetch(`${env.apiUrl}/slack/oauth-url`);
 
       if (!response.ok) {
         const error = await response.json();

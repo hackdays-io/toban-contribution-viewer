@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import env from '../../config/env';
 import {
   Box,
   Button,
@@ -122,7 +123,7 @@ const MessageList: React.FC<MessageListProps> = ({
       setIsLoading(true)
 
       // Construct the URL with query parameters
-      let url = `${import.meta.env.VITE_API_URL}/slack/workspaces/${workspaceId}/channels/${channelId}/messages?include_replies=${includeReplies}`
+      let url = `${env.apiUrl}/slack/workspaces/${workspaceId}/channels/${channelId}/messages?include_replies=${includeReplies}`
 
       if (startDate) {
         // Create a date at the beginning of the selected day (00:00:00)
@@ -203,7 +204,7 @@ const MessageList: React.FC<MessageListProps> = ({
       const userIdsParam = validUserIds
         .map((id) => `user_ids=${encodeURIComponent(id)}`)
         .join('&')
-      const url = `${import.meta.env.VITE_API_URL}/slack/workspaces/${workspaceId}/users?${userIdsParam}`
+      const url = `${env.apiUrl}/slack/workspaces/${workspaceId}/users?${userIdsParam}`
 
       // Fetch user data from API
 
@@ -298,7 +299,7 @@ const MessageList: React.FC<MessageListProps> = ({
         thread_days: 30, // Sync last 30 days of threads by default
       }
 
-      const syncUrl = `${import.meta.env.VITE_API_URL}/slack/workspaces/${workspaceId}/channels/${channelId}/sync`
+      const syncUrl = `${env.apiUrl}/slack/workspaces/${workspaceId}/channels/${channelId}/sync`
       // Start the sync process
 
       const response = await fetch(syncUrl, {

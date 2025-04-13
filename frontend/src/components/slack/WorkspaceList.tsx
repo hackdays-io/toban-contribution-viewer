@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import env from '../../config/env';
 import {
   Box,
   Heading,
@@ -62,7 +63,7 @@ const WorkspaceList: React.FC = () => {
   const fetchWorkspaces = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/slack/workspaces`);
+      const response = await fetch(`${env.apiUrl}/slack/workspaces`);
 
       if (!response.ok) {
         throw new Error('Failed to fetch workspaces');
@@ -92,7 +93,7 @@ const WorkspaceList: React.FC = () => {
 
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/slack/workspaces/${workspaceId}/verify`
+        `${env.apiUrl}/slack/workspaces/${workspaceId}/verify`
       );
 
       if (!response.ok) {
@@ -134,7 +135,7 @@ const WorkspaceList: React.FC = () => {
 
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/slack/workspaces/${selectedWorkspace.id}`,
+        `${env.apiUrl}/slack/workspaces/${selectedWorkspace.id}`,
         {
           method: 'DELETE',
         }

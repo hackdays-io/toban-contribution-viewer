@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import env from '../../config/env';
 import {
   Box,
   Button,
@@ -126,7 +127,7 @@ const ThreadView: React.FC<ThreadViewProps> = ({
     try {
       setIsLoading(true)
       const limit = 1000 // Increased limit to get more replies
-      const url = `${import.meta.env.VITE_API_URL}/slack/workspaces/${workspaceId}/channels/${channelId}/threads/${threadTs}?limit=${limit}`
+      const url = `${env.apiUrl}/slack/workspaces/${workspaceId}/channels/${channelId}/threads/${threadTs}?limit=${limit}`
       
       const response = await fetch(url)
 

@@ -5,6 +5,40 @@ import '../../../__tests__/setup';
 import { ChakraProvider } from '@chakra-ui/react';
 import React from 'react';
 
+// Mock the env config
+vi.mock('../../../config/env', () => ({
+  default: {
+    apiUrl: 'http://localhost:8000/api/v1',
+    isDev: true,
+    features: {
+      enableSlack: true,
+    },
+    supabase: {
+      url: 'mock-url',
+      anonKey: 'mock-key',
+      redirectUri: 'http://localhost:3000/auth/callback',
+    }
+  },
+  getEnvVar: (name) => {
+    if (name === 'VITE_API_URL') return 'http://localhost:8000/api/v1';
+    return 'mock-value';
+  },
+  getBooleanEnvVar: () => true,
+  validateEnvironment: () => true,
+  env: {
+    apiUrl: 'http://localhost:8000/api/v1',
+    isDev: true,
+    features: {
+      enableSlack: true,
+    },
+    supabase: {
+      url: 'mock-url',
+      anonKey: 'mock-key',
+      redirectUri: 'http://localhost:3000/auth/callback',
+    }
+  }
+}));
+
 // Mock Chakra Modal component to avoid framer-motion issues in tests
 vi.mock('@chakra-ui/react', async () => {
   const actual = await vi.importActual('@chakra-ui/react');

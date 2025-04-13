@@ -165,7 +165,7 @@ const ChannelList: React.FC = () => {
       console.log("Fetching all channels:", queryParams.toString());
 
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/slack/workspaces/${workspaceId}/channels?${queryParams}`
+        `${env.apiUrl}/slack/workspaces/${workspaceId}/channels?${queryParams}`
       );
 
       if (!response.ok) {
@@ -211,7 +211,7 @@ const ChannelList: React.FC = () => {
 
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/slack/workspaces/${workspaceId}/sync-status`
+        `${env.apiUrl}/slack/workspaces/${workspaceId}/sync-status`
       );
 
       if (!response.ok) {
@@ -305,7 +305,7 @@ const ChannelList: React.FC = () => {
 
       // Start the background sync process
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/slack/workspaces/${workspaceId}/channels/sync?${queryParams}`,
+        `${env.apiUrl}/slack/workspaces/${workspaceId}/channels/sync?${queryParams}`,
         { method: 'POST' }
       );
 
@@ -368,7 +368,7 @@ const ChannelList: React.FC = () => {
 
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/slack/workspaces/${workspaceId}/channels/select`,
+        `${env.apiUrl}/slack/workspaces/${workspaceId}/channels/select`,
         {
           method: 'POST',
           headers: {
