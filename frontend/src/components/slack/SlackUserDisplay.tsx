@@ -389,9 +389,9 @@ const SlackUserDisplay: React.FC<SlackUserDisplayProps> = ({
     
     return (
       <Tooltip label="Error loading user data">
-        <Text as={Component} color={errorColor} fontSize="sm">
+        <Box as={Component} color={errorColor} fontSize="sm">
           {fallback || userId || 'Unknown User'}
-        </Text>
+        </Box>
       </Tooltip>
     );
   }
@@ -413,7 +413,7 @@ const SlackUserDisplay: React.FC<SlackUserDisplayProps> = ({
           {getDisplayName()}
         </Link>
       ) : (
-        <Text>{getDisplayName()}</Text>
+        <Box as="span">{getDisplayName()}</Box>
       )}
     </Flex>
   );
