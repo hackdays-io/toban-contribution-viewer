@@ -99,3 +99,43 @@ When the server is running, access the auto-generated OpenAPI documentation:
 
 - Swagger UI: http://localhost:8000/docs
 - ReDoc: http://localhost:8000/redoc
+
+## Features
+
+### Slack Integration
+
+The backend provides robust integration with Slack workspaces:
+
+- OAuth-based workspace connection
+- Channel management
+- Message syncing and retrieval
+- Thread support
+
+### LLM-Powered Analytics
+
+The application uses large language models via OpenRouter to provide analytics:
+
+- Channel communication analysis
+- Topic identification
+- Contributor insights
+- Key conversation highlights
+
+For details, see:
+- [OpenRouter Integration](./docs/integrations/openrouter.md)
+- [Channel Analysis API](./docs/api/channel-analysis.md)
+
+## Environment Variables
+
+In addition to the database configuration, you'll need to set the following environment variables:
+
+```
+# Slack API credentials
+SLACK_CLIENT_ID=your_slack_client_id
+SLACK_CLIENT_SECRET=your_slack_client_secret
+
+# OpenRouter (for LLM analytics)
+OPENROUTER_API_KEY=your_openrouter_api_key
+OPENROUTER_DEFAULT_MODEL=anthropic/claude-3-opus:20240229
+OPENROUTER_MAX_TOKENS=4000
+OPENROUTER_TEMPERATURE=0.7
+```
