@@ -38,6 +38,11 @@ class Settings(BaseSettings):
         allowed_hosts = list(v)
         additional_cors = values.get("ADDITIONAL_CORS_ORIGINS", "")
 
+        # Add specific NGROK_URL if it exists
+        ngrok_url = os.environ.get("NGROK_URL")
+        if ngrok_url and ngrok_url.strip():
+            allowed_hosts.append(ngrok_url.strip())
+
         if additional_cors:
             # Split by comma and filter out empty strings
             origins = [
@@ -47,7 +52,29 @@ class Settings(BaseSettings):
             ]
             allowed_hosts.extend(origins)
 
-        return allowed_hosts
+        # CORS security in browsers typically doesn't support wildcards,
+        # so we need to add specific domains
+        explicit_allowed_hosts = []
+        for host in allowed_hosts:
+            explicit_allowed_hosts.append(host)
+
+            # Handle wildcards in ngrok domains
+            if ("*.ngrok-free.app" in host or "*.ngrok.io" in host) and ngrok_url:
+                # If we have ngrok URL and we're dealing with a wildcard ngrok domain,
+                # add the specific domain explicitly
+                if "ngrok-free.app" in ngrok_url or "ngrok.io" in ngrok_url:
+                    explicit_allowed_hosts.append(ngrok_url)
+
+        # Always ensure summary-locust-arriving.ngrok-free.app is included
+        if (
+            "https://summary-locust-arriving.ngrok-free.app"
+            not in explicit_allowed_hosts
+        ):
+            explicit_allowed_hosts.append(
+                "https://summary-locust-arriving.ngrok-free.app"
+            )
+
+        return explicit_allowed_hosts
 
     # Secret Keys
     SECRET_KEY: str

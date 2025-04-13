@@ -143,9 +143,17 @@ const MessageList: React.FC<MessageListProps> = ({
         url += `&cursor=${cursor}`
       }
 
-      // Fetch messages from API
-
-      const response = await fetch(url)
+      // Fetch messages from API with CORS headers
+      const response = await fetch(url, {
+        method: 'GET',
+        mode: 'cors',
+        credentials: 'include',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Origin': window.location.origin
+        }
+      })
 
       if (!response.ok) {
         const errorText = await response.text()
@@ -206,9 +214,17 @@ const MessageList: React.FC<MessageListProps> = ({
         .join('&')
       const url = `${env.apiUrl}/slack/workspaces/${workspaceId}/users?${userIdsParam}`
 
-      // Fetch user data from API
-
-      const response = await fetch(url)
+      // Fetch user data from API with CORS headers
+      const response = await fetch(url, {
+        method: 'GET',
+        mode: 'cors',
+        credentials: 'include',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Origin': window.location.origin
+        }
+      })
 
       if (!response.ok) {
         const errorText = await response.text()

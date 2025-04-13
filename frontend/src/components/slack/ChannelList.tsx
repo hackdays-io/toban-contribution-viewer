@@ -175,7 +175,17 @@ const ChannelList: React.FC = () => {
       console.log("Fetching all channels:", queryParams.toString());
 
       const response = await fetch(
-        `${env.apiUrl}/slack/workspaces/${workspaceId}/channels?${queryParams}`
+        `${env.apiUrl}/slack/workspaces/${workspaceId}/channels?${queryParams}`,
+        {
+          method: 'GET',
+          mode: 'cors',
+          credentials: 'include',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Origin': window.location.origin
+          }
+        }
       );
 
       if (!response.ok) {
@@ -331,10 +341,19 @@ const ChannelList: React.FC = () => {
         batch_size: '200', // Process in batches of 200 channels
       });
 
-      // Start the background sync process
+      // Start the background sync process with explicit CORS headers
       const response = await fetch(
         `${env.apiUrl}/slack/workspaces/${workspaceId}/channels/sync?${queryParams}`,
-        { method: 'POST' }
+        { 
+          method: 'POST',
+          mode: 'cors',
+          credentials: 'include',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Origin': window.location.origin
+          }
+        }
       );
 
       if (!response.ok) {
@@ -399,8 +418,12 @@ const ChannelList: React.FC = () => {
         `${env.apiUrl}/slack/workspaces/${workspaceId}/channels/select`,
         {
           method: 'POST',
+          mode: 'cors',
+          credentials: 'include',
           headers: {
+            'Accept': 'application/json',
             'Content-Type': 'application/json',
+            'Origin': window.location.origin
           },
           body: JSON.stringify({
             channel_ids: selectedChannels,

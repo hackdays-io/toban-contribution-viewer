@@ -129,7 +129,16 @@ const ThreadView: React.FC<ThreadViewProps> = ({
       const limit = 1000 // Increased limit to get more replies
       const url = `${env.apiUrl}/slack/workspaces/${workspaceId}/channels/${channelId}/threads/${threadTs}?limit=${limit}`
       
-      const response = await fetch(url)
+      const response = await fetch(url, {
+        method: 'GET',
+        mode: 'cors',
+        credentials: 'include',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Origin': window.location.origin
+        }
+      })
 
       if (!response.ok) {
         throw new Error(

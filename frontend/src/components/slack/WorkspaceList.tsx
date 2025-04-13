@@ -72,8 +72,17 @@ const WorkspaceList: React.FC = () => {
     setCorsError(false);
     
     try {
-      // Make the API request
-      const response = await fetch(`${env.apiUrl}/slack/workspaces`);
+      // Make the API request with explicit CORS settings
+      const response = await fetch(`${env.apiUrl}/slack/workspaces`, {
+        method: 'GET',
+        mode: 'cors',
+        credentials: 'include',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Origin': window.location.origin
+        }
+      });
 
       if (!response.ok) {
         throw new Error('Failed to fetch workspaces');
@@ -121,7 +130,17 @@ const WorkspaceList: React.FC = () => {
     
     try {
       const response = await fetch(
-        `${env.apiUrl}/slack/workspaces/${workspaceId}/verify`
+        `${env.apiUrl}/slack/workspaces/${workspaceId}/verify`,
+        {
+          method: 'GET',
+          mode: 'cors',
+          credentials: 'include',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Origin': window.location.origin
+          }
+        }
       );
 
       if (!response.ok) {
