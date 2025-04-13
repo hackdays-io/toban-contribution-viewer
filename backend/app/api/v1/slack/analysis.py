@@ -9,8 +9,6 @@ import logging
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 
-logger = logging.getLogger(__name__)
-
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -20,6 +18,8 @@ from app.services.llm.analysis_store import AnalysisStoreService
 from app.services.llm.openrouter import OpenRouterService
 from app.services.slack.channels import get_channel_by_id
 from app.services.slack.messages import get_channel_messages, get_channel_users
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 

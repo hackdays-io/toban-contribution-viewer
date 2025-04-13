@@ -5,9 +5,9 @@ Service for storing and retrieving LLM analysis results in the database.
 import logging
 import uuid
 from datetime import datetime
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional
 
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.slack import SlackAnalysis, SlackChannel, SlackChannelAnalysis
