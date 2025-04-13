@@ -61,16 +61,98 @@ const WorkspaceList: React.FC = () => {
    * Fetch connected workspaces from the API.
    */
   const fetchWorkspaces = async () => {
+    const isNgrokOrLocalhost = window.location.hostname.includes('ngrok') || 
+                               window.location.hostname === 'localhost';
+    const isDevelopmentMode = env.isDev || process.env.NODE_ENV === 'development';
+    const useDevelopmentWorkaround = isDevelopmentMode && isNgrokOrLocalhost;
+    
     try {
       setIsLoading(true);
-      const response = await fetch(`${env.apiUrl}/slack/workspaces`);
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch workspaces');
+      
+      // For development with ngrok, use a different CORS approach
+      if (useDevelopmentWorkaround) {
+        console.info('Using development mode CORS workaround for fetching workspaces');
+        
+        // Check if we're attempting to access localhost from a non-localhost domain
+        const isAccessingLocalhost = env.apiUrl.includes('localhost') && window.location.hostname !== 'localhost';
+        
+        if (isAccessingLocalhost) {
+          console.info('CORS workaround: Using mock workspaces data for development');
+          
+          // Simulate network delay
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
+          // Use mock data to prevent CORS errors in development
+          const mockWorkspaces = [
+            {
+              id: 'mock-workspace-id',
+              name: 'Mock Slack Workspace',
+              team_id: 'T12345',
+              team_name: 'Mock Team',
+              team_domain: 'mockteam',
+              bot_name: 'Toban Bot',
+              is_connected: true,
+              has_valid_token: true,
+              channel_count: 5,
+              connected_at: new Date().toISOString(),
+              last_used_at: new Date().toISOString(),
+            }
+          ];
+          
+          setWorkspaces(mockWorkspaces);
+          return;
+        }
       }
+      
+      // Standard API call
+      try {
+        const response = await fetch(`${env.apiUrl}/slack/workspaces`);
 
-      const data = await response.json();
-      setWorkspaces(data.workspaces || []);
+        if (!response.ok) {
+          throw new Error('Failed to fetch workspaces');
+        }
+
+        const data = await response.json();
+        setWorkspaces(data.workspaces || []);
+      } catch (networkError) {
+        console.error('Network error fetching workspaces:', networkError);
+        
+        // If in development mode, provide a fallback
+        if (useDevelopmentWorkaround) {
+          console.info('CORS or network error in development mode. Using mock workspaces data.');
+          
+          // Use mock data to prevent CORS errors in development
+          const mockWorkspaces = [
+            {
+              id: 'mock-workspace-id',
+              name: 'Mock Slack Workspace',
+              team_id: 'T12345',
+              team_name: 'Mock Team',
+              team_domain: 'mockteam',
+              bot_name: 'Toban Bot',
+              is_connected: true,
+              has_valid_token: true,
+              channel_count: 5,
+              connected_at: new Date().toISOString(),
+              last_used_at: new Date().toISOString(),
+            }
+          ];
+          
+          setWorkspaces(mockWorkspaces);
+          
+          toast({
+            title: 'Development Mode',
+            description: 'Using mock workspace data due to CORS/network issues with localhost API.',
+            status: 'info',
+            duration: 5000,
+            isClosable: true,
+          });
+          return;
+        }
+        
+        // Otherwise show the error in production
+        throw networkError;
+      }
     } catch (error) {
       console.error('Error fetching workspaces:', error);
       toast({
@@ -90,11 +172,39 @@ const WorkspaceList: React.FC = () => {
    */
   const refreshWorkspace = async (workspaceId: string) => {
     setIsRefreshing(workspaceId);
+    
+    const isNgrokOrLocalhost = window.location.hostname.includes('ngrok') || 
+                             window.location.hostname === 'localhost';
+    const isDevelopmentMode = env.isDev || process.env.NODE_ENV === 'development';
+    const useDevelopmentWorkaround = isDevelopmentMode && isNgrokOrLocalhost;
 
     try {
-      const response = await fetch(
-        `${env.apiUrl}/slack/workspaces/${workspaceId}/verify`
-      );
+      // For development with ngrok, check if we're trying to access localhost
+      if (useDevelopmentWorkaround && env.apiUrl.includes('localhost') && 
+          window.location.hostname !== 'localhost') {
+        console.info('Using development mode CORS workaround for refreshing workspace');
+          
+        // Simulate network delay
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
+        toast({
+          title: 'Development Mode',
+          description: 'Workspace connection verified (mock)',
+          status: 'success',
+          duration: 5000,
+          isClosable: true,
+        });
+        
+        // Refresh the workspace list with our mocks
+        fetchWorkspaces();
+        return;
+      }
+      
+      // Standard API call
+      try {
+        const response = await fetch(
+          `${env.apiUrl}/slack/workspaces/${workspaceId}/verify`
+        );
 
       if (!response.ok) {
         const error = await response.json();
@@ -133,13 +243,42 @@ const WorkspaceList: React.FC = () => {
   const handleDisconnect = async () => {
     if (!selectedWorkspace) return;
 
+    const isNgrokOrLocalhost = window.location.hostname.includes('ngrok') || 
+                            window.location.hostname === 'localhost';
+    const isDevelopmentMode = env.isDev || process.env.NODE_ENV === 'development';
+    const useDevelopmentWorkaround = isDevelopmentMode && isNgrokOrLocalhost;
+
     try {
-      const response = await fetch(
-        `${env.apiUrl}/slack/workspaces/${selectedWorkspace.id}`,
-        {
-          method: 'DELETE',
-        }
-      );
+      // For development with ngrok, check if we're trying to access localhost
+      if (useDevelopmentWorkaround && env.apiUrl.includes('localhost') && 
+          window.location.hostname !== 'localhost') {
+        console.info('Using development mode CORS workaround for disconnecting workspace');
+          
+        // Simulate network delay
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
+        toast({
+          title: 'Development Mode',
+          description: 'Workspace disconnected successfully (mock)',
+          status: 'success',
+          duration: 5000,
+          isClosable: true,
+        });
+        
+        // Refresh the workspace list with our mocks (will show empty list since we "disconnected")
+        setWorkspaces([]);
+        onClose();
+        return;
+      }
+      
+      // Standard API call
+      try {
+        const response = await fetch(
+          `${env.apiUrl}/slack/workspaces/${selectedWorkspace.id}`,
+          {
+            method: 'DELETE',
+          }
+        );
 
       if (!response.ok) {
         const error = await response.json();
@@ -156,6 +295,29 @@ const WorkspaceList: React.FC = () => {
 
       // Refresh the list
       fetchWorkspaces();
+      } catch (networkError) {
+        console.error('Network error disconnecting workspace:', networkError);
+        
+        // If in development mode, provide a fallback
+        if (useDevelopmentWorkaround) {
+          console.info('CORS or network error in development mode. Using mock disconnect flow.');
+          
+          toast({
+            title: 'Development Mode',
+            description: 'Workspace disconnected successfully (mock)',
+            status: 'success',
+            duration: 5000,
+            isClosable: true,
+          });
+          
+          // Remove the workspace from the list
+          setWorkspaces([]);
+          return;
+        }
+        
+        // Otherwise show the error in production
+        throw networkError;
+      }
     } catch (error) {
       console.error('Error disconnecting workspace:', error);
       toast({
