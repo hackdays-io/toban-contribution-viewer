@@ -169,7 +169,7 @@ describe('ThreadView', () => {
     render(<ThreadView {...defaultProps} />, { wrapper: Wrapper });
     
     expect(global.fetch).toHaveBeenCalledWith(
-      `http://localhost:8000/api/v1/slack/workspaces/W123/channels/C123/threads/1617984000.000100`
+      `http://localhost:8000/api/v1/slack/workspaces/W123/channels/C123/threads/1617984000.000100?limit=1000`
     );
   });
 
