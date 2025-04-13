@@ -311,6 +311,9 @@ async def slack_oauth_callback(
             status_code=500, detail="Slack integration is not properly configured"
         )
 
+    # Log the OAuth callback (with only first few chars of the code for security)
+    logger.info(f"OAuth callback received with code={code[:5]}... and state={state}")
+
     try:
         # Exchange code for token and handle errors
         token_data = await _exchange_code_for_token(code)
