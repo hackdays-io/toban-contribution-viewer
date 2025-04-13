@@ -121,19 +121,13 @@ const ThreadView: React.FC<ThreadViewProps> = ({
 
   /**
    * Fetch thread replies from the API.
-   * @param forceRefresh Whether to force a refresh from Slack API
    */
-  const fetchThreadReplies = async (forceRefresh = false) => {
+  const fetchThreadReplies = async () => {
     try {
       setIsLoading(true)
       const limit = 1000 // Increased limit to get more replies
-      let url = `${import.meta.env.VITE_API_URL}/slack/workspaces/${workspaceId}/channels/${channelId}/threads/${threadTs}?limit=${limit}`
+      const url = `${import.meta.env.VITE_API_URL}/slack/workspaces/${workspaceId}/channels/${channelId}/threads/${threadTs}?limit=${limit}`
       
-      // Add force_refresh parameter if requested
-      if (forceRefresh) {
-        url += '&force_refresh=true'
-      }
-
       console.log('Fetching thread replies from:', url)
       const response = await fetch(url)
 
@@ -166,11 +160,10 @@ const ThreadView: React.FC<ThreadViewProps> = ({
 
   /**
    * Refresh thread replies.
-   * @param forceRefresh Whether to force a refresh from Slack API
    */
-  const refreshThreadReplies = (forceRefresh = false) => {
+  const refreshThreadReplies = () => {
     setIsRefreshing(true)
-    fetchThreadReplies(forceRefresh)
+    fetchThreadReplies() // No parameter needed anymore
   }
 
   /**
@@ -311,30 +304,8 @@ const ThreadView: React.FC<ThreadViewProps> = ({
                     mb={2}
                     onClick={() => {
                       // Load more replies by increasing the limit
-                      const url = `${import.meta.env.VITE_API_URL}/slack/workspaces/${workspaceId}/channels/${channelId}/threads/${threadTs}?limit=1000`;
-                      
-                      fetch(url)
-                        .then(response => {
-                          if (!response.ok) {
-                            throw new Error(`Error loading more replies: ${response.status}`);
-                          }
-                          return response.json();
-                        })
-                        .then(data => {
-                          setReplies(data.replies || []);
-                          setTotalReplies(data.total_replies || 0);
-                          setHasMore(data.has_more || false);
-                        })
-                        .catch(error => {
-                          console.error('Error loading more replies:', error);
-                          toast({
-                            title: 'Error',
-                            description: 'Failed to load more replies',
-                            status: 'error',
-                            duration: 5000,
-                            isClosable: true,
-                          });
-                        });
+                      // Now uses the same fetchThreadReplies function for consistency
+                      fetchThreadReplies();
                     }}
                   >
                     Load More Replies
@@ -350,29 +321,15 @@ const ThreadView: React.FC<ThreadViewProps> = ({
           )}
         </ModalBody>
         <ModalFooter>
-          <HStack spacing={2}>
-            <Button
-              leftIcon={<Icon as={FiRefreshCw} />}
-              colorScheme="purple"
-              variant="outline"
-              size="sm"
-              onClick={() => refreshThreadReplies(true)}
-              isLoading={isRefreshing}
-              title="Force refresh from Slack API"
-            >
-              Force Refresh
-            </Button>
-            
-            <Button
-              leftIcon={<Icon as={FiRefreshCw} />}
-              colorScheme="purple"
-              size="sm"
-              onClick={() => refreshThreadReplies(false)}
-              isLoading={isRefreshing}
-            >
-              Refresh
-            </Button>
-          </HStack>
+          <Button
+            leftIcon={<Icon as={FiRefreshCw} />}
+            colorScheme="purple"
+            onClick={refreshThreadReplies}
+            isLoading={isRefreshing}
+            mr={3}
+          >
+            Refresh
+          </Button>
           
           <Button variant="ghost" onClick={onClose}>
             Close
