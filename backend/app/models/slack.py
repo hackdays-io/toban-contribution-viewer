@@ -341,6 +341,17 @@ class SlackAnalysis(Base, BaseModel):
     end_date = Column(DateTime, nullable=False)
     parameters = Column(JSONB, nullable=True)  # Custom analysis parameters
 
+    # LLM configuration
+    llm_model = Column(String(255), nullable=True)
+    analysis_type = Column(String(50), default="channel_analysis", nullable=False)
+
+    # Scheduling
+    is_scheduled = Column(Boolean, default=False, nullable=False)
+    schedule_frequency = Column(
+        String(50), nullable=True
+    )  # 'daily', 'weekly', 'monthly'
+    next_run_at = Column(DateTime, nullable=True)
+
     # Status
     status = Column(String(50), default="pending", nullable=False)
     progress = Column(Float, default=0.0, nullable=False)
@@ -367,6 +378,9 @@ class SlackAnalysis(Base, BaseModel):
     )
     contributions: Mapped[List["SlackContribution"]] = relationship(
         "SlackContribution", back_populates="analysis"
+    )
+    channel_analyses: Mapped[List["SlackChannelAnalysis"]] = relationship(
+        "SlackChannelAnalysis", back_populates="analysis", cascade="all, delete-orphan"
     )
 
     def __repr__(self) -> str:
@@ -433,3 +447,64 @@ class SlackContribution(Base, BaseModel):
 
     def __repr__(self) -> str:
         return f"<SlackContribution by {self.user_id} in analysis {self.analysis_id}>"
+
+
+class SlackChannelAnalysis(Base, BaseModel):
+    """
+    Model for storing LLM channel analysis results.
+
+    This model stores detailed results from LLM analysis of Slack channels,
+    including summaries, topic analysis, and insights about communication patterns.
+    """
+
+    # Foreign keys
+    analysis_id = Column(
+        UUID(as_uuid=True), ForeignKey("slackanalysis.id"), nullable=False, index=True
+    )
+    channel_id = Column(
+        UUID(as_uuid=True), ForeignKey("slackchannel.id"), nullable=False, index=True
+    )
+
+    # Analysis period
+    start_date = Column(DateTime, nullable=False)
+    end_date = Column(DateTime, nullable=False)
+
+    # Statistics
+    message_count = Column(Integer, default=0, nullable=False)
+    participant_count = Column(Integer, default=0, nullable=False)
+    thread_count = Column(Integer, default=0, nullable=False)
+    reaction_count = Column(Integer, default=0, nullable=False)
+
+    # Analysis content sections
+    channel_summary = Column(Text, nullable=True)
+    topic_analysis = Column(Text, nullable=True)
+    contributor_insights = Column(Text, nullable=True)
+    key_highlights = Column(Text, nullable=True)
+
+    # LLM metadata
+    model_used = Column(String(255), nullable=True)
+    generated_at = Column(DateTime, nullable=False, index=True)
+    raw_response = Column(JSONB, nullable=True)  # Store the full LLM response
+
+    # Status tracking
+    status = Column(String(50), default="completed", nullable=False)
+    error_message = Column(Text, nullable=True)
+
+    # Relationships
+    analysis: Mapped["SlackAnalysis"] = relationship(
+        "SlackAnalysis", back_populates="channel_analyses"
+    )
+    channel: Mapped["SlackChannel"] = relationship("SlackChannel")
+
+    # Ensure uniqueness of analysis per channel
+    __table_args__ = (
+        Index(
+            "ix_slackchannelanalysis_analysis_id_channel_id",
+            "analysis_id",
+            "channel_id",
+            unique=True,
+        ),
+    )
+
+    def __repr__(self) -> str:
+        return f"<SlackChannelAnalysis for channel {self.channel_id} in analysis {self.analysis_id}>"
