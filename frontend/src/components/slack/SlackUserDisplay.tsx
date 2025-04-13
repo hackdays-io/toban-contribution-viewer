@@ -309,7 +309,7 @@ const SlackUserDisplay: React.FC<SlackUserDisplayProps> = ({
     };
     
     fetchUserData();
-  }, [userId, workspaceId, context, _skipLoading, _testUser]);
+  }, [userId, workspaceId, context, _skipLoading, _testUser, fetchFromSlack]);
   
   // Subscribe to changes in context for this user
   useEffect(() => {
