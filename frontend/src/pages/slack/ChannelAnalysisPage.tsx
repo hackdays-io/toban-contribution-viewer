@@ -136,18 +136,25 @@ const ChannelAnalysisPage: React.FC = () => {
         }
       }
       
-      // Fetch channel info
+      // Fetch channel info - get only bot-installed channels
+      const queryParams = new URLSearchParams({
+        bot_installed_only: 'true'
+      });
+      
       const channelResponse = await fetch(
-        `${env.apiUrl}/slack/workspaces/${workspaceId}/channels`
+        `${env.apiUrl}/slack/workspaces/${workspaceId}/channels?${queryParams}`
       );
       
       if (channelResponse.ok) {
         const channelsData = await channelResponse.json();
-        const matchedChannel = channelsData.channels.find(
-          (c: Channel) => c.id === channelId
-        );
-        if (matchedChannel) {
-          setChannel(matchedChannel);
+        // Find the specific channel by ID
+        if (channelsData.channels && Array.isArray(channelsData.channels)) {
+          const matchedChannel = channelsData.channels.find(
+            (c: Channel) => c.id === channelId
+          );
+          if (matchedChannel) {
+            setChannel(matchedChannel);
+          }
         }
       }
     } catch (error) {
@@ -308,9 +315,11 @@ const ChannelAnalysisPage: React.FC = () => {
               </FormControl>
             </HStack>
             
-            <FormHelperText>
-              Select a date range and options for analysis. A larger date range will take longer to analyze.
-            </FormHelperText>
+            <FormControl>
+              <FormHelperText>
+                Select a date range and options for analysis. A larger date range will take longer to analyze.
+              </FormHelperText>
+            </FormControl>
             
             <Divider />
             

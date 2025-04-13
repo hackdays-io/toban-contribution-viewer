@@ -55,6 +55,8 @@ class ChannelService:
         include_archived: bool = False,
         page: int = 1,
         page_size: int = 100,
+        bot_installed_only: bool = False,
+        selected_for_analysis_only: bool = False,
     ) -> Dict[str, Any]:
         """
         Get channels for a specific workspace with pagination.
@@ -67,6 +69,8 @@ class ChannelService:
             include_archived: Whether to include archived channels
             page: Page number for pagination (1-indexed)
             page_size: Number of items per page
+            bot_installed_only: Only include channels where the bot is installed
+            selected_for_analysis_only: Only include channels that are selected for analysis
 
         Returns:
             Dictionary containing the channels and pagination metadata
@@ -118,6 +122,16 @@ class ChannelService:
             query = query.where(SlackChannel.is_archived.is_(False))
             logger.info("Excluded archived channels")
 
+        # Apply bot installation filter if requested
+        if bot_installed_only:
+            query = query.where(SlackChannel.is_bot_member.is_(True))
+            logger.info("Filtered to only include channels where bot is installed")
+
+        # Apply analysis selection filter if requested
+        if selected_for_analysis_only:
+            query = query.where(SlackChannel.is_selected_for_analysis.is_(True))
+            logger.info("Filtered to only include channels selected for analysis")
+
         # Apply pagination
         offset = (page - 1) * page_size
         query = query.order_by(SlackChannel.name).offset(offset).limit(page_size)
@@ -151,6 +165,22 @@ class ChannelService:
         if not include_archived:
             count_query = count_query.where(SlackChannel.is_archived.is_(False))
             logger.info("Excluded archived channels from count query")
+
+        # Apply bot installation filter if requested
+        if bot_installed_only:
+            count_query = count_query.where(SlackChannel.is_bot_member.is_(True))
+            logger.info(
+                "Filtered count query to only include channels where bot is installed"
+            )
+
+        # Apply analysis selection filter if requested
+        if selected_for_analysis_only:
+            count_query = count_query.where(
+                SlackChannel.is_selected_for_analysis.is_(True)
+            )
+            logger.info(
+                "Filtered count query to only include channels selected for analysis"
+            )
 
         try:
             count_result = await db.execute(count_query)
