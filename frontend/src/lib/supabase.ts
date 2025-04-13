@@ -10,15 +10,20 @@ const isPlaceholder = (value: string) => {
   return !value || value === 'your_supabase_url' || value === 'your_supabase_anon_key';
 };
 
-// Create a mock client if values are placeholders to avoid breaking the app
+// Create Supabase client with real or mock credentials
+let clientUrl = supabaseUrl;
+let clientKey = supabaseAnonKey;
+
+// Use mock credentials if needed
 if (isPlaceholder(supabaseUrl) || isPlaceholder(supabaseAnonKey)) {
   console.warn('Using mock Supabase client. Authentication will not work.');
   // Use a valid URL format for the mock client
-  export const supabase = createClient('https://example.com', 'mock_key');
-} else {
-  // Use actual credentials
-  export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+  clientUrl = 'https://example.com';
+  clientKey = 'mock_key';
 }
+
+// Create the client
+export const supabase = createClient(clientUrl, clientKey);
 
 // Auth helpers
 export const signIn = async (email: string, password: string) => {
