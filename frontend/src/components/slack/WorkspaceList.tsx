@@ -201,10 +201,9 @@ const WorkspaceList: React.FC = () => {
       }
       
       // Standard API call
-      try {
-        const response = await fetch(
-          `${env.apiUrl}/slack/workspaces/${workspaceId}/verify`
-        );
+      const response = await fetch(
+        `${env.apiUrl}/slack/workspaces/${workspaceId}/verify`
+      );
 
       if (!response.ok) {
         const error = await response.json();
@@ -225,13 +224,35 @@ const WorkspaceList: React.FC = () => {
       fetchWorkspaces();
     } catch (error) {
       console.error('Error refreshing workspace:', error);
-      toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to refresh workspace',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
+      
+      // If network error in development mode, provide a fallback
+      if (error instanceof Error && 
+          (error.message.includes('Failed to fetch') || 
+           error.message.includes('NetworkError') || 
+           error.message.includes('CORS')) && 
+          useDevelopmentWorkaround) {
+        
+        console.info('CORS or network error in development mode. Using mock refresh response.');
+        
+        toast({
+          title: 'Development Mode',
+          description: 'Workspace connection verified (mock)',
+          status: 'success',
+          duration: 5000,
+          isClosable: true,
+        });
+        
+        // Refresh the workspace list with our mocks
+        fetchWorkspaces();
+      } else {
+        toast({
+          title: 'Error',
+          description: error instanceof Error ? error.message : 'Failed to refresh workspace',
+          status: 'error',
+          duration: 5000,
+          isClosable: true,
+        });
+      }
     } finally {
       setIsRefreshing(null);
     }
@@ -272,13 +293,12 @@ const WorkspaceList: React.FC = () => {
       }
       
       // Standard API call
-      try {
-        const response = await fetch(
-          `${env.apiUrl}/slack/workspaces/${selectedWorkspace.id}`,
-          {
-            method: 'DELETE',
-          }
-        );
+      const response = await fetch(
+        `${env.apiUrl}/slack/workspaces/${selectedWorkspace.id}`,
+        {
+          method: 'DELETE',
+        }
+      );
 
       if (!response.ok) {
         const error = await response.json();
@@ -295,38 +315,37 @@ const WorkspaceList: React.FC = () => {
 
       // Refresh the list
       fetchWorkspaces();
-      } catch (networkError) {
-        console.error('Network error disconnecting workspace:', networkError);
-        
-        // If in development mode, provide a fallback
-        if (useDevelopmentWorkaround) {
-          console.info('CORS or network error in development mode. Using mock disconnect flow.');
-          
-          toast({
-            title: 'Development Mode',
-            description: 'Workspace disconnected successfully (mock)',
-            status: 'success',
-            duration: 5000,
-            isClosable: true,
-          });
-          
-          // Remove the workspace from the list
-          setWorkspaces([]);
-          return;
-        }
-        
-        // Otherwise show the error in production
-        throw networkError;
-      }
     } catch (error) {
       console.error('Error disconnecting workspace:', error);
-      toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to disconnect workspace',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
+      
+      // If network error in development mode, provide a fallback
+      if (error instanceof Error && 
+          (error.message.includes('Failed to fetch') || 
+           error.message.includes('NetworkError') || 
+           error.message.includes('CORS')) && 
+          useDevelopmentWorkaround) {
+        
+        console.info('CORS or network error in development mode. Using mock disconnect flow.');
+        
+        toast({
+          title: 'Development Mode',
+          description: 'Workspace disconnected successfully (mock)',
+          status: 'success',
+          duration: 5000,
+          isClosable: true,
+        });
+        
+        // Remove the workspace from the list
+        setWorkspaces([]);
+      } else {
+        toast({
+          title: 'Error',
+          description: error instanceof Error ? error.message : 'Failed to disconnect workspace',
+          status: 'error',
+          duration: 5000,
+          isClosable: true,
+        });
+      }
     } finally {
       onClose();
     }
