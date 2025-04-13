@@ -181,4 +181,3 @@ describe('SlackUserDisplay', () => {
     expect(screen.getByText('Loading...')).toBeInTheDocument();
   });
 });
-EOF < /dev/null
