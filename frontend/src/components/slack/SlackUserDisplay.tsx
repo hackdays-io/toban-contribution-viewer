@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useContext, createContext } from 'react';
 import {
-  Box,
+  // Box, // Uncomment if needed
   Avatar,
   Text,
   Flex,
-  Spinner,
+  // Spinner, // Uncomment if needed
   Tooltip,
   Link,
-  SkeletonText,
-  SkeletonCircle,
+  // SkeletonText, // Uncomment if needed
+  // SkeletonCircle, // Uncomment if needed
   useColorModeValue,
 } from '@chakra-ui/react';
 import env from '../../config/env';
@@ -55,7 +55,7 @@ interface UserCacheContextType {
 const UserCacheContext = createContext<UserCacheContextType | undefined>(undefined);
 
 // Provider component for the UserCache
-export const SlackUserCacheProvider: React.FC<{ children: React.ReactNode, workspaceId: string }> = ({ children, workspaceId }) => {
+export const SlackUserCacheProvider: React.FC<{ children: React.ReactNode, workspaceId: string }> = ({ children }) => {
   const [users, setUsers] = useState<Map<string, SlackUser>>(new Map());
   const [loading, setLoading] = useState<Set<string>>(new Set());
   const [errors, setErrors] = useState<Set<string>>(new Set());

@@ -403,24 +403,13 @@ const MessageList: React.FC<MessageListProps> = ({
 
   /**
    * Get user information for a message.
+   * Note: This function is no longer used since we're using SlackUserDisplay component
    */
-  const getUserInfo = (userId: string | null) => {
-    if (!userId) return { name: 'Unknown User', avatar: null }
-    const user = users.get(userId)
-
-    // Choose the best name to display in this order of preference:
-    // 1. display_name (what appears in Slack UI)
-    // 2. real_name (full name if available)
-    // 3. name (username/handle)
-    // If none available, fallback to "Unknown User"
-    const displayName =
-      user?.display_name || user?.real_name || user?.name || 'Unknown User'
-
-    return {
-      name: displayName,
-      avatar: user?.profile_image_url,
-    }
-  }
+  // const getUserInfo = (userId: string | null) => {
+  //    name: displayName,
+  //    avatar: user?.profile_image_url,
+  //  }
+  //}
 
   /**
    * Filter messages by search query (client-side filtering).
