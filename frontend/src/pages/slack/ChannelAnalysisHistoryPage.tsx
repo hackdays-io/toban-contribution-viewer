@@ -57,13 +57,15 @@ interface StoredAnalysisResponse {
 
 interface Channel {
   id: string;
+  slack_id: string;
   name: string;
-  topic: string;
-  purpose: string;
+  type: string;
+  topic?: string;
+  purpose?: string;
   is_archived: boolean;
-  member_count: number;
-  is_bot_member: boolean;
-  is_selected_for_analysis: boolean;
+  member_count?: number;
+  is_bot_member?: boolean;
+  is_selected_for_analysis?: boolean;
 }
 
 const ChannelAnalysisHistoryPage: React.FC = () => {
@@ -95,22 +97,57 @@ const ChannelAnalysisHistoryPage: React.FC = () => {
 
   const fetchChannel = async () => {
     try {
+      // Get the channel from the channels list API with query parameters
+      const queryParams = new URLSearchParams({
+        bot_installed_only: 'true'
+      });
+      
       const response = await fetch(
-        `${env.apiUrl}/slack/workspaces/${workspaceId}/channels/${channelId}`
+        `${env.apiUrl}/slack/workspaces/${workspaceId}/channels?${queryParams}`
       );
       
       if (!response.ok) {
-        throw new Error(`Error fetching channel: ${response.status} ${response.statusText}`);
+        throw new Error(`Error fetching channels: ${response.status} ${response.statusText}`);
       }
       
       const data = await response.json();
-      setChannel(data);
+      
+      // Find the specific channel by ID
+      if (data.channels && Array.isArray(data.channels)) {
+        const matchedChannel = data.channels.find(
+          (c: Channel) => c.id === channelId
+        );
+        
+        if (matchedChannel) {
+          setChannel(matchedChannel);
+        } else {
+          // If not found, try another request without the bot_installed filter
+          const allChannelsResponse = await fetch(
+            `${env.apiUrl}/slack/workspaces/${workspaceId}/channels`
+          );
+          
+          if (allChannelsResponse.ok) {
+            const allChannelsData = await allChannelsResponse.json();
+            const foundChannel = allChannelsData.channels.find(
+              (c: Channel) => c.id === channelId
+            );
+            
+            if (foundChannel) {
+              setChannel(foundChannel);
+            } else {
+              throw new Error(`Channel with ID ${channelId} not found`);
+            }
+          } else {
+            throw new Error(`Error fetching all channels: ${allChannelsResponse.status}`);
+          }
+        }
+      }
     } catch (error) {
       console.error('Error fetching channel:', error);
       toast({
-        title: 'Error',
-        description: 'Failed to load channel information',
-        status: 'error',
+        title: 'Notice',
+        description: 'Could not load channel details, but analysis history is still available',
+        status: 'info',
         duration: 5000,
         isClosable: true,
       });
