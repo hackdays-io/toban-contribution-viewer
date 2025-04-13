@@ -24,6 +24,7 @@ import {
   AnalyticsPage as SlackAnalyticsPage,
   ChannelAnalysisPage as SlackChannelAnalysisPage,
 } from './pages/slack'
+import ChannelAnalysisHistoryPage from './pages/slack/ChannelAnalysisHistoryPage'
 
 // Create a default theme
 const theme = extendTheme({})
@@ -119,6 +120,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <SlackChannelAnalysisPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard/analytics/slack/channels/:workspaceId/:channelId/history"
+                element={
+                  <ProtectedRoute>
+                    <ChannelAnalysisHistoryPage />
                   </ProtectedRoute>
                 }
               />

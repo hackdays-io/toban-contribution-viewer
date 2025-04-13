@@ -169,6 +169,23 @@ const AnalyticsPage: React.FC = () => {
       });
     }
   };
+  
+  /**
+   * Handle viewing analysis history for a channel.
+   */
+  const handleViewHistory = () => {
+    if (selectedWorkspace && selectedChannel) {
+      navigate(`/dashboard/analytics/slack/channels/${selectedWorkspace}/${selectedChannel}/history`);
+    } else {
+      toast({
+        title: 'Selection Required',
+        description: 'Please select both a workspace and a channel to view history',
+        status: 'warning',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
 
   /**
    * Render the workspace and channel selection form.
@@ -214,14 +231,24 @@ const AnalyticsPage: React.FC = () => {
           </FormControl>
         </SimpleGrid>
         
-        <Button
-          colorScheme="purple"
-          onClick={handleAnalyzeChannel}
-          isDisabled={!selectedWorkspace || !selectedChannel}
-          leftIcon={<Icon as={FiBarChart2} />}
-        >
-          Analyze Channel
-        </Button>
+        <HStack spacing={4}>
+          <Button
+            colorScheme="purple"
+            onClick={handleAnalyzeChannel}
+            isDisabled={!selectedWorkspace || !selectedChannel}
+            leftIcon={<Icon as={FiBarChart2} />}
+          >
+            Analyze Channel
+          </Button>
+          <Button
+            colorScheme="blue"
+            variant="outline"
+            onClick={handleViewHistory}
+            isDisabled={!selectedWorkspace || !selectedChannel}
+          >
+            View Analysis History
+          </Button>
+        </HStack>
       </Box>
     );
   };
