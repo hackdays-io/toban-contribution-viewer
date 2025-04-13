@@ -298,10 +298,12 @@ const MessageList: React.FC<MessageListProps> = ({
         start_date: startDateTime ? startDateTime.toISOString() : null,
         end_date: endDateTime ? endDateTime.toISOString() : null,
         include_replies: includeReplies,
+        sync_threads: true, // Always sync threads
+        thread_days: 30, // Sync last 30 days of threads by default
       }
 
       const syncUrl = `${import.meta.env.VITE_API_URL}/slack/workspaces/${workspaceId}/channels/${channelId}/sync`
-      console.log('Syncing messages with:', syncUrl, dateRange)
+      console.log('Syncing messages and threads with:', syncUrl, dateRange)
 
       const response = await fetch(syncUrl, {
         method: 'POST',
@@ -319,11 +321,13 @@ const MessageList: React.FC<MessageListProps> = ({
         )
       }
 
-      await response.json() // Process response but we don't need to use it
+      const result = await response.json() // Process response
 
       toast({
         title: 'Sync Started',
-        description: 'Messages are being synchronized in the background.',
+        description: result.sync_threads 
+          ? 'Messages and thread replies are being synchronized in the background.' 
+          : 'Messages are being synchronized in the background.',
         status: 'info',
         duration: 5000,
         isClosable: true,
@@ -428,63 +432,15 @@ const MessageList: React.FC<MessageListProps> = ({
         </Heading>
         <HStack spacing={3}>
           <Button
-            leftIcon={<Icon as={FiMessageSquare} />}
-            colorScheme="teal"
-            size="md"
-            onClick={() => {
-              // Fix thread parent flags first
-              fetch(`${import.meta.env.VITE_API_URL}/slack/fix-thread-parent-flags`, { method: 'POST' })
-                .then(response => {
-                  if (!response.ok) {
-                    throw new Error(`Error fixing thread parent flags: ${response.status}`);
-                  }
-                  return response.json();
-                })
-                .then(() => {
-                  // Then sync thread replies with Slack API
-                  const syncUrl = `${import.meta.env.VITE_API_URL}/slack/workspaces/${workspaceId}/channels/${channelId}/sync-threads`;
-                  return fetch(syncUrl, { method: 'POST' });
-                })
-                .then(response => {
-                  if (!response.ok) {
-                    throw new Error(`Error syncing threads: ${response.status}`);
-                  }
-                  return response.json();
-                })
-                .then(data => {
-                  toast({
-                    title: 'Thread Sync',
-                    description: `Synced ${data.replies_synced} replies for ${data.threads_synced} threads`,
-                    status: 'success',
-                    duration: 5000,
-                    isClosable: true,
-                  });
-                  // Refresh messages after sync
-                  setTimeout(() => {
-                    fetchMessages();
-                  }, 1000);
-                })
-                .catch(error => {
-                  console.error('Error syncing threads:', error);
-                  toast({
-                    title: 'Error',
-                    description: 'Failed to sync thread replies',
-                    status: 'error',
-                    duration: 5000,
-                    isClosable: true,
-                  });
-                });
-            }}
-          >
-            Sync Threads
-          </Button>
-          <Button
             leftIcon={<Icon as={FiRefreshCw} />}
             colorScheme="purple"
             isLoading={isSyncing}
-            onClick={syncMessages}
+            onClick={() => {
+              // Use the unified sync endpoint that handles both messages and threads
+              syncMessages();
+            }}
           >
-            Sync Messages
+            Sync Messages & Threads
           </Button>
         </HStack>
       </HStack>

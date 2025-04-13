@@ -1023,10 +1023,14 @@ class SlackMessageService:
         start_date: Optional[datetime] = None,
         end_date: Optional[datetime] = None,
         include_replies: bool = True,
+        sync_threads: bool = True,
+        thread_days: int = 30,
         batch_size: int = 200,
     ) -> Dict[str, Any]:
         """
-        Sync messages from a Slack channel to the database.
+        Sync messages and thread replies from a Slack channel to the database.
+
+        This method fetches all normal messages and their thread replies in a single operation.
 
         Args:
             db: Database session
@@ -1034,7 +1038,9 @@ class SlackMessageService:
             channel_id: UUID of the channel
             start_date: Optional start date for filtering messages
             end_date: Optional end date for filtering messages
-            include_replies: Whether to include thread replies
+            include_replies: Whether to include thread replies during message sync
+            sync_threads: Whether to explicitly sync thread replies after message sync
+            thread_days: Number of days of thread messages to sync
             batch_size: Number of messages to process in each batch
 
         Returns:
@@ -1161,6 +1167,117 @@ class SlackMessageService:
             logger.error(f"Error fixing message user references: {str(e)}")
             fixed_count = 0
 
+        # Sync thread replies if requested
+        thread_sync_results = {
+            "threads_synced": 0,
+            "replies_synced": 0,
+            "thread_errors": 0,
+        }
+
+        if sync_threads:
+            try:
+                logger.info(f"Starting thread sync for channel {channel.name}")
+
+                # First, make sure thread parent flags are set correctly
+                # Use direct SQL for efficiency
+                thread_flag_sql = """
+                UPDATE slackmessage 
+                SET is_thread_parent = TRUE
+                WHERE channel_id = :channel_id
+                  AND reply_count > 0 
+                  AND (thread_ts = slack_ts OR thread_ts IS NULL)
+                  AND is_thread_parent = FALSE
+                """
+
+                result = await db.execute(
+                    text(thread_flag_sql), {"channel_id": channel_id}
+                )
+                fixed_thread_flags = (
+                    result.rowcount if hasattr(result, "rowcount") else 0
+                )
+                await db.commit()
+
+                logger.info(f"Fixed {fixed_thread_flags} thread parent flags")
+
+                # Get all thread parent messages in the timeframe
+                end_date_for_threads = datetime.utcnow()
+                start_date_for_threads = end_date_for_threads - timedelta(
+                    days=thread_days
+                )
+
+                parent_result = await db.execute(
+                    select(SlackMessage).where(
+                        SlackMessage.channel_id == channel_id,
+                        SlackMessage.is_thread_parent.is_(True),
+                        SlackMessage.message_datetime >= start_date_for_threads,
+                        SlackMessage.message_datetime <= end_date_for_threads,
+                    )
+                )
+                parents = parent_result.scalars().all()
+
+                thread_sync_results["threads_synced"] = len(parents)
+
+                # Process each thread
+                for parent in parents:
+                    try:
+                        # Fetch thread replies with pagination
+                        thread_replies = await SlackMessageService._fetch_thread_replies_with_pagination(
+                            access_token=workspace.access_token,
+                            channel_id=channel.slack_id,
+                            thread_ts=parent.slack_ts,
+                        )
+
+                        # Process each reply
+                        for reply in thread_replies:
+                            # Skip the parent message
+                            if reply.get("ts") == parent.slack_ts:
+                                continue
+
+                            # Check if reply already exists
+                            existing_result = await db.execute(
+                                select(SlackMessage).where(
+                                    SlackMessage.channel_id == channel_id,
+                                    SlackMessage.slack_ts == reply.get("ts"),
+                                )
+                            )
+                            existing = existing_result.scalars().first()
+
+                            if not existing:
+                                # Process and store the reply
+                                reply_data = (
+                                    await SlackMessageService._prepare_message_data(
+                                        db=db,
+                                        workspace_id=workspace_id,
+                                        channel=channel,
+                                        message=reply,
+                                    )
+                                )
+
+                                # Create new reply
+                                db_reply = SlackMessage(**reply_data)
+                                db.add(db_reply)
+                                thread_sync_results["replies_synced"] += 1
+
+                        # Update parent with latest counts
+                        if thread_replies:
+                            parent.reply_count = (
+                                len(thread_replies) - 1
+                            )  # Subtract 1 for parent message
+
+                    except Exception as e:
+                        logger.error(
+                            f"Error syncing thread {parent.slack_ts}: {str(e)}"
+                        )
+                        thread_sync_results["thread_errors"] += 1
+
+                # Commit all thread changes
+                await db.commit()
+                logger.info(f"Thread sync completed: {thread_sync_results}")
+
+            except Exception as e:
+                logger.error(f"Error during thread sync: {str(e)}")
+                thread_sync_results["thread_errors"] += 1
+
         # Calculate sync stats
         elapsed_time = time.time() - start_time
         return {
@@ -1172,5 +1289,8 @@ class SlackMessageService:
             "updated_message_count": updated_message_count,
             "error_count": error_count,
             "fixed_references_count": fixed_count,
+            "threads_synced": thread_sync_results["threads_synced"],
+            "replies_synced": thread_sync_results["replies_synced"],
+            "thread_errors": thread_sync_results["thread_errors"],
             "elapsed_time": elapsed_time,
         }

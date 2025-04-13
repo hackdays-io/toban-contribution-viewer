@@ -259,7 +259,13 @@ async def sync_channel_messages(
     date_range: Optional[DateRangeRequest] = None,
     background_tasks: BackgroundTasks = BackgroundTasks(),
     include_replies: bool = Query(
-        True, description="Whether to include thread replies"
+        True, description="Whether to include thread replies during message sync"
+    ),
+    sync_threads: bool = Query(
+        True, description="Whether to sync thread replies after message sync"
+    ),
+    thread_days: int = Query(
+        30, ge=1, le=90, description="Number of days of thread messages to sync"
     ),
     batch_size: int = Query(
         200, ge=50, le=1000, description="Number of messages per batch"
@@ -267,9 +273,9 @@ async def sync_channel_messages(
     db: AsyncSession = Depends(get_async_db),
 ) -> Dict[str, Any]:
     """
-    Sync messages from a Slack channel to the database.
+    Sync messages and thread replies from a Slack channel to the database.
 
-    This endpoint initiates a background task for syncing messages to prevent timeouts.
+    This endpoint initiates a background task for syncing both regular messages and thread replies.
     It returns immediately with a status message while the sync continues in the background.
 
     Args:
@@ -277,7 +283,9 @@ async def sync_channel_messages(
         channel_id: UUID of the channel
         date_range: Optional date range for filtering messages
         background_tasks: FastAPI background tasks handler
-        include_replies: Whether to include thread replies
+        include_replies: Whether to include thread replies during message sync
+        sync_threads: Whether to sync thread replies after message sync
+        thread_days: Number of days of thread messages to sync
         batch_size: Number of messages to process in each batch
         db: Database session
 
@@ -286,9 +294,10 @@ async def sync_channel_messages(
     """
     try:
         logger.info(
-            f"Initiating message sync for channel {channel_id} in workspace {workspace_id}, "
+            f"Initiating message & thread sync for channel {channel_id} in workspace {workspace_id}, "
             f"date range: {date_range.start_date if date_range else None} to "
-            f"{date_range.end_date if date_range else None}, batch_size: {batch_size}"
+            f"{date_range.end_date if date_range else None}, batch_size: {batch_size}, "
+            f"sync_threads: {sync_threads}, thread_days: {thread_days}"
         )
 
         # Prepare safe dates (timezone-naive) for the background task
@@ -322,17 +331,21 @@ async def sync_channel_messages(
             start_date=safe_start_date,
             end_date=safe_end_date,
             include_replies=include_replies,
+            sync_threads=sync_threads,
+            thread_days=thread_days,
             batch_size=batch_size,
         )
 
+        msg_type = "Message & thread" if sync_threads else "Message"
         return {
             "status": "syncing",
             "message": (
-                "Message synchronization started. This process will continue in the background "
+                f"{msg_type} synchronization started. This process will continue in the background "
                 "and may take a few minutes depending on the date range and message volume."
             ),
             "workspace_id": workspace_id,
             "channel_id": channel_id,
+            "sync_threads": sync_threads,
         }
     except HTTPException:
         raise
@@ -676,138 +689,58 @@ async def sync_thread_replies(
     workspace_id: str,
     channel_id: str,
     days: int = Query(
-        7, ge=1, le=30, description="Days of messages to scan for threads"
+        30, ge=1, le=90, description="Days of messages to scan for threads"
     ),
+    background_tasks: BackgroundTasks = BackgroundTasks(),
     db: AsyncSession = Depends(get_async_db),
 ) -> Dict[str, Any]:
     """
-    Sync thread replies for messages in a channel.
+    [DEPRECATED] Sync thread replies for messages in a channel.
+    Use the /sync endpoint with sync_threads=true parameter instead.
 
     Args:
         workspace_id: UUID of the workspace
         channel_id: UUID of the channel
         days: Number of days of messages to scan for threads
+        background_tasks: FastAPI background tasks handler
         db: Database session
 
     Returns:
         Dictionary with sync results
     """
+    # Log deprecation warning
+    logger.warning(
+        "Using deprecated sync-threads endpoint. Use /sync with sync_threads=true instead."
+    )
+
     try:
-        # Find all thread parent messages in the channel within timeframe
-        end_date = datetime.utcnow()
-        start_date = end_date - timedelta(days=days)
-
-        # Get the channel
-        channel_result = await db.execute(
-            select(SlackChannel)
-            .options(selectinload(SlackChannel.workspace))
-            .where(SlackChannel.id == channel_id)
+        # Call the new unified sync endpoint's functionality
+        background_tasks.add_task(
+            SlackMessageService.sync_channel_messages,
+            db=db,
+            workspace_id=workspace_id,
+            channel_id=channel_id,
+            # Don't sync messages, only threads
+            start_date=None,
+            end_date=None,
+            include_replies=True,
+            sync_threads=True,
+            thread_days=days,
+            batch_size=200,
         )
-        channel = channel_result.scalars().first()
-
-        if not channel:
-            raise HTTPException(
-                status_code=404, detail=f"Channel not found: {channel_id}"
-            )
-
-        # Get thread parent messages in the timeframe
-        parent_result = await db.execute(
-            select(SlackMessage).where(
-                SlackMessage.channel_id == channel_id,
-                SlackMessage.is_thread_parent.is_(True),
-                SlackMessage.message_datetime >= start_date,
-                SlackMessage.message_datetime <= end_date,
-            )
-        )
-        parents = parent_result.scalars().all()
-
-        if not parents:
-            return {
-                "status": "success",
-                "message": "No thread parent messages found in timeframe",
-                "threads_synced": 0,
-                "replies_synced": 0,
-            }
-
-        # Sync each thread
-        total_threads = len(parents)
-        total_replies = 0
-
-        for parent in parents:
-            # Fetch and store thread replies
-            logger.info(
-                f"Processing thread {parent.slack_ts} in channel {channel.name}"
-            )
-            try:
-                thread_replies = (
-                    await SlackMessageService._fetch_thread_replies_with_pagination(
-                        access_token=channel.workspace.access_token,
-                        channel_id=channel.slack_id,
-                        thread_ts=parent.slack_ts,
-                    )
-                )
-                logger.info(
-                    f"Retrieved {len(thread_replies)} messages for thread {parent.slack_ts}"
-                )
-            except Exception as e:
-                logger.error(
-                    f"Error fetching thread replies for {parent.slack_ts}: {str(e)}"
-                )
-                thread_replies = []
-
-            # Process and store replies
-            reply_count = 0
-            for reply in thread_replies:
-                # Skip if it's the parent message
-                if reply.get("ts") == parent.slack_ts:
-                    continue
-
-                # Check if reply already exists
-                existing_result = await db.execute(
-                    select(SlackMessage).where(
-                        SlackMessage.channel_id == channel_id,
-                        SlackMessage.slack_ts == reply.get("ts"),
-                    )
-                )
-                existing = existing_result.scalars().first()
-
-                if existing:
-                    # Skip already stored replies
-                    continue
-
-                # Process reply
-                reply_data = await SlackMessageService._prepare_message_data(
-                    db=db,
-                    workspace_id=workspace_id,
-                    channel=channel,
-                    message=reply,
-                )
-
-                # Create new reply
-                db_reply = SlackMessage(**reply_data)
-                db.add(db_reply)
-                reply_count += 1
-
-            if reply_count > 0:
-                # Update parent message with latest counts
-                parent.reply_count = (
-                    len(thread_replies) - 1
-                )  # Subtract 1 for parent message
-                logger.info(
-                    f"Stored {reply_count} replies for thread {parent.slack_ts}"
-                )
-                total_replies += reply_count
-
-                # Commit changes for this thread
-                await db.commit()
 
         return {
-            "status": "success",
-            "message": f"Synced {total_replies} replies for {total_threads} threads",
-            "threads_synced": total_threads,
-            "replies_synced": total_replies,
+            "status": "syncing",
+            "message": (
+                "[DEPRECATED ENDPOINT] Thread synchronization started. "
+                "This process will continue in the background. "
+                "Please use the /sync endpoint with sync_threads=true in the future."
+            ),
             "workspace_id": workspace_id,
             "channel_id": channel_id,
+            "threads_synced": 0,  # Will be determined during background processing
+            "replies_synced": 0,  # Will be determined during background processing
+            "deprecated": True,
         }
 
     except HTTPException:
