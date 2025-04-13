@@ -15,13 +15,13 @@ from pathlib import Path
 # Add the parent directory to sys.path to import app modules
 sys.path.append(str(Path(__file__).parent.parent))
 
-from sqlalchemy import select, text
+# Import after sys.path is updated - these imports must be here, ignore E402
+# flake8: noqa: E402
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.base import Base
 from app.db.session import async_engine, get_async_db
-from app.models.slack import SlackChannel, SlackMessage, SlackWorkspace
-from app.services.slack.api import SlackApiClient
+from app.models.slack import SlackChannel
 from app.services.slack.messages import SlackMessageService
 
 # Configure logging
@@ -44,9 +44,9 @@ async def reset_thread_data(channel_id=None):
         # This is a no-op if tables already exist
         await conn.run_sync(Base.metadata.create_all)
 
-    # Get a database session
+    # Get a database session - access the first value in the generator
     db_gen = get_async_db()
-    db: AsyncSession = await anext(db_gen)
+    db: AsyncSession = await db_gen.__anext__()
 
     try:
         # STEP 1: Truncate existing thread replies
@@ -100,7 +100,7 @@ async def reset_thread_data(channel_id=None):
         update_query = """
         UPDATE slackmessage
         SET is_thread_parent = TRUE
-        WHERE reply_count > 0 
+        WHERE reply_count > 0
           AND (thread_ts = slack_ts OR thread_ts IS NULL)
         """
 
@@ -117,6 +117,11 @@ async def reset_thread_data(channel_id=None):
 
         # STEP 4: Find all thread parent messages and fetch their replies
         logger.info("Finding thread parent messages")
+
+        # Import needed modules for this operation
+        from sqlalchemy import select
+
+        from app.models.slack import SlackMessage
 
         # Build the query to find thread parent messages
         query = select(SlackMessage).where(

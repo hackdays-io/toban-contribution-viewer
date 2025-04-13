@@ -3,8 +3,7 @@ Slack messages API routes.
 """
 
 import logging
-import traceback
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
@@ -15,7 +14,6 @@ from sqlalchemy.orm import selectinload
 
 from app.db.session import get_async_db
 from app.models.slack import SlackChannel, SlackMessage
-from app.services.slack.api import SlackApiClient
 from app.services.slack.messages import SlackMessageService
 
 # Configure logging
@@ -381,10 +379,8 @@ async def sync_users_from_messages(
             if not workspace or not workspace.access_token:
                 continue
 
-            # Create API client
-            api_client = SlackApiClient(workspace.access_token)
-
             # Fetch and create each user
+            # API client will be created in the service
             for slack_user_id in slack_user_ids:
                 try:
                     # Check if user already exists
@@ -510,9 +506,9 @@ async def fix_thread_parent_flags(
 
         # Use a direct SQL update for efficiency
         sql = """
-        UPDATE slackmessage 
+        UPDATE slackmessage
         SET is_thread_parent = TRUE
-        WHERE reply_count > 0 
+        WHERE reply_count > 0
           AND (thread_ts = slack_ts OR thread_ts IS NULL)
           AND is_thread_parent = FALSE
         """
@@ -567,7 +563,7 @@ async def fix_thread_replies(
 
         # Find thread parent messages
         query = select(SlackMessage).where(
-            SlackMessage.is_thread_parent == True, SlackMessage.reply_count > 0
+            SlackMessage.is_thread_parent.is_(True), SlackMessage.reply_count > 0
         )
 
         if channel_id:

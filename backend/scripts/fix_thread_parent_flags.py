@@ -15,12 +15,14 @@ from pathlib import Path
 # Add the parent directory to sys.path to import app modules
 sys.path.append(str(Path(__file__).parent.parent))
 
-from sqlalchemy import select, text, update
+# Import after sys.path is updated - these imports must be here, ignore E402
+# flake8: noqa: E402
+from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.base import Base
 from app.db.session import async_engine, get_async_db
-from app.models.slack import SlackChannel, SlackMessage, SlackWorkspace
+from app.models.slack import SlackMessage
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -38,9 +40,9 @@ async def fix_thread_parent_flags():
         # This is a no-op if tables already exist
         await conn.run_sync(Base.metadata.create_all)
 
-    # Get a database session
+    # Get a database session - access the first value in the generator
     db_gen = get_async_db()
-    db: AsyncSession = await anext(db_gen)
+    db: AsyncSession = await db_gen.__anext__()
 
     try:
         # First, get all messages with reply_count > 0
@@ -75,9 +77,9 @@ async def fix_thread_parent_flags():
 
         # Also run a SQL update for efficiency to catch any that were missed
         sql = """
-        UPDATE slackmessage 
+        UPDATE slackmessage
         SET is_thread_parent = TRUE
-        WHERE reply_count > 0 
+        WHERE reply_count > 0
           AND (thread_ts = slack_ts OR thread_ts IS NULL)
           AND is_thread_parent = FALSE
         """

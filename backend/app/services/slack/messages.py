@@ -1151,10 +1151,10 @@ class SlackMessageService:
                 # First, make sure thread parent flags are set correctly
                 # Use direct SQL for efficiency
                 thread_flag_sql = """
-                UPDATE slackmessage 
+                UPDATE slackmessage
                 SET is_thread_parent = TRUE
                 WHERE channel_id = :channel_id
-                  AND reply_count > 0 
+                  AND reply_count > 0
                   AND (thread_ts = slack_ts OR thread_ts IS NULL)
                   AND is_thread_parent = FALSE
                 """

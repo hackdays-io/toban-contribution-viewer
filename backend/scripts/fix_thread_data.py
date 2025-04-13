@@ -15,13 +15,14 @@ from pathlib import Path
 # Add the parent directory to sys.path to import app modules
 sys.path.append(str(Path(__file__).parent.parent))
 
-from sqlalchemy import select, text
+# Import after sys.path is updated - these imports must be here, ignore E402
+# flake8: noqa: E402
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.base import Base
 from app.db.session import async_engine, get_async_db
-from app.models.slack import SlackChannel, SlackMessage, SlackWorkspace
-from app.services.slack.api import SlackApiClient
+from app.models.slack import SlackChannel, SlackMessage
 from app.services.slack.messages import SlackMessageService
 
 # Configure logging
@@ -44,9 +45,9 @@ async def fix_thread_data(channel_id=None, max_threads=50):
         # This is a no-op if tables already exist
         await conn.run_sync(Base.metadata.create_all)
 
-    # Get a database session
+    # Get a database session - access the first value in the generator
     db_gen = get_async_db()
-    db: AsyncSession = await anext(db_gen)
+    db: AsyncSession = await db_gen.__anext__()
 
     try:
         # Build the query to find thread parent messages
@@ -81,7 +82,7 @@ async def fix_thread_data(channel_id=None, max_threads=50):
             # Get the channel info for this message
             channel_result = await db.execute(
                 select(SlackChannel)
-                .options(sqlalchemy.orm.selectinload(SlackChannel.workspace))
+                .options(select(SlackChannel.workspace))
                 .where(SlackChannel.id == parent.channel_id)
             )
             channel = channel_result.scalars().first()
@@ -96,8 +97,7 @@ async def fix_thread_data(channel_id=None, max_threads=50):
                 )
                 continue
 
-            # Create API client
-            api_client = SlackApiClient(channel.workspace.access_token)
+            # API client will be created in the service
 
             # Fetch full thread from Slack API
             try:
