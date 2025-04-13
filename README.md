@@ -23,6 +23,9 @@ TeamInsight is an AI-powered analytics platform designed to extract, analyze, an
 - Contribution quality assessment based on context and impact
 - Cross-platform activity correlation (e.g., Slack discussions leading to GitHub commits)
 - Trend identification and anomaly detection
+- Channel conversation analysis with LLM insights
+- Topic extraction and contributor recognition
+- Key discussion highlights and pattern identification
 
 ### Visualization & Reporting
 - Interactive dashboards with customizable views
@@ -34,7 +37,7 @@ TeamInsight is an AI-powered analytics platform designed to extract, analyze, an
 
 - **Backend**: Python with FastAPI
 - **Frontend**: React with TypeScript and Chakra UI
-- **AI Processing**: OpenAI API (GPT-4)
+- **AI Processing**: OpenRouter API (Claude, GPT-4, and other LLMs)
 - **Database**: PostgreSQL with SQLAlchemy ORM
 - **Authentication**: Supabase Auth (open-source)
 - **Hosting**: AWS
@@ -60,7 +63,7 @@ TeamInsight is an AI-powered analytics platform designed to extract, analyze, an
   - Slack
   - GitHub
   - Notion
-  - OpenAI
+  - OpenRouter (for LLM access)
 
 ### Option 1: Docker Setup (Recommended)
 
@@ -348,6 +351,10 @@ NGROK_URL=https://xyz-123-abc.ngrok-free.app
 
 # Required for ngrok configuration
 NGROK_AUTHTOKEN=your_ngrok_auth_token
+
+# OpenRouter for LLM analytics
+OPENROUTER_API_KEY=your_openrouter_api_key
+OPENROUTER_DEFAULT_MODEL=anthropic/claude-3-opus:20240229
 ```
 
 #### Step 6: Restart the containers
@@ -458,7 +465,8 @@ Required backend environment variables:
 - `DATABASE_URL`: PostgreSQL connection string
 - `SECRET_KEY`: Application secret key for security
 - `SUPABASE_URL`, `SUPABASE_KEY`, `SUPABASE_JWT_SECRET`: Supabase authentication settings
-- `OPENAI_API_KEY`: For AI-powered analysis
+- `OPENROUTER_API_KEY`: API key for LLM access via OpenRouter
+- `OPENROUTER_DEFAULT_MODEL`: Default LLM model to use (e.g., `anthropic/claude-3-opus:20240229`)
 - `SLACK_CLIENT_ID`, `SLACK_CLIENT_SECRET`, `SLACK_SIGNING_SECRET`: For Slack integration
 
 ### Frontend Environment Variables
