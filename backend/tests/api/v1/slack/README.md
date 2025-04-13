@@ -7,6 +7,8 @@ This directory contains tests for the Slack API integration in the Toban Contrib
 - `test_oauth.py`: Tests for Slack OAuth authentication
 - `test_channels.py`: Unit tests for the channel endpoints
 - `test_channels_integration.py`: Integration tests for channel endpoints with real Slack API
+- `test_messages.py`: Tests for the message retrieval endpoints
+- `test_analysis.py`: Tests for the LLM-powered channel analysis endpoint
 
 ## Running Tests
 
@@ -15,7 +17,7 @@ This directory contains tests for the Slack API integration in the Toban Contrib
 Run unit tests with pytest:
 
 ```bash
-pytest tests/api/v1/slack/test_oauth.py tests/api/v1/slack/test_channels.py
+pytest tests/api/v1/slack/test_oauth.py tests/api/v1/slack/test_channels.py tests/api/v1/slack/test_messages.py tests/api/v1/slack/test_analysis.py
 ```
 
 These tests use mocks and don't require real Slack credentials.
