@@ -12,6 +12,7 @@ import ProtectedRoute from './components/auth/ProtectedRoute'
 // Pages
 import Home from './pages/Home'
 import Dashboard from './pages/Dashboard'
+import Analytics from './pages/Analytics'
 
 // Slack Pages
 import {
@@ -20,6 +21,8 @@ import {
   WorkspacesPage as SlackWorkspacesPage,
   ChannelsPage as SlackChannelsPage,
   MessagesPage as SlackMessagesPage,
+  AnalyticsPage as SlackAnalyticsPage,
+  ChannelAnalysisPage as SlackChannelAnalysisPage,
 } from './pages/slack'
 
 // Create a default theme
@@ -90,6 +93,32 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <SlackMessagesPage />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Analytics routes */}
+              <Route
+                path="/dashboard/analytics"
+                element={
+                  <ProtectedRoute>
+                    <Analytics />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard/analytics/slack"
+                element={
+                  <ProtectedRoute>
+                    <SlackAnalyticsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard/analytics/slack/channels/:workspaceId/:channelId/analyze"
+                element={
+                  <ProtectedRoute>
+                    <SlackChannelAnalysisPage />
                   </ProtectedRoute>
                 }
               />

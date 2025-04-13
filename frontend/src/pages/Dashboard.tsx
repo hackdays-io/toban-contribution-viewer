@@ -58,6 +58,7 @@ const Dashboard: React.FC = () => {
           <Tab>GitHub</Tab>
           <Tab>Slack</Tab>
           <Tab>Notion</Tab>
+          <Tab>Analytics</Tab>
         </TabList>
 
         <TabPanels>
@@ -125,6 +126,24 @@ const Dashboard: React.FC = () => {
               </Text>
               <Button mt={4} colorScheme="blue">
                 Connect Notion
+              </Button>
+            </Box>
+          </TabPanel>
+
+          <TabPanel>
+            <Box p={4} borderWidth="1px" borderRadius="lg">
+              <Heading as="h2" size="md" mb={4}>
+                Analytics & Insights
+              </Heading>
+              <Text mb={4}>
+                Analyze your contributions and gain insights across platforms.
+              </Text>
+              <Button
+                as={Link}
+                to="/dashboard/analytics"
+                colorScheme="purple"
+              >
+                View Analytics
               </Button>
             </Box>
           </TabPanel>
