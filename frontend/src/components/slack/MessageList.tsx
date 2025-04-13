@@ -37,6 +37,7 @@ import {
 
 // Import ThreadView component
 import ThreadView from './ThreadView'
+import SlackUserDisplay, { SlackUserCacheProvider } from './SlackUserDisplay'
 
 // Define types
 interface SlackMessage {
@@ -431,25 +432,26 @@ const MessageList: React.FC<MessageListProps> = ({
   )
 
   return (
-    <Box p={6} width="100%" maxWidth="1000px" mx="auto">
-      <HStack justifyContent="space-between" mb={6}>
-        <Heading size="lg">
-          {channelName ? `#${channelName} Messages` : 'Channel Messages'}
-        </Heading>
-        <HStack spacing={3}>
-          <Button
-            leftIcon={<Icon as={FiRefreshCw} />}
-            colorScheme="purple"
-            isLoading={isSyncing}
-            onClick={() => {
-              // Use the unified sync endpoint that handles both messages and threads
-              syncMessages();
-            }}
-          >
-            Sync Messages & Threads
-          </Button>
+    <SlackUserCacheProvider workspaceId={workspaceId}>
+      <Box p={6} width="100%" maxWidth="1000px" mx="auto">
+        <HStack justifyContent="space-between" mb={6}>
+          <Heading size="lg">
+            {channelName ? `#${channelName} Messages` : 'Channel Messages'}
+          </Heading>
+          <HStack spacing={3}>
+            <Button
+              leftIcon={<Icon as={FiRefreshCw} />}
+              colorScheme="purple"
+              isLoading={isSyncing}
+              onClick={() => {
+                // Use the unified sync endpoint that handles both messages and threads
+                syncMessages();
+              }}
+            >
+              Sync Messages & Threads
+            </Button>
+          </HStack>
         </HStack>
-      </HStack>
 
       <Divider mb={6} />
 
@@ -543,14 +545,15 @@ const MessageList: React.FC<MessageListProps> = ({
                   return (
                     <Box key={message.id} p={2}>
                       <HStack spacing={4} align="start" mb={2}>
-                        <Avatar
-                          size="sm"
-                          name={user.name}
-                          src={user.avatar || undefined}
+                        <SlackUserDisplay 
+                          userId={message.user_id || ''}
+                          workspaceId={workspaceId}
+                          showAvatar={true}
+                          displayFormat="real_name"
+                          fetchFromSlack={true}
                         />
                         <Box>
                           <HStack mb={1}>
-                            <Text fontWeight="bold">{user.name}</Text>
                             <Text fontSize="sm" color="gray.500">
                               {formatDateTime(message.message_datetime)}
                             </Text>
@@ -625,6 +628,7 @@ const MessageList: React.FC<MessageListProps> = ({
         users={users}
       />
     </Box>
+    </SlackUserCacheProvider>
   )
 }
 

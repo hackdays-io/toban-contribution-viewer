@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import env from '../../config/env';
+import SlackUserDisplay, { SlackUserCacheProvider } from './SlackUserDisplay'
 import {
   Box,
   Button,
@@ -180,8 +181,6 @@ const ThreadView: React.FC<ThreadViewProps> = ({
   const renderParentMessage = () => {
     if (!parentMessage) return null
 
-    const user = getUserInfo(parentMessage.user_id)
-
     return (
       <Box
         p={4}
@@ -192,10 +191,15 @@ const ThreadView: React.FC<ThreadViewProps> = ({
         width="100%"
       >
         <HStack spacing={4} align="start">
-          <Avatar size="sm" name={user.name} src={user.avatar || undefined} />
+          <SlackUserDisplay 
+            userId={parentMessage.user_id || ''}
+            workspaceId={workspaceId}
+            showAvatar={true}
+            displayFormat="real_name"
+            fetchFromSlack={true}
+          />
           <Box flex="1">
             <HStack mb={1}>
-              <Text fontWeight="bold">{user.name}</Text>
               <Text fontSize="sm" color="gray.500">
                 {formatDateTime(parentMessage.message_datetime)}
               </Text>
@@ -224,15 +228,18 @@ const ThreadView: React.FC<ThreadViewProps> = ({
    * Render a single thread reply.
    */
   const renderThreadReply = (message: SlackMessage) => {
-    const user = getUserInfo(message.user_id)
-
     return (
       <Box key={message.id} py={2} width="100%">
         <HStack spacing={4} align="start">
-          <Avatar size="sm" name={user.name} src={user.avatar || undefined} />
+          <SlackUserDisplay 
+            userId={message.user_id || ''}
+            workspaceId={workspaceId}
+            showAvatar={true}
+            displayFormat="real_name"
+            fetchFromSlack={true}
+          />
           <Box flex="1">
             <HStack mb={1}>
-              <Text fontWeight="bold">{user.name}</Text>
               <Text fontSize="sm" color="gray.500">
                 {formatDateTime(message.message_datetime)}
               </Text>
@@ -258,11 +265,12 @@ const ThreadView: React.FC<ThreadViewProps> = ({
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="xl" scrollBehavior="inside">
-      <ModalOverlay />
-      <ModalContent maxWidth={{ base: '95%', md: '800px' }}>
-        <ModalHeader>Thread</ModalHeader>
-        <ModalCloseButton />
+    <SlackUserCacheProvider workspaceId={workspaceId}>
+      <Modal isOpen={isOpen} onClose={onClose} size="xl" scrollBehavior="inside">
+        <ModalOverlay />
+        <ModalContent maxWidth={{ base: '95%', md: '800px' }}>
+          <ModalHeader>Thread</ModalHeader>
+          <ModalCloseButton />
         <ModalBody p={4}>
           {isLoading && !isRefreshing ? (
             <Box display="flex" justifyContent="center" py={8}>
@@ -345,6 +353,7 @@ const ThreadView: React.FC<ThreadViewProps> = ({
         </ModalFooter>
       </ModalContent>
     </Modal>
+    </SlackUserCacheProvider>
   )
 }
 
