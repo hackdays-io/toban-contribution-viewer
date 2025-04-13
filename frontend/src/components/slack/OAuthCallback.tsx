@@ -56,8 +56,12 @@ const OAuthCallback: React.FC = () => {
             `${env.apiUrl}/slack/oauth-callback?code=${code}&redirect_from_frontend=true`,
             {
               method: 'GET',
+              mode: 'cors',
+              credentials: 'include',
               headers: {
+                'Accept': 'application/json',
                 'Content-Type': 'application/json',
+                'Origin': window.location.origin
               },
             }
           );
