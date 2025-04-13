@@ -371,9 +371,9 @@ const SlackUserDisplay: React.FC<SlackUserDisplayProps> = ({
     return (
       <Flex as={Component} align="center">
         {showAvatar && (
-          <Text mr={2}>⭐</Text>
+          <Box as="span" mr={2}>⭐</Box>
         )}
-        <Text>Loading...</Text>
+        <Box as="span">Loading...</Box>
       </Flex>
     );
   }

@@ -62,9 +62,9 @@ const MessageText: React.FC<MessageTextProps> = ({
       ));
     
     return (
-      <Text textAlign="left">
+      <Box textAlign="left">
         {formattedText}
-      </Text>
+      </Box>
     );
   }
   
@@ -147,9 +147,9 @@ const MessageText: React.FC<MessageTextProps> = ({
   }
   
   return (
-    <Text textAlign="left">
+    <Box textAlign="left">
       {segments}
-    </Text>
+    </Box>
   );
 };
 
