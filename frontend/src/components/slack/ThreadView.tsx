@@ -121,11 +121,18 @@ const ThreadView: React.FC<ThreadViewProps> = ({
 
   /**
    * Fetch thread replies from the API.
+   * @param forceRefresh Whether to force a refresh from Slack API
    */
-  const fetchThreadReplies = async () => {
+  const fetchThreadReplies = async (forceRefresh = false) => {
     try {
       setIsLoading(true)
-      const url = `${import.meta.env.VITE_API_URL}/slack/workspaces/${workspaceId}/channels/${channelId}/threads/${threadTs}?limit=500`
+      const limit = 1000 // Increased limit to get more replies
+      let url = `${import.meta.env.VITE_API_URL}/slack/workspaces/${workspaceId}/channels/${channelId}/threads/${threadTs}?limit=${limit}`
+      
+      // Add force_refresh parameter if requested
+      if (forceRefresh) {
+        url += '&force_refresh=true'
+      }
 
       console.log('Fetching thread replies from:', url)
       const response = await fetch(url)
@@ -137,6 +144,8 @@ const ThreadView: React.FC<ThreadViewProps> = ({
       }
 
       const data = await response.json()
+      console.log(`Thread data received: total_replies=${data.total_replies}, replies.length=${data.replies?.length}`)
+      
       setReplies(data.replies || [])
       setTotalReplies(data.total_replies || 0)
       setHasMore(data.has_more || false)
@@ -157,10 +166,11 @@ const ThreadView: React.FC<ThreadViewProps> = ({
 
   /**
    * Refresh thread replies.
+   * @param forceRefresh Whether to force a refresh from Slack API
    */
-  const refreshThreadReplies = () => {
+  const refreshThreadReplies = (forceRefresh = false) => {
     setIsRefreshing(true)
-    fetchThreadReplies()
+    fetchThreadReplies(forceRefresh)
   }
 
   /**
@@ -340,15 +350,30 @@ const ThreadView: React.FC<ThreadViewProps> = ({
           )}
         </ModalBody>
         <ModalFooter>
-          <Button
-            leftIcon={<Icon as={FiRefreshCw} />}
-            colorScheme="purple"
-            mr={3}
-            onClick={refreshThreadReplies}
-            isLoading={isRefreshing}
-          >
-            Refresh
-          </Button>
+          <HStack spacing={2}>
+            <Button
+              leftIcon={<Icon as={FiRefreshCw} />}
+              colorScheme="purple"
+              variant="outline"
+              size="sm"
+              onClick={() => refreshThreadReplies(true)}
+              isLoading={isRefreshing}
+              title="Force refresh from Slack API"
+            >
+              Force Refresh
+            </Button>
+            
+            <Button
+              leftIcon={<Icon as={FiRefreshCw} />}
+              colorScheme="purple"
+              size="sm"
+              onClick={() => refreshThreadReplies(false)}
+              isLoading={isRefreshing}
+            >
+              Refresh
+            </Button>
+          </HStack>
+          
           <Button variant="ghost" onClick={onClose}>
             Close
           </Button>

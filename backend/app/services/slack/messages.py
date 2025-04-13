@@ -655,9 +655,23 @@ class SlackMessageService:
 
         client = SlackApiClient(access_token)
 
+        # Add detailed logging for debugging
+        logger.info(
+            f"Attempting to fetch thread replies for thread {thread_ts} in channel {channel_id}"
+        )
+        logger.info(
+            f"Using access token: {access_token[:10]}...{access_token[-4:]} (length: {len(access_token)})"
+        )
+        logger.info(
+            f"Request parameters: channel_id={channel_id}, thread_ts={thread_ts}, limit={limit}"
+        )
+
         while page_count < max_pages:
             try:
                 # Fetch replies for this page
+                logger.info(
+                    f"Making Slack API request for thread replies, page {page_count + 1}, cursor: {cursor or 'None'}"
+                )
                 response = await client.get_thread_replies(
                     channel_id=channel_id,
                     thread_ts=thread_ts,
@@ -666,16 +680,39 @@ class SlackMessageService:
                     inclusive=True,  # Include parent message
                 )
 
+                # Log the response structure for debugging
+                has_messages = "messages" in response
+                message_count = len(response.get("messages", []))
+                has_error = "error" in response
+                error_message = response.get("error", "None")
+                has_metadata = "response_metadata" in response
+
+                logger.info(
+                    f"API Response stats: has_messages={has_messages}, message_count={message_count}, has_error={has_error}, error={error_message}"
+                )
+
+                if has_error:
+                    logger.error(
+                        f"Slack API error for thread {thread_ts}: {error_message}"
+                    )
+                    break
+
                 # Add replies to our collection
                 replies = response.get("messages", [])
                 if replies:
+                    logger.info(f"Got {len(replies)} replies in this page")
                     all_replies.extend(replies)
+                else:
+                    logger.warning(
+                        f"No replies found in API response for thread {thread_ts}"
+                    )
 
                 # Check for more pages
                 response_metadata = response.get("response_metadata", {})
                 next_cursor = response_metadata.get("next_cursor")
 
                 if not next_cursor:
+                    logger.info(f"No more pages available (no next_cursor)")
                     break  # No more pages
 
                 cursor = next_cursor
@@ -688,7 +725,10 @@ class SlackMessageService:
                     )
 
             except Exception as e:
-                logger.error(f"Error fetching thread replies: {str(e)}")
+                logger.error(f"Exception fetching thread replies: {str(e)}")
+                import traceback
+
+                logger.error(f"Traceback: {traceback.format_exc()}")
                 break
 
         logger.info(
