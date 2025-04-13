@@ -21,6 +21,8 @@ import {
   AlertDialogHeader,
   AlertDialogContent,
   AlertDialogOverlay,
+  Alert,
+  AlertIcon,
 } from '@chakra-ui/react';
 import { Link } from 'react-router-dom';
 import { FiPlus, FiTrash2, FiRefreshCw } from 'react-icons/fi';
@@ -47,13 +49,18 @@ const WorkspaceList: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState<string | null>(null);
   const [selectedWorkspace, setSelectedWorkspace] = useState<Workspace | null>(null);
+  const [corsError, setCorsError] = useState(false);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const cancelRef = React.useRef<HTMLButtonElement>(null);
   const toast = useToast();
 
+  // Detect if we're running in an environment that might have CORS issues
+  const isNgrokOrRemote = window.location.hostname.includes('ngrok') || 
+                         (!window.location.hostname.includes('localhost') && 
+                          env.apiUrl.includes('localhost'));
+  
   useEffect(() => {
     fetchWorkspaces();
-    // fetchWorkspaces is defined inside the component and doesn't depend on any props or state
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -61,107 +68,46 @@ const WorkspaceList: React.FC = () => {
    * Fetch connected workspaces from the API.
    */
   const fetchWorkspaces = async () => {
-    const isNgrokOrLocalhost = window.location.hostname.includes('ngrok') || 
-                               window.location.hostname === 'localhost';
-    const isDevelopmentMode = env.isDev || process.env.NODE_ENV === 'development';
-    const useDevelopmentWorkaround = isDevelopmentMode && isNgrokOrLocalhost;
+    setIsLoading(true);
+    setCorsError(false);
     
     try {
-      setIsLoading(true);
-      
-      // For development with ngrok, use a different CORS approach
-      if (useDevelopmentWorkaround) {
-        console.info('Using development mode CORS workaround for fetching workspaces');
-        
-        // Check if we're attempting to access localhost from a non-localhost domain
-        const isAccessingLocalhost = env.apiUrl.includes('localhost') && window.location.hostname !== 'localhost';
-        
-        if (isAccessingLocalhost) {
-          console.info('CORS workaround: Using mock workspaces data for development');
-          
-          // Simulate network delay
-          await new Promise(resolve => setTimeout(resolve, 500));
-          
-          // Use mock data to prevent CORS errors in development
-          const mockWorkspaces = [
-            {
-              id: 'mock-workspace-id',
-              name: 'Mock Slack Workspace',
-              team_id: 'T12345',
-              team_name: 'Mock Team',
-              team_domain: 'mockteam',
-              bot_name: 'Toban Bot',
-              is_connected: true,
-              has_valid_token: true,
-              channel_count: 5,
-              connected_at: new Date().toISOString(),
-              last_used_at: new Date().toISOString(),
-            }
-          ];
-          
-          setWorkspaces(mockWorkspaces);
-          return;
-        }
-      }
-      
-      // Standard API call
-      try {
-        const response = await fetch(`${env.apiUrl}/slack/workspaces`);
+      // Make the API request
+      const response = await fetch(`${env.apiUrl}/slack/workspaces`);
 
-        if (!response.ok) {
-          throw new Error('Failed to fetch workspaces');
-        }
-
-        const data = await response.json();
-        setWorkspaces(data.workspaces || []);
-      } catch (networkError) {
-        console.error('Network error fetching workspaces:', networkError);
-        
-        // If in development mode, provide a fallback
-        if (useDevelopmentWorkaround) {
-          console.info('CORS or network error in development mode. Using mock workspaces data.');
-          
-          // Use mock data to prevent CORS errors in development
-          const mockWorkspaces = [
-            {
-              id: 'mock-workspace-id',
-              name: 'Mock Slack Workspace',
-              team_id: 'T12345',
-              team_name: 'Mock Team',
-              team_domain: 'mockteam',
-              bot_name: 'Toban Bot',
-              is_connected: true,
-              has_valid_token: true,
-              channel_count: 5,
-              connected_at: new Date().toISOString(),
-              last_used_at: new Date().toISOString(),
-            }
-          ];
-          
-          setWorkspaces(mockWorkspaces);
-          
-          toast({
-            title: 'Development Mode',
-            description: 'Using mock workspace data due to CORS/network issues with localhost API.',
-            status: 'info',
-            duration: 5000,
-            isClosable: true,
-          });
-          return;
-        }
-        
-        // Otherwise show the error in production
-        throw networkError;
+      if (!response.ok) {
+        throw new Error('Failed to fetch workspaces');
       }
+
+      const data = await response.json();
+      setWorkspaces(data.workspaces || []);
     } catch (error) {
       console.error('Error fetching workspaces:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load connected workspaces',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
+      
+      // Check if this is likely a CORS error
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const isCorsError = errorMessage.includes('NetworkError') || 
+                         errorMessage.includes('Failed to fetch') ||
+                         errorMessage.includes('CORS');
+      
+      if (isCorsError && isNgrokOrRemote) {
+        setCorsError(true);
+        toast({
+          title: 'CORS Error',
+          description: 'Unable to connect to API due to CORS restrictions. This commonly happens when accessing the application through ngrok while the API is running on localhost.',
+          status: 'error',
+          duration: 10000,
+          isClosable: true,
+        });
+      } else {
+        toast({
+          title: 'Error',
+          description: 'Failed to load connected workspaces',
+          status: 'error',
+          duration: 5000,
+          isClosable: true,
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -173,34 +119,7 @@ const WorkspaceList: React.FC = () => {
   const refreshWorkspace = async (workspaceId: string) => {
     setIsRefreshing(workspaceId);
     
-    const isNgrokOrLocalhost = window.location.hostname.includes('ngrok') || 
-                             window.location.hostname === 'localhost';
-    const isDevelopmentMode = env.isDev || process.env.NODE_ENV === 'development';
-    const useDevelopmentWorkaround = isDevelopmentMode && isNgrokOrLocalhost;
-
     try {
-      // For development with ngrok, check if we're trying to access localhost
-      if (useDevelopmentWorkaround && env.apiUrl.includes('localhost') && 
-          window.location.hostname !== 'localhost') {
-        console.info('Using development mode CORS workaround for refreshing workspace');
-          
-        // Simulate network delay
-        await new Promise(resolve => setTimeout(resolve, 800));
-        
-        toast({
-          title: 'Development Mode',
-          description: 'Workspace connection verified (mock)',
-          status: 'success',
-          duration: 5000,
-          isClosable: true,
-        });
-        
-        // Refresh the workspace list with our mocks
-        fetchWorkspaces();
-        return;
-      }
-      
-      // Standard API call
       const response = await fetch(
         `${env.apiUrl}/slack/workspaces/${workspaceId}/verify`
       );
@@ -225,25 +144,21 @@ const WorkspaceList: React.FC = () => {
     } catch (error) {
       console.error('Error refreshing workspace:', error);
       
-      // If network error in development mode, provide a fallback
-      if (error instanceof Error && 
-          (error.message.includes('Failed to fetch') || 
-           error.message.includes('NetworkError') || 
-           error.message.includes('CORS')) && 
-          useDevelopmentWorkaround) {
-        
-        console.info('CORS or network error in development mode. Using mock refresh response.');
-        
+      // Check if this is likely a CORS error
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const isCorsError = errorMessage.includes('NetworkError') || 
+                         errorMessage.includes('Failed to fetch') ||
+                         errorMessage.includes('CORS');
+      
+      if (isCorsError && isNgrokOrRemote) {
+        setCorsError(true);
         toast({
-          title: 'Development Mode',
-          description: 'Workspace connection verified (mock)',
-          status: 'success',
-          duration: 5000,
+          title: 'CORS Error',
+          description: 'Unable to connect to API due to CORS restrictions. Try accessing the application directly on localhost.',
+          status: 'error',
+          duration: 10000,
           isClosable: true,
         });
-        
-        // Refresh the workspace list with our mocks
-        fetchWorkspaces();
       } else {
         toast({
           title: 'Error',
@@ -264,35 +179,7 @@ const WorkspaceList: React.FC = () => {
   const handleDisconnect = async () => {
     if (!selectedWorkspace) return;
 
-    const isNgrokOrLocalhost = window.location.hostname.includes('ngrok') || 
-                            window.location.hostname === 'localhost';
-    const isDevelopmentMode = env.isDev || process.env.NODE_ENV === 'development';
-    const useDevelopmentWorkaround = isDevelopmentMode && isNgrokOrLocalhost;
-
     try {
-      // For development with ngrok, check if we're trying to access localhost
-      if (useDevelopmentWorkaround && env.apiUrl.includes('localhost') && 
-          window.location.hostname !== 'localhost') {
-        console.info('Using development mode CORS workaround for disconnecting workspace');
-          
-        // Simulate network delay
-        await new Promise(resolve => setTimeout(resolve, 800));
-        
-        toast({
-          title: 'Development Mode',
-          description: 'Workspace disconnected successfully (mock)',
-          status: 'success',
-          duration: 5000,
-          isClosable: true,
-        });
-        
-        // Refresh the workspace list with our mocks (will show empty list since we "disconnected")
-        setWorkspaces([]);
-        onClose();
-        return;
-      }
-      
-      // Standard API call
       const response = await fetch(
         `${env.apiUrl}/slack/workspaces/${selectedWorkspace.id}`,
         {
@@ -318,25 +205,21 @@ const WorkspaceList: React.FC = () => {
     } catch (error) {
       console.error('Error disconnecting workspace:', error);
       
-      // If network error in development mode, provide a fallback
-      if (error instanceof Error && 
-          (error.message.includes('Failed to fetch') || 
-           error.message.includes('NetworkError') || 
-           error.message.includes('CORS')) && 
-          useDevelopmentWorkaround) {
-        
-        console.info('CORS or network error in development mode. Using mock disconnect flow.');
-        
+      // Check if this is likely a CORS error
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const isCorsError = errorMessage.includes('NetworkError') || 
+                         errorMessage.includes('Failed to fetch') ||
+                         errorMessage.includes('CORS');
+      
+      if (isCorsError && isNgrokOrRemote) {
+        setCorsError(true);
         toast({
-          title: 'Development Mode',
-          description: 'Workspace disconnected successfully (mock)',
-          status: 'success',
-          duration: 5000,
+          title: 'CORS Error',
+          description: 'Unable to connect to API due to CORS restrictions. Try accessing the application directly on localhost.',
+          status: 'error',
+          duration: 10000,
           isClosable: true,
         });
-        
-        // Remove the workspace from the list
-        setWorkspaces([]);
       } else {
         toast({
           title: 'Error',
@@ -374,6 +257,23 @@ const WorkspaceList: React.FC = () => {
       </HStack>
 
       <Divider mb={6} />
+      
+      {corsError && (
+        <Alert status="warning" mb={6}>
+          <AlertIcon />
+          <VStack align="start" spacing={2} width="100%">
+            <Text fontWeight="bold">CORS Error Detected</Text>
+            <Text>
+              Unable to connect to the API due to browser security restrictions (CORS).
+              This commonly happens when accessing the app through ngrok while the API is running on localhost.
+            </Text>
+            <Text fontWeight="bold">Try one of these solutions:</Text>
+            <Text>1. Run the frontend directly on localhost</Text>
+            <Text>2. Run the backend on a public URL</Text>
+            <Text>3. Configure the backend to accept requests from {window.location.origin}</Text>
+          </VStack>
+        </Alert>
+      )}
 
       {isLoading ? (
         <Flex justify="center" align="center" minHeight="200px">
@@ -388,16 +288,28 @@ const WorkspaceList: React.FC = () => {
           bg="gray.50"
         >
           <Text fontSize="lg" mb={4}>
-            No workspaces connected yet
+            {corsError 
+              ? "Unable to load workspaces due to CORS restrictions" 
+              : "No workspaces connected yet"}
           </Text>
-          <Button
-            as={Link}
-            to="/dashboard/slack/connect"
-            colorScheme="purple"
-            leftIcon={<Icon as={FiPlus} />}
-          >
-            Connect Your First Workspace
-          </Button>
+          {!corsError && (
+            <Button
+              as={Link}
+              to="/dashboard/slack/connect"
+              colorScheme="purple"
+              leftIcon={<Icon as={FiPlus} />}
+            >
+              Connect Your First Workspace
+            </Button>
+          )}
+          {corsError && (
+            <Button
+              colorScheme="blue"
+              onClick={fetchWorkspaces}
+            >
+              Retry Connection
+            </Button>
+          )}
         </Box>
       ) : (
         <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
