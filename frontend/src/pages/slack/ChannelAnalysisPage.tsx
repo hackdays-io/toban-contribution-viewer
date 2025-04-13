@@ -267,6 +267,17 @@ const ChannelAnalysisPage: React.FC = () => {
         </CardHeader>
         <CardBody>
           <VStack spacing={4} align="stretch">
+            <Flex justify="flex-end">
+              <Button
+                as={Link}
+                to={`/dashboard/analytics/slack/channels/${workspaceId}/${channelId}/history`}
+                size="sm"
+                colorScheme="blue"
+                variant="outline"
+              >
+                View Analysis History
+              </Button>
+            </Flex>
             <HStack spacing={4}>
               <FormControl>
                 <FormLabel>Start Date</FormLabel>
