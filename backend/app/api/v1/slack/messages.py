@@ -124,6 +124,87 @@ async def get_channel_messages(
         )
 
 
+@router.get("/workspaces/{workspace_id}/messages")
+async def get_messages_by_date_range(
+    workspace_id: str,
+    channel_ids: str,  # Comma-separated list of channel IDs
+    start_date: Optional[datetime] = Query(
+        None, description="Start date for message filtering"
+    ),
+    end_date: Optional[datetime] = Query(
+        None, description="End date for message filtering"
+    ),
+    include_replies: bool = Query(
+        True, description="Whether to include thread replies"
+    ),
+    page: int = Query(1, ge=1, description="Page number"),
+    page_size: int = Query(100, ge=1, le=1000, description="Number of items per page"),
+    db: AsyncSession = Depends(get_async_db),
+) -> Dict[str, Any]:
+    """
+    Get messages from multiple channels with date range filtering and pagination.
+
+    Args:
+        workspace_id: UUID of the workspace
+        channel_ids: Comma-separated list of channel IDs to get messages from
+        start_date: Optional start date for filtering messages
+        end_date: Optional end date for filtering messages
+        include_replies: Whether to include thread replies
+        page: Page number for pagination
+        page_size: Number of items per page
+        db: Database session
+
+    Returns:
+        Dictionary with messages and pagination information
+    """
+    try:
+        logger.info(
+            f"Fetching messages for workspace {workspace_id}, channels: {channel_ids}, "
+            f"date range: {start_date} to {end_date}, page: {page}, page_size: {page_size}"
+        )
+
+        # Parse channel IDs from comma-separated string
+        channel_id_list = [
+            ch_id.strip() for ch_id in channel_ids.split(",") if ch_id.strip()
+        ]
+
+        # Strip timezone info from datetime objects if present
+        safe_start_date = None
+        safe_end_date = None
+
+        if start_date:
+            safe_start_date = start_date.replace(tzinfo=None)
+
+        if end_date:
+            safe_end_date = end_date.replace(tzinfo=None)
+
+        # Get messages by date range
+        result = await SlackMessageService.get_messages_by_date_range(
+            db=db,
+            workspace_id=workspace_id,
+            channel_ids=channel_id_list,
+            start_date=safe_start_date,
+            end_date=safe_end_date,
+            include_replies=include_replies,
+            page=page,
+            page_size=page_size,
+        )
+
+        # Format response for API
+        return {
+            "messages": result["messages"],
+            "pagination": result["pagination"],
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching messages by date range: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail="An error occurred while retrieving messages"
+        )
+
+
 @router.get("/workspaces/{workspace_id}/users")
 async def get_users(
     workspace_id: str,
