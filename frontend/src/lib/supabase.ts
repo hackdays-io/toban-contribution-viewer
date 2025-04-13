@@ -17,7 +17,7 @@ const usesMockClient = isPlaceholder(supabaseUrl) || isPlaceholder(supabaseAnonK
 let supabase;
 
 if (usesMockClient) {
-  console.warn('Using fully mocked Supabase client. Authentication and database operations will not work.');
+  console.info('Using mock Supabase client in development mode. Authentication is bypassed for easier testing.');
   
   // Create a fully mocked Supabase client to prevent CORS errors
   // This approach prevents any actual network requests

@@ -39,7 +39,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const isMockEnvironment = !('onAuthStateChange' in supabase.auth);
         
         if (isMockEnvironment) {
-          console.warn('Running in development mode with mock authentication. Bypassing auth checks.');
+          console.info('Running in development mode with mock authentication. This is normal when using placeholder Supabase credentials.');
           // In mock mode, allow access without authentication
           setLoading(false);
           return;

@@ -28,7 +28,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
   // In development with mock auth, allow access without authentication
   if (isMockEnvironment && !user) {
-    console.warn('Bypassing authentication in development environment');
+    console.info('Bypassing authentication in development environment. This is normal with placeholder credentials.');
     return <>{children}</>;
   }
 
