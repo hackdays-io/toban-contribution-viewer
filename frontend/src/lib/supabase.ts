@@ -318,7 +318,7 @@ export const signInWithGoogle = async () => {
 };
 
 // Helper to detect if we're using mock client
-function isUsingMockClient(): boolean {
+export function isUsingMockClient(): boolean {
   // Check if we have placeholder credentials
   const isPlaceholder = (value: string) => {
     return !value || value === 'your_supabase_url' || value === 'your_supabase_anon_key';
