@@ -1,4 +1,4 @@
-import React from 'react';
+// No need to import React when using JSX without explicit React APIs
 import { render, screen } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { describe, it, expect, vi } from 'vitest';
