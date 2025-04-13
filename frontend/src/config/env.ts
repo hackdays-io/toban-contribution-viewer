@@ -25,19 +25,29 @@ type OptionalEnvVar = keyof typeof OPTIONAL_ENV_VARS;
 type EnvVar = RequiredEnvVar | OptionalEnvVar;
 
 // Validate required environment variables
-const validateEnv = (): { valid: boolean; missing: string[] } => {
+const validateEnv = (): { valid: boolean; missing: string[]; placeholders: string[] } => {
   const missing: string[] = [];
+  const placeholders: string[] = [];
 
   for (const envVar of REQUIRED_ENV_VARS) {
-    if (!import.meta.env[envVar]) {
+    const value = import.meta.env[envVar];
+    
+    if (!value) {
       missing.push(envVar);
       console.error(`Missing required environment variable: ${envVar}`);
+    } else if (
+      value === 'your_supabase_url' || 
+      value === 'your_supabase_anon_key'
+    ) {
+      placeholders.push(envVar);
+      console.warn(`Environment variable contains placeholder: ${envVar}`);
     }
   }
 
   return {
-    valid: missing.length === 0,
+    valid: missing.length === 0 && placeholders.length === 0,
     missing,
+    placeholders,
   };
 };
 
@@ -66,24 +76,46 @@ export const getBooleanEnvVar = (name: EnvVar): boolean => {
 
 // Validate environment on load
 export const validateEnvironment = (): boolean => {
-  const { valid, missing } = validateEnv();
+  const { valid, missing, placeholders } = validateEnv();
 
   if (!valid) {
-    console.error(
-      'The app is missing required environment variables:',
-      missing.join(', ')
-    );
+    // Handle missing variables
+    if (missing.length > 0) {
+      console.error(
+        'The app is missing required environment variables:',
+        missing.join(', ')
+      );
+    }
+    
+    // Handle placeholder values
+    if (placeholders.length > 0) {
+      console.warn(
+        'The app has placeholder values for required environment variables:',
+        placeholders.join(', ')
+      );
+    }
 
     // Only show alert in development mode to avoid exposing errors to users
     if (getBooleanEnvVar('VITE_DEV_MODE')) {
-      alert(
-        `Missing required environment variables: ${missing.join(', ')}. ` +
-        'Please check your .env file and restart the development server.'
-      );
+      let message = '';
+      
+      if (missing.length > 0) {
+        message += `Missing required environment variables: ${missing.join(', ')}. `;
+      }
+      
+      if (placeholders.length > 0) {
+        message += `Please replace placeholder values for: ${placeholders.join(', ')}. `;
+      }
+      
+      message += 'Please check your .env file and restart the development server.';
+      
+      // Use console warning instead of alert for a better developer experience
+      console.warn(message);
     }
   }
 
-  return valid;
+  // Return valid status but allow the app to continue even with placeholders
+  return missing.length === 0;
 };
 
 // Create a config object with all environment variables
