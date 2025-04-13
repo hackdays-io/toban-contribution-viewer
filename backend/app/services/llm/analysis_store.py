@@ -45,15 +45,29 @@ class AnalysisStoreService:
         Returns:
             The stored SlackChannelAnalysis model instance
         """
-        # Find the channel
-        channel_query = select(SlackChannel).where(
-            SlackChannel.slack_id == channel_id,
-            (
-                SlackChannel.workspace_id == uuid.UUID(workspace_id)
+        # Find the channel by its database ID (not slack_id)
+        try:
+            channel_uuid = uuid.UUID(channel_id)
+            workspace_uuid = (
+                uuid.UUID(workspace_id)
                 if not isinstance(workspace_id, uuid.UUID)
                 else workspace_id
-            ),
-        )
+            )
+
+            channel_query = select(SlackChannel).where(
+                SlackChannel.id == channel_uuid,
+                SlackChannel.workspace_id == workspace_uuid,
+            )
+        except ValueError:
+            # If channel_id is not a valid UUID, try looking it up as slack_id
+            channel_query = select(SlackChannel).where(
+                SlackChannel.slack_id == channel_id,
+                (
+                    SlackChannel.workspace_id == uuid.UUID(workspace_id)
+                    if not isinstance(workspace_id, uuid.UUID)
+                    else workspace_id
+                ),
+            )
         result = await db.execute(channel_query)
         channel = result.scalars().first()
 
@@ -132,7 +146,16 @@ class AnalysisStoreService:
         Returns:
             List of SlackChannelAnalysis instances
         """
-        channel_query = select(SlackChannel).where(SlackChannel.slack_id == channel_id)
+        # Try to parse channel_id as UUID first
+        try:
+            channel_uuid = uuid.UUID(channel_id)
+            channel_query = select(SlackChannel).where(SlackChannel.id == channel_uuid)
+        except ValueError:
+            # If not a valid UUID, treat as slack_id
+            channel_query = select(SlackChannel).where(
+                SlackChannel.slack_id == channel_id
+            )
+
         result = await db.execute(channel_query)
         channel = result.scalars().first()
 
