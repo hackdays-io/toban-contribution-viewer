@@ -455,7 +455,11 @@ const MessageList: React.FC<MessageListProps> = ({
                       
                       {/* Message content */}
                       <Box pl={10} pr={2}>
-                        <MessageText text={message.text} />
+                        <MessageText 
+                          text={message.text} 
+                          workspaceId={workspaceId} 
+                          resolveMentions={true}
+                        />
                       </Box>
 
                       {/* Footer row with thread and reaction info */}

@@ -196,7 +196,11 @@ const ThreadView: React.FC<ThreadViewProps> = ({
         
         {/* Message content */}
         <Box pl={10} pr={2}>
-          <MessageText text={parentMessage.text} />
+          <MessageText 
+            text={parentMessage.text} 
+            workspaceId={workspaceId} 
+            resolveMentions={true}
+          />
         </Box>
 
         {/* Footer with reactions */}
@@ -243,7 +247,11 @@ const ThreadView: React.FC<ThreadViewProps> = ({
         
         {/* Message content */}
         <Box pl={10} pr={2}>
-          <MessageText text={message.text} />
+          <MessageText 
+            text={message.text} 
+            workspaceId={workspaceId} 
+            resolveMentions={true}
+          />
         </Box>
 
         {/* Footer with reactions */}
