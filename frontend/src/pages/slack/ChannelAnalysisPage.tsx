@@ -32,6 +32,7 @@ import {
 import { FiChevronRight, FiArrowLeft, FiRefreshCw } from 'react-icons/fi';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import env from '../../config/env';
+import MessageText from '../../components/slack/MessageText';
 
 interface AnalysisResponse {
   analysis_id: string;
@@ -246,13 +247,22 @@ const ChannelAnalysisPage: React.FC = () => {
   };
 
   /**
-   * Format text with paragraphs.
+   * Format text with paragraphs and process Slack mentions.
    */
   const formatText = (text: string) => {
     return text.split('\n').map((paragraph, index) => (
-      <Text key={index} mb={2}>
-        {paragraph}
-      </Text>
+      <Box key={index} mb={2}>
+        {paragraph.trim() ? (
+          <MessageText
+            text={paragraph}
+            workspaceId={workspaceId || ''}
+            resolveMentions={true}
+            fallbackToSimpleFormat={true}
+          />
+        ) : (
+          <Box height="1em" />
+        )}
+      </Box>
     ));
   };
 
