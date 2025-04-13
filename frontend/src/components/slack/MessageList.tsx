@@ -21,7 +21,7 @@ import {
   CardHeader,
   // Avatar, // Removed after replacing with SlackUserDisplay
   Stack,
-  StackDivider,
+  // StackDivider no longer used after layout changes
   FormControl,
   FormLabel,
   IconButton,
