@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
-import { Text, Link, Box, useColorModeValue } from '@chakra-ui/react';
-import { useUserCache } from './SlackUserDisplay';
+import { Text, Box, useColorModeValue } from '@chakra-ui/react';
+import { useUserCache, SlackUser } from './SlackUserDisplay';
 
 interface MessageTextProps {
   text: string;
