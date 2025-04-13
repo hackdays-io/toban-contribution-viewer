@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import env from '../../config/env';
 import SlackUserDisplay, { SlackUserCacheProvider } from './SlackUserDisplay'
+import MessageText from './MessageText'
 import {
   Box,
   Button,
@@ -195,7 +196,12 @@ const ThreadView: React.FC<ThreadViewProps> = ({
         
         {/* Message content */}
         <Box pl={10} pr={2}>
-          <Text textAlign="left" dangerouslySetInnerHTML={{ __html: parentMessage.text.replace(/\n/g, '<br/>') }}></Text>
+          <MessageText 
+            text={parentMessage.text} 
+            workspaceId={workspaceId} 
+            resolveMentions={true}
+            fallbackToSimpleFormat={true}
+          />
         </Box>
 
         {/* Footer with reactions */}
@@ -242,7 +248,12 @@ const ThreadView: React.FC<ThreadViewProps> = ({
         
         {/* Message content */}
         <Box pl={10} pr={2}>
-          <Text textAlign="left" dangerouslySetInnerHTML={{ __html: message.text.replace(/\n/g, '<br/>') }}></Text>
+          <MessageText 
+            text={message.text} 
+            workspaceId={workspaceId} 
+            resolveMentions={true}
+            fallbackToSimpleFormat={true}
+          />
         </Box>
 
         {/* Footer with reactions */}

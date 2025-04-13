@@ -38,6 +38,7 @@ import {
 // Import ThreadView component
 import ThreadView from './ThreadView'
 import SlackUserDisplay, { SlackUserCacheProvider } from './SlackUserDisplay'
+import MessageText from './MessageText'
 
 // Define types
 interface SlackMessage {
@@ -454,7 +455,12 @@ const MessageList: React.FC<MessageListProps> = ({
                       
                       {/* Message content */}
                       <Box pl={10} pr={2}>
-                        <Text textAlign="left" dangerouslySetInnerHTML={{ __html: message.text.replace(/\n/g, '<br/>') }}></Text>
+                        <MessageText 
+                          text={message.text} 
+                          workspaceId={workspaceId} 
+                          resolveMentions={true}
+                          fallbackToSimpleFormat={true}
+                        />
                       </Box>
 
                       {/* Footer row with thread and reaction info */}
