@@ -116,9 +116,9 @@ const AnalyticsPage: React.FC = () => {
     try {
       setIsLoadingChannels(true);
       
-      // Create URL with query parameters to get only bot-installed or selected channels
+      // Create URL with query parameters to get only channels selected for analysis
       const queryParams = new URLSearchParams({
-        bot_installed_only: 'true',
+        selected_for_analysis_only: 'true',
         include_archived: 'false'
       });
       
