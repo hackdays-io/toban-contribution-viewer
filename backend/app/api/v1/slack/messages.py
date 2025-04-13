@@ -209,6 +209,10 @@ async def get_messages_by_date_range(
 async def get_users(
     workspace_id: str,
     user_ids: List[str] = Query(..., description="List of user UUIDs to retrieve"),
+    fetch_from_slack: bool = Query(
+        False,
+        description="Whether to fetch users from Slack API if not found in database",
+    ),
     db: AsyncSession = Depends(get_async_db),
 ) -> Dict[str, Any]:
     """
@@ -217,6 +221,7 @@ async def get_users(
     Args:
         workspace_id: UUID of the workspace
         user_ids: List of user UUIDs to retrieve
+        fetch_from_slack: Whether to fetch users from Slack API if not found in database
         db: Database session
 
     Returns:
@@ -224,7 +229,7 @@ async def get_users(
     """
     try:
         logger.info(
-            f"Fetching user details for workspace {workspace_id}, user_ids: {user_ids}"
+            f"Fetching user details for workspace {workspace_id}, user_ids: {user_ids}, fetch_from_slack: {fetch_from_slack}"
         )
 
         # Strip out any empty strings or None values
@@ -234,7 +239,7 @@ async def get_users(
             return {"users": []}
 
         # Import locally to avoid clash with unused import warning
-        from app.models.slack import SlackUser
+        from app.models.slack import SlackUser, SlackWorkspace
 
         # Query users from database
         query = select(SlackUser).where(
@@ -243,6 +248,67 @@ async def get_users(
 
         result = await db.execute(query)
         users = result.scalars().all()
+
+        # Keep track of IDs that were found in the database
+        found_user_ids = {str(user.id) for user in users}
+
+        # Find missing user IDs
+        missing_user_ids = [
+            user_id for user_id in valid_user_ids if user_id not in found_user_ids
+        ]
+
+        # If fetch_from_slack is True and there are missing users, try to fetch them from Slack API
+        if fetch_from_slack and missing_user_ids:
+            logger.info(
+                f"Attempting to fetch {len(missing_user_ids)} missing users from Slack API"
+            )
+
+            # Get the workspace access token
+            workspace_result = await db.execute(
+                select(SlackWorkspace).where(SlackWorkspace.id == workspace_id)
+            )
+            workspace = workspace_result.scalars().first()
+
+            if workspace and workspace.access_token:
+                # Get list of missing users that have rows in the SlackMessage table
+                # where user_id is null but user_slack_id is not null
+                missing_users_query = """
+                    SELECT DISTINCT m.user_slack_id
+                    FROM slackmessage m
+                    JOIN slackchannel c ON m.channel_id = c.id
+                    WHERE c.workspace_id = :workspace_id
+                    AND m.user_id IS NULL
+                    AND m.user_slack_id IS NOT NULL
+                """
+                missing_users_result = await db.execute(
+                    text(missing_users_query), {"workspace_id": workspace_id}
+                )
+                missing_slack_ids = missing_users_result.scalars().all()
+
+                # Fetch each missing user from Slack API
+                for slack_user_id in missing_slack_ids:
+                    try:
+                        new_user = await SlackMessageService._fetch_and_create_user(
+                            db=db,
+                            workspace_id=workspace_id,
+                            slack_user_id=slack_user_id,
+                            access_token=workspace.access_token,
+                        )
+
+                        if new_user and str(new_user.id) in missing_user_ids:
+                            users.append(new_user)
+                            logger.info(
+                                f"Successfully fetched user {slack_user_id} from Slack API"
+                            )
+                    except Exception as user_error:
+                        logger.error(
+                            f"Error fetching user {slack_user_id} from Slack API: {str(user_error)}"
+                        )
+
+                # Try to fix message references now that we have created users
+                await SlackMessageService.fix_message_user_references(
+                    db=db, workspace_id=workspace_id
+                )
 
         # Convert users to dictionaries
         user_dicts = []
