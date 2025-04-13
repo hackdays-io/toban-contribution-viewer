@@ -23,7 +23,7 @@ global.fetch = vi.fn(() =>
     ok: true,
     json: () => Promise.resolve([]), // Return empty analysis history
   })
-) as any;
+) as unknown as typeof global.fetch;
 
 describe('ChannelAnalysisHistoryPage', () => {
   it('renders the channel analysis history page correctly', async () => {
