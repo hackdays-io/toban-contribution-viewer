@@ -189,7 +189,7 @@ const ThreadView: React.FC<ThreadViewProps> = ({
                 </Badge>
               )}
             </HStack>
-            <Text>{parentMessage.text}</Text>
+            <Text textAlign="left" dangerouslySetInnerHTML={{ __html: parentMessage.text.replace(/\n/g, '<br/>') }}></Text>
 
             {/* Reactions */}
             {parentMessage.reaction_count > 0 && (
@@ -229,7 +229,7 @@ const ThreadView: React.FC<ThreadViewProps> = ({
                 </Badge>
               )}
             </HStack>
-            <Text>{message.text}</Text>
+            <Text textAlign="left" dangerouslySetInnerHTML={{ __html: message.text.replace(/\n/g, '<br/>') }}></Text>
 
             {/* Reactions */}
             {message.reaction_count > 0 && (

@@ -448,7 +448,7 @@ const MessageList: React.FC<MessageListProps> = ({
                               </Badge>
                             )}
                           </HStack>
-                          <Text>{message.text}</Text>
+                          <Text textAlign="left" dangerouslySetInnerHTML={{ __html: message.text.replace(/\n/g, '<br/>') }}></Text>
 
                           {/* Thread info */}
                           {message.is_thread_parent &&
