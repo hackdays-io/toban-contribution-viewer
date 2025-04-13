@@ -95,10 +95,10 @@ def mock_get_channel_messages():
             MagicMock(spec=SlackMessage),
         ]
         for i, msg in enumerate(messages):
-            msg.id = f"msg{i+1}"
-            msg.slack_id = f"S{i+1}"
+            msg.id = f"msg{i + 1}"
+            msg.slack_id = f"S{i + 1}"
             msg.user_id = "U12345" if i % 2 == 0 else "U67890"
-            msg.text = f"Test message {i+1}"
+            msg.text = f"Test message {i + 1}"
             msg.is_thread_parent = i == 0  # First message is a thread parent
             msg.is_thread_reply = i == 1  # Second message is a thread reply
             msg.reaction_count = i  # Increasing reaction counts
