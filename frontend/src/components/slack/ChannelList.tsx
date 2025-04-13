@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import env from '../../config/env';
 import {
   Box,
   Button,
@@ -30,6 +31,8 @@ import {
   AlertDialogHeader,
   AlertDialogOverlay,
   useDisclosure,
+  Alert,
+  AlertIcon,
 } from '@chakra-ui/react';
 import { FiSearch, FiRefreshCw, FiCheck, FiAlertTriangle, FiArrowLeft, FiArrowRight, FiMessageSquare } from 'react-icons/fi';
 import { Link, useParams, useNavigate } from 'react-router-dom';
@@ -104,6 +107,7 @@ const ChannelList: React.FC = () => {
   // State for channels and loading
   const [allChannels, setAllChannels] = useState<Channel[]>([]); // Store all channels fetched from API
   const [selectedChannels, setSelectedChannels] = useState<string[]>([]);
+  const [corsError, setCorsError] = useState(false);
   // Client-side pagination state
   const [pagination, setPagination] = useState<PaginationInfo>({
     page: 1,
@@ -111,6 +115,11 @@ const ChannelList: React.FC = () => {
     total_items: 0,
     total_pages: 0,
   });
+  
+  // Detect if we're running in an environment that might have CORS issues
+  const isNgrokOrRemote = window.location.hostname.includes('ngrok') || 
+                         (!window.location.hostname.includes('localhost') && 
+                          env.apiUrl.includes('localhost'));
 
   // State for filters
   const [searchTerm, setSearchTerm] = useState('');
@@ -146,6 +155,7 @@ const ChannelList: React.FC = () => {
     if (!workspaceId) return;
 
     setIsLoading(true);
+    setCorsError(false);
     
     console.log("Fetching all channels for client-side filtering");
 
@@ -191,19 +201,37 @@ const ChannelList: React.FC = () => {
       setSelectedChannels(preselected);
     } catch (error) {
       console.error('Error fetching channels:', error);
-      toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to load channels',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
+      
+      // Check if this is likely a CORS error
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const isCorsError = errorMessage.includes('NetworkError') || 
+                         errorMessage.includes('Failed to fetch') ||
+                         errorMessage.includes('CORS');
+      
+      if (isCorsError && isNgrokOrRemote) {
+        setCorsError(true);
+        toast({
+          title: 'CORS Error',
+          description: 'Unable to connect to API due to CORS restrictions. This commonly happens when accessing the application through ngrok while the API is running on localhost.',
+          status: 'error',
+          duration: 10000,
+          isClosable: true,
+        });
+      } else {
+        toast({
+          title: 'Error',
+          description: error instanceof Error ? error.message : 'Failed to load channels',
+          status: 'error',
+          duration: 5000,
+          isClosable: true,
+        });
+      }
     } finally {
       setIsLoading(false);
     }
   // We only depend on page, typeFilter, and includeArchived from state
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [workspaceId, pagination.page, pagination.page_size, includeArchived, typeFilter, toast]);
+  }, [workspaceId, pagination.page, pagination.page_size, includeArchived, typeFilter, toast, isNgrokOrRemote]);
 
   // Function to check sync status
   const checkSyncStatus = async () => {
@@ -597,6 +625,26 @@ const ChannelList: React.FC = () => {
       </HStack>
 
       <Divider mb={6} />
+      
+      {corsError && (
+        <Alert status="warning" mb={6}>
+          <AlertIcon />
+          <VStack align="start" spacing={2} width="100%">
+            <Text fontWeight="bold">CORS Error Detected</Text>
+            <Text>
+              Unable to connect to the API due to browser security restrictions (CORS).
+              This commonly happens when accessing the app through ngrok while the API is running on localhost.
+            </Text>
+            <Text fontWeight="bold">Try one of these solutions:</Text>
+            <Text>1. Run the frontend directly on localhost</Text>
+            <Text>2. Run the backend on a public URL</Text>
+            <Text>3. Configure the backend to accept requests from {window.location.origin}</Text>
+            <Button size="sm" colorScheme="blue" onClick={fetchChannels} mt={2}>
+              Retry Connection
+            </Button>
+          </VStack>
+        </Alert>
+      )}
 
       {/* Filters and controls */}
       <Flex
