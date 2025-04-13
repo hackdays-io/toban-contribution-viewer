@@ -136,18 +136,21 @@ const ChannelAnalysisPage: React.FC = () => {
         }
       }
       
-      // Fetch channel info
+      // Fetch channel info - get all channels then find the specific one
       const channelResponse = await fetch(
         `${env.apiUrl}/slack/workspaces/${workspaceId}/channels`
       );
       
       if (channelResponse.ok) {
         const channelsData = await channelResponse.json();
-        const matchedChannel = channelsData.channels.find(
-          (c: Channel) => c.id === channelId
-        );
-        if (matchedChannel) {
-          setChannel(matchedChannel);
+        // Find the specific channel by ID
+        if (channelsData.channels && Array.isArray(channelsData.channels)) {
+          const matchedChannel = channelsData.channels.find(
+            (c: Channel) => c.id === channelId
+          );
+          if (matchedChannel) {
+            setChannel(matchedChannel);
+          }
         }
       }
     } catch (error) {
