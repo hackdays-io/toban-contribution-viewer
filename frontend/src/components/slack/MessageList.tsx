@@ -19,7 +19,7 @@ import {
   Card,
   CardBody,
   CardHeader,
-  Avatar,
+  // Avatar, // Removed after replacing with SlackUserDisplay
   Stack,
   StackDivider,
   FormControl,
@@ -541,7 +541,7 @@ const MessageList: React.FC<MessageListProps> = ({
             <CardBody>
               <Stack divider={<StackDivider />} spacing={4}>
                 {filteredMessages.map((message) => {
-                  const user = getUserInfo(message.user_id)
+                  // We no longer need user info since we're using SlackUserDisplay
                   return (
                     <Box key={message.id} p={2}>
                       <HStack spacing={4} align="start" mb={2}>

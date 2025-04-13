@@ -14,7 +14,7 @@ import {
   Text,
   HStack,
   VStack,
-  Avatar,
+  // Avatar, // Removed after replacing with SlackUserDisplay
   Badge,
   Icon,
   Spinner,
@@ -106,20 +106,8 @@ const ThreadView: React.FC<ThreadViewProps> = ({
 
   /**
    * Get user information for a message.
+   * Note: This function is no longer used since we're using SlackUserDisplay
    */
-  const getUserInfo = (userId: string | null) => {
-    if (!userId) return { name: 'Unknown User', avatar: null }
-    const user = users.get(userId)
-
-    // Choose the best name to display in this order of preference
-    const displayName =
-      user?.display_name || user?.real_name || user?.name || 'Unknown User'
-
-    return {
-      name: displayName,
-      avatar: user?.profile_image_url,
-    }
-  }
 
   /**
    * Fetch thread replies from the API.
