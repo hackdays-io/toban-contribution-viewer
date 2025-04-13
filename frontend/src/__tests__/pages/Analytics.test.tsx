@@ -9,11 +9,11 @@ vi.mock('@chakra-ui/react', async () => {
   const actual = await vi.importActual('@chakra-ui/react');
   return {
     ...actual,
-    Tabs: ({ children }: any) => <div data-testid="tabs">{children}</div>,
-    TabList: ({ children }: any) => <div data-testid="tab-list">{children}</div>,
-    Tab: ({ children }: any) => <div data-testid="tab">{children}</div>,
-    TabPanels: ({ children }: any) => <div data-testid="tab-panels">{children}</div>,
-    TabPanel: ({ children }: any) => <div data-testid="tab-panel">{children}</div>,
+    Tabs: ({ children }: { children: React.ReactNode }) => <div data-testid="tabs">{children}</div>,
+    TabList: ({ children }: { children: React.ReactNode }) => <div data-testid="tab-list">{children}</div>,
+    Tab: ({ children }: { children: React.ReactNode }) => <div data-testid="tab">{children}</div>,
+    TabPanels: ({ children }: { children: React.ReactNode }) => <div data-testid="tab-panels">{children}</div>,
+    TabPanel: ({ children }: { children: React.ReactNode }) => <div data-testid="tab-panel">{children}</div>,
   };
 });
 

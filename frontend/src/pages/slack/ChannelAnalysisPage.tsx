@@ -113,6 +113,7 @@ const ChannelAnalysisPage: React.FC = () => {
     if (workspaceId && channelId) {
       fetchWorkspaceAndChannelInfo();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [workspaceId, channelId]);
 
   /**

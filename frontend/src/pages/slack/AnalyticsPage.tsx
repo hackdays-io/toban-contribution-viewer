@@ -62,6 +62,7 @@ const AnalyticsPage: React.FC = () => {
   // Fetch workspaces on component mount
   useEffect(() => {
     fetchWorkspaces();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Fetch channels when workspace is selected
@@ -71,6 +72,7 @@ const AnalyticsPage: React.FC = () => {
     } else {
       setChannels([]);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedWorkspace]);
 
   /**
