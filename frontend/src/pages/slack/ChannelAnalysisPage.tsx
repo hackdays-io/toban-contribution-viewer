@@ -136,9 +136,13 @@ const ChannelAnalysisPage: React.FC = () => {
         }
       }
       
-      // Fetch channel info - get all channels then find the specific one
+      // Fetch channel info - get only bot-installed channels
+      const queryParams = new URLSearchParams({
+        bot_installed_only: 'true'
+      });
+      
       const channelResponse = await fetch(
-        `${env.apiUrl}/slack/workspaces/${workspaceId}/channels`
+        `${env.apiUrl}/slack/workspaces/${workspaceId}/channels?${queryParams}`
       );
       
       if (channelResponse.ok) {

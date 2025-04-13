@@ -137,6 +137,12 @@ async def list_channels(
     include_archived: bool = Query(False, description="Include archived channels"),
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(100, ge=1, le=1000, description="Number of items per page"),
+    bot_installed_only: bool = Query(
+        False, description="Only include channels where the bot is installed"
+    ),
+    selected_for_analysis_only: bool = Query(
+        False, description="Only include channels selected for analysis"
+    ),
 ) -> Dict[str, Any]:
     """
     List channels for a workspace with pagination.
@@ -164,6 +170,8 @@ async def list_channels(
             include_archived=include_archived,
             page=page,
             page_size=page_size,
+            bot_installed_only=bot_installed_only,
+            selected_for_analysis_only=selected_for_analysis_only,
         )
 
         logger.info(

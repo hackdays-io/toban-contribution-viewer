@@ -115,8 +115,15 @@ const AnalyticsPage: React.FC = () => {
   const fetchChannels = async (workspaceId: string) => {
     try {
       setIsLoadingChannels(true);
+      
+      // Create URL with query parameters to get only bot-installed or selected channels
+      const queryParams = new URLSearchParams({
+        bot_installed_only: 'true',
+        include_archived: 'false'
+      });
+      
       const response = await fetch(
-        `${env.apiUrl}/slack/workspaces/${workspaceId}/channels`
+        `${env.apiUrl}/slack/workspaces/${workspaceId}/channels?${queryParams}`
       );
       
       if (!response.ok) {
@@ -124,15 +131,11 @@ const AnalyticsPage: React.FC = () => {
       }
       
       const data = await response.json();
-      // Filter out archived channels
-      const activeChannels = (data.channels || []).filter(
-        (channel: Channel) => !channel.is_archived
-      );
-      setChannels(activeChannels);
+      setChannels(data.channels || []);
       
       // Set the first channel as selected if available
-      if (activeChannels.length > 0) {
-        setSelectedChannel(activeChannels[0].id);
+      if (data.channels && data.channels.length > 0) {
+        setSelectedChannel(data.channels[0].id);
       } else {
         setSelectedChannel('');
       }
