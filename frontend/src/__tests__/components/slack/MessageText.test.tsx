@@ -44,6 +44,23 @@ vi.mock('../../../components/slack/SlackUserDisplay', async () => {
   };
 });
 
+// Mock fetch
+global.fetch = vi.fn().mockImplementation(() => Promise.resolve({
+  ok: true,
+  json: () => Promise.resolve({
+    users: [
+      {
+        id: 'db-id-1',
+        slack_id: 'U12345',
+        name: 'testuser',
+        display_name: 'Test User',
+        real_name: 'Test User Real Name',
+        profile_image_url: 'https://example.com/avatar.jpg'
+      }
+    ]
+  })
+})) as unknown as typeof global.fetch;
+
 describe('MessageText', () => {
   beforeEach(() => {
     vi.clearAllMocks();

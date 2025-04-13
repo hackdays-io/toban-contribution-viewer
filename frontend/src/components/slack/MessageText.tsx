@@ -1,6 +1,7 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 import { Text, Box, useColorModeValue } from '@chakra-ui/react';
 import { useUserCache, SlackUser } from './SlackUserDisplay';
+import env from '../../config/env';
 
 interface MessageTextProps {
   text: string;
@@ -18,6 +19,68 @@ interface MessageTextProps {
 const MessageText: React.FC<MessageTextProps> = ({ text, workspaceId }) => {
   const userCache = useUserCache();
   const mentionColor = useColorModeValue('blue.500', 'blue.300');
+  const [userMap, setUserMap] = useState<Map<string, SlackUser>>(new Map());
+  
+  // Extract all user mentions from the text and fetch their data directly
+  useEffect(() => {
+    if (!text || !workspaceId) return;
+    
+    // First extract all user IDs mentioned in the text
+    const userMentionRegex = /<@([A-Z0-9]+)>/g;
+    let match;
+    const userIds: string[] = [];
+    
+    // Reset the text and match all user IDs
+    let textCopy = text;
+    while ((match = userMentionRegex.exec(textCopy)) !== null) {
+      userIds.push(match[1]);
+    }
+    
+    // If no user IDs found, return early
+    if (userIds.length === 0) return;
+    
+    // Fetch user data directly from the API
+    const fetchUsers = async () => {
+      try {
+        const userIdsParam = userIds.map(id => `user_ids=${encodeURIComponent(id)}`).join('&');
+        const url = `${env.apiUrl}/slack/workspaces/${workspaceId}/users?${userIdsParam}&fetch_from_slack=true`;
+        
+        const response = await fetch(url, {
+          method: 'GET',
+          mode: 'cors',
+          credentials: 'include',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Origin': window.location.origin
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Error fetching users: ${response.status} ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.users && Array.isArray(data.users)) {
+          const newUserMap = new Map<string, SlackUser>();
+          
+          // Add each user to the map
+          data.users.forEach((user: SlackUser) => {
+            if (user && user.slack_id) {
+              newUserMap.set(user.slack_id, user);
+            }
+          });
+          
+          setUserMap(newUserMap);
+        }
+      } catch (error) {
+        console.error('Error fetching users for message:', error);
+      }
+    };
+    
+    fetchUsers();
+  }, [text, workspaceId]);
 
   // Process the text to replace user mentions and handle formatting
   const processedContent = useMemo(() => {
@@ -56,9 +119,14 @@ const MessageText: React.FC<MessageTextProps> = ({ text, workspaceId }) => {
         }
       }
       
-      // Add the mention
+      // Add the mention - first check our direct userMap
       let displayName = userId;
-      if (user) {
+      const mapUser = userMap.get(userId);
+      
+      if (mapUser) {
+        displayName = mapUser.real_name || mapUser.display_name || mapUser.name || userId;
+      } else if (user) {
+        // Fall back to the user cache
         displayName = user.real_name || user.display_name || user.name || userId;
       }
       
@@ -94,7 +162,7 @@ const MessageText: React.FC<MessageTextProps> = ({ text, workspaceId }) => {
     }
     
     return <>{messageParts}</>;
-  }, [text, userCache, mentionColor]);
+  }, [text, userCache, mentionColor, userMap]);
 
   return (
     <Text textAlign="left">
