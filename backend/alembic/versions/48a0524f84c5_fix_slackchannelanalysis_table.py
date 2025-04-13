@@ -1,8 +1,8 @@
-"""add_channel_analysis_model
+"""fix_slackchannelanalysis_table
 
-Revision ID: 9b8d4568d5be
-Revises: 7d5c89f714c7
-Create Date: 2025-04-13 18:18:08.510916
+Revision ID: 48a0524f84c5
+Revises: 9b8d4568d5be
+Create Date: 2025-04-13 09:53:49.975143
 
 """
 
@@ -12,14 +12,34 @@ from sqlalchemy.dialects import postgresql
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision = "9b8d4568d5be"
-down_revision = "7d5c89f714c7"
+revision = "48a0524f84c5"
+down_revision = "9b8d4568d5be"
 branch_labels = None
 depends_on = None
 
 
 def upgrade() -> None:
-    # Create a new table for storing LLM channel analysis results
+    # First drop the table if it exists
+    try:
+        op.drop_index(
+            "ix_slackchannelanalysis_analysis_id_channel_id",
+            table_name="slackchannelanalysis",
+        )
+        op.drop_index(
+            "ix_slackchannelanalysis_generated_at", table_name="slackchannelanalysis"
+        )
+        op.drop_index(
+            "ix_slackchannelanalysis_channel_id", table_name="slackchannelanalysis"
+        )
+        op.drop_index(
+            "ix_slackchannelanalysis_analysis_id", table_name="slackchannelanalysis"
+        )
+        op.drop_table("slackchannelanalysis")
+    except:
+        # Table might not exist, which is fine
+        pass
+
+    # Create the table again with the missing is_active column
     op.create_table(
         "slackchannelanalysis",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
@@ -50,14 +70,12 @@ def upgrade() -> None:
         sa.Column("key_highlights", sa.Text(), nullable=True),
         sa.Column("model_used", sa.String(255), nullable=True),
         sa.Column("generated_at", sa.DateTime(), nullable=False),
-        sa.Column(
-            "raw_response", postgresql.JSONB(), nullable=True
-        ),  # Store the full LLM response
-        sa.Column("status", sa.String(50), nullable=False, default="completed"),
+        sa.Column("raw_response", postgresql.JSONB(), nullable=True),
+        sa.Column("status", sa.String(50), nullable=False, server_default="completed"),
         sa.Column("error_message", sa.Text(), nullable=True),
     )
 
-    # Add indexes for efficient querying
+    # Recreate the indexes
     op.create_index(
         "ix_slackchannelanalysis_analysis_id",
         "slackchannelanalysis",
@@ -80,54 +98,7 @@ def upgrade() -> None:
         unique=True,
     )
 
-    # Add new columns to SlackAnalysis table for better tracking
-    op.add_column(
-        "slackanalysis",
-        sa.Column("llm_model", sa.String(255), nullable=True),
-    )
-    op.add_column(
-        "slackanalysis",
-        sa.Column("is_scheduled", sa.Boolean(), nullable=False, server_default="false"),
-    )
-    op.add_column(
-        "slackanalysis",
-        sa.Column("schedule_frequency", sa.String(50), nullable=True),
-    )
-    op.add_column(
-        "slackanalysis",
-        sa.Column("next_run_at", sa.DateTime(), nullable=True),
-    )
-    op.add_column(
-        "slackanalysis",
-        sa.Column(
-            "analysis_type",
-            sa.String(50),
-            nullable=False,
-            server_default="channel_analysis",
-        ),
-    )
-
 
 def downgrade() -> None:
-    # Drop the new table
-    op.drop_index(
-        "ix_slackchannelanalysis_analysis_id_channel_id",
-        table_name="slackchannelanalysis",
-    )
-    op.drop_index(
-        "ix_slackchannelanalysis_generated_at", table_name="slackchannelanalysis"
-    )
-    op.drop_index(
-        "ix_slackchannelanalysis_channel_id", table_name="slackchannelanalysis"
-    )
-    op.drop_index(
-        "ix_slackchannelanalysis_analysis_id", table_name="slackchannelanalysis"
-    )
-    op.drop_table("slackchannelanalysis")
-
-    # Drop the new columns from SlackAnalysis
-    op.drop_column("slackanalysis", "llm_model")
-    op.drop_column("slackanalysis", "is_scheduled")
-    op.drop_column("slackanalysis", "schedule_frequency")
-    op.drop_column("slackanalysis", "next_run_at")
-    op.drop_column("slackanalysis", "analysis_type")
+    # No need to downgrade, as we're fixing a broken table
+    pass

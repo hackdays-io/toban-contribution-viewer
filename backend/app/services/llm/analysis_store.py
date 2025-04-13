@@ -5,9 +5,9 @@ Service for storing and retrieving LLM analysis results in the database.
 import logging
 import uuid
 from datetime import datetime
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional
 
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.slack import SlackAnalysis, SlackChannel, SlackChannelAnalysis
@@ -45,15 +45,29 @@ class AnalysisStoreService:
         Returns:
             The stored SlackChannelAnalysis model instance
         """
-        # Find the channel
-        channel_query = select(SlackChannel).where(
-            SlackChannel.slack_id == channel_id,
-            (
-                SlackChannel.workspace_id == uuid.UUID(workspace_id)
+        # Find the channel by its database ID (not slack_id)
+        try:
+            channel_uuid = uuid.UUID(channel_id)
+            workspace_uuid = (
+                uuid.UUID(workspace_id)
                 if not isinstance(workspace_id, uuid.UUID)
                 else workspace_id
-            ),
-        )
+            )
+
+            channel_query = select(SlackChannel).where(
+                SlackChannel.id == channel_uuid,
+                SlackChannel.workspace_id == workspace_uuid,
+            )
+        except ValueError:
+            # If channel_id is not a valid UUID, try looking it up as slack_id
+            channel_query = select(SlackChannel).where(
+                SlackChannel.slack_id == channel_id,
+                (
+                    SlackChannel.workspace_id == uuid.UUID(workspace_id)
+                    if not isinstance(workspace_id, uuid.UUID)
+                    else workspace_id
+                ),
+            )
         result = await db.execute(channel_query)
         channel = result.scalars().first()
 
@@ -64,12 +78,23 @@ class AnalysisStoreService:
 
         # Create or find an analysis record
         analysis_name = f"Channel analysis for #{channel.name}"
+
+        # Convert timezone-aware datetimes to naive datetimes to avoid database errors
+        naive_start_date = (
+            start_date.replace(tzinfo=None) if start_date.tzinfo else start_date
+        )
+        naive_end_date = end_date.replace(tzinfo=None) if end_date.tzinfo else end_date
+
+        logger.info(
+            f"Creating analysis with naive dates: {naive_start_date} to {naive_end_date}"
+        )
+
         analysis = SlackAnalysis(
             workspace_id=channel.workspace_id,
             name=analysis_name,
-            description=f"Analysis of #{channel.name} from {start_date.date()} to {end_date.date()}",
-            start_date=start_date,
-            end_date=end_date,
+            description=f"Analysis of #{channel.name} from {naive_start_date.date()} to {naive_end_date.date()}",
+            start_date=naive_start_date,
+            end_date=naive_end_date,
             llm_model=model_used,
             analysis_type="channel_analysis",
             status="completed",
@@ -89,8 +114,8 @@ class AnalysisStoreService:
         # Create the channel analysis record
         channel_analysis = SlackChannelAnalysis(
             channel_id=channel.id,
-            start_date=start_date,
-            end_date=end_date,
+            start_date=naive_start_date,
+            end_date=naive_end_date,
             message_count=stats.get("message_count", 0),
             participant_count=stats.get("participant_count", 0),
             thread_count=stats.get("thread_count", 0),
@@ -132,7 +157,16 @@ class AnalysisStoreService:
         Returns:
             List of SlackChannelAnalysis instances
         """
-        channel_query = select(SlackChannel).where(SlackChannel.slack_id == channel_id)
+        # Try to parse channel_id as UUID first
+        try:
+            channel_uuid = uuid.UUID(channel_id)
+            channel_query = select(SlackChannel).where(SlackChannel.id == channel_uuid)
+        except ValueError:
+            # If not a valid UUID, treat as slack_id
+            channel_query = select(SlackChannel).where(
+                SlackChannel.slack_id == channel_id
+            )
+
         result = await db.execute(channel_query)
         channel = result.scalars().first()
 
