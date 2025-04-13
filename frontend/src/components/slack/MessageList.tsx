@@ -19,7 +19,7 @@ import {
   Card,
   CardBody,
   CardHeader,
-  Avatar,
+  // Avatar, // Removed after replacing with SlackUserDisplay
   Stack,
   StackDivider,
   FormControl,
@@ -37,6 +37,7 @@ import {
 
 // Import ThreadView component
 import ThreadView from './ThreadView'
+import SlackUserDisplay, { SlackUserCacheProvider } from './SlackUserDisplay'
 
 // Define types
 interface SlackMessage {
@@ -61,14 +62,8 @@ interface SlackMessage {
   parent_id: string | null
 }
 
-interface SlackUser {
-  id: string
-  slack_id: string
-  name: string
-  display_name: string | null
-  real_name: string | null
-  profile_image_url: string | null
-}
+// SlackUser interface removed as it's no longer needed here
+// We now use the one from SlackUserDisplay component
 
 interface PaginationInfo {
   has_more: boolean
@@ -101,7 +96,6 @@ const MessageList: React.FC<MessageListProps> = ({
   const [endDate, setEndDate] = useState<string>('')
   const [includeReplies] = useState(true)
   const toast = useToast()
-  const [users, setUsers] = useState<Map<string, SlackUser>>(new Map())
 
   // Thread view state
   const [isThreadViewOpen, setIsThreadViewOpen] = useState(false)
@@ -170,18 +164,8 @@ const MessageList: React.FC<MessageListProps> = ({
       setMessages(data.messages || [])
       setPagination(data.pagination || null)
 
-      // Extract user IDs from messages to fetch user data
-      const userIds = new Set<string>()
-      data.messages.forEach((message: SlackMessage) => {
-        if (message.user_id) {
-          userIds.add(message.user_id)
-        }
-      })
-
-      // Fetch user data for the messages
-      if (userIds.size > 0) {
-        await fetchUserData(Array.from(userIds))
-      }
+      // No longer need to extract user IDs to fetch user data here
+      // User data is now handled by the SlackUserDisplay component
     } catch (error) {
       console.error('Error fetching messages:', error)
       toast({
@@ -196,95 +180,8 @@ const MessageList: React.FC<MessageListProps> = ({
     }
   }
 
-  /**
-   * Fetch user data for message authors from the API.
-   */
-  const fetchUserData = async (userIds: string[]) => {
-    try {
-      // Filter out empty or undefined userIds
-      const validUserIds = userIds.filter((id) => id)
-
-      if (validUserIds.length === 0) {
-        return
-      }
-
-      // Create URL with query parameters for all user IDs
-      const userIdsParam = validUserIds
-        .map((id) => `user_ids=${encodeURIComponent(id)}`)
-        .join('&')
-      const url = `${env.apiUrl}/slack/workspaces/${workspaceId}/users?${userIdsParam}`
-
-      // Fetch user data from API with CORS headers
-      const response = await fetch(url, {
-        method: 'GET',
-        mode: 'cors',
-        credentials: 'include',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-          'Origin': window.location.origin
-        }
-      })
-
-      if (!response.ok) {
-        const errorText = await response.text()
-        console.error('Error fetching user data:', errorText)
-        throw new Error(
-          `Failed to fetch user data: ${response.status} ${response.statusText}`
-        )
-      }
-
-      const data = await response.json()
-      const newUsers = new Map<string, SlackUser>()
-
-      // Process the users from the API response
-      if (data.users && Array.isArray(data.users)) {
-        data.users.forEach((user: SlackUser) => {
-          if (user && user.id) {
-            newUsers.set(user.id, user)
-          }
-        })
-      }
-
-      // For any userIds not found in the API response, create placeholder users
-      validUserIds.forEach((userId) => {
-        if (!newUsers.has(userId)) {
-          const placeholderUser: SlackUser = {
-            id: userId,
-            slack_id: '',
-            name: 'Unknown User',
-            display_name: null,
-            real_name: null,
-            profile_image_url: null,
-          }
-          newUsers.set(userId, placeholderUser)
-        }
-      })
-
-      // User data loaded successfully
-      setUsers(newUsers)
-    } catch (error) {
-      console.error('Error fetching user data:', error)
-      // Create placeholder users for all IDs if the API call fails
-      const newUsers = new Map<string, SlackUser>()
-
-      userIds.forEach((userId) => {
-        if (userId) {
-          const placeholderUser: SlackUser = {
-            id: userId,
-            slack_id: '',
-            name: 'Unknown User',
-            display_name: null,
-            real_name: null,
-            profile_image_url: null,
-          }
-          newUsers.set(userId, placeholderUser)
-        }
-      })
-
-      setUsers(newUsers)
-    }
-  }
+  // fetchUserData method removed as it's no longer needed
+  // User data is now handled by the SlackUserDisplay component
 
   /**
    * Sync messages from Slack to the database.
@@ -402,24 +299,13 @@ const MessageList: React.FC<MessageListProps> = ({
 
   /**
    * Get user information for a message.
+   * Note: This function is no longer used since we're using SlackUserDisplay component
    */
-  const getUserInfo = (userId: string | null) => {
-    if (!userId) return { name: 'Unknown User', avatar: null }
-    const user = users.get(userId)
-
-    // Choose the best name to display in this order of preference:
-    // 1. display_name (what appears in Slack UI)
-    // 2. real_name (full name if available)
-    // 3. name (username/handle)
-    // If none available, fallback to "Unknown User"
-    const displayName =
-      user?.display_name || user?.real_name || user?.name || 'Unknown User'
-
-    return {
-      name: displayName,
-      avatar: user?.profile_image_url,
-    }
-  }
+  // const getUserInfo = (userId: string | null) => {
+  //    name: displayName,
+  //    avatar: user?.profile_image_url,
+  //  }
+  //}
 
   /**
    * Filter messages by search query (client-side filtering).
@@ -431,25 +317,26 @@ const MessageList: React.FC<MessageListProps> = ({
   )
 
   return (
-    <Box p={6} width="100%" maxWidth="1000px" mx="auto">
-      <HStack justifyContent="space-between" mb={6}>
-        <Heading size="lg">
-          {channelName ? `#${channelName} Messages` : 'Channel Messages'}
-        </Heading>
-        <HStack spacing={3}>
-          <Button
-            leftIcon={<Icon as={FiRefreshCw} />}
-            colorScheme="purple"
-            isLoading={isSyncing}
-            onClick={() => {
-              // Use the unified sync endpoint that handles both messages and threads
-              syncMessages();
-            }}
-          >
-            Sync Messages & Threads
-          </Button>
+    <SlackUserCacheProvider workspaceId={workspaceId}>
+      <Box p={6} width="100%" maxWidth="1000px" mx="auto">
+        <HStack justifyContent="space-between" mb={6}>
+          <Heading size="lg">
+            {channelName ? `#${channelName} Messages` : 'Channel Messages'}
+          </Heading>
+          <HStack spacing={3}>
+            <Button
+              leftIcon={<Icon as={FiRefreshCw} />}
+              colorScheme="purple"
+              isLoading={isSyncing}
+              onClick={() => {
+                // Use the unified sync endpoint that handles both messages and threads
+                syncMessages();
+              }}
+            >
+              Sync Messages & Threads
+            </Button>
+          </HStack>
         </HStack>
-      </HStack>
 
       <Divider mb={6} />
 
@@ -539,18 +426,19 @@ const MessageList: React.FC<MessageListProps> = ({
             <CardBody>
               <Stack divider={<StackDivider />} spacing={4}>
                 {filteredMessages.map((message) => {
-                  const user = getUserInfo(message.user_id)
+                  // We no longer need user info since we're using SlackUserDisplay
                   return (
                     <Box key={message.id} p={2}>
                       <HStack spacing={4} align="start" mb={2}>
-                        <Avatar
-                          size="sm"
-                          name={user.name}
-                          src={user.avatar || undefined}
+                        <SlackUserDisplay 
+                          userId={message.user_id || ''}
+                          workspaceId={workspaceId}
+                          showAvatar={true}
+                          displayFormat="real_name"
+                          fetchFromSlack={true}
                         />
                         <Box>
                           <HStack mb={1}>
-                            <Text fontWeight="bold">{user.name}</Text>
                             <Text fontSize="sm" color="gray.500">
                               {formatDateTime(message.message_datetime)}
                             </Text>
@@ -622,9 +510,9 @@ const MessageList: React.FC<MessageListProps> = ({
         channelId={channelId}
         threadTs={selectedThreadTs}
         parentMessage={selectedThreadParent}
-        users={users}
       />
     </Box>
+    </SlackUserCacheProvider>
   )
 }
 

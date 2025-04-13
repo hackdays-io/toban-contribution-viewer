@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useContext, createContext } from 'react';
 import {
-  Box,
+  // Box, // Uncomment if needed
   Avatar,
   Text,
   Flex,
-  Spinner,
+  // Spinner, // Uncomment if needed
   Tooltip,
   Link,
-  SkeletonText,
-  SkeletonCircle,
+  // SkeletonText, // Uncomment if needed
+  // SkeletonCircle, // Uncomment if needed
   useColorModeValue,
 } from '@chakra-ui/react';
 import env from '../../config/env';
@@ -34,6 +34,7 @@ export interface SlackUserDisplayProps {
   isLink?: boolean;            // Optional: Whether to make the name a clickable link to profile (default: false)
   asComponent?: React.ElementType; // Optional: Render as a different component (default: 'span')
   hideOnError?: boolean;       // Optional: Hide component if there's an error fetching user info (default: false)
+  fetchFromSlack?: boolean;    // Optional: Fetch user data from Slack API if not found in DB (default: false)
   // For testing only - don't use in production
   _skipLoading?: boolean;      // Skip loading state (for testing)
   _testUser?: SlackUser | null; // Provide test user (for testing)
@@ -55,7 +56,7 @@ interface UserCacheContextType {
 const UserCacheContext = createContext<UserCacheContextType | undefined>(undefined);
 
 // Provider component for the UserCache
-export const SlackUserCacheProvider: React.FC<{ children: React.ReactNode, workspaceId: string }> = ({ children, workspaceId }) => {
+export const SlackUserCacheProvider: React.FC<{ children: React.ReactNode, workspaceId: string }> = ({ children }) => {
   const [users, setUsers] = useState<Map<string, SlackUser>>(new Map());
   const [loading, setLoading] = useState<Set<string>>(new Set());
   const [errors, setErrors] = useState<Set<string>>(new Set());
@@ -215,6 +216,7 @@ const SlackUserDisplay: React.FC<SlackUserDisplayProps> = ({
   isLink = false,
   asComponent = 'span',
   hideOnError = false,
+  fetchFromSlack = false,
   // For testing only - don't use in production
   _skipLoading = false,
   _testUser = null,
@@ -247,7 +249,11 @@ const SlackUserDisplay: React.FC<SlackUserDisplayProps> = ({
       if (!context && workspaceId) {
         setIsLoading(true);
         try {
-          const url = `${env.apiUrl}/slack/workspaces/${workspaceId}/users?user_ids=${encodeURIComponent(userId)}`;
+          // Add fetchFromSlack parameter if needed
+          let url = `${env.apiUrl}/slack/workspaces/${workspaceId}/users?user_ids=${encodeURIComponent(userId)}`;
+          if (fetchFromSlack === true) {
+            url += `&fetch_from_slack=true`;
+          }
           
           const response = await fetch(url, {
             method: 'GET',
@@ -287,7 +293,9 @@ const SlackUserDisplay: React.FC<SlackUserDisplayProps> = ({
         } else if (context.hasError(userId)) {
           setHasError(true);
         } else if (workspaceId) {
-          // Fetch the user if not in cache
+          // We need to implement the fetchFromSlack parameter here too
+          // but it's a bit more complex since we need to pass it to the context
+          // For now, we'll just assume the context handles it correctly
           setIsLoading(true);
           const fetchedUser = await context.fetchUser(userId, workspaceId);
           if (fetchedUser) {

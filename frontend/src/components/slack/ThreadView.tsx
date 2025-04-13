@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import env from '../../config/env';
+import SlackUserDisplay, { SlackUserCacheProvider } from './SlackUserDisplay'
 import {
   Box,
   Button,
@@ -13,7 +14,7 @@ import {
   Text,
   HStack,
   VStack,
-  Avatar,
+  // Avatar, // Removed after replacing with SlackUserDisplay
   Badge,
   Icon,
   Spinner,
@@ -46,14 +47,7 @@ interface SlackMessage {
   parent_id: string | null
 }
 
-interface SlackUser {
-  id: string
-  slack_id: string
-  name: string
-  display_name: string | null
-  real_name: string | null
-  profile_image_url: string | null
-}
+// SlackUser interface removed as it's no longer used
 
 interface ThreadViewProps {
   isOpen: boolean
@@ -62,7 +56,6 @@ interface ThreadViewProps {
   channelId: string
   threadTs: string
   parentMessage: SlackMessage | null
-  users: Map<string, SlackUser>
 }
 
 /**
@@ -74,8 +67,8 @@ const ThreadView: React.FC<ThreadViewProps> = ({
   workspaceId,
   channelId,
   threadTs,
-  parentMessage,
-  users,
+  parentMessage
+  // users parameter removed as it's not used
 }) => {
   const [replies, setReplies] = useState<SlackMessage[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -105,20 +98,8 @@ const ThreadView: React.FC<ThreadViewProps> = ({
 
   /**
    * Get user information for a message.
+   * Note: This function is no longer used since we're using SlackUserDisplay
    */
-  const getUserInfo = (userId: string | null) => {
-    if (!userId) return { name: 'Unknown User', avatar: null }
-    const user = users.get(userId)
-
-    // Choose the best name to display in this order of preference
-    const displayName =
-      user?.display_name || user?.real_name || user?.name || 'Unknown User'
-
-    return {
-      name: displayName,
-      avatar: user?.profile_image_url,
-    }
-  }
 
   /**
    * Fetch thread replies from the API.
@@ -180,8 +161,6 @@ const ThreadView: React.FC<ThreadViewProps> = ({
   const renderParentMessage = () => {
     if (!parentMessage) return null
 
-    const user = getUserInfo(parentMessage.user_id)
-
     return (
       <Box
         p={4}
@@ -192,10 +171,15 @@ const ThreadView: React.FC<ThreadViewProps> = ({
         width="100%"
       >
         <HStack spacing={4} align="start">
-          <Avatar size="sm" name={user.name} src={user.avatar || undefined} />
+          <SlackUserDisplay 
+            userId={parentMessage.user_id || ''}
+            workspaceId={workspaceId}
+            showAvatar={true}
+            displayFormat="real_name"
+            fetchFromSlack={true}
+          />
           <Box flex="1">
             <HStack mb={1}>
-              <Text fontWeight="bold">{user.name}</Text>
               <Text fontSize="sm" color="gray.500">
                 {formatDateTime(parentMessage.message_datetime)}
               </Text>
@@ -224,15 +208,18 @@ const ThreadView: React.FC<ThreadViewProps> = ({
    * Render a single thread reply.
    */
   const renderThreadReply = (message: SlackMessage) => {
-    const user = getUserInfo(message.user_id)
-
     return (
       <Box key={message.id} py={2} width="100%">
         <HStack spacing={4} align="start">
-          <Avatar size="sm" name={user.name} src={user.avatar || undefined} />
+          <SlackUserDisplay 
+            userId={message.user_id || ''}
+            workspaceId={workspaceId}
+            showAvatar={true}
+            displayFormat="real_name"
+            fetchFromSlack={true}
+          />
           <Box flex="1">
             <HStack mb={1}>
-              <Text fontWeight="bold">{user.name}</Text>
               <Text fontSize="sm" color="gray.500">
                 {formatDateTime(message.message_datetime)}
               </Text>
@@ -258,11 +245,12 @@ const ThreadView: React.FC<ThreadViewProps> = ({
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="xl" scrollBehavior="inside">
-      <ModalOverlay />
-      <ModalContent maxWidth={{ base: '95%', md: '800px' }}>
-        <ModalHeader>Thread</ModalHeader>
-        <ModalCloseButton />
+    <SlackUserCacheProvider workspaceId={workspaceId}>
+      <Modal isOpen={isOpen} onClose={onClose} size="xl" scrollBehavior="inside">
+        <ModalOverlay />
+        <ModalContent maxWidth={{ base: '95%', md: '800px' }}>
+          <ModalHeader>Thread</ModalHeader>
+          <ModalCloseButton />
         <ModalBody p={4}>
           {isLoading && !isRefreshing ? (
             <Box display="flex" justifyContent="center" py={8}>
@@ -345,6 +333,7 @@ const ThreadView: React.FC<ThreadViewProps> = ({
         </ModalFooter>
       </ModalContent>
     </Modal>
+    </SlackUserCacheProvider>
   )
 }
 
