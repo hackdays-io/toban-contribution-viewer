@@ -170,36 +170,43 @@ const ThreadView: React.FC<ThreadViewProps> = ({
         borderColor={borderColor}
         width="100%"
       >
-        <HStack spacing={4} align="start">
-          <SlackUserDisplay 
-            userId={parentMessage.user_id || ''}
-            workspaceId={workspaceId}
-            showAvatar={true}
-            displayFormat="real_name"
-            fetchFromSlack={true}
-          />
-          <Box flex="1">
-            <HStack mb={1}>
-              <Text fontSize="sm" color="gray.500">
-                {formatDateTime(parentMessage.message_datetime)}
-              </Text>
-              {parentMessage.is_edited && (
-                <Badge size="sm" colorScheme="gray">
-                  Edited
-                </Badge>
-              )}
-            </HStack>
-            <Text textAlign="left" dangerouslySetInnerHTML={{ __html: parentMessage.text.replace(/\n/g, '<br/>') }}></Text>
-
-            {/* Reactions */}
-            {parentMessage.reaction_count > 0 && (
-              <Text fontSize="sm" color="gray.500" mt={1}>
-                {parentMessage.reaction_count}{' '}
-                {parentMessage.reaction_count === 1 ? 'reaction' : 'reactions'}
-              </Text>
-            )}
+        {/* Header row with user and timestamp */}
+        <HStack justifyContent="space-between" width="100%" mb={2}>
+          <Box>
+            <SlackUserDisplay 
+              userId={parentMessage.user_id || ''}
+              workspaceId={workspaceId}
+              showAvatar={true}
+              displayFormat="real_name"
+              fetchFromSlack={true}
+            />
           </Box>
+          <HStack>
+            <Text fontSize="sm" color="gray.500">
+              {formatDateTime(parentMessage.message_datetime)}
+            </Text>
+            {parentMessage.is_edited && (
+              <Badge size="sm" colorScheme="gray">
+                Edited
+              </Badge>
+            )}
+          </HStack>
         </HStack>
+        
+        {/* Message content */}
+        <Box pl={10} pr={2}>
+          <Text textAlign="left" dangerouslySetInnerHTML={{ __html: parentMessage.text.replace(/\n/g, '<br/>') }}></Text>
+        </Box>
+
+        {/* Footer with reactions */}
+        {parentMessage.reaction_count > 0 && (
+          <Box pl={10} mt={2}>
+            <Text fontSize="sm" color="gray.500">
+              {parentMessage.reaction_count}{' '}
+              {parentMessage.reaction_count === 1 ? 'reaction' : 'reactions'}
+            </Text>
+          </Box>
+        )}
       </Box>
     )
   }
@@ -209,37 +216,44 @@ const ThreadView: React.FC<ThreadViewProps> = ({
    */
   const renderThreadReply = (message: SlackMessage) => {
     return (
-      <Box key={message.id} py={2} width="100%">
-        <HStack spacing={4} align="start">
-          <SlackUserDisplay 
-            userId={message.user_id || ''}
-            workspaceId={workspaceId}
-            showAvatar={true}
-            displayFormat="real_name"
-            fetchFromSlack={true}
-          />
-          <Box flex="1">
-            <HStack mb={1}>
-              <Text fontSize="sm" color="gray.500">
-                {formatDateTime(message.message_datetime)}
-              </Text>
-              {message.is_edited && (
-                <Badge size="sm" colorScheme="gray">
-                  Edited
-                </Badge>
-              )}
-            </HStack>
-            <Text textAlign="left" dangerouslySetInnerHTML={{ __html: message.text.replace(/\n/g, '<br/>') }}></Text>
-
-            {/* Reactions */}
-            {message.reaction_count > 0 && (
-              <Text fontSize="sm" color="gray.500" mt={1}>
-                {message.reaction_count}{' '}
-                {message.reaction_count === 1 ? 'reaction' : 'reactions'}
-              </Text>
-            )}
+      <Box key={message.id} py={2} width="100%" borderWidth="1px" borderRadius="md" p={3} mb={2}>
+        {/* Header row with user and timestamp */}
+        <HStack justifyContent="space-between" width="100%" mb={2}>
+          <Box>
+            <SlackUserDisplay 
+              userId={message.user_id || ''}
+              workspaceId={workspaceId}
+              showAvatar={true}
+              displayFormat="real_name"
+              fetchFromSlack={true}
+            />
           </Box>
+          <HStack>
+            <Text fontSize="sm" color="gray.500">
+              {formatDateTime(message.message_datetime)}
+            </Text>
+            {message.is_edited && (
+              <Badge size="sm" colorScheme="gray">
+                Edited
+              </Badge>
+            )}
+          </HStack>
         </HStack>
+        
+        {/* Message content */}
+        <Box pl={10} pr={2}>
+          <Text textAlign="left" dangerouslySetInnerHTML={{ __html: message.text.replace(/\n/g, '<br/>') }}></Text>
+        </Box>
+
+        {/* Footer with reactions */}
+        {message.reaction_count > 0 && (
+          <Box pl={10} mt={2}>
+            <Text fontSize="sm" color="gray.500">
+              {message.reaction_count}{' '}
+              {message.reaction_count === 1 ? 'reaction' : 'reactions'}
+            </Text>
+          </Box>
+        )}
       </Box>
     )
   }
@@ -281,7 +295,7 @@ const ThreadView: React.FC<ThreadViewProps> = ({
 
               {/* Thread replies */}
               {replies.length > 0 ? (
-                <VStack spacing={2} align="stretch" divider={<Divider />}>
+                <VStack spacing={3} align="stretch">
                   {replies.map(renderThreadReply)}
                 </VStack>
               ) : (
