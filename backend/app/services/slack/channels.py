@@ -20,6 +20,28 @@ from app.services.slack.api import SlackApiClient, SlackApiError
 logger = logging.getLogger(__name__)
 
 
+async def get_channel_by_id(
+    db: AsyncSession, workspace_id: str, channel_id: str
+) -> Optional[SlackChannel]:
+    """
+    Get a channel by its ID.
+
+    Args:
+        db: Database session
+        workspace_id: UUID of the workspace
+        channel_id: UUID of the channel
+
+    Returns:
+        SlackChannel or None if not found
+    """
+    result = await db.execute(
+        select(SlackChannel).where(
+            SlackChannel.workspace_id == workspace_id, SlackChannel.id == channel_id
+        )
+    )
+    return result.scalars().first()
+
+
 class ChannelService:
     """
     Service for retrieving and managing Slack channels.

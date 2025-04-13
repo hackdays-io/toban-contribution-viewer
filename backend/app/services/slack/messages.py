@@ -18,6 +18,148 @@ from app.services.slack.api import SlackApiClient, SlackApiError, SlackApiRateLi
 logger = logging.getLogger(__name__)
 
 
+async def get_channel_messages(
+    db: AsyncSession,
+    workspace_id: str,
+    channel_id: str,
+    start_date: Optional[datetime] = None,
+    end_date: Optional[datetime] = None,
+    limit: int = 1000,
+    include_replies: bool = True,
+) -> List[SlackMessage]:
+    """
+    Get messages from a channel, optionally filtered by date range.
+    This is a simplified version of SlackMessageService.get_channel_messages that returns
+    SlackMessage objects directly rather than a dictionary with pagination.
+
+    Args:
+        db: Database session
+        workspace_id: UUID of the workspace
+        channel_id: UUID of the channel
+        start_date: Optional start date for filtering messages
+        end_date: Optional end date for filtering messages
+        limit: Maximum number of messages to fetch
+        include_replies: Whether to include thread replies
+
+    Returns:
+        List of SlackMessage objects
+    """
+    # Verify workspace exists
+    workspace_result = await db.execute(
+        select(SlackWorkspace).where(SlackWorkspace.id == workspace_id)
+    )
+    workspace = workspace_result.scalars().first()
+
+    if not workspace:
+        logger.error(f"Workspace not found: {workspace_id}")
+        raise HTTPException(status_code=404, detail="Workspace not found")
+
+    # Verify channel exists
+    channel_result = await db.execute(
+        select(SlackChannel).where(
+            SlackChannel.id == channel_id,
+            SlackChannel.workspace_id == workspace_id,
+        )
+    )
+    channel = channel_result.scalars().first()
+
+    if not channel:
+        logger.error(f"Channel not found: {channel_id}")
+        raise HTTPException(status_code=404, detail="Channel not found")
+
+    # Query messages from database
+    query = select(SlackMessage).where(SlackMessage.channel_id == channel_id)
+
+    # Include or exclude thread replies
+    if not include_replies:
+        query = query.where(SlackMessage.is_thread_reply.is_(False))
+
+    # Apply date filtering if specified
+    if start_date:
+        if hasattr(start_date, "tzinfo") and start_date.tzinfo:
+            start_date = start_date.replace(tzinfo=None)
+        query = query.where(SlackMessage.message_datetime >= start_date)
+
+    if end_date:
+        if hasattr(end_date, "tzinfo") and end_date.tzinfo:
+            end_date = end_date.replace(tzinfo=None)
+        query = query.where(SlackMessage.message_datetime <= end_date)
+
+    # Sort by datetime (oldest first for analysis)
+    query = query.order_by(SlackMessage.message_datetime.asc())
+
+    # Apply limit
+    query = query.limit(limit)
+
+    # Execute query
+    result = await db.execute(query)
+    messages = result.scalars().all()
+
+    return messages
+
+
+async def get_channel_users(
+    db: AsyncSession, workspace_id: str, channel_id: str
+) -> List[SlackUser]:
+    """
+    Get all users who have posted messages in a specific channel.
+
+    Args:
+        db: Database session
+        workspace_id: UUID of the workspace
+        channel_id: UUID of the channel
+
+    Returns:
+        List of SlackUser objects
+    """
+    # Verify workspace exists
+    workspace_result = await db.execute(
+        select(SlackWorkspace).where(SlackWorkspace.id == workspace_id)
+    )
+    workspace = workspace_result.scalars().first()
+
+    if not workspace:
+        logger.error(f"Workspace not found: {workspace_id}")
+        raise HTTPException(status_code=404, detail="Workspace not found")
+
+    # Verify channel exists
+    channel_result = await db.execute(
+        select(SlackChannel).where(
+            SlackChannel.id == channel_id,
+            SlackChannel.workspace_id == workspace_id,
+        )
+    )
+    channel = channel_result.scalars().first()
+
+    if not channel:
+        logger.error(f"Channel not found: {channel_id}")
+        raise HTTPException(status_code=404, detail="Channel not found")
+
+    # First, get all user IDs that have posted in this channel
+    user_id_query = (
+        select(SlackMessage.user_id)
+        .where(
+            SlackMessage.channel_id == channel_id,
+            SlackMessage.user_id.isnot(None),
+        )
+        .distinct()
+    )
+    user_id_result = await db.execute(user_id_query)
+    user_ids = user_id_result.scalars().all()
+
+    if not user_ids:
+        logger.info(f"No users found for channel {channel_id}")
+        return []
+
+    # Then, get all user details
+    user_query = select(SlackUser).where(SlackUser.id.in_(user_ids))
+    user_result = await db.execute(user_query)
+    users = user_result.scalars().all()
+
+    logger.info(f"Found {len(users)} users for channel {channel_id}")
+    return users
+
+
 class SlackMessageService:
     """
     Service for retrieving, processing, and storing Slack messages.
