@@ -308,9 +308,11 @@ const ChannelAnalysisPage: React.FC = () => {
               </FormControl>
             </HStack>
             
-            <FormHelperText>
-              Select a date range and options for analysis. A larger date range will take longer to analyze.
-            </FormHelperText>
+            <FormControl>
+              <FormHelperText>
+                Select a date range and options for analysis. A larger date range will take longer to analyze.
+              </FormHelperText>
+            </FormControl>
             
             <Divider />
             
