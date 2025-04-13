@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { Text, Box } from '@chakra-ui/react';
 import SlackUserDisplay from './SlackUserDisplay';
 
@@ -6,6 +6,7 @@ interface MessageTextProps {
   text: string;
   workspaceId: string; // Required to fetch user data
   resolveMentions?: boolean; // Whether to resolve user mentions with SlackUserDisplay
+  fallbackToSimpleFormat?: boolean; // When true, falls back to simple @ID format on error
 }
 
 /**
@@ -17,8 +18,18 @@ interface MessageTextProps {
 const MessageText: React.FC<MessageTextProps> = ({ 
   text, 
   workspaceId, 
-  resolveMentions = true 
+  resolveMentions = true,
+  fallbackToSimpleFormat = true
 }) => {
+  // Track which user IDs had errors during resolution
+  const [errorUserIds, setErrorUserIds] = useState<Set<string>>(new Set());
+  
+  // Callback for handling user display errors
+  const handleUserError = useCallback((userId: string) => {
+    if (fallbackToSimpleFormat) {
+      setErrorUserIds(prev => new Set([...prev, userId]));
+    }
+  }, [fallbackToSimpleFormat]);
   if (!text) return null;
   
   // Regular expression to find Slack user mentions in the format <@U12345>
@@ -78,25 +89,46 @@ const MessageText: React.FC<MessageTextProps> = ({
       segments.push(textSegment);
     }
     
-    // Add the user mention with SlackUserDisplay
-    segments.push(
-      <Box 
-        as="span" 
-        key={`mention-${match.index}`} 
-        display="inline-flex" 
-        alignItems="center"
-        verticalAlign="middle"
-        color="blue.500"
-      >
-        @<SlackUserDisplay 
-          userId={match[1]} 
-          workspaceId={workspaceId}
-          displayFormat="username"
-          fetchFromSlack={true}
-          asComponent="span"
-        />
-      </Box>
-    );
+    // Get the user ID from the match
+    const userId = match[1];
+    
+    // Check if this user ID previously had an error
+    if (errorUserIds.has(userId)) {
+      // Just use simple formatting for this user ID
+      segments.push(
+        <Box 
+          as="span" 
+          key={`mention-${match.index}`} 
+          display="inline" 
+          color="blue.500"
+        >
+          @{userId}
+        </Box>
+      );
+    } else {
+      // Attempt to display user with SlackUserDisplay
+      segments.push(
+        <Box 
+          as="span" 
+          key={`mention-${match.index}`} 
+          display="inline-flex" 
+          alignItems="center"
+          verticalAlign="middle"
+          color="blue.500"
+        >
+          @<SlackUserDisplay 
+            userId={userId} 
+            workspaceId={workspaceId}
+            displayFormat="username"
+            fetchFromSlack={true}
+            asComponent="span"
+            fallback={userId} // Use the user ID as fallback if user data can't be fetched
+            hideOnError={false} // Always show something, even on error
+            onError={() => handleUserError(userId)} // Handle errors
+          />
+        </Box>
+      );
+    }
     
     lastIndex = match.index + match[0].length;
   }

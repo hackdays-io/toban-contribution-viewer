@@ -459,6 +459,7 @@ const MessageList: React.FC<MessageListProps> = ({
                           text={message.text} 
                           workspaceId={workspaceId} 
                           resolveMentions={true}
+                          fallbackToSimpleFormat={true}
                         />
                       </Box>
 

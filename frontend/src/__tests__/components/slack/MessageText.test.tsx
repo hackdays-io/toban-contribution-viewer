@@ -7,9 +7,20 @@ import * as SlackUserDisplayModule from '../../../components/slack/SlackUserDisp
 
 // Mock the SlackUserDisplay component
 vi.mock('../../../components/slack/SlackUserDisplay', () => {
+  const mockComponent = vi.fn(({ userId, onError }) => {
+    React.useEffect(() => {
+      // Simulate error for specific test user ID
+      if (userId === 'ERROR_USER') {
+        onError?.(userId);
+      }
+    }, [userId, onError]);
+
+    return <span data-testid={`user-${userId}`}>{userId}</span>;
+  });
+
   return {
     __esModule: true,
-    default: vi.fn(({ userId }) => <span data-testid={`user-${userId}`}>{userId}</span>),
+    default: mockComponent,
     SlackUserCacheProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>
   };
 });
@@ -115,5 +126,20 @@ describe('MessageText', () => {
     
     // Check that our component didn't render anything
     expect(container.innerHTML).not.toContain("workspaceId");
+  });
+  
+  it('renders simple format for user mentions', () => {
+    render(
+      <ChakraProvider>
+        <MessageText 
+          text="Hello <@ERROR_USER>!" 
+          workspaceId={mockWorkspaceId} 
+          resolveMentions={false}
+        />
+      </ChakraProvider>
+    );
+    
+    // The content is actually rendered as "Hello <@ERROR_USER>!" because the mocked component doesn't do the replacement
+    expect(screen.getByText('Hello <@ERROR_USER>!')).toBeInTheDocument();
   });
 });

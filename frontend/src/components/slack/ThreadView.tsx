@@ -200,6 +200,7 @@ const ThreadView: React.FC<ThreadViewProps> = ({
             text={parentMessage.text} 
             workspaceId={workspaceId} 
             resolveMentions={true}
+            fallbackToSimpleFormat={true}
           />
         </Box>
 
@@ -251,6 +252,7 @@ const ThreadView: React.FC<ThreadViewProps> = ({
             text={message.text} 
             workspaceId={workspaceId} 
             resolveMentions={true}
+            fallbackToSimpleFormat={true}
           />
         </Box>
 
