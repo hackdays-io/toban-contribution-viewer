@@ -71,9 +71,6 @@ const TeamsPage: React.FC = () => {
   const [formErrors, setFormErrors] = useState<Partial<CreateTeamForm>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
-    fetchTeams();
-  }, [fetchTeams]);
 
   const fetchTeams = useCallback(async () => {
     try {
@@ -105,6 +102,11 @@ const TeamsPage: React.FC = () => {
       setIsLoading(false);
     }
   }, [toast]);
+  
+  // Call fetchTeams when component mounts
+  useEffect(() => {
+    fetchTeams();
+  }, [fetchTeams]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -349,8 +351,10 @@ const TeamsPage: React.FC = () => {
                   value={formData.slug}
                   onChange={handleInputChange}
                   placeholder="team-slug"
-                  helperText="Used in URLs and identifiers"
                 />
+                <Text fontSize="sm" color="gray.500" mt={1}>
+                  Used in URLs and identifiers
+                </Text>
                 <FormErrorMessage>{formErrors.slug}</FormErrorMessage>
               </FormControl>
 

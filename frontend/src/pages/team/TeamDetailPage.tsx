@@ -51,11 +51,6 @@ const TeamDetailPage: React.FC = () => {
   const [slug, setSlug] = useState('');
   const [description, setDescription] = useState('');
 
-  useEffect(() => {
-    if (teamId) {
-      fetchTeam();
-    }
-  }, [teamId, fetchTeam]);
 
   const fetchTeam = useCallback(async () => {
     try {
@@ -92,6 +87,13 @@ const TeamDetailPage: React.FC = () => {
       setIsLoading(false);
     }
   }, [teamId, toast]);
+  
+  // Call fetchTeam when component mounts or teamId changes
+  useEffect(() => {
+    if (teamId) {
+      fetchTeam();
+    }
+  }, [teamId, fetchTeam]);
 
   const validateForm = () => {
     const errors: { [key: string]: string } = {};

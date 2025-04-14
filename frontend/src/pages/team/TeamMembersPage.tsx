@@ -82,11 +82,6 @@ const TeamMembersPage: React.FC = () => {
   });
   const [formErrors, setFormErrors] = useState<Partial<InviteFormData>>({});
 
-  useEffect(() => {
-    if (teamId) {
-      fetchTeamAndMembers();
-    }
-  }, [teamId, fetchTeamAndMembers]);
 
   const fetchTeam = useCallback(async () => {
     try {
@@ -158,6 +153,13 @@ const TeamMembersPage: React.FC = () => {
       setIsLoading(false);
     }
   }, [fetchTeam, fetchMembers]);
+  
+  // Call fetchTeamAndMembers when component mounts or teamId changes
+  useEffect(() => {
+    if (teamId) {
+      fetchTeamAndMembers();
+    }
+  }, [teamId, fetchTeamAndMembers]);
 
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -179,7 +181,7 @@ const TeamMembersPage: React.FC = () => {
     }
     
     if (!formData.role) {
-      errors.role = 'Role is required';
+      errors.role = '';
     }
     
     return errors;
