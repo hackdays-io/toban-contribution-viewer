@@ -80,6 +80,14 @@ async def db_session(init_db) -> AsyncGenerator[AsyncSession, None]:
         await session.close()
 
 
+@pytest.fixture
+async def db(db_session):
+    """
+    Shorthand for db_session fixture.
+    """
+    return db_session
+
+
 @pytest.fixture(scope="function")
 def override_get_db(db_session: AsyncSession):
     """
@@ -97,7 +105,7 @@ def override_get_db(db_session: AsyncSession):
 
 
 @pytest.fixture
-def app(override_get_db):
+def app(override_get_db, test_user_id):
     """
     Create a FastAPI test app with dependencies overridden.
     """
@@ -107,6 +115,14 @@ def app(override_get_db):
     # Override the get_async_db dependency
     app.dependency_overrides[get_async_db] = override_get_db
 
+    # Mock the authentication dependency
+    from app.core.auth import get_current_user
+
+    async def override_get_current_user():
+        return {"id": test_user_id, "email": "test@example.com", "role": "user"}
+
+    app.dependency_overrides[get_current_user] = override_get_current_user
+
     yield app
 
     # Clear the override after test is done
@@ -114,13 +130,33 @@ def app(override_get_db):
 
 
 @pytest.fixture
-def client(app):
+async def client(app):
     """
     Create a test client for the app.
     """
-    from fastapi.testclient import TestClient
+    from httpx import AsyncClient
 
-    return TestClient(app)
+    async with AsyncClient(app=app, base_url="http://test") as client:
+        yield client
+
+
+@pytest.fixture
+def test_user_id():
+    """
+    Test user ID for authentication.
+    """
+    return "test_user_123"
+
+
+@pytest.fixture
+def test_user_auth_header(test_user_id):
+    """
+    Create a mock authentication header for tests.
+
+    In a real test we would generate a JWT token, but here we'll
+    mock the auth dependency in the app fixture instead.
+    """
+    return {"Authorization": f"Bearer test_token_for_{test_user_id}"}
 
 
 @pytest.fixture(scope="function")
