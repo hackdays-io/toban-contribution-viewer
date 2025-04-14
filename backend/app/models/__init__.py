@@ -13,3 +13,4 @@ from app.models.slack import (  # noqa: F401
     SlackWorkspace,
     analysis_channels,
 )
+from app.models.team import Team, TeamMember, TeamMemberRole  # noqa: F401
