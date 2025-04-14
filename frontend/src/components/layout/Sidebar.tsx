@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   Box,
   Flex,
@@ -43,7 +43,7 @@ interface NavItemProps {
 /**
  * Navigation item component for the sidebar
  */
-const NavItem = ({ icon, to, children, isActive, badge, badgeColorScheme }: NavItemProps) => {
+const NavItem = React.memo(({ icon, to, children, isActive, badge, badgeColorScheme }: NavItemProps) => {
   const activeBg = useColorModeValue('blue.50', 'blue.900');
   const activeColor = useColorModeValue('blue.700', 'blue.200');
   const hoverBg = useColorModeValue('gray.100', 'gray.700');
@@ -80,7 +80,7 @@ const NavItem = ({ icon, to, children, isActive, badge, badgeColorScheme }: NavI
       </HStack>
     </Box>
   );
-};
+});
 
 /**
  * Sidebar component with navigation links
@@ -89,18 +89,22 @@ const Sidebar = ({ onClose, ...rest }: SidebarProps) => {
   const { teamContext } = useAuth();
   const location = useLocation();
 
-  // Get current team name
-  const currentTeam = teamContext.teams?.find(team => team.id === teamContext.currentTeamId);
+  // Get current team name - memoize to prevent recalculation on every render
+  const currentTeam = useMemo(() => {
+    return teamContext.teams?.find(team => team.id === teamContext.currentTeamId);
+  }, [teamContext.teams, teamContext.currentTeamId]);
   
   // Background and text colors based on light/dark mode
   const bgColor = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
   
-  // Helper to check if a path is active
-  const isActivePath = (path: string) => {
-    return location.pathname === path || 
-           (path !== '/dashboard' && location.pathname.startsWith(path));
-  };
+  // Helper to check if a path is active - memoize to prevent recalculation
+  const isActivePath = useMemo(() => {
+    return (path: string) => {
+      return location.pathname === path || 
+             (path !== '/dashboard' && location.pathname.startsWith(path));
+    };
+  }, [location.pathname]);
   
   return (
     <Box
@@ -237,4 +241,4 @@ const Sidebar = ({ onClose, ...rest }: SidebarProps) => {
   );
 };
 
-export default Sidebar;
+export default React.memo(Sidebar);

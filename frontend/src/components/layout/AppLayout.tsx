@@ -20,7 +20,7 @@ interface AppLayoutProps {
 const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   
-  // Background colors for light/dark mode
+  // Background colors for light/dark mode - memoized to prevent recalculations
   const bgColor = useColorModeValue('gray.50', 'gray.900');
   const contentBgColor = useColorModeValue('white', 'gray.800');
   
@@ -71,4 +71,4 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   );
 };
 
-export default AppLayout;
+export default React.memo(AppLayout);

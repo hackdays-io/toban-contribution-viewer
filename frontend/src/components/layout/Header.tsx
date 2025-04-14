@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import {
   Flex,
   HStack,
@@ -34,7 +34,8 @@ const Header: React.FC<HeaderProps> = ({ onOpenSidebar }) => {
   const bgColor = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
   
-  const handleSignOut = async () => {
+  // Memoize event handler to prevent recreation on each render
+  const handleSignOut = useCallback(async () => {
     try {
       await signOut();
       toast({
@@ -52,7 +53,7 @@ const Header: React.FC<HeaderProps> = ({ onOpenSidebar }) => {
         isClosable: true,
       });
     }
-  };
+  }, [signOut, toast]);
   
   return (
     <Flex
@@ -128,4 +129,4 @@ const Header: React.FC<HeaderProps> = ({ onOpenSidebar }) => {
   );
 };
 
-export default Header;
+export default React.memo(Header);
