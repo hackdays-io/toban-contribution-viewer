@@ -8,7 +8,9 @@ from typing import AsyncGenerator
 from unittest.mock import MagicMock, patch
 
 import pytest
+import pytest_asyncio
 from fastapi import FastAPI
+from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool
@@ -50,7 +52,7 @@ def event_loop():
     loop.close()
 
 
-@pytest.fixture(scope="function")
+@pytest_asyncio.fixture(scope="function")
 async def init_db():
     """
     Initialize database with tables before tests and drop them after.
@@ -64,7 +66,7 @@ async def init_db():
         await conn.run_sync(Base.metadata.drop_all)
 
 
-@pytest.fixture(scope="function")
+@pytest_asyncio.fixture(scope="function")
 async def db_session(init_db) -> AsyncGenerator[AsyncSession, None]:
     """
     Create a new database session for a test.
@@ -80,7 +82,7 @@ async def db_session(init_db) -> AsyncGenerator[AsyncSession, None]:
         await session.close()
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def db(db_session):
     """
     Shorthand for db_session fixture.
@@ -104,7 +106,7 @@ def override_get_db(db_session: AsyncSession):
     return _get_test_db
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def app(override_get_db, test_user_id):
     """
     Create a FastAPI test app with dependencies overridden.
@@ -129,15 +131,13 @@ def app(override_get_db, test_user_id):
     app.dependency_overrides.clear()
 
 
-@pytest.fixture
-async def client(app):
+@pytest_asyncio.fixture(scope="function")
+async def client(app) -> AsyncGenerator[AsyncClient, None]:
     """
     Create a test client for the app.
     """
-    from httpx import AsyncClient
-
-    async with AsyncClient(app=app, base_url="http://test") as client:
-        yield client
+    async with AsyncClient(app=app, base_url="http://test") as ac:
+        yield ac
 
 
 @pytest.fixture

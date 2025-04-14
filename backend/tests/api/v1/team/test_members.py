@@ -6,13 +6,14 @@ import uuid
 from typing import Dict
 
 import pytest
+import pytest_asyncio
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.team import Team, TeamMember, TeamMemberRole
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_team_with_members(db: AsyncSession, test_user_id: str) -> Dict:
     """
     Fixture for a test team with multiple members.
@@ -87,14 +88,14 @@ async def test_team_with_members(db: AsyncSession, test_user_id: str) -> Dict:
 
 
 @pytest.mark.asyncio
-@pytest.mark.skip(reason="Test infrastructure needs updates for async fixtures")
 async def test_get_team_members(
     client: AsyncClient, test_user_auth_header: Dict, test_team_with_members: Dict
 ):
     """
     Test getting a list of team members.
     """
-    team = test_team_with_members["team"]
+    team_data = await test_team_with_members
+    team = team_data["team"]
 
     response = await client.get(
         f"/api/v1/teams/{team.id}/members", headers=test_user_auth_header
@@ -115,15 +116,15 @@ async def test_get_team_members(
 
 
 @pytest.mark.asyncio
-@pytest.mark.skip(reason="Test infrastructure needs updates for async fixtures")
 async def test_get_team_member(
     client: AsyncClient, test_user_auth_header: Dict, test_team_with_members: Dict
 ):
     """
     Test getting a specific team member.
     """
-    team = test_team_with_members["team"]
-    admin = test_team_with_members["admin"]
+    team_data = await test_team_with_members
+    team = team_data["team"]
+    admin = team_data["admin"]
 
     response = await client.get(
         f"/api/v1/teams/{team.id}/members/{admin.id}", headers=test_user_auth_header
@@ -138,14 +139,14 @@ async def test_get_team_member(
 
 
 @pytest.mark.asyncio
-@pytest.mark.skip(reason="Test infrastructure needs updates for async fixtures")
 async def test_add_team_member(
     client: AsyncClient, test_user_auth_header: Dict, test_team_with_members: Dict
 ):
     """
     Test adding a new team member.
     """
-    team = test_team_with_members["team"]
+    team_data = await test_team_with_members
+    team = team_data["team"]
 
     new_member_data = {
         "user_id": f"new-user-{uuid.uuid4()}",
@@ -168,15 +169,15 @@ async def test_add_team_member(
 
 
 @pytest.mark.asyncio
-@pytest.mark.skip(reason="Test infrastructure needs updates for async fixtures")
 async def test_update_team_member(
     client: AsyncClient, test_user_auth_header: Dict, test_team_with_members: Dict
 ):
     """
     Test updating a team member.
     """
-    team = test_team_with_members["team"]
-    member = test_team_with_members["member"]
+    team_data = await test_team_with_members
+    team = team_data["team"]
+    member = team_data["member"]
 
     update_data = {"role": TeamMemberRole.ADMIN, "display_name": "Updated Display Name"}
 
@@ -195,15 +196,15 @@ async def test_update_team_member(
 
 
 @pytest.mark.asyncio
-@pytest.mark.skip(reason="Test infrastructure needs updates for async fixtures")
 async def test_remove_team_member(
     client: AsyncClient, test_user_auth_header: Dict, test_team_with_members: Dict
 ):
     """
     Test removing a team member.
     """
-    team = test_team_with_members["team"]
-    viewer = test_team_with_members["viewer"]
+    team_data = await test_team_with_members
+    team = team_data["team"]
+    viewer = team_data["viewer"]
 
     response = await client.delete(
         f"/api/v1/teams/{team.id}/members/{viewer.id}", headers=test_user_auth_header
@@ -222,14 +223,14 @@ async def test_remove_team_member(
 
 
 @pytest.mark.asyncio
-@pytest.mark.skip(reason="Test infrastructure needs updates for async fixtures")
 async def test_invite_team_member(
     client: AsyncClient, test_user_auth_header: Dict, test_team_with_members: Dict
 ):
     """
     Test inviting a user to a team.
     """
-    team = test_team_with_members["team"]
+    team_data = await test_team_with_members
+    team = team_data["team"]
 
     invitation_data = {
         "email": "test.invite@example.com",
