@@ -11,7 +11,6 @@ from sqlalchemy.orm import Mapped, relationship
 
 from app.db.base import Base
 from app.models.base import BaseModel
-from app.models.slack import SlackWorkspace
 
 
 class TeamMemberRole(str, enum.Enum):
@@ -49,7 +48,7 @@ class Team(Base, BaseModel):
     members: Mapped[List["TeamMember"]] = relationship(
         "TeamMember", back_populates="team", cascade="all, delete-orphan"
     )
-    slack_workspaces: Mapped[List["SlackWorkspace"]] = relationship(
+    slack_workspaces = relationship(
         "SlackWorkspace", back_populates="team"
     )
 
