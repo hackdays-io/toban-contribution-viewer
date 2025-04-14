@@ -146,6 +146,8 @@ const MessageText: React.FC<MessageTextProps> = ({
     segments.push(textSegment);
   }
   
+  // We don't need to wrap with SlackUserCacheProvider here since
+  // the parent components (ThreadView and MessageList) already provide it
   return (
     <Box textAlign="left">
       {segments}
