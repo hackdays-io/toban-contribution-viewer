@@ -12,9 +12,12 @@ import {
   Tabs,
   Text,
   useToast,
+  Divider,
+  SimpleGrid,
 } from '@chakra-ui/react';
 import { Link } from 'react-router-dom';
 import useAuth from '../context/useAuth';
+import { TeamSwitcher, TeamContext } from '../components/team';
 
 const Dashboard: React.FC = () => {
   const { user, signOut } = useAuth();
@@ -43,7 +46,10 @@ const Dashboard: React.FC = () => {
   return (
     <Box>
       <Flex justifyContent="space-between" alignItems="center" mb={6}>
-        <Heading as="h1" size="xl">Dashboard</Heading>
+        <HStack>
+          <Heading as="h1" size="xl">Dashboard</Heading>
+          <TeamSwitcher variant="compact" />
+        </HStack>
         <HStack spacing={4}>
           <Text>Hello, {user?.email}</Text>
           <Button onClick={handleSignOut} colorScheme="blue" variant="outline">
@@ -64,15 +70,28 @@ const Dashboard: React.FC = () => {
 
         <TabPanels>
           <TabPanel>
-            <Box p={4} borderWidth="1px" borderRadius="lg">
-              <Heading as="h2" size="md" mb={4}>
-                Welcome to your Contribution Dashboard
-              </Heading>
-              <Text>
-                This dashboard shows your contributions across platforms. Connect your accounts
-                to start tracking your activity.
-              </Text>
-            </Box>
+            <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
+              <Box p={4} borderWidth="1px" borderRadius="lg">
+                <Heading as="h2" size="md" mb={4}>
+                  Welcome to your Contribution Dashboard
+                </Heading>
+                <Text mb={4}>
+                  This dashboard shows your contributions across platforms. Connect your accounts
+                  to start tracking your activity.
+                </Text>
+                <Divider my={4} />
+                <HStack spacing={4}>
+                  <Button as={Link} to="/dashboard/teams" colorScheme="blue">
+                    Manage Teams
+                  </Button>
+                  <Button as={Link} to="/dashboard/slack/connect" colorScheme="purple">
+                    Connect Slack
+                  </Button>
+                </HStack>
+              </Box>
+              
+              <TeamContext />
+            </SimpleGrid>
           </TabPanel>
 
           <TabPanel>

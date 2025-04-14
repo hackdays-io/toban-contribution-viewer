@@ -31,11 +31,13 @@ import {
   FormErrorMessage,
 } from '@chakra-ui/react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FiPlus, FiUsers, FiSettings, FiTrash2 } from 'react-icons/fi';
+import { FiPlus, FiUsers, FiSettings, FiTrash2, FiRefreshCw } from 'react-icons/fi';
 
 import env from '../../config/env';
 import useAuth from '../../context/useAuth';
 import { supabase } from '../../lib/supabase';
+import { TeamSwitcher } from '../../components/team';
+// import { canPerformAdminActions } from '../../utils/teamUtils'; - will use in future implementation
 
 interface Team {
   id: string;
@@ -57,7 +59,7 @@ interface CreateTeamForm {
 }
 
 const TeamsPage: React.FC = () => {
-  useAuth(); // Auth context is used but no properties are currently needed
+  useAuth(); // Used for authentication state
   const toast = useToast();
   const navigate = useNavigate();
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -317,14 +319,27 @@ const TeamsPage: React.FC = () => {
   return (
     <Box p={4}>
       <Flex justifyContent="space-between" alignItems="center" mb={6}>
-        <Heading size="lg">Teams</Heading>
-        <Button
-          leftIcon={<FiPlus />}
-          colorScheme="blue"
-          onClick={onOpen}
-        >
-          Create Team
-        </Button>
+        <HStack>
+          <Heading size="lg">Teams</Heading>
+          <TeamSwitcher variant="compact" />
+        </HStack>
+        <HStack>
+          <Button
+            leftIcon={<FiRefreshCw />}
+            variant="ghost"
+            onClick={() => fetchTeams()}
+            isLoading={isLoading}
+          >
+            Refresh
+          </Button>
+          <Button
+            leftIcon={<FiPlus />}
+            colorScheme="blue"
+            onClick={onOpen}
+          >
+            Create Team
+          </Button>
+        </HStack>
       </Flex>
 
       {isLoading ? (
