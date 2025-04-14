@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useContext, createContext } from 'react';
 import {
-  // Box, // Uncomment if needed
+  Box,
   Avatar,
+  Text,
   Flex,
   // Spinner, // Uncomment if needed
   Tooltip,
