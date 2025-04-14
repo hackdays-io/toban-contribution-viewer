@@ -2,6 +2,83 @@
 
 This document outlines the implementation details for key features in the Toban Contribution Viewer.
 
+## Issue #101: Authentication System Updates for Team Support
+
+_Part of parent issue #88: Add Team Concept for Multi-Team Organization Support_
+
+### Implementation Details
+
+This issue involved enhancing the authentication system to support team-based access control and context switching. The implementation includes both backend and frontend changes to integrate team context into the auth flow.
+
+#### Backend Implementation
+1. **Enhanced JWT Tokens**
+   - Modified `get_current_user` function to extract team context from token
+   - Added team ID and role to JWT token claims
+   - Created token refresh endpoint to update team context
+
+2. **Team Context Management**
+   - Added `get_user_team_context` function to load team data if not in token
+   - Created `switch_team_context` function to switch user's current team
+   - Implemented `create_token_with_team_context` to generate new JWT with team data
+
+3. **Team Authentication Dependencies**
+   - Created `TeamRequiredAuth` dependency class for role-based access control
+   - Added predefined dependencies: `require_owner`, `require_admin`, `require_member`
+   - Added verification for team membership and role requirements
+
+4. **Team Auth API Endpoints**
+   - Created new API routes in `/backend/app/api/v1/team/auth.py`:
+     - `GET /teams/auth/context`: Get current user's team context
+     - `POST /teams/auth/switch-team`: Switch to a different team
+     - `POST /teams/auth/refresh-token`: Refresh JWT with current team context
+
+#### Frontend Implementation
+1. **Enhanced AuthContext**
+   - Added team-related types: `TeamRole`, `Team`, `TeamContext`
+   - Added team context state and setter functions
+   - Implemented `loadTeamContext` to fetch team data from API
+   - Created `switchTeam` function to change current team context
+   - Updated auth initialization to load team context after login
+
+2. **Team Context Components**
+   - Created `TeamSwitcher` component to switch between teams
+   - Added `TeamContext` component to display team information
+   - Integrated components into Dashboard layout
+
+3. **Team Utilities**
+   - Added helper functions in `teamUtils.ts` for role-based access control:
+     - `hasRequiredRole`: Check if user has required permissions
+     - `canPerformAdminActions`: Check for admin privileges
+     - `canViewTeamResources`: Check view permissions
+     - `canEditTeamResources`: Check edit permissions
+   - Added formatting utilities: `getRoleDisplayName` and `getRoleBadgeColorScheme`
+
+### Migration Path
+- Users without team assignments will be automatically assigned to a personal team
+- Existing processes remain unaffected if team context is not used
+- A default team is selected if the user has multiple teams
+
+### Testing Plan
+- Unit tests for team authentication dependencies
+- Integration tests for team context API endpoints
+- Frontend component tests for team switcher
+- E2E test for team switching and context persistence
+
+### Future Enhancements
+- Team-specific settings and preferences
+- Team invitation management in UI
+- Custom team branding and themes
+- Team access logs and audit trails
+
+### Reference to Parent Issue #88
+This implementation is part of the larger initiative to add a Team concept for multi-team organization support. The parent issue defines:
+
+- Data model with Organization > Teams > Team Members & Integrations
+- New UI navigation structure that's team-scoped
+- Key features including team management, context switching, dashboards, cross-team analysis, and permissions
+- Technical requirements and migration strategy
+- Acceptance criteria for the complete feature set
+
 ## Slack Workspace Metadata
 
 This section outlines the implementation of the service to retrieve and store basic workspace information after Slack OAuth connection.
