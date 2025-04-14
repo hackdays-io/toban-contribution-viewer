@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import env from '../../config/env';
-import SlackUserDisplay, { SlackUserCacheProvider } from './SlackUserDisplay'
+import SlackUserDisplay from './SlackUserDisplay'
+import { SlackUserCacheProvider } from './SlackUserContext'
 import MessageText from './MessageText'
 import {
   Box,
