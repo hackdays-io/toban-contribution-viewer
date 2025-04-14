@@ -23,7 +23,8 @@ import {
   FiFileText,
   FiBarChart2,
   FiSettings,
-  FiExternalLink
+  FiExternalLink,
+  FiUser
 } from 'react-icons/fi';
 import useAuth from '../../context/useAuth';
 
@@ -218,7 +219,23 @@ const Sidebar = ({ onClose, ...rest }: SidebarProps) => {
           
           <Divider my={3} />
           
-          {/* Settings section */}
+          {/* Account section */}
+          <Box py={2} px={3}>
+            <Text fontSize="xs" fontWeight="bold" textTransform="uppercase" color="gray.500">
+              Account
+            </Text>
+          </Box>
+          
+          <ListItem>
+            <NavItem
+              to="/dashboard/profile"
+              icon={FiUser}
+              isActive={isActivePath('/dashboard/profile')}
+            >
+              Profile
+            </NavItem>
+          </ListItem>
+          
           <ListItem>
             <NavItem
               to="/dashboard/settings"

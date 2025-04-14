@@ -36,6 +36,12 @@ import {
   TeamMembersPage,
 } from './pages/team'
 
+// Profile Pages
+import {
+  ProfilePage,
+  EditProfilePage,
+} from './pages/profile'
+
 // Create a default theme
 const theme = extendTheme({
   styles: {
@@ -199,6 +205,28 @@ function App() {
                   <ProtectedRoute>
                     <AppLayout>
                       <ChannelAnalysisHistoryPage />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Profile routes */}
+              <Route
+                path="/dashboard/profile"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <ProfilePage />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard/profile/edit"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <EditProfilePage />
                     </AppLayout>
                   </ProtectedRoute>
                 }
