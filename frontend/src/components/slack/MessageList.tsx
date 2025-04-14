@@ -21,7 +21,7 @@ import {
   CardHeader,
   // Avatar, // Removed after replacing with SlackUserDisplay
   Stack,
-  StackDivider,
+  // StackDivider no longer used after layout changes
   FormControl,
   FormLabel,
   IconButton,
@@ -38,6 +38,7 @@ import {
 // Import ThreadView component
 import ThreadView from './ThreadView'
 import SlackUserDisplay, { SlackUserCacheProvider } from './SlackUserDisplay'
+import MessageText from './MessageText'
 
 // Define types
 interface SlackMessage {
@@ -424,67 +425,77 @@ const MessageList: React.FC<MessageListProps> = ({
               <Heading size="md">Messages</Heading>
             </CardHeader>
             <CardBody>
-              <Stack divider={<StackDivider />} spacing={4}>
+              <Stack spacing={4}>
                 {filteredMessages.map((message) => {
                   // We no longer need user info since we're using SlackUserDisplay
                   return (
-                    <Box key={message.id} p={2}>
-                      <HStack spacing={4} align="start" mb={2}>
-                        <SlackUserDisplay 
-                          userId={message.user_id || ''}
-                          workspaceId={workspaceId}
-                          showAvatar={true}
-                          displayFormat="real_name"
-                          fetchFromSlack={true}
-                        />
+                    <Box key={message.id} p={3} borderWidth="1px" borderRadius="md">
+                      {/* Header row with user and timestamp */}
+                      <HStack justifyContent="space-between" width="100%" mb={2}>
                         <Box>
-                          <HStack mb={1}>
-                            <Text fontSize="sm" color="gray.500">
-                              {formatDateTime(message.message_datetime)}
-                            </Text>
-                            {message.is_edited && (
-                              <Badge size="sm" colorScheme="gray">
-                                Edited
-                              </Badge>
-                            )}
-                          </HStack>
-                          <Text>{message.text}</Text>
+                          <SlackUserDisplay 
+                            userId={message.user_id || ''}
+                            workspaceId={workspaceId}
+                            showAvatar={true}
+                            displayFormat="real_name"
+                            fetchFromSlack={true}
+                          />
+                        </Box>
+                        <HStack>
+                          <Text fontSize="sm" color="gray.500">
+                            {formatDateTime(message.message_datetime)}
+                          </Text>
+                          {message.is_edited && (
+                            <Badge size="sm" colorScheme="gray">
+                              Edited
+                            </Badge>
+                          )}
+                        </HStack>
+                      </HStack>
+                      
+                      {/* Message content */}
+                      <Box pl={10} pr={2}>
+                        <MessageText 
+                          text={message.text} 
+                          workspaceId={workspaceId} 
+                          resolveMentions={true}
+                          fallbackToSimpleFormat={true}
+                        />
+                      </Box>
 
+                      {/* Footer row with thread and reaction info */}
+                      <Box pl={10} mt={2}>
+                        <HStack spacing={4}>
                           {/* Thread info */}
-                          {message.is_thread_parent &&
-                            message.reply_count > 0 && (
-                              <HStack mt={1} spacing={2}>
-                                <Text fontSize="sm" color="purple.500">
-                                  <Icon as={FiMessageSquare} mr={1} />
-                                  {message.reply_count}{' '}
-                                  {message.reply_count === 1
-                                    ? 'reply'
-                                    : 'replies'}
-                                </Text>
-                                <Tooltip label="View thread">
-                                  <IconButton
-                                    aria-label="View thread"
-                                    icon={<FiMessageCircle />}
-                                    size="xs"
-                                    colorScheme="purple"
-                                    variant="ghost"
-                                    onClick={() => openThreadView(message)}
-                                  />
-                                </Tooltip>
-                              </HStack>
-                            )}
+                          {message.is_thread_parent && message.reply_count > 0 && (
+                            <HStack spacing={2}>
+                              <Text fontSize="sm" color="purple.500">
+                                <Icon as={FiMessageSquare} mr={1} />
+                                {message.reply_count}{' '}
+                                {message.reply_count === 1 ? 'reply' : 'replies'}
+                              </Text>
+                              <Tooltip label="View thread">
+                                <IconButton
+                                  aria-label="View thread"
+                                  icon={<FiMessageCircle />}
+                                  size="xs"
+                                  colorScheme="purple"
+                                  variant="ghost"
+                                  onClick={() => openThreadView(message)}
+                                />
+                              </Tooltip>
+                            </HStack>
+                          )}
 
                           {/* Reactions */}
                           {message.reaction_count > 0 && (
-                            <Text fontSize="sm" color="gray.500" mt={1}>
+                            <Text fontSize="sm" color="gray.500">
                               {message.reaction_count}{' '}
-                              {message.reaction_count === 1
-                                ? 'reaction'
-                                : 'reactions'}
+                              {message.reaction_count === 1 ? 'reaction' : 'reactions'}
                             </Text>
                           )}
-                        </Box>
-                      </HStack>
+                        </HStack>
+                      </Box>
                     </Box>
                   )
                 })}

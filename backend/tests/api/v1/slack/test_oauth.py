@@ -3,20 +3,24 @@ Tests for Slack OAuth integration.
 """
 
 import pytest
+import pytest_asyncio
 from fastapi import FastAPI
-from fastapi.testclient import TestClient
+from httpx import AsyncClient
 
 from app.api.v1.slack.router import router as slack_router
 from app.config import settings
+from tests.conftest import team_test_mark
 
 
-def test_get_oauth_url(client, monkeypatch):
+@pytest.mark.asyncio
+@team_test_mark
+async def test_get_oauth_url(client: AsyncClient, monkeypatch):
     """Test getting Slack OAuth URL."""
     # Mock settings
     monkeypatch.setattr(settings, "SLACK_CLIENT_ID", "test_client_id")
 
     # Make request
-    response = client.get("/api/v1/slack/oauth-url")
+    response = await client.get("/api/v1/slack/oauth-url")
 
     # Check response
     assert response.status_code == 200
@@ -26,21 +30,23 @@ def test_get_oauth_url(client, monkeypatch):
     assert "channels%3Ahistory" in response.json()["url"]
 
 
-def test_get_oauth_url_missing_client_id(client, monkeypatch):
+@pytest.mark.asyncio
+@team_test_mark
+async def test_get_oauth_url_missing_client_id(client: AsyncClient, monkeypatch):
     """Test error when client ID is missing."""
     # Mock settings
     monkeypatch.setattr(settings, "SLACK_CLIENT_ID", None)
 
     # Make request
-    response = client.get("/api/v1/slack/oauth-url")
+    response = await client.get("/api/v1/slack/oauth-url")
 
     # Check response
     assert response.status_code == 500
     assert "not properly configured" in response.json()["detail"]
 
 
-@pytest.fixture
-def oauth_test_client():
+@pytest_asyncio.fixture
+async def oauth_test_client():
     """Create a test client specifically for OAuth tests with dependencies mocked."""
     # Create a new FastAPI app
     app = FastAPI()
@@ -49,7 +55,8 @@ def oauth_test_client():
     app.include_router(slack_router, prefix="/api/v1/slack")
 
     # Create and return the test client
-    return TestClient(app)
+    async with AsyncClient(app=app, base_url="http://test") as test_client:
+        yield test_client
 
 
 def test_oauth_callback_success():

@@ -2,7 +2,6 @@ import React, { useState, useEffect, useContext, createContext } from 'react';
 import {
   // Box, // Uncomment if needed
   Avatar,
-  Text,
   Flex,
   // Spinner, // Uncomment if needed
   Tooltip,
@@ -35,6 +34,7 @@ export interface SlackUserDisplayProps {
   asComponent?: React.ElementType; // Optional: Render as a different component (default: 'span')
   hideOnError?: boolean;       // Optional: Hide component if there's an error fetching user info (default: false)
   fetchFromSlack?: boolean;    // Optional: Fetch user data from Slack API if not found in DB (default: false)
+  onError?: (userId: string) => void; // Optional: Callback for when an error occurs
   // For testing only - don't use in production
   _skipLoading?: boolean;      // Skip loading state (for testing)
   _testUser?: SlackUser | null; // Provide test user (for testing)
@@ -217,6 +217,7 @@ const SlackUserDisplay: React.FC<SlackUserDisplayProps> = ({
   asComponent = 'span',
   hideOnError = false,
   fetchFromSlack = false,
+  onError,
   // For testing only - don't use in production
   _skipLoading = false,
   _testUser = null,
@@ -276,10 +277,14 @@ const SlackUserDisplay: React.FC<SlackUserDisplayProps> = ({
             setUser(data.users[0]);
           } else {
             setHasError(true);
+            // Call onError callback if provided
+            if (onError) onError(userId);
           }
         } catch (error) {
           console.error('Error fetching user data:', error);
           setHasError(true);
+          // Call onError callback if provided
+          if (onError) onError(userId);
         } finally {
           setIsLoading(false);
         }
@@ -292,6 +297,8 @@ const SlackUserDisplay: React.FC<SlackUserDisplayProps> = ({
           setIsLoading(true);
         } else if (context.hasError(userId)) {
           setHasError(true);
+          // Call onError callback if provided
+          if (onError) onError(userId);
         } else if (workspaceId) {
           // We need to implement the fetchFromSlack parameter here too
           // but it's a bit more complex since we need to pass it to the context
@@ -302,6 +309,8 @@ const SlackUserDisplay: React.FC<SlackUserDisplayProps> = ({
             setUser(fetchedUser);
           } else {
             setHasError(true);
+            // Call onError callback if provided
+            if (onError) onError(userId);
           }
           setIsLoading(false);
         }
@@ -309,7 +318,7 @@ const SlackUserDisplay: React.FC<SlackUserDisplayProps> = ({
     };
     
     fetchUserData();
-  }, [userId, workspaceId, context, _skipLoading, _testUser]);
+  }, [userId, workspaceId, context, _skipLoading, _testUser, fetchFromSlack, onError]);
   
   // Subscribe to changes in context for this user
   useEffect(() => {
@@ -328,11 +337,13 @@ const SlackUserDisplay: React.FC<SlackUserDisplayProps> = ({
       } else if (userHasError) {
         setHasError(true);
         setIsLoading(false);
+        // Call onError callback if provided
+        if (onError) onError(userId);
       }
     }, 100); // Check every 100ms
     
     return () => clearInterval(intervalId);
-  }, [userId, context]);
+  }, [userId, context, onError]);
   
   // Function to get the display name
   const getDisplayName = (): string => {
@@ -359,22 +370,27 @@ const SlackUserDisplay: React.FC<SlackUserDisplayProps> = ({
     return (
       <Flex as={Component} align="center">
         {showAvatar && (
-          <Text mr={2}>⭐</Text>
+          <Box as="span" mr={2}>⭐</Box>
         )}
-        <Text>Loading...</Text>
+        <Box as="span">Loading...</Box>
       </Flex>
     );
   }
   
   // Handle error state
   if (hasError) {
+    // Call the onError callback if provided
+    if (onError && userId) {
+      onError(userId);
+    }
+    
     if (hideOnError) return null;
     
     return (
       <Tooltip label="Error loading user data">
-        <Text as={Component} color={errorColor} fontSize="sm">
+        <Box as={Component} color={errorColor} fontSize="sm">
           {fallback || userId || 'Unknown User'}
-        </Text>
+        </Box>
       </Tooltip>
     );
   }
@@ -396,7 +412,7 @@ const SlackUserDisplay: React.FC<SlackUserDisplayProps> = ({
           {getDisplayName()}
         </Link>
       ) : (
-        <Text>{getDisplayName()}</Text>
+        <Box as="span">{getDisplayName()}</Box>
       )}
     </Flex>
   );

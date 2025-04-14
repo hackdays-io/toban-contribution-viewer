@@ -190,7 +190,7 @@ Provide insightful, specific, and actionable observations based on actual messag
             start_sample = messages[:sample_size]
             middle_idx = len(messages) // 2
             middle_sample = messages[
-                middle_idx - sample_size // 2:middle_idx + sample_size // 2
+                middle_idx - sample_size // 2 : middle_idx + sample_size // 2
             ]
             end_sample = messages[-sample_size:]
 
@@ -211,9 +211,9 @@ Provide insightful, specific, and actionable observations based on actual messag
                     "Beginning of time period:",
                     "\n".join(formatted_messages[:sample_size]),
                     "\nMiddle of time period:",
-                    "\n".join(formatted_messages[sample_size:2 * sample_size]),
+                    "\n".join(formatted_messages[sample_size : 2 * sample_size]),
                     "\nEnd of time period:",
-                    "\n".join(formatted_messages[2 * sample_size:]),
+                    "\n".join(formatted_messages[2 * sample_size :]),
                     "--- END OF SAMPLE ---",
                 ]
             )
