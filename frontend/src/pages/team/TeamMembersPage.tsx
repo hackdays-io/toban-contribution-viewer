@@ -474,33 +474,26 @@ const TeamMembersPage: React.FC = () => {
                         aria-label="More options"
                       />
                       <MenuList>
-                        <MenuItem isDisabled={member.role === 'owner'}>
-                          <Menu>
-                            <MenuButton width="100%" textAlign="left">
-                              Change Role <FiChevronDown style={{ display: 'inline', marginLeft: '5px' }} />
-                            </MenuButton>
-                            <MenuList>
-                              <MenuItem 
-                                isDisabled={member.role === 'admin'}
-                                onClick={() => handleUpdateMemberRole(member.id, 'admin')}
-                              >
-                                Admin
-                              </MenuItem>
-                              <MenuItem 
-                                isDisabled={member.role === 'member'}
-                                onClick={() => handleUpdateMemberRole(member.id, 'member')}
-                              >
-                                Member
-                              </MenuItem>
-                              <MenuItem 
-                                isDisabled={member.role === 'viewer'}
-                                onClick={() => handleUpdateMemberRole(member.id, 'viewer')}
-                              >
-                                Viewer
-                              </MenuItem>
-                            </MenuList>
-                          </Menu>
-                        </MenuItem>
+                        <MenuGroup title="Change Role:" isDisabled={member.role === 'owner'}>
+                          <MenuItem 
+                            isDisabled={member.role === 'owner' || member.role === 'admin'}
+                            onClick={() => handleUpdateMemberRole(member.id, 'admin')}
+                          >
+                            Set as Admin
+                          </MenuItem>
+                          <MenuItem 
+                            isDisabled={member.role === 'owner' || member.role === 'member'}
+                            onClick={() => handleUpdateMemberRole(member.id, 'member')}
+                          >
+                            Set as Member
+                          </MenuItem>
+                          <MenuItem 
+                            isDisabled={member.role === 'owner' || member.role === 'viewer'}
+                            onClick={() => handleUpdateMemberRole(member.id, 'viewer')}
+                          >
+                            Set as Viewer
+                          </MenuItem>
+                        </MenuGroup>
                         <MenuItem 
                           onClick={() => handleRemoveMember(member.id)}
                           isDisabled={member.role === 'owner'}
