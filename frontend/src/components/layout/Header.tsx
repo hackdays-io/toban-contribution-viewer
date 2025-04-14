@@ -15,7 +15,8 @@ import {
   useToast,
   Button,
 } from '@chakra-ui/react';
-import { FiMenu, FiChevronDown, FiBell, FiSearch, FiLogOut } from 'react-icons/fi';
+import { FiMenu, FiChevronDown, FiBell, FiSearch, FiLogOut, FiUser, FiSettings } from 'react-icons/fi';
+import { Link } from 'react-router-dom';
 import { TeamSwitcher } from '../team';
 import useAuth from '../../context/useAuth';
 
@@ -116,8 +117,20 @@ const Header: React.FC<HeaderProps> = ({ onOpenSidebar }) => {
             </HStack>
           </MenuButton>
           <MenuList>
-            <MenuItem>Profile</MenuItem>
-            <MenuItem>Settings</MenuItem>
+            <MenuItem 
+              as={Link} 
+              to="/dashboard/profile" 
+              icon={<FiUser />}
+            >
+              Profile
+            </MenuItem>
+            <MenuItem 
+              as={Link} 
+              to="/dashboard/profile/edit"
+              icon={<FiSettings />}
+            >
+              Edit Profile
+            </MenuItem>
             <MenuDivider />
             <MenuItem icon={<FiLogOut />} onClick={handleSignOut}>
               Sign Out
