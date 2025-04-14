@@ -62,6 +62,8 @@ const NavItem = React.memo(({ icon, to, children, isActive, badge, badgeColorSch
       bg={isActive ? activeBg : undefined}
       _hover={{ bg: isActive ? activeBg : hoverBg }}
       role="group"
+      width="100%"
+      display="block"
     >
       <HStack spacing={3} overflow="hidden">
         <Icon as={icon} w={5} h={5} />
