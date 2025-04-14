@@ -42,24 +42,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           throw error;
         }
 
-        // Cast session type to satisfy TypeScript
+        // Set user session
         if (session) {
           setSession(session as unknown as Session);
           setUser(session.user || null);
         } else {
           setSession(null);
           setUser(null);
-        }
-
-        // For mock clients, inform the developer
-        // Check if we're using a mock client and in a development environment
-        const isMockClient = !session && ('auth' in supabase) && !('http' in supabase);
-        const isDevelopmentHost = window.location.hostname.includes('ngrok') || 
-                                 window.location.hostname === 'localhost';
-                                 
-        if (isMockClient && isDevelopmentHost) {
-          console.info('Running in development mode with mock authentication. This is normal when using placeholder Supabase credentials.');
-          console.info('You can proceed without authentication or use the login/signup forms with any credentials.');
         }
       } catch (error) {
         setError(error as Error);
@@ -72,11 +61,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     initializeAuth();
 
     // Set up auth state change listener
-    // Our mock client now also supports this
     const listener = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.info(`Auth state changed: ${event}`);
-        // Cast session type to satisfy TypeScript
         if (session) {
           setSession(session as unknown as Session);
           setUser(session.user || null);

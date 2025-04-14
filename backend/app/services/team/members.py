@@ -44,7 +44,7 @@ class TeamMemberService:
         logger.info(f"Getting members for team {team_id}")
 
         # Check if the team exists
-        team_query = select(Team).where(Team.id == team_id, Team.is_active is True)
+        team_query = select(Team).where(Team.id == team_id, Team.is_active == True)
         team_result = await db.execute(team_query)
         team = team_result.scalars().first()
 
@@ -67,10 +67,12 @@ class TeamMemberService:
             ],
         )
 
-        # Get all active team members
+        # Get all active team members (note: using invitation_status instead of is_active)
         query = (
             select(TeamMember)
-            .where(TeamMember.team_id == team_id, TeamMember.is_active is True)
+            .where(
+                TeamMember.team_id == team_id, TeamMember.invitation_status == "active"
+            )
             .order_by(TeamMember.role, TeamMember.created_at)
         )
 
@@ -118,7 +120,7 @@ class TeamMemberService:
         query = select(TeamMember).where(
             TeamMember.team_id == team_id,
             TeamMember.id == member_id,
-            TeamMember.is_active is True,
+            TeamMember.invitation_status == "active",
         )
 
         result = await db.execute(query)
@@ -157,7 +159,7 @@ class TeamMemberService:
 
         # Check if the user is already a member
         existing_member = await get_team_member(db, team_id, member_data.get("user_id"))
-        if existing_member and existing_member.is_active:
+        if existing_member and existing_member.invitation_status == "active":
             logger.warning(
                 f"User {member_data.get('user_id')} is already a member of team {team_id}"
             )
@@ -434,7 +436,7 @@ class TeamMemberService:
                 .where(
                     TeamMember.team_id == team_id,
                     TeamMember.role == TeamMemberRole.OWNER,
-                    TeamMember.is_active is True,
+                    TeamMember.invitation_status == "active",
                 )
             )
 
@@ -451,8 +453,8 @@ class TeamMemberService:
                 )
 
         try:
-            # Soft delete - update is_active flag
-            member.is_active = False
+            # Soft delete - update invitation_status
+            member.invitation_status = "inactive"
 
             # Save changes
             await db.commit()
@@ -492,7 +494,10 @@ class TeamMemberService:
             count_query = (
                 select(func.count())
                 .select_from(TeamMember)
-                .where(TeamMember.team_id == team_id, TeamMember.is_active is True)
+                .where(
+                    TeamMember.team_id == team_id,
+                    TeamMember.invitation_status == "active",
+                )
             )
 
             result = await db.execute(count_query)

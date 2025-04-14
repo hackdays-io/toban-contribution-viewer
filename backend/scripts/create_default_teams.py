@@ -108,23 +108,90 @@ def create_default_teams(session: Session, dry_run: bool = False) -> Dict[str, i
     }
 
 
+def create_test_user_team(session: Session, user_id: str, email: str = None):
+    """
+    Create a test team for a specific user.
+    
+    Args:
+        session: SQLAlchemy session
+        user_id: User ID to create team for
+        email: Optional email of the user
+        
+    Returns:
+        Created team
+    """
+    from app.models.team import Team, TeamMember, TeamMemberRole
+    
+    logger.info(f"Creating test team for user {user_id}")
+    
+    # Create the team
+    team = Team(
+        name="My Test Team",
+        slug=f"my-test-team-{uuid.uuid4().hex[:8]}",
+        description="A test team created for development",
+        is_personal=True,
+        created_by_user_id=user_id,
+        created_by_email=email,
+        team_metadata={"auto_created": True, "source": "test_script"},
+    )
+    
+    session.add(team)
+    # Flush to get the team ID
+    session.flush()
+    
+    # Create the team member (owner)
+    member = TeamMember(
+        team_id=team.id,
+        user_id=user_id,
+        email=email,
+        role=TeamMemberRole.OWNER,
+        invitation_status="active",
+    )
+    session.add(member)
+    
+    session.commit()
+    
+    logger.info(f"Created test team '{team.name}' (ID: {team.id}) for user {user_id}")
+    return team
+    
+
 def main():
     """Run the script."""
     logger.info("Starting data migration: creating default teams for workspaces")
 
     # Parse command line arguments
     dry_run = "--dry-run" in sys.argv
+    create_test_team = "--create-test-team" in sys.argv
+    
+    # Get custom user ID if specified
+    user_id_arg = None
+    user_email_arg = None
+    for arg in sys.argv:
+        if arg.startswith("--user-id="):
+            user_id_arg = arg.split("=")[1]
+        if arg.startswith("--email="):
+            user_email_arg = arg.split("=")[1]
+    
     if dry_run:
         logger.info("Running in dry-run mode, no changes will be committed")
 
     # Use the existing SQLAlchemy session
     session = SessionLocal()
     try:
-        results = create_default_teams(session, dry_run=dry_run)
-        logger.info(
-            f"Data migration complete: processed {results['workspaces_processed']} "
-            f"workspaces, created {results['teams_created']} teams"
-        )
+        if create_test_team:
+            # Create a test team for development
+            test_user_id = user_id_arg or "auth0|user1234"
+            test_email = user_email_arg or "test@example.com"
+            
+            logger.info(f"Creating test team for user ID: {test_user_id}, email: {test_email}")
+            create_test_user_team(session, test_user_id, test_email)
+            logger.info(f"Test team created for user {test_user_id}")
+        else:
+            results = create_default_teams(session, dry_run=dry_run)
+            logger.info(
+                f"Data migration complete: processed {results['workspaces_processed']} "
+                f"workspaces, created {results['teams_created']} teams"
+            )
     except Exception as e:
         logger.error(f"Error during data migration: {e}")
         if not dry_run:

@@ -21,6 +21,60 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
+def convert_team_to_dict(team, include_members: bool = False) -> Dict:
+    """
+    Convert a Team ORM object to a dictionary to avoid lazy loading issues.
+
+    Args:
+        team: Team ORM object
+        include_members: Whether to include team members in the result
+
+    Returns:
+        Dictionary representation of the team
+    """
+    team_dict = {
+        "id": team.id,
+        "name": team.name,
+        "slug": team.slug,
+        "description": team.description,
+        "avatar_url": team.avatar_url,
+        "is_personal": team.is_personal,
+        "created_by_user_id": team.created_by_user_id,
+        "created_by_email": team.created_by_email,
+        "created_at": team.created_at,
+        "updated_at": team.updated_at,
+        "team_size": team.team_size or 0,
+    }
+
+    # Only include members if requested and available
+    if include_members and hasattr(team, "members") and team.members:
+        try:
+            # Explicitly load and convert members to avoid lazy loading issues
+            member_list = []
+            for member in team.members:
+                member_dict = {
+                    "id": member.id,
+                    "team_id": member.team_id,
+                    "user_id": member.user_id,
+                    "email": member.email,
+                    "display_name": member.display_name,
+                    "role": member.role,
+                    "invitation_status": member.invitation_status,
+                    "created_at": member.created_at,
+                    "last_active_at": member.last_active_at,
+                }
+                member_list.append(member_dict)
+
+            team_dict["members"] = member_list
+        except Exception as e:
+            logger.error(f"Error loading team members: {str(e)}")
+            team_dict["members"] = []
+    else:
+        team_dict["members"] = None
+
+    return team_dict
+
+
 @router.get("/", response_model=List[TeamResponse])
 async def get_teams(
     include_members: bool = Query(
@@ -40,13 +94,16 @@ async def get_teams(
     Returns:
         List of teams
     """
-    logger.info(f"User {current_user['id']} requesting their teams")
+    logger.debug(f"Getting teams for user: {current_user['id']}")
 
+    # Get the teams from the service
     teams = await TeamService.get_teams_for_user(
         db=db, user_id=current_user["id"], include_members=include_members
     )
 
-    return teams
+    # Convert to dictionaries to avoid lazy loading issues
+    team_responses = [convert_team_to_dict(team, include_members) for team in teams]
+    return team_responses
 
 
 @router.post("/", response_model=TeamResponse, status_code=status.HTTP_201_CREATED)
@@ -66,7 +123,7 @@ async def create_team(
     Returns:
         Newly created team
     """
-    logger.info(f"User {current_user['id']} creating team: {team}")
+    logger.debug(f"Creating team: {team.name} for user: {current_user['id']}")
 
     # If no slug is provided, generate one from the name
     if not team.slug:
@@ -80,7 +137,8 @@ async def create_team(
         user_email=current_user.get("email"),
     )
 
-    return created_team
+    # Convert to dictionary and include members since it's a creation operation
+    return convert_team_to_dict(created_team, include_members=True)
 
 
 @router.get("/{team_id}", response_model=TeamResponse)
@@ -104,7 +162,7 @@ async def get_team(
     Returns:
         Team data if found and user has access
     """
-    logger.info(f"User {current_user['id']} requesting team {team_id}")
+    logger.debug(f"Getting team {team_id} for user: {current_user['id']}")
 
     # Get the team
     team = await TeamService.get_team_by_id(db, team_id, include_members)
@@ -121,7 +179,8 @@ async def get_team(
         request=None, team_id=team_id, db=db, current_user=current_user
     )
 
-    return team
+    # Convert to dictionary using our helper function
+    return convert_team_to_dict(team, include_members)
 
 
 @router.get("/by-slug/{slug}", response_model=TeamResponse)
@@ -145,7 +204,7 @@ async def get_team_by_slug(
     Returns:
         Team data if found and user has access
     """
-    logger.info(f"User {current_user['id']} requesting team with slug {slug}")
+    logger.debug(f"Getting team with slug: {slug} for user: {current_user['id']}")
 
     # Get the team
     team = await TeamService.get_team_by_slug(db, slug, include_members)
@@ -162,7 +221,8 @@ async def get_team_by_slug(
         request=None, team_id=team.id, db=db, current_user=current_user
     )
 
-    return team
+    # Convert to dictionary using our helper function
+    return convert_team_to_dict(team, include_members)
 
 
 @router.put("/{team_id}", response_model=TeamResponse)
@@ -184,7 +244,7 @@ async def update_team(
     Returns:
         Updated team data
     """
-    logger.info(f"User {current_user['id']} updating team {team_id}")
+    logger.debug(f"Updating team {team_id} for user: {current_user['id']}")
 
     # Check admin or owner permissions
     from app.core.team_scoped_access import require_team_admin
@@ -201,7 +261,8 @@ async def update_team(
         user_id=current_user["id"],
     )
 
-    return updated_team
+    # For updates, we don't typically include members data
+    return convert_team_to_dict(updated_team, include_members=False)
 
 
 @router.delete("/{team_id}")

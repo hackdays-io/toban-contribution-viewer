@@ -40,6 +40,7 @@ import { Link, useParams } from 'react-router-dom';
 import { FiArrowLeft, FiChevronDown, FiMoreVertical, FiPlus, FiUserPlus } from 'react-icons/fi';
 
 import env from '../../config/env';
+import { supabase } from '../../lib/supabase';
 
 interface TeamMember {
   id: string;
@@ -85,11 +86,16 @@ const TeamMembersPage: React.FC = () => {
 
   const fetchTeam = useCallback(async () => {
     try {
+      // Get the session to include the auth token
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      
       const response = await fetch(`${env.apiUrl}/teams/${teamId}`, {
         method: 'GET',
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': token ? `Bearer ${token}` : '',
         },
       });
 
@@ -115,11 +121,16 @@ const TeamMembersPage: React.FC = () => {
 
   const fetchMembers = useCallback(async () => {
     try {
+      // Get the session to include the auth token
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      
       const response = await fetch(`${env.apiUrl}/teams/${teamId}/members`, {
         method: 'GET',
         credentials: 'include',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json', 
+          'Authorization': token ? `Bearer ${token}` : '',
         },
       });
 
@@ -194,11 +205,17 @@ const TeamMembersPage: React.FC = () => {
 
     try {
       setIsSubmitting(true);
+      
+      // Get the session to include the auth token
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      
       const response = await fetch(`${env.apiUrl}/teams/${teamId}/invite`, {
         method: 'POST',
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': token ? `Bearer ${token}` : '',
         },
         body: JSON.stringify(formData),
       });
@@ -238,11 +255,16 @@ const TeamMembersPage: React.FC = () => {
 
   const handleUpdateMemberRole = async (memberId: string, newRole: string) => {
     try {
+      // Get the session to include the auth token
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      
       const response = await fetch(`${env.apiUrl}/teams/${teamId}/members/${memberId}`, {
         method: 'PUT',
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': token ? `Bearer ${token}` : '',
         },
         body: JSON.stringify({ role: newRole }),
       });
@@ -282,11 +304,16 @@ const TeamMembersPage: React.FC = () => {
     }
 
     try {
+      // Get the session to include the auth token
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      
       const response = await fetch(`${env.apiUrl}/teams/${teamId}/members/${memberId}`, {
         method: 'DELETE',
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': token ? `Bearer ${token}` : '',
         },
       });
 

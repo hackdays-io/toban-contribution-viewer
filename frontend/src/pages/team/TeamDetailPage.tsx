@@ -23,6 +23,7 @@ import { Link, useParams } from 'react-router-dom';
 import { FiArrowLeft, FiSave, FiUsers } from 'react-icons/fi';
 
 import env from '../../config/env';
+import { supabase } from '../../lib/supabase';
 
 interface Team {
   id: string;
@@ -55,11 +56,17 @@ const TeamDetailPage: React.FC = () => {
   const fetchTeam = useCallback(async () => {
     try {
       setIsLoading(true);
+      
+      // Get the session to include the auth token
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      
       const response = await fetch(`${env.apiUrl}/teams/${teamId}`, {
         method: 'GET',
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': token ? `Bearer ${token}` : '',
         },
       });
 
@@ -117,11 +124,17 @@ const TeamDetailPage: React.FC = () => {
 
     try {
       setIsSaving(true);
+      
+      // Get the session to include the auth token
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      
       const response = await fetch(`${env.apiUrl}/teams/${teamId}`, {
         method: 'PUT',
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': token ? `Bearer ${token}` : '',
         },
         body: JSON.stringify({
           name,

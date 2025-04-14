@@ -35,6 +35,7 @@ import { FiPlus, FiUsers, FiSettings, FiTrash2 } from 'react-icons/fi';
 
 import env from '../../config/env';
 import useAuth from '../../context/useAuth';
+import { supabase } from '../../lib/supabase';
 
 interface Team {
   id: string;
@@ -75,11 +76,20 @@ const TeamsPage: React.FC = () => {
   const fetchTeams = useCallback(async () => {
     try {
       setIsLoading(true);
+      
+      // Get the session to include the auth token
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      
+      // Construct the authorization header
+      const authHeader = token ? `Bearer ${token}` : '';
+      
       const response = await fetch(`${env.apiUrl}/teams`, {
         method: 'GET',
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': authHeader,
         },
       });
 
@@ -147,11 +157,17 @@ const TeamsPage: React.FC = () => {
 
     try {
       setIsSubmitting(true);
+      
+      // Get the session to include the auth token
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      
       const response = await fetch(`${env.apiUrl}/teams`, {
         method: 'POST',
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': token ? `Bearer ${token}` : '',
         },
         body: JSON.stringify(formData),
       });
@@ -258,11 +274,16 @@ const TeamsPage: React.FC = () => {
     }
 
     try {
+      // Get the session to include the auth token
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      
       const response = await fetch(`${env.apiUrl}/teams/${teamId}`, {
         method: 'DELETE',
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': token ? `Bearer ${token}` : '',
         },
       });
 
@@ -289,6 +310,7 @@ const TeamsPage: React.FC = () => {
       });
     }
   };
+
 
   return (
     <Box p={4}>
