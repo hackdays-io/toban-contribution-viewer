@@ -251,7 +251,17 @@ const TeamMembersPage: React.FC = () => {
   }, [members]);
   
   const expiredInvitations = useMemo(() => {
-    return members.filter(member => member.invitation_status === 'expired');
+    return members.filter(member => 
+      member.invitation_status === 'expired' || 
+      member.invitation_status === 'inactive'
+    );
+  }, [members]);
+  
+  // List of all email addresses (active, pending, expired) to prevent duplicates
+  const allMemberEmails = useMemo(() => {
+    return members
+      .filter(member => member.email)
+      .map(member => member.email?.toLowerCase() || '');
   }, [members]);
   
   // Handler for refreshing the data
@@ -269,28 +279,54 @@ const TeamMembersPage: React.FC = () => {
     if (formErrors[name as keyof InviteFormData]) {
       setFormErrors(prev => ({ ...prev, [name]: undefined }));
     }
+    
+    // If changing email, check for existing user on blur
+    if (name === 'email' && value.trim() && value.includes('@')) {
+      const errors = validateForm();
+      if (errors.email) {
+        setFormErrors(prev => ({ ...prev, email: errors.email }));
+      }
+    }
   };
 
   const validateForm = () => {
     const errors: Partial<InviteFormData> = {};
     
-    if (!formData.email.trim()) {
+    if (!formData.email || !formData.email.trim()) {
       errors.email = 'Email is required';
+      return errors; // Return early if no email to validate
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       errors.email = 'Invalid email format';
+      return errors; // Return early if invalid format
     }
     
-    // Check if this email is already a member or has a pending invitation
-    const existingMember = members.find(
-      m => m.email?.toLowerCase() === formData.email.toLowerCase() && 
-           (m.invitation_status === 'active' || m.invitation_status === 'pending')
-    );
-    
-    if (existingMember) {
-      if (existingMember.invitation_status === 'active') {
-        errors.email = 'This email is already a member of the team';
-      } else if (existingMember.invitation_status === 'pending') {
-        errors.email = 'This email already has a pending invitation';
+    // Check if this email already exists in any state
+    const normalizedEmail = formData.email.toLowerCase();
+    if (allMemberEmails.includes(normalizedEmail)) {
+      // Find the member to determine the exact error message
+      const existingMember = members.find(
+        m => m.email?.toLowerCase() === normalizedEmail
+      );
+      
+      if (existingMember) {
+        switch (existingMember.invitation_status) {
+          case 'active':
+            errors.email = 'This email is already an active member of the team';
+            break;
+          case 'pending':
+            errors.email = 'This email already has a pending invitation';
+            break;
+          case 'expired':
+            errors.email = 'This email has an expired invitation. Please resend the invitation instead.';
+            break;
+          case 'inactive':
+            errors.email = 'This email was previously a member. Please reactivate or use a different email.';
+            break;
+          default:
+            errors.email = 'This email already exists in the system';
+        }
+      } else {
+        errors.email = 'This email is already associated with the team';
       }
     }
     
@@ -361,6 +397,27 @@ const TeamMembersPage: React.FC = () => {
     const validationErrors = validateForm();
     if (Object.keys(validationErrors).length > 0) {
       setFormErrors(validationErrors);
+      
+      // Special case: If there's an expired/inactive invitation, ask to reactivate
+      const normalizedEmail = formData.email.toLowerCase();
+      const existingMember = members.find(
+        m => m.email?.toLowerCase() === normalizedEmail && 
+             (m.invitation_status === 'expired' || m.invitation_status === 'inactive')
+      );
+      
+      if (existingMember) {
+        // Handle reactivation instead
+        try {
+          setIsSubmitting(true);
+          await handleReactivateInvitation(existingMember.id);
+          onInviteModalClose();
+        } catch (error) {
+          console.error('Error reactivating invitation:', error);
+        } finally {
+          setIsSubmitting(false);
+        }
+      }
+      
       return;
     }
 
@@ -382,6 +439,21 @@ const TeamMembersPage: React.FC = () => {
       });
 
       if (!response.ok) {
+        // Handle 409 Conflict (user already exists)
+        if (response.status === 409) {
+          const errorData = await response.json();
+          
+          // Check if error suggests this user already exists
+          if (errorData.detail?.includes('already exists')) {
+            setFormErrors({
+              email: 'This email already exists in the database. Try logging out and back in to refresh the member data.'
+            });
+            return;
+          }
+          
+          throw new Error(errorData.detail || 'User already exists with a different status');
+        }
+        
         const errorData = await response.json();
         throw new Error(errorData.detail || `Failed to invite member: ${response.status}`);
       }
@@ -390,8 +462,8 @@ const TeamMembersPage: React.FC = () => {
       const data = await response.json();
       const newMember = data.member || data; // Handle different API response formats
       
-      // Update members list
-      setMembers(prev => [...prev, newMember]);
+      // Refresh members list to ensure we have the latest data
+      await fetchMembers();
       
       // Switch to the Pending Invitations tab
       setActiveTab(1);
@@ -768,6 +840,51 @@ const TeamMembersPage: React.FC = () => {
     </Box>
   );
 
+  // Function to reactivate an inactive or expired invitation
+  const handleReactivateInvitation = async (memberId: string) => {
+    try {
+      // Get the session to include the auth token
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      
+      const response = await fetch(`${env.apiUrl}/teams/${teamId}/members/${memberId}`, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token ? `Bearer ${token}` : '',
+        },
+        body: JSON.stringify({ 
+          invitation_status: 'pending',
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to reactivate invitation: ${response.status}`);
+      }
+
+      // Refresh members list
+      await fetchMembers();
+      
+      toast({
+        title: 'Invitation reactivated',
+        description: 'The invitation has been reactivated and will be resent',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error('Error reactivating invitation:', error);
+      toast({
+        title: 'Error reactivating invitation',
+        description: error instanceof Error ? error.message : 'An unknown error occurred',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+  };
+
   // Expired Invitations Table
   const renderExpiredInvitationsTable = () => (
     <Box borderWidth="1px" borderRadius="lg" overflow="hidden">
@@ -807,14 +924,14 @@ const TeamMembersPage: React.FC = () => {
                 </Td>
                 <Td>
                   <HStack spacing={1}>
-                    <Tooltip label="Resend Invitation">
+                    <Tooltip label="Reactivate Invitation">
                       <IconButton
                         icon={<FiRefreshCw />}
                         size="sm"
-                        aria-label="Resend invitation"
+                        aria-label="Reactivate invitation"
                         variant="ghost"
                         colorScheme="blue"
-                        onClick={() => openResendInviteModal(member.id)}
+                        onClick={() => handleReactivateInvitation(member.id)}
                       />
                     </Tooltip>
                     <Tooltip label="Delete Invitation">
