@@ -22,6 +22,7 @@ import { FiSave, FiArrowLeft } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import useAuth from '../../context/useAuth';
 import { supabase } from '../../lib/supabase';
+import env from '../../config/env';
 
 interface UserProfileForm {
   name: string;
@@ -32,7 +33,7 @@ interface UserProfileForm {
  * Allows users to update their profile information
  */
 const EditProfilePage: React.FC = () => {
-  const { user } = useAuth();
+  const { user, teamContext } = useAuth();
   const [formData, setFormData] = useState<UserProfileForm>({
     name: '',
   });
@@ -41,6 +42,132 @@ const EditProfilePage: React.FC = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const navigate = useNavigate();
   const toast = useToast();
+  
+  // Function to update display name in all team memberships
+  const updateTeamMemberships = async (name: string) => {
+    try {
+      if (!user) return;
+      
+      // Get the session to include the auth token
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      
+      // Track successful and failed updates
+      const results = {
+        success: 0,
+        failed: 0,
+      };
+      
+      // Update display name for each team the user is a member of
+      const updatePromises = teamContext.teams.map(async (team) => {
+        try {
+          // First get ALL member records for this team (including pending/inactive ones)
+          // that match the current user's ID
+          const memberResponse = await fetch(`${env.apiUrl}/teams/${team.id}/members?status=all`, {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': token ? `Bearer ${token}` : '',
+            },
+          });
+          
+          // If status=all parameter isn't supported by the API, fallback to the standard endpoint
+          if (!memberResponse.ok) {
+            const standardResponse = await fetch(`${env.apiUrl}/teams/${team.id}/members`, {
+              method: 'GET',
+              credentials: 'include',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': token ? `Bearer ${token}` : '',
+              },
+            });
+            
+            if (!standardResponse.ok) {
+              console.error(`Failed to get members for team ${team.id}: ${standardResponse.status}`);
+              results.failed++;
+              return;
+            }
+            
+            const members = await standardResponse.json();
+            return processMembers(members, team.id);
+          }
+          
+          const members = await memberResponse.json();
+          return processMembers(members, team.id);
+          
+        } catch (error) {
+          console.error(`Error updating membership for team ${team.id}:`, error);
+          results.failed++;
+        }
+      });
+      
+      // Helper function to process members and update display names
+      async function processMembers(members: { members?: Array<{ id?: string; user_id?: string }> } | Array<{ id?: string; user_id?: string }>, teamId: string) {
+        // Find all memberships for the current user (there could be multiple with different statuses)
+        let userMembers = [];
+        
+        if (Array.isArray(members)) {
+          userMembers = members.filter(m => m.user_id === user?.id);
+        } else if (members && Array.isArray(members.members)) {
+          userMembers = members.members.filter(m => m.user_id === user?.id);
+        } else {
+          console.error(`Unexpected members format for team ${teamId}`);
+          results.failed++;
+          return;
+        }
+        
+        if (userMembers.length === 0) {
+          console.log(`No memberships found for user in team ${teamId}`);
+          return;
+        }
+        
+        // Update each membership
+        for (const membership of userMembers) {
+          if (!membership.id) continue;
+          
+          try {
+            const updateResponse = await fetch(`${env.apiUrl}/teams/${teamId}/members/${membership.id}`, {
+              method: 'PUT',
+              credentials: 'include',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': token ? `Bearer ${token}` : '',
+              },
+              body: JSON.stringify({
+                display_name: name,
+              }),
+            });
+            
+            if (!updateResponse.ok) {
+              const errorText = await updateResponse.text();
+              console.error(`Failed to update display name for membership ${membership.id}: ${updateResponse.status}`, errorText);
+              results.failed++;
+            } else {
+              results.success++;
+              console.log(`Successfully updated display name for membership ${membership.id} in team ${teamId}`);
+            }
+          } catch (error) {
+            console.error(`Error updating display name for membership ${membership.id}:`, error);
+            results.failed++;
+          }
+        }
+      }
+      
+      // Wait for all updates to complete
+      await Promise.all(updatePromises);
+      
+      console.log(`Team membership updates complete. Success: ${results.success}, Failed: ${results.failed}`);
+      
+      // Return results for potential use in the calling function
+      return results;
+      
+    } catch (error) {
+      console.error('Error updating team memberships:', error);
+      // We don't want to throw here as it would prevent the profile update from completing
+      // Just log the error and continue
+    }
+  };
 
   const cardBg = useColorModeValue('white', 'gray.700');
   const borderColor = useColorModeValue('gray.200', 'gray.600');
@@ -119,13 +246,41 @@ const EditProfilePage: React.FC = () => {
         throw error;
       }
       
-      toast({
-        title: 'Profile updated',
-        description: 'Your profile has been updated successfully',
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-      });
+      // Also update display name in all team memberships
+      // This ensures the name is consistent across teams
+      const results = await updateTeamMemberships(formData.name.trim());
+      
+      // Check for partial failures in team membership updates
+      if (results && results.failed > 0) {
+        if (results.success > 0) {
+          // Some updates succeeded, some failed
+          toast({
+            title: 'Profile updated with warnings',
+            description: `Your profile was updated, but name changes in ${results.failed} teams failed to sync. Team administrators will still see your previous name in those teams.`,
+            status: 'warning',
+            duration: 5000,
+            isClosable: true,
+          });
+        } else {
+          // All team membership updates failed
+          toast({
+            title: 'Profile updated with warnings',
+            description: 'Your profile was updated, but the changes failed to sync with your team memberships. Team administrators will still see your previous name.',
+            status: 'warning',
+            duration: 5000,
+            isClosable: true,
+          });
+        }
+      } else {
+        // All successful or no teams to update
+        toast({
+          title: 'Profile updated',
+          description: 'Your profile has been updated successfully across all your teams',
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        });
+      }
       
       // Navigate back to profile page
       navigate('/dashboard/profile');
