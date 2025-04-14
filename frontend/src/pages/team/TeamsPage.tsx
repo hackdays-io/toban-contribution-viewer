@@ -98,7 +98,9 @@ const TeamsPage: React.FC = () => {
       }
 
       const data = await response.json();
-      setTeams(data.teams || []);
+      console.log('DEBUG - Teams API response:', data);
+      // The response is an array directly, not wrapped in a 'teams' property
+      setTeams(Array.isArray(data) ? data : data.teams || []);
     } catch (error) {
       console.error('Error fetching teams:', error);
       toast({
