@@ -24,7 +24,10 @@ class TeamService:
 
     @staticmethod
     async def get_teams_for_user(
-        db: AsyncSession, user_id: str, include_members: bool = False
+        db: AsyncSession,
+        user_id: str,
+        include_members: bool = False,
+        auto_create: bool = True,
     ) -> List[Team]:
         """
         Get all teams that a user is a member of.
@@ -33,6 +36,7 @@ class TeamService:
             db: Database session
             user_id: User ID to get teams for
             include_members: Whether to include team members in the response
+            auto_create: Whether to auto-create a personal team if user has none
 
         Returns:
             List of teams the user is a member of
@@ -43,7 +47,7 @@ class TeamService:
         query = (
             select(Team)
             .join(TeamMember, Team.id == TeamMember.team_id)
-            .where(TeamMember.user_id == user_id, TeamMember.is_active is True)
+            .where(TeamMember.user_id == user_id, Team.is_active.is_(True))
         )
 
         # Include team members if requested
@@ -54,6 +58,52 @@ class TeamService:
         teams = result.scalars().all()
 
         logger.info(f"Found {len(teams)} teams for user {user_id}")
+
+        # Auto-create a team if user has none and auto_create is enabled
+        if not teams and auto_create:
+            logger.info(
+                f"No teams found for user {user_id}, auto-creating a personal team"
+            )
+            try:
+                # Create a personal team for this user
+                team_name = "My Personal Team"
+                team_slug = f"personal-team-{uuid.uuid4().hex[:8]}"
+
+                team = Team(
+                    name=team_name,
+                    slug=team_slug,
+                    description="Your default team for managing workspaces",
+                    is_personal=True,
+                    created_by_user_id=user_id,
+                    team_metadata={"auto_created": True},
+                )
+
+                db.add(team)
+                await db.flush()  # Flush to get the team ID
+
+                # Add the user as an owner
+                team_member = TeamMember(
+                    team_id=team.id,
+                    user_id=user_id,
+                    role=TeamMemberRole.OWNER,
+                    invitation_status="active",
+                )
+
+                db.add(team_member)
+                await db.commit()
+                await db.refresh(team)
+
+                logger.info(
+                    f"Auto-created team '{team.name}' (ID: {team.id}) for user {user_id}"
+                )
+
+                # Return the newly created team
+                return [team]
+            except Exception as e:
+                logger.error(f"Error auto-creating team for user {user_id}: {str(e)}")
+                await db.rollback()
+                # Continue with empty teams list
+
         return teams
 
     @staticmethod
@@ -74,7 +124,7 @@ class TeamService:
         logger.info(f"Getting team with ID {team_id}")
 
         # Build the query
-        query = select(Team).where(Team.id == team_id, Team.is_active is True)
+        query = select(Team).where(Team.id == team_id, Team.is_active.is_(True))
 
         # Include team members if requested
         if include_members:
@@ -106,7 +156,7 @@ class TeamService:
         logger.info(f"Getting team with slug {slug}")
 
         # Build the query
-        query = select(Team).where(Team.slug == slug, Team.is_active is True)
+        query = select(Team).where(Team.slug == slug, Team.is_active.is_(True))
 
         # Include team members if requested
         if include_members:

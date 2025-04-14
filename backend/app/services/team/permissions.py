@@ -32,7 +32,6 @@ async def get_team_member(
     query = select(TeamMember).where(
         TeamMember.team_id == team_id,
         TeamMember.user_id == user_id,
-        TeamMember.is_active is True,
         TeamMember.invitation_status == "active",
     )
 

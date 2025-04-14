@@ -108,5 +108,70 @@ async def cors_debug():
     }
 
 
+# JWT debug endpoint - useful for troubleshooting JWT issues
+@app.get("/auth-debug")
+async def auth_debug():
+    """Return JWT configuration for debugging."""
+    import base64
+    import hashlib
+
+    # Get the JWT secret for debugging
+    jwt_secret = settings.SUPABASE_JWT_SECRET
+
+    # Safely prepare information for response
+    try:
+        # Create a safe preview of the secret (first few chars only)
+        safe_secret = jwt_secret[:5] + "..." if jwt_secret else "Not configured"
+
+        # Determine if it's base64 encoded and its length
+        if jwt_secret:
+            try:
+                decoded = base64.b64decode(jwt_secret)
+                is_base64 = True
+                secret_length = len(decoded)
+                # Create a hash for comparison without revealing the actual secret
+                secret_hash = hashlib.sha256(decoded).hexdigest()[:8]
+            except Exception:
+                is_base64 = False
+                secret_length = len(jwt_secret)
+                secret_hash = hashlib.sha256(jwt_secret.encode("utf-8")).hexdigest()[:8]
+
+            # Test if the secret can be used for JWT operations
+            from jose import jwt
+
+            try:
+                test_payload = {"sub": "test", "exp": 1000000000000}
+                test_token = jwt.encode(test_payload, jwt_secret, algorithm="HS256")
+                jwt.decode(test_token, jwt_secret, algorithms=["HS256"])
+                secret_valid = True
+            except Exception:
+                secret_valid = False
+        else:
+            is_base64 = False
+            secret_length = 0
+            secret_hash = None
+            secret_valid = False
+    except Exception:
+        safe_secret = "Error analyzing secret"
+        is_base64 = False
+        secret_length = 0
+        secret_hash = None
+        secret_valid = False
+
+    # Return auth configuration information
+    return {
+        "jwt_auth_configured": bool(jwt_secret),
+        "jwt_secret_preview": safe_secret,
+        "jwt_secret_is_base64": is_base64,
+        "jwt_secret_length": secret_length,
+        "jwt_secret_hash": secret_hash,
+        "jwt_secret_valid": secret_valid,
+        "supabase_url": settings.SUPABASE_URL,
+        "supabase_jwt_secret_configured": bool(settings.SUPABASE_JWT_SECRET),
+        "api_url": settings.API_URL,
+        "frontend_url": settings.FRONTEND_URL,
+    }
+
+
 # Include API routes
 app.include_router(api_router)
