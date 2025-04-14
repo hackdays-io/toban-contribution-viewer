@@ -1,4 +1,4 @@
-import { ChakraProvider, Container, extendTheme } from '@chakra-ui/react'
+import { ChakraProvider, extendTheme } from '@chakra-ui/react'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import './App.css'
 
@@ -8,6 +8,9 @@ import Login from './components/auth/Login'
 import SignUp from './components/auth/SignUp'
 import AuthCallback from './components/auth/AuthCallback'
 import ProtectedRoute from './components/auth/ProtectedRoute'
+
+// Layout
+import { AppLayout } from './components/layout'
 
 // Pages
 import Home from './pages/Home'
@@ -34,15 +37,22 @@ import {
 } from './pages/team'
 
 // Create a default theme
-const theme = extendTheme({})
+const theme = extendTheme({
+  styles: {
+    global: {
+      body: {
+        bg: 'gray.50',
+      },
+    },
+  },
+})
 
 function App() {
   return (
     <ChakraProvider theme={theme}>
       <BrowserRouter>
         <AuthProvider>
-          <Container maxW="container.xl" py={5}>
-            <Routes>
+          <Routes>
               {/* Public routes */}
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
@@ -50,11 +60,20 @@ function App() {
               <Route path="/auth/callback" element={<AuthCallback />} />
 
               {/* Protected routes */}
+              {/* Public callback route */}
+              <Route
+                path="/auth/slack/callback"
+                element={<SlackOAuthCallbackPage />}
+              />
+
+              {/* Dashboard routes - all wrapped with AppLayout */}
               <Route
                 path="/dashboard"
                 element={
                   <ProtectedRoute>
-                    <Dashboard />
+                    <AppLayout>
+                      <Dashboard />
+                    </AppLayout>
                   </ProtectedRoute>
                 }
               />
@@ -64,7 +83,9 @@ function App() {
                 path="/dashboard/teams"
                 element={
                   <ProtectedRoute>
-                    <TeamsPage />
+                    <AppLayout>
+                      <TeamsPage />
+                    </AppLayout>
                   </ProtectedRoute>
                 }
               />
@@ -72,7 +93,9 @@ function App() {
                 path="/dashboard/teams/:teamId"
                 element={
                   <ProtectedRoute>
-                    <TeamDetailPage />
+                    <AppLayout>
+                      <TeamDetailPage />
+                    </AppLayout>
                   </ProtectedRoute>
                 }
               />
@@ -80,7 +103,9 @@ function App() {
                 path="/dashboard/teams/:teamId/members"
                 element={
                   <ProtectedRoute>
-                    <TeamMembersPage />
+                    <AppLayout>
+                      <TeamMembersPage />
+                    </AppLayout>
                   </ProtectedRoute>
                 }
               />
@@ -90,7 +115,9 @@ function App() {
                 path="/dashboard/slack/workspaces"
                 element={
                   <ProtectedRoute>
-                    <SlackWorkspacesPage />
+                    <AppLayout>
+                      <SlackWorkspacesPage />
+                    </AppLayout>
                   </ProtectedRoute>
                 }
               />
@@ -98,19 +125,19 @@ function App() {
                 path="/dashboard/slack/connect"
                 element={
                   <ProtectedRoute>
-                    <SlackConnectPage />
+                    <AppLayout>
+                      <SlackConnectPage />
+                    </AppLayout>
                   </ProtectedRoute>
                 }
-              />
-              <Route
-                path="/auth/slack/callback"
-                element={<SlackOAuthCallbackPage />}
               />
               <Route
                 path="/dashboard/slack/workspaces/:workspaceId/channels"
                 element={
                   <ProtectedRoute>
-                    <SlackChannelsPage />
+                    <AppLayout>
+                      <SlackChannelsPage />
+                    </AppLayout>
                   </ProtectedRoute>
                 }
               />
@@ -118,7 +145,9 @@ function App() {
                 path="/dashboard/slack/workspaces/:workspaceId"
                 element={
                   <ProtectedRoute>
-                    <SlackWorkspacesPage />
+                    <AppLayout>
+                      <SlackWorkspacesPage />
+                    </AppLayout>
                   </ProtectedRoute>
                 }
               />
@@ -126,7 +155,9 @@ function App() {
                 path="/dashboard/slack/workspaces/:workspaceId/channels/:channelId/messages"
                 element={
                   <ProtectedRoute>
-                    <SlackMessagesPage />
+                    <AppLayout>
+                      <SlackMessagesPage />
+                    </AppLayout>
                   </ProtectedRoute>
                 }
               />
@@ -136,7 +167,9 @@ function App() {
                 path="/dashboard/analytics"
                 element={
                   <ProtectedRoute>
-                    <Analytics />
+                    <AppLayout>
+                      <Analytics />
+                    </AppLayout>
                   </ProtectedRoute>
                 }
               />
@@ -144,7 +177,9 @@ function App() {
                 path="/dashboard/analytics/slack"
                 element={
                   <ProtectedRoute>
-                    <SlackAnalyticsPage />
+                    <AppLayout>
+                      <SlackAnalyticsPage />
+                    </AppLayout>
                   </ProtectedRoute>
                 }
               />
@@ -152,7 +187,9 @@ function App() {
                 path="/dashboard/analytics/slack/channels/:workspaceId/:channelId/analyze"
                 element={
                   <ProtectedRoute>
-                    <SlackChannelAnalysisPage />
+                    <AppLayout>
+                      <SlackChannelAnalysisPage />
+                    </AppLayout>
                   </ProtectedRoute>
                 }
               />
@@ -160,12 +197,13 @@ function App() {
                 path="/dashboard/analytics/slack/channels/:workspaceId/:channelId/history"
                 element={
                   <ProtectedRoute>
-                    <ChannelAnalysisHistoryPage />
+                    <AppLayout>
+                      <ChannelAnalysisHistoryPage />
+                    </AppLayout>
                   </ProtectedRoute>
                 }
               />
             </Routes>
-          </Container>
         </AuthProvider>
       </BrowserRouter>
     </ChakraProvider>

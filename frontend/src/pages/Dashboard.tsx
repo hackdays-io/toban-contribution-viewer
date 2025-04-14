@@ -2,194 +2,189 @@ import React from 'react';
 import {
   Box,
   Button,
-  Flex,
   Heading,
-  HStack,
-  Tab,
-  TabList,
-  TabPanel,
-  TabPanels,
-  Tabs,
   Text,
-  useToast,
-  Divider,
   SimpleGrid,
+  Stat,
+  StatLabel,
+  StatNumber,
+  StatHelpText,
+  Icon,
+  Card,
+  CardBody,
+  HStack,
+  Divider,
+  useColorModeValue,
 } from '@chakra-ui/react';
 import { Link } from 'react-router-dom';
+import { FiSlack, FiGithub, FiUsers, FiBarChart2 } from 'react-icons/fi';
+import { TeamContext } from '../components/team';
 import useAuth from '../context/useAuth';
-import { TeamSwitcher, TeamContext } from '../components/team';
 
+/**
+ * Dashboard home page with overview and quick access to key features
+ */
 const Dashboard: React.FC = () => {
-  const { user, signOut } = useAuth();
-  const toast = useToast();
-
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-      toast({
-        title: 'Signed out successfully',
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-      });
-    } catch (error) {
-      toast({
-        title: 'Error signing out',
-        description: error instanceof Error ? error.message : 'An error occurred',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
-    }
-  };
-
+  const { teamContext } = useAuth();
+  const cardBg = useColorModeValue('white', 'gray.800');
+  
+  // Get current team name
+  const currentTeam = teamContext.teams?.find(team => team.id === teamContext.currentTeamId);
+  
   return (
     <Box>
-      <Flex justifyContent="space-between" alignItems="center" mb={6}>
-        <HStack>
-          <Heading as="h1" size="xl">Dashboard</Heading>
-          <TeamSwitcher variant="compact" />
-        </HStack>
-        <HStack spacing={4}>
-          <Text>Hello, {user?.email}</Text>
-          <Button onClick={handleSignOut} colorScheme="blue" variant="outline">
-            Sign Out
-          </Button>
-        </HStack>
-      </Flex>
-
-      <Tabs colorScheme="blue" mb={6}>
-        <TabList>
-          <Tab>Overview</Tab>
-          <Tab>Teams</Tab>
-          <Tab>GitHub</Tab>
-          <Tab>Slack</Tab>
-          <Tab>Notion</Tab>
-          <Tab>Analytics</Tab>
-        </TabList>
-
-        <TabPanels>
-          <TabPanel>
-            <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
-              <Box p={4} borderWidth="1px" borderRadius="lg">
-                <Heading as="h2" size="md" mb={4}>
-                  Welcome to your Contribution Dashboard
-                </Heading>
-                <Text mb={4}>
-                  This dashboard shows your contributions across platforms. Connect your accounts
-                  to start tracking your activity.
-                </Text>
-                <Divider my={4} />
-                <HStack spacing={4}>
-                  <Button as={Link} to="/dashboard/teams" colorScheme="blue">
-                    Manage Teams
-                  </Button>
-                  <Button as={Link} to="/dashboard/slack/connect" colorScheme="purple">
-                    Connect Slack
-                  </Button>
+      <Box mb={6}>
+        <Heading size="lg" mb={2}>Welcome to your Dashboard</Heading>
+        {currentTeam && (
+          <Text color="gray.600">
+            You're currently viewing the {currentTeam.name} team workspace.
+          </Text>
+        )}
+      </Box>
+      
+      <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
+        <Box>
+          {/* Stats Overview */}
+          <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4} mb={6}>
+            <Stat bg={cardBg} p={4} borderRadius="md" boxShadow="sm">
+              <StatLabel>Team Members</StatLabel>
+              <StatNumber>7</StatNumber>
+              <StatHelpText>Active contributors</StatHelpText>
+            </Stat>
+            
+            <Stat bg={cardBg} p={4} borderRadius="md" boxShadow="sm">
+              <StatLabel>Integrations</StatLabel>
+              <StatNumber>3</StatNumber>
+              <StatHelpText>Connected services</StatHelpText>
+            </Stat>
+            
+            <Stat bg={cardBg} p={4} borderRadius="md" boxShadow="sm">
+              <StatLabel>Messages</StatLabel>
+              <StatNumber>1,204</StatNumber>
+              <StatHelpText>Last 30 days</StatHelpText>
+            </Stat>
+            
+            <Stat bg={cardBg} p={4} borderRadius="md" boxShadow="sm">
+              <StatLabel>PRs & Issues</StatLabel>
+              <StatNumber>32</StatNumber>
+              <StatHelpText>Open items</StatHelpText>
+            </Stat>
+          </SimpleGrid>
+          
+          {/* Quick access cards */}
+          <Heading size="md" mb={4}>Quick Access</Heading>
+          <SimpleGrid columns={{ base: 1, sm: 2 }} spacing={4}>
+            <Card variant="outline" bg={cardBg}>
+              <CardBody>
+                <HStack>
+                  <Icon as={FiSlack} color="purple.500" boxSize={6} />
+                  <Box>
+                    <Heading size="sm">Slack Workspaces</Heading>
+                    <Text fontSize="sm" color="gray.600">
+                      Manage your connected Slack workspaces
+                    </Text>
+                  </Box>
                 </HStack>
-              </Box>
-              
-              <TeamContext />
-            </SimpleGrid>
-          </TabPanel>
-
-          <TabPanel>
-            <Box p={4} borderWidth="1px" borderRadius="lg">
-              <Heading as="h2" size="md" mb={4}>
-                Teams
-              </Heading>
-              <Text mb={4}>
-                Manage your teams and collaborators. Teams help you organize your workspaces
-                and control who has access to what.
-              </Text>
-              <HStack spacing={4}>
-                <Button
-                  as={Link}
-                  to="/dashboard/teams"
-                  colorScheme="blue"
-                >
-                  Manage Teams
-                </Button>
-              </HStack>
-            </Box>
-          </TabPanel>
-
-          <TabPanel>
-            <Box p={4} borderWidth="1px" borderRadius="lg">
-              <Heading as="h2" size="md" mb={4}>
-                GitHub Contributions
-              </Heading>
-              <Text>
-                Connect your GitHub account to track issues, pull requests, and code contributions.
-              </Text>
-              <Button mt={4} colorScheme="blue">
-                Connect GitHub
-              </Button>
-            </Box>
-          </TabPanel>
-
-          <TabPanel>
-            <Box p={4} borderWidth="1px" borderRadius="lg">
-              <Heading as="h2" size="md" mb={4}>
-                Slack Contributions
-              </Heading>
-              <Text mb={4}>
-                Connect your Slack workspace to track messages, reactions, and engagement.
-              </Text>
-              <HStack spacing={4}>
-                <Button
-                  as={Link}
-                  to="/dashboard/slack/connect"
-                  colorScheme="purple"
-                >
-                  Connect Workspace
-                </Button>
+                <Divider my={3} />
                 <Button
                   as={Link}
                   to="/dashboard/slack/workspaces"
-                  variant="outline"
-                  colorScheme="purple"
+                  size="sm"
+                  variant="ghost"
+                  width="full"
+                  justifyContent="flex-start"
+                  leftIcon={<FiSlack />}
                 >
-                  Manage Workspaces
+                  View Workspaces
                 </Button>
-              </HStack>
-            </Box>
-          </TabPanel>
-
-          <TabPanel>
-            <Box p={4} borderWidth="1px" borderRadius="lg">
-              <Heading as="h2" size="md" mb={4}>
-                Notion Contributions
-              </Heading>
-              <Text>
-                Connect Notion to track document edits, comments, and knowledge sharing.
-              </Text>
-              <Button mt={4} colorScheme="blue">
-                Connect Notion
-              </Button>
-            </Box>
-          </TabPanel>
-
-          <TabPanel>
-            <Box p={4} borderWidth="1px" borderRadius="lg">
-              <Heading as="h2" size="md" mb={4}>
-                Analytics & Insights
-              </Heading>
-              <Text mb={4}>
-                Analyze your contributions and gain insights across platforms.
-              </Text>
-              <Button
-                as={Link}
-                to="/dashboard/analytics"
-                colorScheme="purple"
-              >
-                View Analytics
-              </Button>
-            </Box>
-          </TabPanel>
-        </TabPanels>
-      </Tabs>
+              </CardBody>
+            </Card>
+            
+            <Card variant="outline" bg={cardBg}>
+              <CardBody>
+                <HStack>
+                  <Icon as={FiUsers} color="blue.500" boxSize={6} />
+                  <Box>
+                    <Heading size="sm">Team Management</Heading>
+                    <Text fontSize="sm" color="gray.600">
+                      Manage your team members and roles
+                    </Text>
+                  </Box>
+                </HStack>
+                <Divider my={3} />
+                <Button
+                  as={Link}
+                  to="/dashboard/teams"
+                  size="sm"
+                  variant="ghost"
+                  width="full"
+                  justifyContent="flex-start"
+                  leftIcon={<FiUsers />}
+                >
+                  Manage Teams
+                </Button>
+              </CardBody>
+            </Card>
+            
+            <Card variant="outline" bg={cardBg}>
+              <CardBody>
+                <HStack>
+                  <Icon as={FiBarChart2} color="green.500" boxSize={6} />
+                  <Box>
+                    <Heading size="sm">Analytics</Heading>
+                    <Text fontSize="sm" color="gray.600">
+                      View insights across platforms
+                    </Text>
+                  </Box>
+                </HStack>
+                <Divider my={3} />
+                <Button
+                  as={Link}
+                  to="/dashboard/analytics"
+                  size="sm"
+                  variant="ghost"
+                  width="full"
+                  justifyContent="flex-start"
+                  leftIcon={<FiBarChart2 />}
+                >
+                  View Analytics
+                </Button>
+              </CardBody>
+            </Card>
+            
+            <Card variant="outline" bg={cardBg}>
+              <CardBody>
+                <HStack>
+                  <Icon as={FiGithub} color="gray.700" boxSize={6} />
+                  <Box>
+                    <Heading size="sm">GitHub</Heading>
+                    <Text fontSize="sm" color="gray.600">
+                      Connect GitHub repositories
+                    </Text>
+                  </Box>
+                </HStack>
+                <Divider my={3} />
+                <Button
+                  as={Link}
+                  to="/dashboard/github"
+                  size="sm"
+                  variant="ghost"
+                  width="full"
+                  justifyContent="flex-start"
+                  leftIcon={<FiGithub />}
+                >
+                  Connect Repos
+                </Button>
+              </CardBody>
+            </Card>
+          </SimpleGrid>
+        </Box>
+        
+        {/* Right column */}
+        <Box>
+          <TeamContext />
+        </Box>
+      </SimpleGrid>
     </Box>
   );
 };

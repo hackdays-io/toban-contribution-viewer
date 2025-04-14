@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   Box,
   Card,
@@ -22,7 +22,12 @@ import { getRoleBadgeColorScheme, getRoleDisplayName } from '../../utils/teamUti
 
 const TeamContext: React.FC = () => {
   const { teamContext, loading } = useAuth();
-  const currentTeam = teamContext.teams?.find(team => team.id === teamContext.currentTeamId);
+  
+  // Memoize derived values to prevent recalculation on every render
+  const currentTeam = useMemo(() => {
+    return teamContext.teams?.find(team => team.id === teamContext.currentTeamId);
+  }, [teamContext.teams, teamContext.currentTeamId]);
+  
   const cardBg = useColorModeValue('white', 'gray.800');
   
   if (loading) {
@@ -104,4 +109,4 @@ const TeamContext: React.FC = () => {
   );
 };
 
-export default TeamContext;
+export default React.memo(TeamContext);

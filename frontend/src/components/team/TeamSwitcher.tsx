@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, useCallback } from 'react';
 import {
   Menu,
   MenuButton,
@@ -29,10 +29,13 @@ const TeamSwitcher: React.FC<TeamSwitcherProps> = ({ variant = 'default' }) => {
   const { teamContext, switchTeam, loading } = useAuth();
   const toast = useToast();
   
-  // Get the current team from the context
-  const currentTeam = teamContext.teams.find(team => team.id === teamContext.currentTeamId);
+  // Get the current team from the context - memoized to prevent recalculation
+  const currentTeam = useMemo(() => {
+    return teamContext.teams.find(team => team.id === teamContext.currentTeamId);
+  }, [teamContext.teams, teamContext.currentTeamId]);
   
-  const handleTeamSwitch = async (teamId: string) => {
+  // Memoize the event handler to prevent recreation on each render
+  const handleTeamSwitch = useCallback(async (teamId: string) => {
     try {
       await switchTeam(teamId);
       toast({
@@ -50,7 +53,7 @@ const TeamSwitcher: React.FC<TeamSwitcherProps> = ({ variant = 'default' }) => {
         isClosable: true,
       });
     }
-  };
+  }, [switchTeam, toast]);
   
   // Using the utility function for badge colors
   
@@ -139,4 +142,4 @@ const TeamSwitcher: React.FC<TeamSwitcherProps> = ({ variant = 'default' }) => {
   );
 };
 
-export default TeamSwitcher;
+export default React.memo(TeamSwitcher);

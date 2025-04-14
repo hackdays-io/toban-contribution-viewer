@@ -36,8 +36,9 @@ import { FiPlus, FiUsers, FiSettings, FiTrash2, FiRefreshCw } from 'react-icons/
 import env from '../../config/env';
 import useAuth from '../../context/useAuth';
 import { supabase } from '../../lib/supabase';
-import { TeamSwitcher } from '../../components/team';
-// import { canPerformAdminActions } from '../../utils/teamUtils'; - will use in future implementation
+import { PageTitle } from '../../components/layout';
+// Will use in future implementation:
+// import { canPerformAdminActions } from '../../utils/teamUtils';
 
 interface Team {
   id: string;
@@ -318,29 +319,29 @@ const TeamsPage: React.FC = () => {
 
   return (
     <Box p={4}>
-      <Flex justifyContent="space-between" alignItems="center" mb={6}>
-        <HStack>
-          <Heading size="lg">Teams</Heading>
-          <TeamSwitcher variant="compact" />
-        </HStack>
-        <HStack>
-          <Button
-            leftIcon={<FiRefreshCw />}
-            variant="ghost"
-            onClick={() => fetchTeams()}
-            isLoading={isLoading}
-          >
-            Refresh
-          </Button>
-          <Button
-            leftIcon={<FiPlus />}
-            colorScheme="blue"
-            onClick={onOpen}
-          >
-            Create Team
-          </Button>
-        </HStack>
-      </Flex>
+      <PageTitle 
+        title="Teams"
+        description="Manage your teams and team members"
+        actions={
+          <>
+            <Button
+              leftIcon={<FiRefreshCw />}
+              variant="ghost"
+              onClick={() => fetchTeams()}
+              isLoading={isLoading}
+            >
+              Refresh
+            </Button>
+            <Button
+              leftIcon={<FiPlus />}
+              colorScheme="blue"
+              onClick={onOpen}
+            >
+              Create Team
+            </Button>
+          </>
+        }
+      />
 
       {isLoading ? (
         <Flex justify="center" align="center" height="300px">
