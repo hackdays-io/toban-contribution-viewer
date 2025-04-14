@@ -61,6 +61,20 @@ vi.mock('@chakra-ui/react', async () => {
   };
 });
 
+// Mock SlackUserDisplay and SlackUserCacheProvider components
+vi.mock('../../../components/slack/SlackUserDisplay', () => ({
+  default: ({ userId }: { userId: string }) => <div data-testid="slack-user-display">{userId}</div>
+}));
+
+vi.mock('../../../components/slack/SlackUserContext', () => ({
+  SlackUserCacheProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="slack-user-cache-provider">{children}</div>
+}));
+
+// Mock MessageText component
+vi.mock('../../../components/slack/MessageText', () => ({
+  default: ({ text }: { text: string }) => <div data-testid="message-text">{text}</div>
+}));
+
 // This mock was duplicated - removed to avoid conflicts
 
 // Mock data
@@ -131,30 +145,8 @@ const mockReplies = [
   },
 ];
 
-const mockUsers = new Map([
-  [
-    'U123',
-    {
-      id: 'U123',
-      slack_id: 'U123',
-      name: 'user1',
-      display_name: 'User One',
-      real_name: 'User 1',
-      profile_image_url: 'https://example.com/user1.jpg',
-    },
-  ],
-  [
-    'U456',
-    {
-      id: 'U456',
-      slack_id: 'U456',
-      name: 'user2',
-      display_name: 'User Two',
-      real_name: 'User 2',
-      profile_image_url: 'https://example.com/user2.jpg',
-    },
-  ],
-]);
+// Users are no longer needed as SlackUserDisplay component is mocked
+// and directly handles user data fetching in the actual component
 
 // Props for the component
 const defaultProps = {
@@ -164,7 +156,7 @@ const defaultProps = {
   channelId: 'C123',
   threadTs: '1617984000.000100',
   parentMessage: mockParentMessage,
-  users: mockUsers,
+  // users prop removed as it's no longer used in the component
 };
 
 // Wrapper component with ChakraProvider
