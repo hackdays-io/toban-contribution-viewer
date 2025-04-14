@@ -475,7 +475,7 @@ const TeamMembersPage: React.FC = () => {
                         aria-label="More options"
                       />
                       <MenuList>
-                        <MenuGroup title="Change Role:" isDisabled={member.role === 'owner'}>
+                        <MenuGroup title="Change Role:" _disabled={member.role === 'owner'}>
                           <MenuItem 
                             isDisabled={member.role === 'owner' || member.role === 'admin'}
                             onClick={() => handleUpdateMemberRole(member.id, 'admin')}
