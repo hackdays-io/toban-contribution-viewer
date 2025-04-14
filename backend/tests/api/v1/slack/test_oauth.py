@@ -5,7 +5,6 @@ Tests for Slack OAuth integration.
 import pytest
 import pytest_asyncio
 from fastapi import FastAPI
-from fastapi.testclient import TestClient
 from httpx import AsyncClient
 
 from app.api.v1.slack.router import router as slack_router
