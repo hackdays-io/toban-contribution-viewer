@@ -12,7 +12,8 @@ import {
   Grid,
   GridItem,
 } from '@chakra-ui/react';
-import SlackUserDisplay, { SlackUserCacheProvider } from './SlackUserDisplay';
+import SlackUserDisplay from './SlackUserDisplay';
+import { SlackUserCacheProvider } from './SlackUserContext';
 
 /**
  * Demo component to showcase different ways of using SlackUserDisplay.

@@ -37,7 +37,8 @@ import {
 
 // Import ThreadView component
 import ThreadView from './ThreadView'
-import SlackUserDisplay, { SlackUserCacheProvider } from './SlackUserDisplay'
+import SlackUserDisplay from './SlackUserDisplay'
+import { SlackUserCacheProvider } from './SlackUserContext'
 import MessageText from './MessageText'
 
 // Define types
