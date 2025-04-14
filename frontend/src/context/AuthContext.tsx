@@ -52,6 +52,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [teamContext, setTeamContext] = useState<TeamContext>({ teams: [] });
+  
+  // Use ref to track the previous teamContext without causing re-renders
+  // Temporarily commenting out as it's not used yet but will be needed for future optimizations
+  // const prevTeamContextRef = useRef<TeamContext>({ teams: [] });
 
   // Function to load team context from API
   const loadTeamContext = useCallback(async () => {
@@ -72,18 +76,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       const data = await response.json();
-      setTeamContext({
-        currentTeamId: data.current_team_id,
-        currentTeamRole: data.current_team_role as TeamRole,
-        teams: data.teams || [],
-      });
       
-      console.info('Team context loaded:', data);
+      // Check if team context actually changed before updating state
+      const hasChanged = 
+        data.current_team_id !== teamContext.currentTeamId ||
+        data.current_team_role !== teamContext.currentTeamRole ||
+        JSON.stringify(data.teams || []) !== JSON.stringify(teamContext.teams);
+      
+      if (hasChanged) {
+        setTeamContext({
+          currentTeamId: data.current_team_id,
+          currentTeamRole: data.current_team_role as TeamRole,
+          teams: data.teams || [],
+        });
+        
+        // Only log when there's an actual change
+        console.info('Team context updated');
+      }
     } catch (error) {
       console.error('Error loading team context:', error);
       // Don't set error state here, as this is supplementary information
     }
-  }, [user, session?.access_token]);
+  }, [user, session?.access_token, teamContext]);
   
   // Function to switch the current team
   const switchTeam = async (teamId: string) => {
@@ -134,6 +148,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // This effect will only run once on component mount
   useEffect(() => {
     // Get the initial session
     const initializeAuth = async () => {
@@ -151,9 +166,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (session) {
           setSession(session as unknown as Session);
           setUser(session.user || null);
-          
-          // Load team context after authentication
-          await loadTeamContext();
         } else {
           setSession(null);
           setUser(null);
@@ -176,11 +188,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (session) {
           setSession(session as unknown as Session);
           setUser(session.user || null);
-          
-          // Load team context on auth state change
-          if (event === 'SIGNED_IN') {
-            await loadTeamContext();
-          }
         } else {
           setSession(null);
           setUser(null);
@@ -196,7 +203,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         listener.data.subscription.unsubscribe();
       }
     };
-  }, [loadTeamContext]);
+  }, []); // Empty dependency array so it only runs once
+  
+  // Separate effect for loading team context when user or session changes
+  useEffect(() => {
+    if (user && session) {
+      loadTeamContext();
+    }
+  }, [user, session, loadTeamContext]);
 
   // Sign out function
   const signOut = async () => {
