@@ -37,7 +37,7 @@ import {
   Avatar,
 } from '@chakra-ui/react';
 import { Link, useParams } from 'react-router-dom';
-import { FiArrowLeft, FiChevronDown, FiMoreVertical, FiPlus, FiUserPlus } from 'react-icons/fi';
+import { FiArrowLeft, FiMoreVertical, FiPlus, FiUserPlus } from 'react-icons/fi';
 
 import env from '../../config/env';
 import { supabase } from '../../lib/supabase';
