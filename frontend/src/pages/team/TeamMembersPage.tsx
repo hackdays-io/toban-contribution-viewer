@@ -188,7 +188,8 @@ const TeamMembersPage: React.FC = () => {
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
       
-      const response = await fetch(`${env.apiUrl}/teams/${teamId}/members`, {
+      // Using "all=true" query parameter to get all members including pending, expired, and inactive
+      const response = await fetch(`${env.apiUrl}/teams/${teamId}/members?all=true`, {
         method: 'GET',
         credentials: 'include',
         headers: {
@@ -198,6 +199,49 @@ const TeamMembersPage: React.FC = () => {
       });
 
       if (!response.ok) {
+        // If the "all" parameter isn't supported (in case you're using an older API version)
+        // let's try to get each status type separately and combine them
+        if (response.status === 400) {
+          // Fallback to multiple requests if the API doesn't support "all" parameter
+          const [activeResp, pendingResp] = await Promise.all([
+            fetch(`${env.apiUrl}/teams/${teamId}/members`, {
+              method: 'GET',
+              credentials: 'include',
+              headers: {
+                'Content-Type': 'application/json', 
+                'Authorization': token ? `Bearer ${token}` : '',
+              },
+            }),
+            fetch(`${env.apiUrl}/teams/${teamId}/invitations`, {
+              method: 'GET',
+              credentials: 'include',
+              headers: {
+                'Content-Type': 'application/json', 
+                'Authorization': token ? `Bearer ${token}` : '',
+              },
+            })
+          ]);
+          
+          if (!activeResp.ok) {
+            throw new Error(`Error fetching active members: ${activeResp.status}`);
+          }
+          
+          // Get active members
+          const activeData = await activeResp.json();
+          let allMembers = activeData.members || [];
+          
+          // Try to get pending invitations if available
+          if (pendingResp.ok) {
+            const pendingData = await pendingResp.json();
+            if (pendingData.invitations) {
+              allMembers = [...allMembers, ...pendingData.invitations];
+            }
+          }
+          
+          setMembers(allMembers);
+          return allMembers;
+        }
+        
         throw new Error(`Error fetching team members: ${response.status}`);
       }
 
@@ -458,9 +502,8 @@ const TeamMembersPage: React.FC = () => {
         throw new Error(errorData.detail || `Failed to invite member: ${response.status}`);
       }
 
-      // Get the response data
-      const data = await response.json();
-      const newMember = data.member || data; // Handle different API response formats
+      // Get the response data and refresh the member list
+      await response.json();
       
       // Refresh members list to ensure we have the latest data
       await fetchMembers();
