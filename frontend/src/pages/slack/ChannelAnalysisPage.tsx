@@ -33,6 +33,7 @@ import { FiChevronRight, FiArrowLeft, FiRefreshCw } from 'react-icons/fi';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import env from '../../config/env';
 import MessageText from '../../components/slack/MessageText';
+import { SlackUserCacheProvider } from '../../components/slack/SlackUserContext';
 
 interface AnalysisResponse {
   analysis_id: string;
@@ -466,13 +467,14 @@ const ChannelAnalysisPage: React.FC = () => {
   };
 
   return (
-    <Box p={4}>
-      {/* Breadcrumb navigation */}
-      <Breadcrumb
-        spacing="8px"
-        separator={<Icon as={FiChevronRight} color="gray.500" />}
-        mb={6}
-      >
+    <SlackUserCacheProvider workspaceId={workspaceId || ''}>
+      <Box p={4}>
+        {/* Breadcrumb navigation */}
+        <Breadcrumb
+          spacing="8px"
+          separator={<Icon as={FiChevronRight} color="gray.500" />}
+          mb={6}
+        >
         <BreadcrumbItem>
           <BreadcrumbLink as={Link} to="/dashboard">
             Dashboard
@@ -544,7 +546,8 @@ const ChannelAnalysisPage: React.FC = () => {
           {analysis && renderAnalysisResults()}
         </>
       )}
-    </Box>
+      </Box>
+    </SlackUserCacheProvider>
   );
 };
 

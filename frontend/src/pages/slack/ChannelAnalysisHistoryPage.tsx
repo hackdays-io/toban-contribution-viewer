@@ -37,6 +37,7 @@ import { FiChevronRight, FiArrowLeft, FiClock, FiFileText } from 'react-icons/fi
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import env from '../../config/env';
 import MessageText from '../../components/slack/MessageText';
+import { SlackUserCacheProvider } from '../../components/slack/SlackUserContext';
 
 interface StoredAnalysisResponse {
   id: string;
@@ -375,7 +376,8 @@ const ChannelAnalysisHistoryPage: React.FC = () => {
   };
 
   return (
-    <Box p={6} width="100%" maxWidth="1200px" mx="auto">
+    <SlackUserCacheProvider workspaceId={workspaceId || ''}>
+      <Box p={6} width="100%" maxWidth="1200px" mx="auto">
       {/* Breadcrumb navigation */}
       <Breadcrumb spacing="8px" separator={<Icon as={FiChevronRight} color="gray.500" />} mb={6}>
         <BreadcrumbItem>
@@ -460,7 +462,8 @@ const ChannelAnalysisHistoryPage: React.FC = () => {
           </Card>
         </>
       )}
-    </Box>
+      </Box>
+    </SlackUserCacheProvider>
   );
 };
 
