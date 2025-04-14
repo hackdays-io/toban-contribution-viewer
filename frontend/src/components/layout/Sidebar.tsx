@@ -63,9 +63,13 @@ const NavItem = React.memo(({ icon, to, children, isActive, badge, badgeColorSch
       _hover={{ bg: isActive ? activeBg : hoverBg }}
       role="group"
     >
-      <HStack spacing={3} overflow="hidden">
-        <Icon as={icon} w={5} h={5} />
-        <Text overflow="hidden" textOverflow="ellipsis">
+      <HStack spacing={3} width="100%" overflow="hidden" css={{
+        '&::-webkit-scrollbar': { display: 'none' },
+        'scrollbarWidth': 'none',
+        '-ms-overflow-style': 'none',
+      }}>
+        <Icon as={icon} w={5} h={5} flexShrink={0} />
+        <Text overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap">
           {children}
         </Text>
         {badge && (
@@ -74,6 +78,7 @@ const NavItem = React.memo(({ icon, to, children, isActive, badge, badgeColorSch
             colorScheme={badgeColorScheme || 'blue'}
             borderRadius="full"
             px={2}
+            flexShrink={0}
           >
             {badge}
           </Badge>
@@ -136,7 +141,11 @@ const Sidebar = ({ onClose, ...rest }: SidebarProps) => {
         </Box>
       )}
       
-      <Box mx={3}>
+      <Box mx={3} overflowY="auto" css={{
+        '&::-webkit-scrollbar': { width: '0px' },
+        'scrollbarWidth': 'none',
+        '-ms-overflow-style': 'none',
+      }}>
         {/* Main Navigation */}
         <List spacing={1}>
           <ListItem>
