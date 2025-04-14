@@ -199,34 +199,39 @@ async def get_user_team_context(
         # Import here to avoid circular imports
         from app.services.team.teams import TeamService
 
-        # Get the user's teams
-        teams = await TeamService.get_teams_for_user(
-            db=db,
-            user_id=current_user["id"],
-            include_members=False,
-            auto_create=True,  # Create a personal team if user has none
-        )
-
-        # Transform to simple list for the token
-        team_list = []
-        for team in teams:
-            # Find the user's role in this team
-            user_role = None
-            for member in team.members:
-                if member.user_id == current_user["id"]:
-                    user_role = member.role
-                    break
-
-            team_list.append(
-                {
-                    "id": str(team.id),
-                    "name": team.name,
-                    "slug": team.slug,
-                    "role": user_role,
-                }
+        # Use an async context manager to ensure proper async operation
+        async with db.begin():
+            # Get the user's teams
+            teams = await TeamService.get_teams_for_user(
+                db=db,
+                user_id=current_user["id"],
+                include_members=True,  # Including members to get roles
+                auto_create=True,  # Create a personal team if user has none
             )
 
-        current_user["teams"] = team_list
+            # Transform to simple list for the token
+            team_list = []
+            for team in teams:
+                # Find the user's role in this team
+                user_role = None
+                for member in team.members:
+                    if (
+                        member.user_id == current_user["id"]
+                        and member.invitation_status == "active"
+                    ):
+                        user_role = member.role
+                        break
+
+                team_list.append(
+                    {
+                        "id": str(team.id),
+                        "name": team.name,
+                        "slug": team.slug,
+                        "role": user_role,
+                    }
+                )
+
+            current_user["teams"] = team_list
 
         # If user has teams but no current team is set, set the first one
         if team_list and not current_user.get("current_team_id"):
@@ -287,7 +292,10 @@ async def switch_team_context(
             # Import here to avoid circular imports
             from app.services.team.permissions import get_team_member
 
-            member = await get_team_member(db, team_id, current_user["id"])
+            # Only allow switching to teams with active membership
+            member = await get_team_member(
+                db, team_id, current_user["id"], include_all_statuses=False
+            )
             if member:
                 team_found = True
                 new_role = member.role

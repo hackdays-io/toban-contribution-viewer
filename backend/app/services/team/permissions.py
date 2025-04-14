@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 async def get_team_member(
-    db: AsyncSession, team_id: UUID, user_id: str
+    db: AsyncSession, team_id: UUID, user_id: str, include_all_statuses: bool = False
 ) -> Optional[TeamMember]:
     """
     Get a user's membership status in a team.
@@ -25,15 +25,25 @@ async def get_team_member(
         db: Database session
         team_id: Team ID
         user_id: User ID to check
+        include_all_statuses: If True, include members with any invitation status,
+                              otherwise only active members
 
     Returns:
         TeamMember object if user is a member, None otherwise
     """
-    query = select(TeamMember).where(
-        TeamMember.team_id == team_id,
-        TeamMember.user_id == user_id,
-        TeamMember.invitation_status == "active",
-    )
+    if include_all_statuses:
+        # Return membership with any status
+        query = select(TeamMember).where(
+            TeamMember.team_id == team_id,
+            TeamMember.user_id == user_id,
+        )
+    else:
+        # Only return active members
+        query = select(TeamMember).where(
+            TeamMember.team_id == team_id,
+            TeamMember.user_id == user_id,
+            TeamMember.invitation_status == "active",
+        )
 
     result = await db.execute(query)
     return result.scalars().first()
@@ -61,11 +71,11 @@ async def ensure_team_permission(
         f"Checking if user {user_id} has role {allowed_roles} in team {team_id}"
     )
 
-    # Get the user's team membership
-    member = await get_team_member(db, team_id, user_id)
+    # Get the user's team membership - only active members can access team resources
+    member = await get_team_member(db, team_id, user_id, include_all_statuses=False)
 
     if not member:
-        logger.warning(f"User {user_id} is not a member of team {team_id}")
+        logger.warning(f"User {user_id} is not an active member of team {team_id}")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You don't have permission to access this team",

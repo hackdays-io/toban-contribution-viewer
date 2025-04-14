@@ -188,8 +188,8 @@ const TeamMembersPage: React.FC = () => {
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
       
-      // Using "all=true" query parameter to get all members including pending, expired, and inactive
-      const response = await fetch(`${env.apiUrl}/teams/${teamId}/members?all=true`, {
+      // Using "status=all" query parameter to get all members including pending, expired, and inactive
+      const response = await fetch(`${env.apiUrl}/teams/${teamId}/members?status=all`, {
         method: 'GET',
         credentials: 'include',
         headers: {
@@ -202,9 +202,9 @@ const TeamMembersPage: React.FC = () => {
         // If the "all" parameter isn't supported (in case you're using an older API version)
         // let's try to get each status type separately and combine them
         if (response.status === 400) {
-          // Fallback to multiple requests if the API doesn't support "all" parameter
-          const [activeResp, pendingResp] = await Promise.all([
-            fetch(`${env.apiUrl}/teams/${teamId}/members`, {
+          // Fallback to multiple requests if the API doesn't support "status=all" parameter
+          const [activeResp, pendingResp, expiredResp] = await Promise.all([
+            fetch(`${env.apiUrl}/teams/${teamId}/members?status=active`, {
               method: 'GET',
               credentials: 'include',
               headers: {
@@ -212,7 +212,15 @@ const TeamMembersPage: React.FC = () => {
                 'Authorization': token ? `Bearer ${token}` : '',
               },
             }),
-            fetch(`${env.apiUrl}/teams/${teamId}/invitations`, {
+            fetch(`${env.apiUrl}/teams/${teamId}/members?status=pending`, {
+              method: 'GET',
+              credentials: 'include',
+              headers: {
+                'Content-Type': 'application/json', 
+                'Authorization': token ? `Bearer ${token}` : '',
+              },
+            }),
+            fetch(`${env.apiUrl}/teams/${teamId}/members?status=expired`, {
               method: 'GET',
               credentials: 'include',
               headers: {
@@ -228,13 +236,21 @@ const TeamMembersPage: React.FC = () => {
           
           // Get active members
           const activeData = await activeResp.json();
-          let allMembers = activeData.members || [];
+          let allMembers = activeData || [];
           
           // Try to get pending invitations if available
           if (pendingResp.ok) {
             const pendingData = await pendingResp.json();
-            if (pendingData.invitations) {
-              allMembers = [...allMembers, ...pendingData.invitations];
+            if (pendingData && Array.isArray(pendingData)) {
+              allMembers = [...allMembers, ...pendingData];
+            }
+          }
+          
+          // Try to get expired invitations if available
+          if (expiredResp.ok) {
+            const expiredData = await expiredResp.json();
+            if (expiredData && Array.isArray(expiredData)) {
+              allMembers = [...allMembers, ...expiredData];
             }
           }
           
@@ -246,8 +262,10 @@ const TeamMembersPage: React.FC = () => {
       }
 
       const data = await response.json();
-      setMembers(data.members || []);
-      return data.members;
+      // Handle different API response structures
+      const membersList = Array.isArray(data) ? data : data.members || [];
+      setMembers(membersList);
+      return membersList;
     } catch (error) {
       console.error('Error fetching team members:', error);
       toast({
@@ -293,6 +311,54 @@ const TeamMembersPage: React.FC = () => {
   const pendingInvitations = useMemo(() => {
     return members.filter(member => member.invitation_status === 'pending');
   }, [members]);
+  
+  // Debug function to simulate accepting an invitation
+  const simulateAcceptInvite = async (memberId: string) => {
+    try {
+      setIsRefreshing(true);
+      
+      // Get the session to include the auth token
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      
+      // Call the debug endpoint
+      const response = await fetch(`${env.apiUrl}/teams/${teamId}/members/${memberId}/debug-accept-invite`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token ? `Bearer ${token}` : '',
+        }
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || `Failed to simulate invitation acceptance: ${response.status}`);
+      }
+      
+      toast({
+        title: 'DEBUG: Invitation Accepted',
+        description: 'The invitation has been automatically accepted for testing purposes',
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      });
+      
+      // Refresh data
+      await fetchTeamAndMembers();
+    } catch (error) {
+      console.error('Error in debug accept invitation:', error);
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'An unknown error occurred',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
   
   const expiredInvitations = useMemo(() => {
     return members.filter(member => 
@@ -872,6 +938,17 @@ const TeamMembersPage: React.FC = () => {
                         colorScheme="red"
                         onClick={() => confirmRemoveMember(member.id)}
                       />
+                    </Tooltip>
+                    {/* Debug button - simulate accepting invitation */}
+                    <Tooltip label="DEBUG: Accept Invitation">
+                      <Button
+                        size="sm"
+                        colorScheme="purple"
+                        variant="outline"
+                        onClick={() => simulateAcceptInvite(member.id)}
+                      >
+                        Debug Accept
+                      </Button>
                     </Tooltip>
                   </HStack>
                 </Td>

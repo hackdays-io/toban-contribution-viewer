@@ -24,16 +24,18 @@ class TeamMemberService:
     """Service for team member operations."""
 
     @staticmethod
-    async def get_team_members(
-        db: AsyncSession, team_id: UUID, user_id: str
+    async def get_team_members_by_status(
+        db: AsyncSession, team_id: UUID, user_id: str, status: Optional[str] = "active"
     ) -> List[TeamMember]:
         """
-        Get all members of a team.
+        Get members of a team filtered by invitation status.
 
         Args:
             db: Database session
             team_id: Team ID to get members for
             user_id: User ID making the request (for permission check)
+            status: Invitation status to filter by ("active", "pending", "expired", "inactive")
+                   If None, returns members with any status
 
         Returns:
             List of team members
@@ -41,7 +43,7 @@ class TeamMemberService:
         Raises:
             HTTPException: If team doesn't exist or user doesn't have permission
         """
-        logger.info(f"Getting members for team {team_id}")
+        logger.info(f"Getting team {team_id} members with status: {status or 'all'}")
 
         # Check if the team exists
         team_query = select(Team).where(Team.id == team_id, Team.is_active.is_(True))
@@ -67,24 +69,65 @@ class TeamMemberService:
             ],
         )
 
-        # Get all active team members (note: using invitation_status instead of is_active)
-        query = (
-            select(TeamMember)
-            .where(
-                TeamMember.team_id == team_id, TeamMember.invitation_status == "active"
+        # Build query based on status filter
+        if status is None:
+            # Get all members regardless of status
+            query = (
+                select(TeamMember)
+                .where(TeamMember.team_id == team_id)
+                .order_by(
+                    TeamMember.invitation_status, TeamMember.role, TeamMember.created_at
+                )
             )
-            .order_by(TeamMember.role, TeamMember.created_at)
-        )
+        else:
+            # Get members with the specified status
+            query = (
+                select(TeamMember)
+                .where(
+                    TeamMember.team_id == team_id,
+                    TeamMember.invitation_status == status,
+                )
+                .order_by(TeamMember.role, TeamMember.created_at)
+            )
 
         result = await db.execute(query)
         members = result.scalars().all()
 
-        logger.info(f"Found {len(members)} members for team {team_id}")
+        logger.info(
+            f"Found {len(members)} members with status '{status or 'all'}' for team {team_id}"
+        )
         return members
 
     @staticmethod
+    async def get_team_members(
+        db: AsyncSession, team_id: UUID, user_id: str
+    ) -> List[TeamMember]:
+        """
+        Get active members of a team.
+
+        Args:
+            db: Database session
+            team_id: Team ID to get members for
+            user_id: User ID making the request (for permission check)
+
+        Returns:
+            List of active team members
+
+        Raises:
+            HTTPException: If team doesn't exist or user doesn't have permission
+        """
+        # This is a backward-compatible wrapper for get_team_members_by_status
+        return await TeamMemberService.get_team_members_by_status(
+            db=db, team_id=team_id, user_id=user_id, status="active"
+        )
+
+    @staticmethod
     async def get_team_member_by_id(
-        db: AsyncSession, team_id: UUID, member_id: UUID, user_id: str
+        db: AsyncSession,
+        team_id: UUID,
+        member_id: UUID,
+        user_id: str,
+        include_inactive: bool = True,
     ) -> Optional[TeamMember]:
         """
         Get a specific team member by ID.
@@ -94,6 +137,7 @@ class TeamMemberService:
             team_id: Team ID
             member_id: Member ID to look up
             user_id: User ID making the request (for permission check)
+            include_inactive: If True, includes members with any status (for admin operations)
 
         Returns:
             TeamMember object if found, None otherwise
@@ -117,11 +161,19 @@ class TeamMemberService:
         )
 
         # Get the specific team member
-        query = select(TeamMember).where(
-            TeamMember.team_id == team_id,
-            TeamMember.id == member_id,
-            TeamMember.invitation_status == "active",
-        )
+        if include_inactive:
+            # Get member with any status
+            query = select(TeamMember).where(
+                TeamMember.team_id == team_id,
+                TeamMember.id == member_id,
+            )
+        else:
+            # Get only active members
+            query = select(TeamMember).where(
+                TeamMember.team_id == team_id,
+                TeamMember.id == member_id,
+                TeamMember.invitation_status == "active",
+            )
 
         result = await db.execute(query)
         member = result.scalars().first()
@@ -157,16 +209,49 @@ class TeamMemberService:
             db, team_id, user_id, [TeamMemberRole.OWNER, TeamMemberRole.ADMIN]
         )
 
-        # Check if the user is already a member
-        existing_member = await get_team_member(db, team_id, member_data.get("user_id"))
-        if existing_member and existing_member.invitation_status == "active":
-            logger.warning(
-                f"User {member_data.get('user_id')} is already a member of team {team_id}"
+        # Check if the user is already a member (with any status)
+        existing_member = await get_team_member(
+            db, team_id, member_data.get("user_id"), include_all_statuses=True
+        )
+        if existing_member:
+            if existing_member.invitation_status == "active":
+                logger.warning(
+                    f"User {member_data.get('user_id')} is already an active member of team {team_id}"
+                )
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="User is already a member of this team",
+                )
+            elif existing_member.invitation_status == "pending":
+                logger.warning(
+                    f"User {member_data.get('user_id')} already has a pending invitation to team {team_id}"
+                )
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="User already has a pending invitation to this team",
+                )
+
+        # Also check for pending invitations by email
+        if member_data.get("email"):
+            # Check for pending invitations with the same email
+            email = member_data.get("email")
+            pending_user_id = f"pending_{email.replace('@', '_at_')}"
+
+            # Query the database directly since we're checking for a different user_id than provided
+            query = select(TeamMember).where(
+                TeamMember.team_id == team_id, TeamMember.user_id == pending_user_id
             )
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="User is already a member of this team",
-            )
+            result = await db.execute(query)
+            pending_invitation = result.scalars().first()
+
+            if pending_invitation:
+                logger.warning(
+                    f"Email {email} already has a pending invitation to team {team_id}"
+                )
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="This email already has a pending invitation to this team",
+                )
 
         try:
             # Verify the role is valid
@@ -478,6 +563,94 @@ class TeamMemberService:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="An error occurred while removing the team member",
+            )
+
+    @staticmethod
+    async def resend_invitation(
+        db: AsyncSession,
+        team_id: UUID,
+        member_id: UUID,
+        user_id: str,
+        custom_message: str = None,
+    ) -> Dict:
+        """
+        Resend an invitation to a pending team member.
+
+        Args:
+            db: Database session
+            team_id: Team ID
+            member_id: ID of the pending member
+            user_id: User ID making the request (for permission check)
+            custom_message: Optional custom message to include in the invitation
+
+        Returns:
+            Dict with status information
+
+        Raises:
+            HTTPException: If team or member doesn't exist, user lacks permission, or other error
+        """
+        logger.info(
+            f"Resending invitation to team member {member_id} for team {team_id}"
+        )
+
+        # Check permissions (must be owner or admin to resend invitations)
+        await ensure_team_permission(
+            db, team_id, user_id, [TeamMemberRole.OWNER, TeamMemberRole.ADMIN]
+        )
+
+        # Get the member to resend invitation to
+        member = await TeamMemberService.get_team_member_by_id(
+            db, team_id, member_id, user_id, include_inactive=True
+        )
+
+        if not member:
+            logger.warning(f"Member {member_id} not found when resending invitation")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Team member not found"
+            )
+
+        # Check if member has a pending or expired invitation
+        if member.invitation_status not in ["pending", "expired"]:
+            logger.warning(
+                f"Cannot resend invitation to member {member_id} with status {member.invitation_status}"
+            )
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Cannot resend invitation to member with status: {member.invitation_status}",
+            )
+
+        try:
+            # Generate a new invitation token
+            token = "".join(
+                secrets.choice(string.ascii_letters + string.digits) for _ in range(32)
+            )
+
+            # Update the invitation
+            member.invitation_token = token
+            member.invitation_status = (
+                "pending"  # Ensure status is pending even if it was expired
+            )
+            member.invitation_expires_at = datetime.utcnow() + timedelta(days=7)
+
+            # Save changes
+            await db.commit()
+            await db.refresh(member)
+
+            # In a real system, you would send an email here with the invitation link
+            logger.info(f"Resent invitation to member {member_id} for team {team_id}")
+
+            return {
+                "status": "success",
+                "message": f"Invitation resent to {member.email}",
+                "note": "In a production system, an email would be sent with a new invitation link",
+            }
+
+        except Exception as e:
+            logger.error(f"Error resending invitation: {str(e)}")
+            await db.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="An error occurred while resending the invitation",
             )
 
     @staticmethod
