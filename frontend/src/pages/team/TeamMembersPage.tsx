@@ -180,9 +180,7 @@ const TeamMembersPage: React.FC = () => {
       errors.email = 'Invalid email format';
     }
     
-    if (!formData.role) {
-      errors.role = '';
-    }
+    // We don't need to check for role since it has a default value
     
     return errors;
   };
