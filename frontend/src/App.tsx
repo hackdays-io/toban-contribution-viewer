@@ -26,6 +26,13 @@ import {
 } from './pages/slack'
 import ChannelAnalysisHistoryPage from './pages/slack/ChannelAnalysisHistoryPage'
 
+// Team Pages
+import {
+  TeamsPage,
+  TeamDetailPage,
+  TeamMembersPage,
+} from './pages/team'
+
 // Create a default theme
 const theme = extendTheme({})
 
@@ -48,6 +55,32 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <Dashboard />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Team routes */}
+              <Route
+                path="/dashboard/teams"
+                element={
+                  <ProtectedRoute>
+                    <TeamsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard/teams/:teamId"
+                element={
+                  <ProtectedRoute>
+                    <TeamDetailPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard/teams/:teamId/members"
+                element={
+                  <ProtectedRoute>
+                    <TeamMembersPage />
                   </ProtectedRoute>
                 }
               />

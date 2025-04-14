@@ -55,6 +55,7 @@ const Dashboard: React.FC = () => {
       <Tabs colorScheme="blue" mb={6}>
         <TabList>
           <Tab>Overview</Tab>
+          <Tab>Teams</Tab>
           <Tab>GitHub</Tab>
           <Tab>Slack</Tab>
           <Tab>Notion</Tab>
@@ -71,6 +72,27 @@ const Dashboard: React.FC = () => {
                 This dashboard shows your contributions across platforms. Connect your accounts
                 to start tracking your activity.
               </Text>
+            </Box>
+          </TabPanel>
+
+          <TabPanel>
+            <Box p={4} borderWidth="1px" borderRadius="lg">
+              <Heading as="h2" size="md" mb={4}>
+                Teams
+              </Heading>
+              <Text mb={4}>
+                Manage your teams and collaborators. Teams help you organize your workspaces
+                and control who has access to what.
+              </Text>
+              <HStack spacing={4}>
+                <Button
+                  as={Link}
+                  to="/dashboard/teams"
+                  colorScheme="blue"
+                >
+                  Manage Teams
+                </Button>
+              </HStack>
             </Box>
           </TabPanel>
 
