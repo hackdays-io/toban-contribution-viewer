@@ -10,6 +10,8 @@ import pytest_asyncio
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from tests.conftest import team_test_mark
+
 from app.models.team import Team, TeamMember, TeamMemberRole
 
 
@@ -88,6 +90,7 @@ async def test_team_with_members(db: AsyncSession, test_user_id: str) -> Dict:
 
 
 @pytest.mark.asyncio
+@team_test_mark
 async def test_get_team_members(
     client: AsyncClient, test_user_auth_header: Dict, test_team_with_members: Dict
 ):
@@ -116,6 +119,7 @@ async def test_get_team_members(
 
 
 @pytest.mark.asyncio
+@team_test_mark
 async def test_get_team_member(
     client: AsyncClient, test_user_auth_header: Dict, test_team_with_members: Dict
 ):
@@ -139,6 +143,7 @@ async def test_get_team_member(
 
 
 @pytest.mark.asyncio
+@team_test_mark
 async def test_add_team_member(
     client: AsyncClient, test_user_auth_header: Dict, test_team_with_members: Dict
 ):
@@ -169,6 +174,7 @@ async def test_add_team_member(
 
 
 @pytest.mark.asyncio
+@team_test_mark
 async def test_update_team_member(
     client: AsyncClient, test_user_auth_header: Dict, test_team_with_members: Dict
 ):
@@ -196,6 +202,7 @@ async def test_update_team_member(
 
 
 @pytest.mark.asyncio
+@team_test_mark
 async def test_remove_team_member(
     client: AsyncClient, test_user_auth_header: Dict, test_team_with_members: Dict
 ):
@@ -223,6 +230,7 @@ async def test_remove_team_member(
 
 
 @pytest.mark.asyncio
+@team_test_mark
 async def test_invite_team_member(
     client: AsyncClient, test_user_auth_header: Dict, test_team_with_members: Dict
 ):

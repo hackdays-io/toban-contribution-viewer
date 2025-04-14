@@ -7,11 +7,14 @@ import pytest_asyncio
 from fastapi import FastAPI
 from httpx import AsyncClient
 
+from tests.conftest import team_test_mark
+
 from app.api.v1.slack.router import router as slack_router
 from app.config import settings
 
 
 @pytest.mark.asyncio
+@team_test_mark
 async def test_get_oauth_url(client: AsyncClient, monkeypatch):
     """Test getting Slack OAuth URL."""
     # Mock settings
@@ -29,6 +32,7 @@ async def test_get_oauth_url(client: AsyncClient, monkeypatch):
 
 
 @pytest.mark.asyncio
+@team_test_mark
 async def test_get_oauth_url_missing_client_id(client: AsyncClient, monkeypatch):
     """Test error when client ID is missing."""
     # Mock settings
