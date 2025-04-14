@@ -3,15 +3,15 @@ SQLAlchemy models for Team and Team Member.
 """
 
 import enum
-from datetime import datetime
-from typing import Any, Dict, List, Optional  # noqa: F401
+from typing import List
 
-from sqlalchemy import Boolean, Column, DateTime, Enum, ForeignKey, Index, Integer, String, Table, Text
+from sqlalchemy import Boolean, Column, DateTime, Enum, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, relationship
 
 from app.db.base import Base
 from app.models.base import BaseModel
+from app.models.slack import SlackWorkspace
 
 
 class TeamMemberRole(str, enum.Enum):

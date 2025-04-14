@@ -13,13 +13,13 @@ Usage:
 import logging
 import sys
 import uuid
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 from sqlalchemy.orm import Session
 
-from app.db.session import SessionLocal, engine
+from app.db.session import SessionLocal
 from app.models.slack import SlackWorkspace
-from app.models.team import Team, TeamMember, TeamMemberRole
+from app.models.team import Team
 
 logging.basicConfig(
     level=logging.INFO,

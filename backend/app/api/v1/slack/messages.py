@@ -14,7 +14,7 @@ from sqlalchemy.orm import selectinload
 
 from app.db.session import get_async_db
 from app.models.slack import SlackChannel, SlackMessage
-from app.services.slack.messages import SlackMessageService, get_channel_messages, get_channel_users
+from app.services.slack.messages import SlackMessageService
 
 # Configure logging
 logger = logging.getLogger(__name__)
