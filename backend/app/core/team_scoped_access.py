@@ -51,7 +51,7 @@ class TeamScopedAccess:
 
     async def __call__(
         self,
-        request: Request,
+        request: Optional[Request] = None,
         team_id: Optional[UUID] = None,
         db: AsyncSession = Depends(get_async_db),
         current_user: dict = Depends(get_current_user),
@@ -60,7 +60,7 @@ class TeamScopedAccess:
         Check if current user has access to the team resource.
 
         Args:
-            request: FastAPI request object
+            request: FastAPI request object (optional)
             team_id: Team ID (used if not getting from path)
             db: Database session
             current_user: Current authenticated user
@@ -71,8 +71,8 @@ class TeamScopedAccess:
         Raises:
             HTTPException: If user doesn't have access
         """
-        # Get team_id from path parameter if needed
-        if self.get_team_id_from_path:
+        # Get team_id from path parameter if needed and if request is available
+        if self.get_team_id_from_path and request is not None:
             try:
                 # Get team_id from path parameter
                 path_team_id = request.path_params.get(self.path_param_name)
@@ -143,3 +143,48 @@ def require_team_roles(*roles: TeamMemberRole):
         TeamScopedAccess dependency instance
     """
     return TeamScopedAccess(required_roles=list(roles))
+
+
+# Simplified direct function for programmatic usage
+async def check_team_access(
+    team_id: UUID,
+    user_id: str,
+    db: AsyncSession,
+    roles: Optional[List[TeamMemberRole]] = None
+) -> bool:
+    """
+    Check if a user has access to a team with specific roles.
+    
+    Args:
+        team_id: Team ID
+        user_id: User ID
+        db: Database session
+        roles: Required roles (defaults to all roles)
+        
+    Returns:
+        True if user has access, False otherwise
+    """
+    try:
+        # Check if the user is a member of the team
+        member = await get_team_member(db, team_id, user_id)
+        
+        if not member:
+            logger.warning(f"User {user_id} denied access to team {team_id} - not a member")
+            return False
+            
+        # If no specific roles required, any membership is sufficient
+        if not roles:
+            return True
+            
+        # Check if the user's role is in the allowed roles
+        if member.role not in roles:
+            logger.warning(
+                f"User {user_id} denied access to team {team_id} - insufficient role "
+                f"(has {member.role}, needs one of {roles})"
+            )
+            return False
+            
+        return True
+    except Exception as e:
+        logger.error(f"Error checking team access: {str(e)}")
+        return False

@@ -172,12 +172,20 @@ async def get_team(
         )
 
     # Verify the user has access
-    from app.core.team_scoped_access import require_team_access
+    from app.core.team_scoped_access import check_team_access
 
-    # This line will raise an exception if the user doesn't have access
-    await require_team_access(
-        request=None, team_id=team_id, db=db, current_user=current_user
+    # Check if user has access to this team
+    has_access = await check_team_access(
+        team_id=team_id, 
+        user_id=current_user["id"],
+        db=db
     )
+    
+    if not has_access:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You don't have access to this team"
+        )
 
     # Convert to dictionary using our helper function
     return convert_team_to_dict(team, include_members)
@@ -214,12 +222,20 @@ async def get_team_by_slug(
         )
 
     # Verify the user has access
-    from app.core.team_scoped_access import require_team_access
+    from app.core.team_scoped_access import check_team_access
 
-    # This line will raise an exception if the user doesn't have access
-    await require_team_access(
-        request=None, team_id=team.id, db=db, current_user=current_user
+    # Check if user has access to this team
+    has_access = await check_team_access(
+        team_id=team.id, 
+        user_id=current_user["id"],
+        db=db
     )
+    
+    if not has_access:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You don't have access to this team"
+        )
 
     # Convert to dictionary using our helper function
     return convert_team_to_dict(team, include_members)
@@ -247,11 +263,21 @@ async def update_team(
     logger.debug(f"Updating team {team_id} for user: {current_user['id']}")
 
     # Check admin or owner permissions
-    from app.core.team_scoped_access import require_team_admin
+    from app.core.team_scoped_access import check_team_access
+    from app.models.team import TeamMemberRole
 
-    await require_team_admin(
-        request=None, team_id=team_id, db=db, current_user=current_user
+    has_access = await check_team_access(
+        team_id=team_id,
+        user_id=current_user["id"],
+        db=db,
+        roles=[TeamMemberRole.OWNER, TeamMemberRole.ADMIN]
     )
+    
+    if not has_access:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You don't have admin access to this team"
+        )
 
     # Update the team (service handles additional permission checks)
     updated_team = await TeamService.update_team(
@@ -285,11 +311,21 @@ async def delete_team(
     logger.info(f"User {current_user['id']} deleting team {team_id}")
 
     # Check owner permissions (only owners can delete teams)
-    from app.core.team_scoped_access import require_team_owner
+    from app.core.team_scoped_access import check_team_access
+    from app.models.team import TeamMemberRole
 
-    await require_team_owner(
-        request=None, team_id=team_id, db=db, current_user=current_user
+    has_access = await check_team_access(
+        team_id=team_id,
+        user_id=current_user["id"],
+        db=db,
+        roles=[TeamMemberRole.OWNER]
     )
+    
+    if not has_access:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only team owners can delete a team"
+        )
 
     # Delete the team
     result = await TeamService.delete_team(
