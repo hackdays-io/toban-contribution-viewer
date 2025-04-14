@@ -12,7 +12,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.v1.team.schemas import TeamMemberCreate, TeamMemberInvite, TeamMemberResponse, TeamMemberUpdate
 from app.core.auth import get_current_user
 from app.db.session import get_async_db
-from app.models.team import TeamMemberRole
+
+# TeamMemberRole is imported but used only for type hints in docstrings
 from app.services.team.members import TeamMemberService
 
 logger = logging.getLogger(__name__)

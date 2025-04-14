@@ -6,7 +6,6 @@ import uuid
 from typing import Dict
 
 import pytest
-from fastapi import FastAPI
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 

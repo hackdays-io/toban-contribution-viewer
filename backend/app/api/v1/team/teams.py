@@ -3,7 +3,7 @@ API endpoints for team management.
 """
 
 import logging
-from typing import Dict, List, Optional
+from typing import Dict, List
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -12,7 +12,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.v1.team.schemas import TeamCreate, TeamResponse, TeamUpdate
 from app.core.auth import get_current_user
 from app.db.session import get_async_db
-from app.models.team import Team, TeamMemberRole
+
+# These models are imported but used only in type hints in docstrings
 from app.services.team.teams import TeamService
 
 logger = logging.getLogger(__name__)

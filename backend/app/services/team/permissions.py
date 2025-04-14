@@ -3,7 +3,7 @@ Permissions and access control for teams.
 """
 
 import logging
-from typing import List, Optional, Union
+from typing import List, Optional
 from uuid import UUID
 
 from fastapi import HTTPException, status
@@ -32,7 +32,7 @@ async def get_team_member(
     query = select(TeamMember).where(
         TeamMember.team_id == team_id,
         TeamMember.user_id == user_id,
-        TeamMember.is_active == True,
+        TeamMember.is_active is True,
         TeamMember.invitation_status == "active",
     )
 

@@ -4,11 +4,11 @@ Service layer for team operations.
 
 import logging
 import uuid
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional
 from uuid import UUID
 
 from fastapi import HTTPException, status
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -43,7 +43,7 @@ class TeamService:
         query = (
             select(Team)
             .join(TeamMember, Team.id == TeamMember.team_id)
-            .where(TeamMember.user_id == user_id, TeamMember.is_active == True)
+            .where(TeamMember.user_id == user_id, TeamMember.is_active is True)
         )
 
         # Include team members if requested
@@ -74,7 +74,7 @@ class TeamService:
         logger.info(f"Getting team with ID {team_id}")
 
         # Build the query
-        query = select(Team).where(Team.id == team_id, Team.is_active == True)
+        query = select(Team).where(Team.id == team_id, Team.is_active is True)
 
         # Include team members if requested
         if include_members:
@@ -106,7 +106,7 @@ class TeamService:
         logger.info(f"Getting team with slug {slug}")
 
         # Build the query
-        query = select(Team).where(Team.slug == slug, Team.is_active == True)
+        query = select(Team).where(Team.slug == slug, Team.is_active is True)
 
         # Include team members if requested
         if include_members:

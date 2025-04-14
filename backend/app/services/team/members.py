@@ -6,7 +6,7 @@ import logging
 import secrets
 import string
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional
 from uuid import UUID
 
 from fastapi import HTTPException, status
@@ -44,7 +44,7 @@ class TeamMemberService:
         logger.info(f"Getting members for team {team_id}")
 
         # Check if the team exists
-        team_query = select(Team).where(Team.id == team_id, Team.is_active == True)
+        team_query = select(Team).where(Team.id == team_id, Team.is_active is True)
         team_result = await db.execute(team_query)
         team = team_result.scalars().first()
 
@@ -70,7 +70,7 @@ class TeamMemberService:
         # Get all active team members
         query = (
             select(TeamMember)
-            .where(TeamMember.team_id == team_id, TeamMember.is_active == True)
+            .where(TeamMember.team_id == team_id, TeamMember.is_active is True)
             .order_by(TeamMember.role, TeamMember.created_at)
         )
 
@@ -118,7 +118,7 @@ class TeamMemberService:
         query = select(TeamMember).where(
             TeamMember.team_id == team_id,
             TeamMember.id == member_id,
-            TeamMember.is_active == True,
+            TeamMember.is_active is True,
         )
 
         result = await db.execute(query)
@@ -434,7 +434,7 @@ class TeamMemberService:
                 .where(
                     TeamMember.team_id == team_id,
                     TeamMember.role == TeamMemberRole.OWNER,
-                    TeamMember.is_active == True,
+                    TeamMember.is_active is True,
                 )
             )
 
@@ -492,7 +492,7 @@ class TeamMemberService:
             count_query = (
                 select(func.count())
                 .select_from(TeamMember)
-                .where(TeamMember.team_id == team_id, TeamMember.is_active == True)
+                .where(TeamMember.team_id == team_id, TeamMember.is_active is True)
             )
 
             result = await db.execute(count_query)
