@@ -7,10 +7,9 @@ import pytest_asyncio
 from fastapi import FastAPI
 from httpx import AsyncClient
 
-from tests.conftest import team_test_mark
-
 from app.api.v1.slack.router import router as slack_router
 from app.config import settings
+from tests.conftest import team_test_mark
 
 
 @pytest.mark.asyncio
