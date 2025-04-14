@@ -115,8 +115,6 @@ async def auth_debug():
     import base64
     import hashlib
 
-    logger = logging.getLogger(__name__)
-
     # Get the JWT secret for debugging
     jwt_secret = settings.SUPABASE_JWT_SECRET
 
@@ -133,7 +131,7 @@ async def auth_debug():
                 secret_length = len(decoded)
                 # Create a hash for comparison without revealing the actual secret
                 secret_hash = hashlib.sha256(decoded).hexdigest()[:8]
-            except:
+            except Exception:
                 is_base64 = False
                 secret_length = len(jwt_secret)
                 secret_hash = hashlib.sha256(jwt_secret.encode("utf-8")).hexdigest()[:8]

@@ -108,8 +108,6 @@ def get_current_user(
     Raises:
         HTTPException: If credentials are invalid or user not found
     """
-    logger = logging.getLogger(__name__)
-
     # Check if credentials were properly extracted from the request
     if not credentials:
         raise HTTPException(

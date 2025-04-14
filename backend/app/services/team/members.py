@@ -44,7 +44,7 @@ class TeamMemberService:
         logger.info(f"Getting members for team {team_id}")
 
         # Check if the team exists
-        team_query = select(Team).where(Team.id == team_id, Team.is_active == True)
+        team_query = select(Team).where(Team.id == team_id, Team.is_active.is_(True))
         team_result = await db.execute(team_query)
         team = team_result.scalars().first()
 
