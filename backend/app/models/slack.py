@@ -24,6 +24,7 @@ from sqlalchemy.orm import Mapped, relationship
 
 from app.db.base import Base
 from app.models.base import BaseModel
+from app.models.team import Team
 
 # Association table for many-to-many relationship between SlackAnalysis and SlackChannel
 analysis_channels = Table(
@@ -72,7 +73,13 @@ class SlackWorkspace(Base, BaseModel):
     refresh_token = Column(String(1024), nullable=True)
     token_expires_at = Column(DateTime, nullable=True)
 
+    # Team association
+    team_id = Column(
+        UUID(as_uuid=True), ForeignKey("team.id"), nullable=True, index=True
+    )
+
     # Relationships
+    team: Mapped["Team"] = relationship("Team", back_populates="slack_workspaces")
     channels: Mapped[List["SlackChannel"]] = relationship(
         "SlackChannel", back_populates="workspace"
     )
