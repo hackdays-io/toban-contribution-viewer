@@ -54,7 +54,7 @@ describe('Integration API Service', () => {
     {
       id: mockResourceId,
       integration_id: mockIntegrationId,
-      resource_type: 'slack_channel' as any,
+      resource_type: ResourceType.SLACK_CHANNEL,
       external_id: 'C12345',
       name: 'general',
       metadata: { topic: 'General discussions' },
@@ -336,7 +336,7 @@ describe('Integration API Service', () => {
       
       await integrationService.getResources(
         mockIntegrationId, 
-        ['slack_channel', 'slack_user'] as any[]
+        [ResourceType.SLACK_CHANNEL, ResourceType.SLACK_USER]
       );
       
       expect(mockFetch).toHaveBeenCalledWith(
