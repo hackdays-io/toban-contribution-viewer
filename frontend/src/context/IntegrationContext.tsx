@@ -176,7 +176,7 @@ export const IntegrationProvider: React.FC<{ children: React.ReactNode }> = ({ c
           : new Error('Failed to fetch integrations')
       }));
     }
-  }, [session, teamContext.currentTeamId]);
+  }, [session, teamContext?.currentTeamId]);
   
   /**
    * Fetch a single integration by ID
@@ -266,7 +266,7 @@ export const IntegrationProvider: React.FC<{ children: React.ReactNode }> = ({ c
       // Update state with the new integration
       setState(prev => {
         // Add to the appropriate lists
-        const integrations = data.team_id === teamContext.currentTeamId
+        const integrations = data.team_id === teamContext?.currentTeamId
           ? [...prev.integrations, result]
           : prev.integrations;
         
@@ -297,7 +297,7 @@ export const IntegrationProvider: React.FC<{ children: React.ReactNode }> = ({ c
       }));
       return null;
     }
-  }, [session, teamContext.currentTeamId]);
+  }, [session, teamContext?.currentTeamId]);
   
   /**
    * Create a new Slack integration via OAuth
@@ -322,7 +322,7 @@ export const IntegrationProvider: React.FC<{ children: React.ReactNode }> = ({ c
       // Update state with the new integration
       setState(prev => {
         // Add to the appropriate lists
-        const integrations = data.team_id === teamContext.currentTeamId
+        const integrations = data.team_id === teamContext?.currentTeamId
           ? [...prev.integrations, result]
           : prev.integrations;
         
@@ -353,7 +353,7 @@ export const IntegrationProvider: React.FC<{ children: React.ReactNode }> = ({ c
       }));
       return null;
     }
-  }, [session, teamContext.currentTeamId]);
+  }, [session, teamContext?.currentTeamId]);
   
   /**
    * Update an integration
@@ -654,11 +654,11 @@ export const IntegrationProvider: React.FC<{ children: React.ReactNode }> = ({ c
    * Load integrations when the current team changes
    */
   useEffect(() => {
-    const currentTeamId = teamContext.currentTeamId;
+    const currentTeamId = teamContext?.currentTeamId;
     if (currentTeamId && session) {
       fetchIntegrations(currentTeamId);
     }
-  }, [teamContext.currentTeamId, session, fetchIntegrations]);
+  }, [teamContext?.currentTeamId, session, fetchIntegrations]);
   
   const contextValue: IntegrationContextType = {
     ...state,
