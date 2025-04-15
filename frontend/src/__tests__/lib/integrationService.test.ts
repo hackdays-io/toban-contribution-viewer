@@ -1,4 +1,6 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+/// <reference types="vitest" />
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import * as vi from 'vitest';
 import integrationService, { 
   Integration, 
   IntegrationType, 
@@ -7,7 +9,9 @@ import integrationService, {
   IntegrationShare,
   ShareLevel,
   AccessLevel,
-  ApiError
+  ApiError,
+  ResourceType,
+  CreateSlackIntegrationRequest
 } from '../../lib/integrationService';
 import { supabase } from '../../lib/supabase';
 
@@ -541,7 +545,7 @@ describe('Integration API Service', () => {
         json: () => Promise.resolve(mockIntegration)
       });
       
-      const slackData = {
+      const slackData: CreateSlackIntegrationRequest = {
         name: 'Test Slack Integration',
         service_type: IntegrationType.SLACK,
         team_id: mockTeamId,
