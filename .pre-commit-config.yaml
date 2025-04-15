@@ -1,3 +1,5 @@
+default_stages: [commit]
+
 repos:
 -   repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
@@ -15,7 +17,7 @@ repos:
     # Removed double-quote-string-fixer as it conflicts with Black's formatting
     # Removed name-tests-test as CI will handle this
 
-# Black formatter
+# Black formatter for backend
 -   repo: https://github.com/psf/black
     rev: 24.3.0
     hooks:
@@ -24,7 +26,7 @@ repos:
         files: ^backend/
         types: [python]
 
-# isort
+# isort for backend
 -   repo: https://github.com/pycqa/isort
     rev: 5.13.2
     hooks:
@@ -32,6 +34,37 @@ repos:
         files: ^backend/
         types: [python]
         args: ["--profile=black"]
+
+# TypeScript linting and formatting
+-   repo: local
+    hooks:
+    -   id: typescript-check
+        name: TypeScript Check
+        entry: bash -c 'cd frontend && npm run typecheck || (echo "TypeScript check failed. Run npm run typecheck in frontend directory for details." && exit 1)'
+        language: system
+        files: ^frontend/.*\.(ts|tsx)$
+        pass_filenames: false
+        
+    -   id: eslint
+        name: ESLint
+        entry: bash -c 'cd frontend && npm run lint || (echo "ESLint check failed. Run npm run lint in frontend directory for details." && exit 1)'
+        language: system
+        files: ^frontend/.*\.(js|jsx|ts|tsx)$
+        pass_filenames: false
+        
+    -   id: prettier
+        name: Prettier Format Check
+        entry: bash -c 'cd frontend && npm run format:check || (echo "Prettier format check failed. Run npm run format in frontend directory to fix issues." && exit 1)'
+        language: system
+        files: ^frontend/.*\.(js|jsx|ts|tsx|json|css|scss|md)$
+        pass_filenames: false
+
+    -   id: check-vite-config
+        name: Check Vite Config
+        entry: frontend/scripts/check-vite-config.sh
+        language: system
+        files: ^frontend/vite\.config\.ts$
+        pass_filenames: false
 
 # The following checks are disabled for local development but run in CI
 # Commented out since CI will handle these checks
