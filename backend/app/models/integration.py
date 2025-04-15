@@ -6,7 +6,6 @@ This module defines models for managing integrations with external services
 """
 
 import enum
-from datetime import datetime  # Used in Column defaults
 from typing import List, Optional
 
 from sqlalchemy import Column, DateTime, Enum, ForeignKey, Index, String, Text
