@@ -285,9 +285,8 @@ describe('IntegrationContext', () => {
       // Setup a fixed mock response to avoid potential race conditions or infinite updates
       vi.mocked(integrationService.getIntegrations).mockResolvedValue([mockIntegration]);
       
-      // Use a ref instead of closure variable to avoid memory leaks
-      const hookStatesRef = React.createRef<{ loading: boolean; integrations: Integration[] }[]>();
-      hookStatesRef.current = [];
+      // Use a regular array instead of a ref
+      const hookStates: { loading: boolean; integrations: Integration[] }[] = [];
       
       const TestComponent = () => {
         const integration = useIntegration();
@@ -302,12 +301,10 @@ describe('IntegrationContext', () => {
           const integrationsLengthChanged = prevIntegrationsLengthRef.current !== integration.integrations.length;
           
           if (loadingChanged || integrationsLengthChanged) {
-            if (hookStatesRef.current) {
-              hookStatesRef.current.push({
-                loading: integration.loading,
-                integrations: [...integration.integrations], // Clone to avoid reference issues
-              });
-            }
+            hookStates.push({
+              loading: integration.loading,
+              integrations: [...integration.integrations], // Clone to avoid reference issues
+            });
             
             prevLoadingRef.current = integration.loading;
             prevIntegrationsLengthRef.current = integration.integrations.length;
@@ -331,26 +328,26 @@ describe('IntegrationContext', () => {
       await new Promise(resolve => setTimeout(resolve, 100));
       
       // Should have at least initial state and loaded state
-      expect(hookStatesRef.current?.length).toBeGreaterThanOrEqual(2);
+      expect(hookStates.length).toBeGreaterThanOrEqual(2);
       
       // Final state should have integrations loaded
-      const finalState = hookStatesRef.current?.[hookStatesRef.current.length - 1];
-      expect(finalState?.loading).toBe(false);
-      expect(finalState?.integrations.length).toBeGreaterThan(0);
+      const finalState = hookStates[hookStates.length - 1];
+      expect(finalState.loading).toBe(false);
+      expect(finalState.integrations.length).toBeGreaterThan(0);
     });
     
     it('should be able to select an integration', async () => {
       // Setup a fixed mock response to avoid potential race conditions
       vi.mocked(integrationService.getResources).mockResolvedValue([mockResource]);
       
-      // Use a ref for the hook result to avoid potential closure issues
-      const hookResultRef = React.createRef<ReturnType<typeof useIntegration>>();
+      // Use a mutable variable for the hook result
+      let hookResult: ReturnType<typeof useIntegration> | undefined;
       
       const TestComponent = () => {
         const integration = useIntegration();
         
-        // Store the integration in the ref
-        hookResultRef.current = integration;
+        // Store the integration in the variable
+        hookResult = integration;
         
         // Only call selectIntegration once to avoid potential loops
         const hasSelectedRef = React.useRef(false);
@@ -380,8 +377,8 @@ describe('IntegrationContext', () => {
       await new Promise(resolve => setTimeout(resolve, 100));
       
       // Check that the integration was selected
-      expect(hookResultRef.current?.currentIntegration).toBeDefined();
-      expect(hookResultRef.current?.currentIntegration?.id).toBe('test-int-1');
+      expect(hookResult?.currentIntegration).toBeDefined();
+      expect(hookResult?.currentIntegration?.id).toBe('test-int-1');
       
       // Check that resources were fetched
       // The function signature includes an optional resourceTypes parameter
@@ -392,12 +389,12 @@ describe('IntegrationContext', () => {
       // Mock getIntegrations to throw an error
       vi.mocked(integrationService.getIntegrations).mockRejectedValueOnce(new Error('API Error'));
       
-      // Use a ref for the hook result to avoid potential closure issues
-      const hookResultRef = React.createRef<ReturnType<typeof useIntegration>>();
+      // Use a mutable variable for the hook result
+      let hookResult: ReturnType<typeof useIntegration> | undefined;
       
       const TestComponent = () => {
         const integration = useIntegration();
-        hookResultRef.current = integration;
+        hookResult = integration;
         return null;
       };
       
@@ -415,20 +412,20 @@ describe('IntegrationContext', () => {
       await new Promise(resolve => setTimeout(resolve, 100));
       
       // Check for error state
-      expect(hookResultRef.current?.error).toBeDefined();
-      expect((hookResultRef.current?.error as Error).message).toBe('API Error');
+      expect(hookResult?.error).toBeDefined();
+      expect((hookResult?.error as Error).message).toBe('API Error');
       
       // Test clearing errors
       await act(async () => {
-        if (hookResultRef.current) {
-          hookResultRef.current.clearErrors();
+        if (hookResult) {
+          hookResult.clearErrors();
         }
       });
       
       // Add another small delay to ensure state updates
       await new Promise(resolve => setTimeout(resolve, 50));
       
-      expect(hookResultRef.current?.error).toBeNull();
+      expect(hookResult?.error).toBeNull();
     });
     
     // Add timeout to the full test suite to prevent hanging
