@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, renderHook, act, waitFor } from '@testing-library/react';
+import { render, screen, renderHook, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { IntegrationProvider } from '../../context/IntegrationContext';
 import useIntegration from '../../context/useIntegration';
@@ -32,13 +32,7 @@ vi.mock('../../context/useAuth', () => ({
 
 // Import after mocking
 import integrationService from '../../lib/integrationService';
-import type { 
-  Integration, 
-  IntegrationType, 
-  IntegrationStatus,
-  ServiceResource,
-  ResourceType 
-} from '../../lib/integrationService';
+import type { Integration } from '../../lib/integrationService';
 import useAuth from '../../context/useAuth';
 
 // Create mock data
@@ -290,3 +284,4 @@ describe('IntegrationContext', () => {
     });
   });
 });
+
