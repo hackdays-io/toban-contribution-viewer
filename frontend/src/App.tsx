@@ -9,6 +9,9 @@ import SignUp from './components/auth/SignUp'
 import AuthCallback from './components/auth/AuthCallback'
 import ProtectedRoute from './components/auth/ProtectedRoute'
 
+// Integrations
+import { IntegrationProvider } from './context/IntegrationContext'
+
 // Layout
 import { AppLayout } from './components/layout'
 
@@ -58,7 +61,8 @@ function App() {
     <ChakraProvider theme={theme}>
       <BrowserRouter>
         <AuthProvider>
-          <Routes>
+          <IntegrationProvider>
+            <Routes>
               {/* Public routes */}
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
@@ -232,6 +236,7 @@ function App() {
                 }
               />
             </Routes>
+          </IntegrationProvider>
         </AuthProvider>
       </BrowserRouter>
     </ChakraProvider>
