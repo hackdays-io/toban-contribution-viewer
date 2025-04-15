@@ -202,6 +202,7 @@ class IntegrationService {
   private handleError(error: unknown, defaultMessage: string): ApiError {
     console.error('API Error:', error);
     
+    // Handle Response objects
     if (error instanceof Response) {
       return {
         status: error.status,
@@ -209,6 +210,17 @@ class IntegrationService {
       };
     }
     
+    // Handle response-like objects (for testing or other scenarios)
+    if (error && typeof error === 'object' && 'ok' in error && !error.ok && 
+        'status' in error && 'statusText' in error) {
+      const responseError = error as { status: number; statusText: string };
+      return {
+        status: responseError.status,
+        message: responseError.statusText || defaultMessage,
+      };
+    }
+    
+    // Default error handling
     return {
       status: 500,
       message: error instanceof Error ? error.message : defaultMessage,
