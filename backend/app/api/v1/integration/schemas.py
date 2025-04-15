@@ -98,7 +98,7 @@ class ServiceResourceBase(BaseModel):
     resource_type: ResourceTypeEnum
     external_id: str
     name: str
-    metadata: Optional[Dict] = None
+    metadata: Optional[Dict] = None  # Maps to resource_metadata in the model
 
 
 class IntegrationShareBase(BaseModel):
@@ -253,7 +253,7 @@ class IntegrationResponse(BaseModel):
     description: Optional[str] = None
     service_type: IntegrationTypeEnum
     status: IntegrationStatusEnum
-    metadata: Optional[Dict] = None
+    metadata: Optional[Dict] = None  # Maps to integration_metadata in the model
     last_used_at: Optional[datetime] = None
 
     owner_team: TeamInfo

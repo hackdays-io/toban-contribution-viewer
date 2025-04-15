@@ -24,7 +24,7 @@ from app.models.integration import (
     ServiceResource,
 )
 from app.services.integration.base import IntegrationService
-from app.services.slack.api import SlackAPI
+from app.services.slack.api import SlackApiClient
 
 logger = logging.getLogger(__name__)
 
@@ -69,8 +69,11 @@ class SlackIntegrationService(IntegrationService):
         Returns:
             Tuple of (Integration, workspace_info)
         """
-        # Exchange auth code for tokens
-        slack_api = SlackAPI()
+        # Exchange auth code for tokens using temporary API client without token
+        # We'll create a proper client after getting the token
+        slack_api = SlackApiClient(
+            access_token="temporary"
+        )  # Token will be replaced by exchange_code
         oauth_response = await slack_api.exchange_code(
             code=auth_code,
             redirect_uri=redirect_uri,
@@ -81,10 +84,9 @@ class SlackIntegrationService(IntegrationService):
         if not oauth_response or "access_token" not in oauth_response:
             raise ValueError("Failed to exchange auth code for tokens")
 
-        # Get workspace info
-        workspace_info = await slack_api.get_workspace_info(
-            token=oauth_response["access_token"]
-        )
+        # Get workspace info with proper token
+        slack_api = SlackApiClient(access_token=oauth_response["access_token"])
+        workspace_info = await slack_api.get_workspace_info()
 
         if not workspace_info or "team" not in workspace_info:
             raise ValueError("Failed to get workspace information")
@@ -187,11 +189,8 @@ class SlackIntegrationService(IntegrationService):
             raise ValueError("No access token found for integration")
 
         # Get channels from Slack API
-        slack_api = SlackAPI()
-        channels = await slack_api.get_all_channels(
-            token=token,
-            limit=limit,
-        )
+        slack_api = SlackApiClient(access_token=token)
+        channels = await slack_api.get_all_channels(limit=limit)
 
         # Get existing channel resources
         result = await db.execute(
@@ -207,7 +206,7 @@ class SlackIntegrationService(IntegrationService):
         for channel in channels:
             resource_data = {
                 "name": f"#{channel['name']}",
-                "metadata": {
+                "resource_metadata": {
                     "type": channel.get("is_private", False) and "private" or "public",
                     "purpose": channel.get("purpose", {}).get("value"),
                     "topic": channel.get("topic", {}).get("value"),
@@ -222,7 +221,7 @@ class SlackIntegrationService(IntegrationService):
                 # Update existing resource
                 resource = existing_resources[channel["id"]]
                 resource.name = resource_data["name"]
-                resource.metadata = resource_data["metadata"]
+                resource.resource_metadata = resource_data["resource_metadata"]
                 resource.last_synced_at = resource_data["last_synced_at"]
             else:
                 # Create new resource
@@ -270,11 +269,8 @@ class SlackIntegrationService(IntegrationService):
             raise ValueError("No access token found for integration")
 
         # Get users from Slack API
-        slack_api = SlackAPI()
-        users = await slack_api.get_all_users(
-            token=token,
-            limit=limit,
-        )
+        slack_api = SlackApiClient(access_token=token)
+        users = await slack_api.get_all_users(limit=limit)
 
         # Get existing user resources
         result = await db.execute(
@@ -295,7 +291,7 @@ class SlackIntegrationService(IntegrationService):
             profile = user.get("profile", {})
             resource_data = {
                 "name": profile.get("real_name") or user.get("name", "Unknown User"),
-                "metadata": {
+                "resource_metadata": {
                     "name": user.get("name"),
                     "real_name": profile.get("real_name"),
                     "display_name": profile.get("display_name"),
@@ -317,7 +313,7 @@ class SlackIntegrationService(IntegrationService):
                 # Update existing resource
                 resource = existing_resources[user["id"]]
                 resource.name = resource_data["name"]
-                resource.metadata = resource_data["metadata"]
+                resource.resource_metadata = resource_data["resource_metadata"]
                 resource.last_synced_at = resource_data["last_synced_at"]
             else:
                 # Create new resource

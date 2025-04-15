@@ -112,7 +112,9 @@ class Integration(Base, BaseModel):
     status = Column(
         Enum(IntegrationStatus), default=IntegrationStatus.ACTIVE, nullable=False
     )
-    metadata = Column(JSONB, nullable=True)  # Service-specific configuration
+    integration_metadata = Column(
+        JSONB, nullable=True
+    )  # Service-specific configuration (renamed from metadata to avoid SQLAlchemy conflict)
     last_used_at = Column(DateTime, nullable=True)
 
     # Owner info
@@ -220,7 +222,9 @@ class ServiceResource(Base, BaseModel):
     resource_type = Column(Enum(ResourceType), nullable=False)
     external_id = Column(String(255), nullable=False)  # ID in external service
     name = Column(String(255), nullable=False)
-    metadata = Column(JSONB, nullable=True)  # Additional properties
+    resource_metadata = Column(
+        JSONB, nullable=True
+    )  # Additional properties (renamed from metadata to avoid SQLAlchemy conflict)
     last_synced_at = Column(DateTime, nullable=True)
 
     # Foreign keys

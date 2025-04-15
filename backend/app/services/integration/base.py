@@ -182,7 +182,7 @@ class IntegrationService:
             description=description,
             service_type=service_type,
             status=IntegrationStatus.ACTIVE,
-            metadata=metadata or {},
+            integration_metadata=metadata or {},
             owner_team_id=team_id,
             created_by_user_id=user_id,
             last_used_at=datetime.utcnow(),
@@ -248,7 +248,7 @@ class IntegrationService:
             "name": integration.name,
             "description": integration.description,
             "status": integration.status,
-            "metadata": integration.metadata,
+            "integration_metadata": integration.integration_metadata,
         }
 
         # Update allowed fields
@@ -261,9 +261,12 @@ class IntegrationService:
         if "status" in data:
             integration.status = data["status"]
 
-        if "metadata" in data:
+        if "integration_metadata" in data:
             # Merge with existing metadata instead of replacing
-            integration.metadata = {**(integration.metadata or {}), **data["metadata"]}
+            integration.integration_metadata = {
+                **(integration.integration_metadata or {}),
+                **data["integration_metadata"],
+            }
 
         # Record the update event
         event = IntegrationEvent(

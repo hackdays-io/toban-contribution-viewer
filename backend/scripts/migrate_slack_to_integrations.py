@@ -94,7 +94,7 @@ async def migrate_slack_workspace(db: AsyncSession, workspace: SlackWorkspace):
             if workspace.is_connected
             else IntegrationStatus.DISCONNECTED
         ),
-        metadata={
+        integration_metadata={
             "slack_id": workspace.slack_id,
             "domain": workspace.domain,
             "icon_url": workspace.icon_url,

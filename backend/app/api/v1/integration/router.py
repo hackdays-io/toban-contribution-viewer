@@ -264,6 +264,8 @@ async def update_integration(
     update_dict = update_data.dict(exclude_unset=True)
     if "status" in update_dict:
         update_dict["status"] = update_dict["status"].value
+    if "metadata" in update_dict:
+        update_dict["integration_metadata"] = update_dict.pop("metadata")
 
     # Update the integration
     updated_integration = await IntegrationService.update_integration(

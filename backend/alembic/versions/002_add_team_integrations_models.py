@@ -109,7 +109,11 @@ def upgrade():
             nullable=False,
             default="active",
         ),
-        sa.Column("metadata", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
+        sa.Column(
+            "integration_metadata",
+            postgresql.JSONB(astext_type=sa.Text()),
+            nullable=True,
+        ),
         sa.Column("last_used_at", sa.DateTime(), nullable=True),
         sa.Column("owner_team_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("created_by_user_id", sa.String(255), nullable=False),
@@ -234,7 +238,9 @@ def upgrade():
         sa.Column("resource_type", resource_type, nullable=False),
         sa.Column("external_id", sa.String(255), nullable=False),
         sa.Column("name", sa.String(255), nullable=False),
-        sa.Column("metadata", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
+        sa.Column(
+            "resource_metadata", postgresql.JSONB(astext_type=sa.Text()), nullable=True
+        ),  # Renamed from metadata to avoid SQLAlchemy conflict
         sa.Column("last_synced_at", sa.DateTime(), nullable=True),
         sa.Column("integration_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("created_at", sa.DateTime(), nullable=False, default=datetime.utcnow),
