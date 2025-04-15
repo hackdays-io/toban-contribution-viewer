@@ -245,18 +245,10 @@ describe('IntegrationContext', () => {
       // Check that getIntegrations was called with teamId
       // The function signature of getIntegrations allows for an optional second parameter
       expect(integrationService.getIntegrations).toHaveBeenCalledWith('team-1', undefined);
-      // Check that getIntegrations was called with teamId
-      // The function signature of getIntegrations allows for an optional second parameter
-      expect(integrationService.getIntegrations).toHaveBeenCalledWith('team-1', undefined);
     });
   });
   
   describe('useIntegration hook', () => {
-    // Skip the test that checks for errors when used outside of provider
-    // This test was causing issues with React's error boundaries
-    it.skip('should throw an error when used outside of IntegrationProvider', () => {
-      // This test would verify that useIntegration throws an error when used outside of IntegrationProvider
-      // We're skipping it for now as it's causing test stability issues
     // Skip the test that checks for errors when used outside of provider
     // This test was causing issues with React's error boundaries
     it.skip('should throw an error when used outside of IntegrationProvider', () => {
@@ -304,11 +296,6 @@ describe('IntegrationContext', () => {
         const prevLoadingRef = React.useRef(integration.loading);
         const prevIntegrationsLengthRef = React.useRef(integration.integrations.length);
         
-        // Use a callback ref to avoid dependency on integration objects
-        // which might cause unnecessary re-renders
-        const prevLoadingRef = React.useRef(integration.loading);
-        const prevIntegrationsLengthRef = React.useRef(integration.integrations.length);
-        
         React.useEffect(() => {
           const loadingChanged = prevLoadingRef.current !== integration.loading;
           const integrationsLengthChanged = prevIntegrationsLengthRef.current !== integration.integrations.length;
@@ -336,9 +323,6 @@ describe('IntegrationContext', () => {
           </MockAuthProvider>
         );
       });
-      
-      // Add a small delay to ensure all state updates have been processed
-      await new Promise(resolve => setTimeout(resolve, 100));
       
       // Add a small delay to ensure all state updates have been processed
       await new Promise(resolve => setTimeout(resolve, 100));
@@ -374,11 +358,6 @@ describe('IntegrationContext', () => {
             integration.selectIntegration('test-int-1');
             hasSelectedRef.current = true;
           }
-          if (!hasSelectedRef.current && integration.integrations.length > 0) {
-            // Select an integration only once when integrations are loaded
-            integration.selectIntegration('test-int-1');
-            hasSelectedRef.current = true;
-          }
         }, [integration]);
         
         return null;
@@ -397,16 +376,11 @@ describe('IntegrationContext', () => {
       // Add a small delay to ensure all effects have run
       await new Promise(resolve => setTimeout(resolve, 100));
       
-      // Add a small delay to ensure all effects have run
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
       // Check that the integration was selected
       expect(hookResult?.currentIntegration).toBeDefined();
       expect(hookResult?.currentIntegration?.id).toBe('test-int-1');
       
       // Check that resources were fetched
-      // The function signature includes an optional resourceTypes parameter
-      expect(integrationService.getResources).toHaveBeenCalledWith('test-int-1', undefined);
       // The function signature includes an optional resourceTypes parameter
       expect(integrationService.getResources).toHaveBeenCalledWith('test-int-1', undefined);
     });
@@ -433,9 +407,6 @@ describe('IntegrationContext', () => {
           </MockAuthProvider>
         );
       });
-      
-      // Add a small delay to ensure error state is properly set
-      await new Promise(resolve => setTimeout(resolve, 100));
       
       // Add a small delay to ensure error state is properly set
       await new Promise(resolve => setTimeout(resolve, 100));
