@@ -1,4 +1,4 @@
-import React from 'react';
+// React is used in JSX transformation
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { ChakraProvider } from '@chakra-ui/react';
