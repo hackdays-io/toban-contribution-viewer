@@ -9,6 +9,15 @@ const MockAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children })
   return <>{children}</>;
 };
 
+// Import types we need to mock
+import { 
+  IntegrationType,
+  IntegrationStatus,
+  ResourceType,
+  ShareLevel,
+  AccessLevel 
+} from '../../lib/integrationService';
+
 // First mock the modules
 vi.mock('../../lib/integrationService', () => ({
   default: {
@@ -23,6 +32,28 @@ vi.mock('../../lib/integrationService', () => ({
     revokeShare: vi.fn(),
     grantResourceAccess: vi.fn(),
     isApiError: vi.fn()
+  },
+  IntegrationType: {
+    SLACK: 'slack',
+    GITHUB: 'github',
+    NOTION: 'notion',
+    DISCORD: 'discord'
+  },
+  IntegrationStatus: {
+    ACTIVE: 'active',
+    DISCONNECTED: 'disconnected',
+    EXPIRED: 'expired',
+    REVOKED: 'revoked',
+    ERROR: 'error'
+  },
+  ResourceType: {
+    SLACK_CHANNEL: 'slack_channel'
+  },
+  ShareLevel: {
+    FULL_ACCESS: 'full_access'
+  },
+  AccessLevel: {
+    READ: 'read'
   }
 }));
 
@@ -35,12 +66,32 @@ import integrationService from '../../lib/integrationService';
 import type { Integration } from '../../lib/integrationService';
 import useAuth from '../../context/useAuth';
 
+// Mock types for auth
+type Session = {
+  access_token: string;
+  refresh_token: string;
+  expires_in: number;
+  token_type: string;
+  user: {
+    id: string;
+    email?: string;
+  };
+};
+
+type User = {
+  id: string;
+  app_metadata: Record<string, unknown>;
+  user_metadata: Record<string, unknown>;
+  aud: string;
+  created_at: string;
+};
+
 // Create mock data
 const mockIntegration = {
   id: 'test-int-1',
   name: 'Test Integration',
-  service_type: 'slack',
-  status: 'active',
+  service_type: IntegrationType.SLACK,
+  status: IntegrationStatus.ACTIVE,
   owner_team: {
     id: 'team-1',
     name: 'Test Team',
@@ -57,7 +108,7 @@ const mockIntegration = {
 const mockResource = {
   id: 'res-1',
   integration_id: 'test-int-1',
-  resource_type: 'slack_channel',
+  resource_type: ResourceType.SLACK_CHANNEL,
   external_id: 'C12345',
   name: 'general',
   created_at: '2023-01-01T00:00:00Z',
@@ -76,8 +127,23 @@ describe('IntegrationContext', () => {
     
     // Setup auth mock
     vi.mocked(useAuth).mockReturnValue({
-      session: { access_token: 'mock-token' },
-      user: { id: 'user-1' },
+      session: { 
+        access_token: 'mock-token',
+        refresh_token: 'mock-refresh',
+        expires_in: 3600,
+        token_type: 'bearer',
+        user: {
+          id: 'user-1',
+          email: 'test@example.com'
+        }
+      } as Session,
+      user: {
+        id: 'user-1',
+        app_metadata: {},
+        user_metadata: {},
+        aud: 'authenticated',
+        created_at: '2023-01-01T00:00:00Z'
+      } as User,
       loading: false,
       teamContext: {
         currentTeamId: 'team-1',
@@ -98,10 +164,50 @@ describe('IntegrationContext', () => {
     vi.mocked(integrationService.createSlackIntegration).mockResolvedValue(mockIntegration);
     vi.mocked(integrationService.updateIntegration).mockResolvedValue(mockIntegration);
     vi.mocked(integrationService.getResources).mockResolvedValue([mockResource]);
-    vi.mocked(integrationService.syncResources).mockResolvedValue({ status: 'success' });
-    vi.mocked(integrationService.shareIntegration).mockResolvedValue({ id: 'share-1' });
-    vi.mocked(integrationService.revokeShare).mockResolvedValue({ status: 'success' });
-    vi.mocked(integrationService.grantResourceAccess).mockResolvedValue({ id: 'access-1' });
+    vi.mocked(integrationService.syncResources).mockResolvedValue({ status: 'success', message: 'Resources synced' });
+    
+    // Mock share response
+    const mockShare = {
+      id: 'share-1',
+      integration_id: 'test-int-1',
+      team_id: 'team-2',
+      share_level: ShareLevel.FULL_ACCESS,
+      status: 'active',
+      shared_by: {
+        id: 'user-1',
+        name: 'Test User'
+      },
+      team: {
+        id: 'team-2',
+        name: 'Team 2',
+        slug: 'team-2'
+      },
+      created_at: '2023-01-01T00:00:00Z',
+      updated_at: '2023-01-01T00:00:00Z'
+    };
+    
+    // Mock resource access
+    const mockAccess = {
+      id: 'access-1',
+      resource_id: 'res-1',
+      team_id: 'team-2',
+      access_level: AccessLevel.READ,
+      granted_by: {
+        id: 'user-1',
+        name: 'Test User'
+      },
+      team: {
+        id: 'team-2',
+        name: 'Team 2',
+        slug: 'team-2'
+      },
+      created_at: '2023-01-01T00:00:00Z',
+      updated_at: '2023-01-01T00:00:00Z'
+    };
+    
+    vi.mocked(integrationService.shareIntegration).mockResolvedValue(mockShare);
+    vi.mocked(integrationService.revokeShare).mockResolvedValue({ status: 'success', message: 'Share revoked' });
+    vi.mocked(integrationService.grantResourceAccess).mockResolvedValue(mockAccess);
     vi.mocked(integrationService.isApiError).mockImplementation(() => false);
   });
   
