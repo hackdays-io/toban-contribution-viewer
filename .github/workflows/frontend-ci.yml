@@ -63,14 +63,6 @@ jobs:
 
     - name: npm test
       run: |
-        export NODE_OPTIONS="--max-old-space-size=8192"
         npm run lint
         npm run typecheck
         npm test -- --ci --no-threads --detectOpenHandles
-
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v4
-      with:
-        file: ./frontend/coverage/coverage-final.json
-        flags: frontend
-        fail_ci_if_error: false
