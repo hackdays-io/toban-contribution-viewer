@@ -64,6 +64,6 @@ jobs:
     - name: Test integration components only
       run: |
         export NODE_OPTIONS="--max-old-space-size=8192"
-        npm test -- --testNamePattern="IntegrationList|IntegrationsPage"
+        npm test
         # Return success even if the test timeout
         exit 0
