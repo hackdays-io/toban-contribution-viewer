@@ -245,10 +245,18 @@ describe('IntegrationContext', () => {
       // Check that getIntegrations was called with teamId
       // The function signature of getIntegrations allows for an optional second parameter
       expect(integrationService.getIntegrations).toHaveBeenCalledWith('team-1', undefined);
+      // Check that getIntegrations was called with teamId
+      // The function signature of getIntegrations allows for an optional second parameter
+      expect(integrationService.getIntegrations).toHaveBeenCalledWith('team-1', undefined);
     });
   });
   
   describe('useIntegration hook', () => {
+    // Skip the test that checks for errors when used outside of provider
+    // This test was causing issues with React's error boundaries
+    it.skip('should throw an error when used outside of IntegrationProvider', () => {
+      // This test would verify that useIntegration throws an error when used outside of IntegrationProvider
+      // We're skipping it for now as it's causing test stability issues
     // Skip the test that checks for errors when used outside of provider
     // This test was causing issues with React's error boundaries
     it.skip('should throw an error when used outside of IntegrationProvider', () => {
@@ -285,11 +293,17 @@ describe('IntegrationContext', () => {
       // Setup a fixed mock response to avoid potential race conditions or infinite updates
       vi.mocked(integrationService.getIntegrations).mockResolvedValue([mockIntegration]);
       
-      // Use a regular array instead of a ref
-      const hookStates: { loading: boolean; integrations: Integration[] }[] = [];
+      // Use a ref instead of closure variable to avoid memory leaks
+      const hookStatesRef = React.createRef<{ loading: boolean; integrations: Integration[] }[]>();
+      hookStatesRef.current = [];
       
       const TestComponent = () => {
         const integration = useIntegration();
+        
+        // Use a callback ref to avoid dependency on integration objects
+        // which might cause unnecessary re-renders
+        const prevLoadingRef = React.useRef(integration.loading);
+        const prevIntegrationsLengthRef = React.useRef(integration.integrations.length);
         
         // Use a callback ref to avoid dependency on integration objects
         // which might cause unnecessary re-renders
@@ -301,10 +315,12 @@ describe('IntegrationContext', () => {
           const integrationsLengthChanged = prevIntegrationsLengthRef.current !== integration.integrations.length;
           
           if (loadingChanged || integrationsLengthChanged) {
-            hookStates.push({
-              loading: integration.loading,
-              integrations: [...integration.integrations], // Clone to avoid reference issues
-            });
+            if (hookStatesRef.current) {
+              hookStatesRef.current.push({
+                loading: integration.loading,
+                integrations: [...integration.integrations], // Clone to avoid reference issues
+              });
+            }
             
             prevLoadingRef.current = integration.loading;
             prevIntegrationsLengthRef.current = integration.integrations.length;
@@ -327,32 +343,40 @@ describe('IntegrationContext', () => {
       // Add a small delay to ensure all state updates have been processed
       await new Promise(resolve => setTimeout(resolve, 100));
       
+      // Add a small delay to ensure all state updates have been processed
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       // Should have at least initial state and loaded state
-      expect(hookStates.length).toBeGreaterThanOrEqual(2);
+      expect(hookStatesRef.current?.length).toBeGreaterThanOrEqual(2);
       
       // Final state should have integrations loaded
-      const finalState = hookStates[hookStates.length - 1];
-      expect(finalState.loading).toBe(false);
-      expect(finalState.integrations.length).toBeGreaterThan(0);
+      const finalState = hookStatesRef.current?.[hookStatesRef.current.length - 1];
+      expect(finalState?.loading).toBe(false);
+      expect(finalState?.integrations.length).toBeGreaterThan(0);
     });
     
     it('should be able to select an integration', async () => {
       // Setup a fixed mock response to avoid potential race conditions
       vi.mocked(integrationService.getResources).mockResolvedValue([mockResource]);
       
-      // Use a mutable variable for the hook result
-      let hookResult: ReturnType<typeof useIntegration> | undefined;
+      // Use a ref for the hook result to avoid potential closure issues
+      const hookResultRef = React.createRef<ReturnType<typeof useIntegration>>();
       
       const TestComponent = () => {
         const integration = useIntegration();
         
-        // Store the integration in the variable
-        hookResult = integration;
+        // Store the integration in the ref
+        hookResultRef.current = integration;
         
         // Only call selectIntegration once to avoid potential loops
         const hasSelectedRef = React.useRef(false);
         
         React.useEffect(() => {
+          if (!hasSelectedRef.current && integration.integrations.length > 0) {
+            // Select an integration only once when integrations are loaded
+            integration.selectIntegration('test-int-1');
+            hasSelectedRef.current = true;
+          }
           if (!hasSelectedRef.current && integration.integrations.length > 0) {
             // Select an integration only once when integrations are loaded
             integration.selectIntegration('test-int-1');
@@ -376,11 +400,16 @@ describe('IntegrationContext', () => {
       // Add a small delay to ensure all effects have run
       await new Promise(resolve => setTimeout(resolve, 100));
       
+      // Add a small delay to ensure all effects have run
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       // Check that the integration was selected
-      expect(hookResult?.currentIntegration).toBeDefined();
-      expect(hookResult?.currentIntegration?.id).toBe('test-int-1');
+      expect(hookResultRef.current?.currentIntegration).toBeDefined();
+      expect(hookResultRef.current?.currentIntegration?.id).toBe('test-int-1');
       
       // Check that resources were fetched
+      // The function signature includes an optional resourceTypes parameter
+      expect(integrationService.getResources).toHaveBeenCalledWith('test-int-1', undefined);
       // The function signature includes an optional resourceTypes parameter
       expect(integrationService.getResources).toHaveBeenCalledWith('test-int-1', undefined);
     });
@@ -389,12 +418,12 @@ describe('IntegrationContext', () => {
       // Mock getIntegrations to throw an error
       vi.mocked(integrationService.getIntegrations).mockRejectedValueOnce(new Error('API Error'));
       
-      // Use a mutable variable for the hook result
-      let hookResult: ReturnType<typeof useIntegration> | undefined;
+      // Use a ref for the hook result to avoid potential closure issues
+      const hookResultRef = React.createRef<ReturnType<typeof useIntegration>>();
       
       const TestComponent = () => {
         const integration = useIntegration();
-        hookResult = integration;
+        hookResultRef.current = integration;
         return null;
       };
       
@@ -411,21 +440,24 @@ describe('IntegrationContext', () => {
       // Add a small delay to ensure error state is properly set
       await new Promise(resolve => setTimeout(resolve, 100));
       
+      // Add a small delay to ensure error state is properly set
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       // Check for error state
-      expect(hookResult?.error).toBeDefined();
-      expect((hookResult?.error as Error).message).toBe('API Error');
+      expect(hookResultRef.current?.error).toBeDefined();
+      expect((hookResultRef.current?.error as Error).message).toBe('API Error');
       
       // Test clearing errors
       await act(async () => {
-        if (hookResult) {
-          hookResult.clearErrors();
+        if (hookResultRef.current) {
+          hookResultRef.current.clearErrors();
         }
       });
       
       // Add another small delay to ensure state updates
       await new Promise(resolve => setTimeout(resolve, 50));
       
-      expect(hookResult?.error).toBeNull();
+      expect(hookResultRef.current?.error).toBeNull();
     });
     
     // Add timeout to the full test suite to prevent hanging
