@@ -61,10 +61,12 @@ jobs:
         VITE_DEV_MODE: "false"
       run: npm run build
 
-    - name: Test
-      env:
-        NODE_OPTIONS: "--max-old-space-size=4096"
-      run: npm test
+    - name: npm test
+      run: |
+        export NODE_OPTIONS="--max-old-space-size=8192"
+        npm run lint
+        npm run typecheck
+        npm test -- --ci --no-threads --detectOpenHandles
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4
