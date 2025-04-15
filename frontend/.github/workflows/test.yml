@@ -33,5 +33,5 @@ jobs:
       - name: Test integration components only
         run: |
           export NODE_OPTIONS="--max-old-space-size=8192"
-          npm test -- --testNamePattern="IntegrationList|IntegrationsPage" --no-threads
+          npm test -- --testNamePattern="IntegrationList|IntegrationsPage"
         working-directory: frontend
