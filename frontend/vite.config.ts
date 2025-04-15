@@ -19,13 +19,16 @@ export default defineConfig(({ mode }) => {
     }
   }
 
-  // Add specific ngrok domain if needed
-  allowedHosts.push('summary-locust-arriving.ngrok-free.app');
+  // Don't add specific ngrok domains - use wildcard patterns instead
   // Add generic ngrok domains
   allowedHosts.push('*.ngrok-free.app');
   allowedHosts.push('*.ngrok.io');
 
-  return {
+  // Determine if we're in development mode
+  const isDev = mode === 'development';
+  
+  // Base configuration
+  const config = {
     plugins: [react()],
     server: {
       host: '0.0.0.0',
@@ -38,14 +41,23 @@ export default defineConfig(({ mode }) => {
       cors: true,
       // Allow connections from these hosts
       allowedHosts,
-      proxy: {
-        // Proxy all API requests to the backend
-        '/api': {
-          target: 'http://localhost:8000',
-          changeOrigin: true,
-          secure: false,
-        }
-      }
     }
+  };
+  
+  // Only add proxy configuration in development mode
+  if (isDev) {
+    config.server.proxy = {
+      // Proxy all API requests to the backend
+      '/api': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        secure: false,
+      }
+    };
+    console.log('Development mode: API proxy enabled');
+  } else {
+    console.log('Production mode: API proxy disabled');
   }
+  
+  return config;
 })

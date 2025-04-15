@@ -63,8 +63,11 @@ services:
     env_file:
       - ./.env.docker
     environment:
-      # API URL for browser requests - use relative path to work with frontend proxy
+      # API URL for browser requests - use relative path in development for proxy
+      # In production, this should be the full URL to the backend API
       - VITE_API_URL=/api/v1
+      # Set environment flag to indicate development mode
+      - VITE_ENVIRONMENT=development
       # Frontend URL for redirects (use ngrok tunnel if available)
       - VITE_FRONTEND_URL=${NGROK_URL:-http://localhost:5173}
       - VITE_SUPABASE_URL=${SUPABASE_URL:-your_supabase_url}
