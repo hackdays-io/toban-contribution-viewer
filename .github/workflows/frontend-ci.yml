@@ -61,9 +61,13 @@ jobs:
         VITE_DEV_MODE: "false"
       run: npm run build
 
-    - name: Test integration components only
+    - name: Run tests with coverage
       run: |
         export NODE_OPTIONS="--max-old-space-size=8192"
-        npm test -- --testNamePattern="IntegrationList|IntegrationsPage"
-        # Return success even if the test timeout
-        exit 0
+        npm test -- --coverage
+        
+    - name: Upload coverage report
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report
+        path: frontend/coverage
