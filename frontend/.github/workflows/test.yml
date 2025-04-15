@@ -15,6 +15,12 @@ jobs:
           node-version-file: 'frontend/.nvmrc'
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
+      - name: Create test environment file
+        run: |
+          echo "VITE_API_URL=http://localhost:8000/api/v1" > .env.test
+          echo "VITE_SUPABASE_URL=https://example.supabase.co" >> .env.test
+          echo "VITE_SUPABASE_ANON_KEY=test-supabase-key" >> .env.test
+        working-directory: frontend
       - name: Install dependencies
         run: npm install
         working-directory: frontend
@@ -25,5 +31,5 @@ jobs:
         run: npm run typecheck
         working-directory: frontend
       - name: Test
-        run: npm test
+        run: npm test -- --coverage
         working-directory: frontend
