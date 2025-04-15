@@ -70,7 +70,7 @@ describe('Integration API Service', () => {
     vi.clearAllMocks();
     
     // Set up supabase auth mock for each test
-    (supabase.auth.getSession as vi.Mock).mockResolvedValue({
+    (supabase.auth.getSession as ReturnType<typeof vi.fn>).mockResolvedValue({
       data: {
         session: {
           access_token: 'mock-token'
