@@ -24,7 +24,8 @@ import {
   FiBarChart2,
   FiSettings,
   FiExternalLink,
-  FiUser
+  FiUser,
+  FiBox
 } from 'react-icons/fi';
 import useAuth from '../../context/useAuth';
 
@@ -169,6 +170,16 @@ const Sidebar = ({ onClose, ...rest }: SidebarProps) => {
               Integrations
             </Text>
           </Box>
+          
+          <ListItem>
+            <NavItem
+              to="/dashboard/integrations"
+              icon={FiBox}
+              isActive={isActivePath('/dashboard/integrations')}
+            >
+              All Integrations
+            </NavItem>
+          </ListItem>
           
           <ListItem>
             <NavItem
