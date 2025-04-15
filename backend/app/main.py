@@ -76,7 +76,7 @@ if ngrok_url and ngrok_url not in allowed_origins:
 # Let's print the exact allowed origins for debugging
 logger.info(f"CORS allowed origins (exact list): {allowed_origins}")
 
-# Make sure specific ngrok URL is included for development
+# Make sure ngrok URL from environment is included for development
 ngrok_url = os.environ.get("NGROK_URL")
 if settings.DEBUG and ngrok_url and ngrok_url not in allowed_origins:
     allowed_origins.append(ngrok_url)
@@ -212,7 +212,7 @@ async def add_cors_headers(request, call_next):
     if origin and (
         origin in allowed_origins or 
         (ngrok_url and origin == ngrok_url) or
-        (origin.endswith('.ngrok-free.app') or origin.endswith('.ngrok.io'))
+        (settings.DEBUG and (origin.endswith('.ngrok-free.app') or origin.endswith('.ngrok.io')))
     ):
         # Add CORS headers
         response.headers["Access-Control-Allow-Origin"] = origin
