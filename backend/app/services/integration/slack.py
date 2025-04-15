@@ -5,11 +5,10 @@ This module provides Slack-specific integration functionality, including
 OAuth flow handling, user/channel resource management, and API operations.
 """
 
-import json
 import logging
 import uuid
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -18,7 +17,6 @@ from app.models.integration import (
     CredentialType,
     Integration,
     IntegrationCredential,
-    IntegrationStatus,
     IntegrationType,
     ResourceType,
     ServiceResource,

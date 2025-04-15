@@ -4,10 +4,10 @@ Pydantic schemas for integration API endpoints.
 
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 
 # Enum definitions for API

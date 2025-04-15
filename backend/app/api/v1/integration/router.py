@@ -10,7 +10,6 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.integration.schemas import (
-    AccessLevelEnum,
     IntegrationCreate,
     IntegrationResponse,
     IntegrationShareCreate,
@@ -20,7 +19,6 @@ from app.api.v1.integration.schemas import (
     ResourceAccessCreate,
     ResourceAccessResponse,
     ServiceResourceResponse,
-    ShareLevelEnum,
     SlackIntegrationCreate,
 )
 from app.core.auth import get_current_user

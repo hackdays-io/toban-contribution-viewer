@@ -8,7 +8,7 @@ creating, updating, and sharing integrations between teams.
 import logging
 import uuid
 from datetime import datetime
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession

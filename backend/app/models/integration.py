@@ -7,9 +7,9 @@ This module defines models for managing integrations with external services
 
 import enum
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import List, Optional
 
-from sqlalchemy import Boolean, Column, DateTime, Enum, ForeignKey, Index, String, Text
+from sqlalchemy import Column, DateTime, Enum, ForeignKey, Index, String, Text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, relationship
 
