@@ -1,6 +1,4 @@
-/// <reference types="vitest" />
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import * as vi from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import integrationService, { 
   Integration, 
   IntegrationType, 
