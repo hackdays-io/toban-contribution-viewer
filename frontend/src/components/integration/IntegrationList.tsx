@@ -13,7 +13,6 @@ import {
   Button,
   Select,
   Flex,
-  Icon,
   Divider,
   useToast,
   useColorModeValue,
@@ -126,7 +125,7 @@ const IntegrationList: React.FC<IntegrationListProps> = ({ teamId }) => {
         duration: 3000,
         isClosable: true,
       });
-    } catch (err) {
+    } catch {
       toast({
         title: 'Failed to refresh integrations',
         status: 'error',
