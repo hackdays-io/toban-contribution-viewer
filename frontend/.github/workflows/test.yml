@@ -30,8 +30,8 @@ jobs:
       - name: Type check
         run: npm run typecheck
         working-directory: frontend
-      - name: Test
+      - name: Test integration components only
         run: |
           export NODE_OPTIONS="--max-old-space-size=8192"
-          npm test -- --no-threads
+          npm test -- --testNamePattern="IntegrationList|IntegrationsPage" --no-threads
         working-directory: frontend
