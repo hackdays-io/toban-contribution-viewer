@@ -3,7 +3,7 @@ Slack API client for making requests to the Slack API.
 """
 
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 import aiohttp
 
@@ -227,6 +227,40 @@ class SlackApiClient:
                 response_data={},
             )
 
+    async def exchange_code(
+        self, code: str, redirect_uri: str, client_id: str, client_secret: str
+    ) -> Dict[str, Any]:
+        """
+        Exchange OAuth code for access token.
+
+        Args:
+            code: OAuth authorization code
+            redirect_uri: OAuth redirect URI
+            client_id: Slack client ID
+            client_secret: Slack client secret
+
+        Returns:
+            OAuth response with access token
+        """
+        # For OAuth token exchange, we don't use the instance token
+        # We'll use form data instead of JSON
+        data = {
+            "code": code,
+            "redirect_uri": redirect_uri,
+            "client_id": client_id,
+            "client_secret": client_secret,
+        }
+
+        # Use custom headers without Authorization
+        headers = {
+            "Content-Type": "application/x-www-form-urlencoded",
+        }
+
+        response = await self._make_request(
+            "POST", "oauth.v2.access", data=data, headers=headers
+        )
+        return response
+
     async def get_workspace_info(self) -> Dict[str, Any]:
         """
         Get information about the workspace.
@@ -259,6 +293,91 @@ class SlackApiClient:
             return True
         except SlackApiError:
             return False
+
+    async def get_all_channels(
+        self,
+        limit: int = 1000,
+        types: str = "public_channel,private_channel",
+        exclude_archived: bool = False,
+    ) -> List[Dict[str, Any]]:
+        """
+        Get all channels in the workspace with pagination.
+
+        Args:
+            limit: Maximum number of channels to fetch in total
+            types: Channel types to include (comma-separated)
+            exclude_archived: Whether to exclude archived channels
+
+        Returns:
+            List of all channels up to the limit
+        """
+        all_channels = []
+        cursor = None
+        page_limit = min(limit, 200)  # Each page request limit
+
+        while len(all_channels) < limit:
+            response = await self.get_channels(
+                cursor=cursor,
+                limit=page_limit,
+                types=types,
+                exclude_archived=exclude_archived,
+            )
+
+            channels = response.get("channels", [])
+            all_channels.extend(channels)
+
+            # Get cursor for next page
+            metadata = response.get("response_metadata", {})
+            cursor = metadata.get("next_cursor")
+
+            # Break if no more results or we've reached the limit
+            if not cursor or not channels:
+                break
+
+        return all_channels[:limit]
+
+    async def get_all_users(
+        self,
+        limit: int = 1000,
+        include_locale: bool = False,
+    ) -> List[Dict[str, Any]]:
+        """
+        Get all users in the workspace with pagination.
+
+        Args:
+            limit: Maximum number of users to fetch in total
+            include_locale: Whether to include locale information
+
+        Returns:
+            List of all users up to the limit
+        """
+        all_users = []
+        cursor = None
+        page_limit = min(limit, 200)  # Each page request limit
+
+        while len(all_users) < limit:
+            response = await self._make_request(
+                "GET",
+                "users.list",
+                params={
+                    "limit": page_limit,
+                    "cursor": cursor if cursor else None,
+                    "include_locale": include_locale,
+                },
+            )
+
+            users = response.get("members", [])
+            all_users.extend(users)
+
+            # Get cursor for next page
+            metadata = response.get("response_metadata", {})
+            cursor = metadata.get("next_cursor")
+
+            # Break if no more results or we've reached the limit
+            if not cursor or not users:
+                break
+
+        return all_users[:limit]
 
     async def get_channels(
         self,

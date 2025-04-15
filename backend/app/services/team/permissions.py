@@ -127,6 +127,59 @@ async def require_team_access(
     )
 
 
+async def has_team_permission(
+    db: AsyncSession,
+    team_id: UUID,
+    user_id: str,
+    permission_level: str,
+) -> bool:
+    """
+    Check if a user has a particular permission level in a team without raising exceptions.
+
+    Args:
+        db: Database session
+        team_id: Team ID
+        user_id: User ID to check
+        permission_level: Permission level ("owner", "admin", "member", "viewer", "read")
+
+    Returns:
+        True if user has permission, False otherwise
+    """
+    # Map permission levels to required roles
+    role_map = {
+        "owner": [TeamMemberRole.OWNER],
+        "admin": [TeamMemberRole.OWNER, TeamMemberRole.ADMIN],
+        "member": [TeamMemberRole.OWNER, TeamMemberRole.ADMIN, TeamMemberRole.MEMBER],
+        "viewer": [
+            TeamMemberRole.OWNER,
+            TeamMemberRole.ADMIN,
+            TeamMemberRole.MEMBER,
+            TeamMemberRole.VIEWER,
+        ],
+        "read": [
+            TeamMemberRole.OWNER,
+            TeamMemberRole.ADMIN,
+            TeamMemberRole.MEMBER,
+            TeamMemberRole.VIEWER,
+        ],
+    }
+
+    # Get allowed roles based on permission level
+    allowed_roles = role_map.get(permission_level.lower(), [])
+    if not allowed_roles:
+        # Default to requiring admin for unknown permission levels
+        allowed_roles = [TeamMemberRole.OWNER, TeamMemberRole.ADMIN]
+
+    # Get the user's team membership
+    member = await get_team_member(db, team_id, user_id, include_all_statuses=False)
+
+    # Check if user is a member with the required role
+    if member and member.role in allowed_roles:
+        return True
+
+    return False
+
+
 def create_team_permission_dependency(required_roles: List[TeamMemberRole]):
     """
     Create a dependency for team-based permission checking.

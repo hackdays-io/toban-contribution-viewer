@@ -48,8 +48,16 @@ class Team(Base, BaseModel):
     members: Mapped[List["TeamMember"]] = relationship(
         "TeamMember", back_populates="team", cascade="all, delete-orphan"
     )
-    slack_workspaces = relationship(
-        "SlackWorkspace", back_populates="team"
+    slack_workspaces = relationship("SlackWorkspace", back_populates="team")
+    # Integration relationships
+    owned_integrations = relationship(
+        "Integration", back_populates="owner_team", cascade="all, delete-orphan"
+    )
+    shared_integrations = relationship(
+        "IntegrationShare", back_populates="team", cascade="all, delete-orphan"
+    )
+    resource_accesses = relationship(
+        "ResourceAccess", back_populates="team", cascade="all, delete-orphan"
     )
 
     # Uniqueness constraints
