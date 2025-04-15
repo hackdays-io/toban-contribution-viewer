@@ -1,5 +1,4 @@
 import os
-import sys
 
 from sqlalchemy import (
     JSON,
@@ -7,7 +6,6 @@ from sqlalchemy import (
     Column,
     DateTime,
     ForeignKey,
-    Integer,
     MetaData,
     String,
     Table,

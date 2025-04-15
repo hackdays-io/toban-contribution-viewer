@@ -1,6 +1,5 @@
 import os
 import sys
-import uuid
 from datetime import datetime
 
 from sqlalchemy import (
@@ -9,7 +8,6 @@ from sqlalchemy import (
     Column,
     DateTime,
     ForeignKey,
-    Integer,
     MetaData,
     String,
     Table,

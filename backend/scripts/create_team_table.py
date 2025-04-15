@@ -1,8 +1,7 @@
 import os
-import uuid
 from datetime import datetime
 
-from sqlalchemy import JSON, Boolean, Column, DateTime, MetaData, String, Table, create_engine
+from sqlalchemy import Boolean, Column, DateTime, MetaData, String, Table, create_engine
 from sqlalchemy.dialects.postgresql import UUID
 
 # Get database URL
