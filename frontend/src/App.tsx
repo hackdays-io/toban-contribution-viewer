@@ -39,6 +39,11 @@ import {
   TeamMembersPage,
 } from './pages/team'
 
+// Integration Pages
+import {
+  IntegrationsPage,
+} from './pages/integration'
+
 // Profile Pages
 import {
   ProfilePage,
@@ -209,6 +214,18 @@ function App() {
                   <ProtectedRoute>
                     <AppLayout>
                       <ChannelAnalysisHistoryPage />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Integrations routes */}
+              <Route
+                path="/dashboard/integrations"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <IntegrationsPage />
                     </AppLayout>
                   </ProtectedRoute>
                 }
