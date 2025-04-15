@@ -4,25 +4,21 @@ Tests for the base integration service.
 
 import uuid
 from datetime import datetime
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.integration import (
     AccessLevel,
-    EventType,
     Integration,
-    IntegrationCredential,
-    IntegrationEvent,
     IntegrationShare,
     IntegrationStatus,
     IntegrationType,
-    ResourceAccess,
     ServiceResource,
     ShareLevel,
 )
-from app.models.team import Team, TeamMember, TeamMemberRole
+from app.models.team import Team
 from app.services.integration.base import IntegrationService
 
 

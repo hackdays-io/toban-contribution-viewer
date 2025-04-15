@@ -19,17 +19,15 @@ Environment variables:
 import asyncio
 import logging
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime
 
-import sqlalchemy as sa
-from sqlalchemy import create_engine, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
 from app.config import settings
 from app.db.session import get_async_db_url
 from app.models.integration import (
-    AccessLevel,
     CredentialType,
     Integration,
     IntegrationCredential,

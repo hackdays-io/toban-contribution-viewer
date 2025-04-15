@@ -2,10 +2,8 @@
 Tests for the integration API endpoints.
 """
 
-import json
 import uuid
-from datetime import datetime
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from fastapi import FastAPI, status
@@ -13,10 +11,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.integration.router import router
-from app.models.integration import Integration, IntegrationStatus, IntegrationType, ServiceResource
-from app.models.team import Team
-from app.services.integration.base import IntegrationService
-from app.services.team.permissions import has_team_permission
+from app.models.integration import IntegrationStatus, IntegrationType, ServiceResource
 
 
 @pytest.fixture
