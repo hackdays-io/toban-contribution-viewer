@@ -64,7 +64,7 @@ jobs:
     - name: Test
       env:
         NODE_OPTIONS: "--max-old-space-size=4096"
-      run: npm test -- --coverage
+      run: npm test
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4
