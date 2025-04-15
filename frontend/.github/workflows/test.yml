@@ -33,5 +33,5 @@ jobs:
       - name: Test
         run: |
           export NODE_OPTIONS="--max-old-space-size=8192"
-          npm test -- --coverage --no-threads
+          npm test -- --no-threads
         working-directory: frontend
