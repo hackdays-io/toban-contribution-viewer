@@ -76,24 +76,21 @@ if ngrok_url and ngrok_url not in allowed_origins:
 # Let's print the exact allowed origins for debugging
 logger.info(f"CORS allowed origins (exact list): {allowed_origins}")
 
-# Make sure specific ngrok URL is included
+# Make sure specific ngrok URL is included for development
 ngrok_url = os.environ.get("NGROK_URL")
-if ngrok_url and ngrok_url not in allowed_origins:
+if settings.DEBUG and ngrok_url and ngrok_url not in allowed_origins:
     allowed_origins.append(ngrok_url)
-    logger.info(f"Added specific ngrok URL to allowed origins: {ngrok_url}")
+    logger.info(f"Added ngrok URL to allowed origins: {ngrok_url}")
 
-# For development, allow all origins as a fallback
-if settings.DEBUG:
-    allowed_origins.append("https://summary-locust-arriving.ngrok-free.app")
-    logger.info("Added hardcoded ngrok URL for development")
-
+# Configure CORS middleware with appropriate settings for the environment
 app.add_middleware(
     CORSMiddleware,
+    # Only use strict origin checking in production
     allow_origins=allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-    expose_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allow_headers=["Authorization", "Content-Type", "X-Requested-With", "Accept"],
+    expose_headers=["Content-Length", "Content-Range"],
 )
 
 
@@ -103,9 +100,13 @@ async def root():
     return {"message": "Welcome to Toban Contribution Viewer API"}
 
 
-# Handle preflight OPTIONS requests explicitly
+# Handle preflight OPTIONS requests explicitly - only in development mode
 @app.options("/{full_path:path}")
 async def options_handler(full_path: str):
+    # This is a fallback for development only
+    if not settings.DEBUG:
+        # In production, let the standard CORS middleware handle OPTIONS requests
+        return {"detail": "Production mode - standard CORS handling applies"}
     return {"detail": "OK"}
 
 
@@ -194,24 +195,35 @@ async def auth_debug():
     }
 
 
-# Add custom CORS middleware for development
+# Add custom CORS middleware only for development
 @app.middleware("http")
 async def add_cors_headers(request, call_next):
     response = await call_next(request)
-
+    
+    # Only apply this in debug/development mode
+    if not settings.DEBUG:
+        return response
+        
     # Check if the Origin header exists in the request
     origin = request.headers.get("Origin")
-    if origin and origin == "https://summary-locust-arriving.ngrok-free.app":
+    ngrok_url = os.environ.get("NGROK_URL")
+    
+    # Only allow specific origins that are configured in environment
+    if origin and (
+        origin in allowed_origins or 
+        (ngrok_url and origin == ngrok_url) or
+        (origin.endswith('.ngrok-free.app') or origin.endswith('.ngrok.io'))
+    ):
         # Add CORS headers
         response.headers["Access-Control-Allow-Origin"] = origin
         response.headers["Access-Control-Allow-Credentials"] = "true"
         response.headers["Access-Control-Allow-Methods"] = (
-            "GET, POST, PUT, DELETE, OPTIONS"
+            "GET, POST, PUT, DELETE, OPTIONS, PATCH"
         )
         response.headers["Access-Control-Allow-Headers"] = (
-            "Content-Type, Authorization, X-Requested-With"
+            "Content-Type, Authorization, X-Requested-With, Accept"
         )
-
+    
     return response
 
 

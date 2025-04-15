@@ -1,4 +1,5 @@
 import os
+import sys
 import uuid
 from datetime import datetime
 
@@ -16,6 +17,16 @@ from sqlalchemy import (
     text,
 )
 from sqlalchemy.dialects.postgresql import ENUM, UUID
+
+# Check for environment
+is_production = os.environ.get("ENVIRONMENT") == "production"
+if is_production:
+    print("WARNING: This script should NOT be run in production!")
+    response = input("Are you sure you want to continue? This will DESTROY ALL DATA! (yes/no): ")
+    if response.lower() != "yes":
+        print("Operation cancelled.")
+        sys.exit(1)
+    print("CAUTION: Proceeding with database reset in PRODUCTION environment!")
 
 # Get database URL
 database_url = os.environ.get(
