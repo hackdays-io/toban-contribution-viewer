@@ -31,5 +31,7 @@ jobs:
         run: npm run typecheck
         working-directory: frontend
       - name: Test
-        run: npm test -- --coverage
+        run: |
+          export NODE_OPTIONS="--max-old-space-size=8192"
+          npm test -- --coverage --no-threads
         working-directory: frontend
