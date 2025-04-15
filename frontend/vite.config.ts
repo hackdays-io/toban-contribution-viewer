@@ -27,7 +27,26 @@ export default defineConfig(({ mode }) => {
   // Determine if we're in development mode
   const isDev = mode === 'development';
   
-  // Base configuration
+  // Define the server configuration type
+  interface ServerConfig {
+    host: string;
+    port: number;
+    strictPort: boolean;
+    hmr: {
+      clientPort: number;
+    };
+    cors: boolean;
+    allowedHosts: string[];
+    proxy?: {
+      [key: string]: {
+        target: string;
+        changeOrigin: boolean;
+        secure: boolean;
+      };
+    };
+  }
+
+  // Base configuration with proper typing
   const config = {
     plugins: [react()],
     server: {
@@ -41,7 +60,9 @@ export default defineConfig(({ mode }) => {
       cors: true,
       // Allow connections from these hosts
       allowedHosts,
-    }
+      // Initialize proxy as empty object to satisfy TypeScript
+      proxy: {} as ServerConfig['proxy']
+    } as ServerConfig
   };
   
   // Only add proxy configuration in development mode

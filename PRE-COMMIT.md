@@ -27,6 +27,9 @@ The pre-commit configuration includes the following checks:
 ### For Backend (Python):
 - Black formatter (code formatting)
 - isort (import sorting)
+- flake8 for linting with multiple plugins
+- mypy for static type checking
+- bandit for security vulnerability scanning
 
 ### For Frontend (TypeScript/JavaScript):
 - TypeScript compiler check
