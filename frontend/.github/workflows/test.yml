@@ -24,16 +24,10 @@ jobs:
       - name: Install dependencies
         run: npm install
         working-directory: frontend
-      - name: Lint
-        run: npm run lint
-        working-directory: frontend
-      - name: Type check
-        run: npm run typecheck
-        working-directory: frontend
-      - name: Test integration components only
+      - name: npm test
         run: |
           export NODE_OPTIONS="--max-old-space-size=8192"
-          timeout 120 npm test -- --testNamePattern="IntegrationList|IntegrationsPage"
-          # Return success even if tests timeout
-          exit 0
+          npm run lint
+          npm run typecheck
+          npm test -- --ci --no-threads --detectOpenHandles
         working-directory: frontend
