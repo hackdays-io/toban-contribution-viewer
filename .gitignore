@@ -60,4 +60,7 @@ infrastructure/cdk/cdk.out
 .env.ngrok
 temp-ngrok.yml
 
+# TEST
+frontend/coverage
+
 **/CLAUDE.local.md
