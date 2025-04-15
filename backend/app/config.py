@@ -1,9 +1,13 @@
+import logging
 import os
 from functools import lru_cache
 from typing import Any, List, Optional
 
 from pydantic import PostgresDsn, SecretStr, validator
 from pydantic_settings import BaseSettings
+
+# Configure logger
+logger = logging.getLogger(__name__)
 
 
 class Settings(BaseSettings):
@@ -65,14 +69,14 @@ class Settings(BaseSettings):
                 if "ngrok-free.app" in ngrok_url or "ngrok.io" in ngrok_url:
                     explicit_allowed_hosts.append(ngrok_url)
 
-        # Always ensure summary-locust-arriving.ngrok-free.app is included
-        if (
-            "https://summary-locust-arriving.ngrok-free.app"
-            not in explicit_allowed_hosts
-        ):
-            explicit_allowed_hosts.append(
-                "https://summary-locust-arriving.ngrok-free.app"
-            )
+        # Add any additional domains from DEBUG_DOMAINS environment variable
+        debug_domains = os.environ.get("DEBUG_DOMAINS", "")
+        if debug_domains:
+            for domain in debug_domains.split(","):
+                domain = domain.strip()
+                if domain and domain not in explicit_allowed_hosts:
+                    explicit_allowed_hosts.append(domain)
+                    logger.info(f"Added debug domain: {domain}")
 
         return explicit_allowed_hosts
 

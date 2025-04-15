@@ -146,6 +146,68 @@ npm run test
 npm run test:watch
 ```
 
+### Code Quality and Pre-commit Hooks
+
+This project uses pre-commit hooks to ensure code quality. These hooks automatically run checks before each commit to catch issues early in the development process.
+
+#### Setup Pre-commit Hooks
+
+1. Install pre-commit:
+   ```bash
+   pip install pre-commit
+   ```
+
+2. Install the git hooks:
+   ```bash
+   pre-commit install
+   ```
+
+#### Included Hooks
+
+The pre-commit configuration includes:
+
+- **Python Hooks**:
+  - Black for code formatting
+  - isort for import sorting
+
+- **TypeScript/Frontend Hooks**:
+  - TypeScript compiler for type checking
+  - ESLint for linting
+  - Prettier for code formatting
+  - Special checks for Vite configuration
+
+- **General Hooks**:
+  - End of file fixer
+  - YAML and JSON syntax checking
+  - Large file prevention
+  - Merge conflict detection
+
+#### Running Hooks Manually
+
+You can run all pre-commit hooks manually on all files:
+
+```bash
+pre-commit run --all-files
+```
+
+Or run a specific hook:
+
+```bash
+pre-commit run black --all-files
+```
+
+#### Bypassing Hooks (Emergency Only)
+
+In rare cases, you may need to bypass the pre-commit hooks for emergency commits:
+
+```bash
+git commit --no-verify -m "Emergency commit message"
+```
+
+**Important**: Use this sparingly and only in genuine emergencies. Follow up with a proper fix as soon as possible.
+
+For more details about the pre-commit setup, see [PRE-COMMIT.md](PRE-COMMIT.md).
+
 ## Slack Integration
 
 ### Local Development with ngrok

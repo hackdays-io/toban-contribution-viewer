@@ -529,6 +529,24 @@ You can also trigger deployments manually through the GitHub Actions interface u
 
 Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
 
+### Pre-commit Hooks
+
+This project uses pre-commit hooks to ensure code quality. To set up the hooks:
+
+1. Install pre-commit:
+   ```bash
+   pip install pre-commit
+   ```
+
+2. Install the git hooks:
+   ```bash
+   pre-commit install
+   ```
+
+3. The hooks will now run automatically on every commit.
+
+For more information on the pre-commit setup, see [PRE-COMMIT.md](PRE-COMMIT.md).
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
