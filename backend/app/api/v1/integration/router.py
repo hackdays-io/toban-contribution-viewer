@@ -23,7 +23,7 @@ from app.api.v1.integration.schemas import (
 )
 from app.core.auth import get_current_user
 from app.db.session import get_async_db
-from app.models.integration import AccessLevel, Integration, IntegrationType, ServiceResource, ShareLevel
+from app.models.integration import AccessLevel, IntegrationType, ServiceResource, ShareLevel
 from app.services.integration.base import IntegrationService
 from app.services.integration.slack import SlackIntegrationService
 from app.services.team.permissions import has_team_permission
