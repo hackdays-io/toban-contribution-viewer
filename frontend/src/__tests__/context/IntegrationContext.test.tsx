@@ -123,7 +123,7 @@ describe('IntegrationContext', () => {
       last_sign_in_at: '2023-01-01T00:00:00Z',
       role: 'authenticated',
       identities: [],
-      factors: null
+      factors: []
     };
     
     const mockSession: Session = {
@@ -142,6 +142,7 @@ describe('IntegrationContext', () => {
       session: mockSession,
       user: mockUser,
       loading: false,
+      error: null,
       teamContext: {
         currentTeamId: 'team-1',
         currentTeamRole: 'admin',
@@ -151,7 +152,10 @@ describe('IntegrationContext', () => {
           slug: 'test-team',
           role: 'admin'
         }]
-      }
+      },
+      setTeamContext: vi.fn(),
+      switchTeam: vi.fn().mockResolvedValue(undefined),
+      signOut: vi.fn().mockResolvedValue(undefined)
     });
     
     // Setup integration service mocks
