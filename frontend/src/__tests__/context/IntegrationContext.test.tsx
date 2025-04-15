@@ -66,25 +66,8 @@ import integrationService from '../../lib/integrationService';
 import type { Integration } from '../../lib/integrationService';
 import useAuth from '../../context/useAuth';
 
-// Mock types for auth
-type Session = {
-  access_token: string;
-  refresh_token: string;
-  expires_in: number;
-  token_type: string;
-  user: {
-    id: string;
-    email?: string;
-  };
-};
-
-type User = {
-  id: string;
-  app_metadata: Record<string, unknown>;
-  user_metadata: Record<string, unknown>;
-  aud: string;
-  created_at: string;
-};
+// Import Supabase types instead of defining them ourselves
+import { Session, User } from '@supabase/supabase-js';
 
 // Create mock data
 const mockIntegration = {
@@ -125,25 +108,39 @@ describe('IntegrationContext', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     
+    // Create proper mock data for Supabase session and user
+    const mockUser: User = {
+      id: 'user-1',
+      app_metadata: {},
+      user_metadata: {},
+      aud: 'authenticated',
+      created_at: '2023-01-01T00:00:00Z',
+      updated_at: '2023-01-01T00:00:00Z',
+      email: 'test@example.com',
+      phone: '',
+      confirmed_at: '2023-01-01T00:00:00Z',
+      email_confirmed_at: '2023-01-01T00:00:00Z',
+      last_sign_in_at: '2023-01-01T00:00:00Z',
+      role: 'authenticated',
+      identities: [],
+      factors: null
+    };
+    
+    const mockSession: Session = {
+      access_token: 'mock-token',
+      refresh_token: 'mock-refresh',
+      expires_in: 3600,
+      expires_at: 1672531200,
+      token_type: 'bearer',
+      user: mockUser,
+      provider_token: null,
+      provider_refresh_token: null
+    };
+    
     // Setup auth mock
     vi.mocked(useAuth).mockReturnValue({
-      session: { 
-        access_token: 'mock-token',
-        refresh_token: 'mock-refresh',
-        expires_in: 3600,
-        token_type: 'bearer',
-        user: {
-          id: 'user-1',
-          email: 'test@example.com'
-        }
-      } as Session,
-      user: {
-        id: 'user-1',
-        app_metadata: {},
-        user_metadata: {},
-        aud: 'authenticated',
-        created_at: '2023-01-01T00:00:00Z'
-      } as User,
+      session: mockSession,
+      user: mockUser,
       loading: false,
       teamContext: {
         currentTeamId: 'team-1',
