@@ -30,7 +30,7 @@ from app.services.team.permissions import has_team_permission
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter()
+router = APIRouter(prefix="/integrations", tags=["integrations"])
 
 
 @router.get("", response_model=List[IntegrationResponse])
