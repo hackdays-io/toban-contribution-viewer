@@ -73,12 +73,27 @@ if ngrok_url and ngrok_url not in allowed_origins:
     allowed_origins.append(ngrok_url)
     logger.info(f"Added ngrok URL to allowed origins: {ngrok_url}")
 
+# Let's print the exact allowed origins for debugging
+logger.info(f"CORS allowed origins (exact list): {allowed_origins}")
+
+# Make sure specific ngrok URL is included
+ngrok_url = os.environ.get("NGROK_URL")
+if ngrok_url and ngrok_url not in allowed_origins:
+    allowed_origins.append(ngrok_url)
+    logger.info(f"Added specific ngrok URL to allowed origins: {ngrok_url}")
+
+# For development, allow all origins as a fallback
+if settings.DEBUG:
+    allowed_origins.append("https://summary-locust-arriving.ngrok-free.app")
+    logger.info("Added hardcoded ngrok URL for development")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 
@@ -86,6 +101,12 @@ app.add_middleware(
 @app.get("/")
 async def root():
     return {"message": "Welcome to Toban Contribution Viewer API"}
+
+
+# Handle preflight OPTIONS requests explicitly
+@app.options("/{full_path:path}")
+async def options_handler(full_path: str):
+    return {"detail": "OK"}
 
 
 # Health check endpoint
@@ -171,6 +192,27 @@ async def auth_debug():
         "api_url": settings.API_URL,
         "frontend_url": settings.FRONTEND_URL,
     }
+
+
+# Add custom CORS middleware for development
+@app.middleware("http")
+async def add_cors_headers(request, call_next):
+    response = await call_next(request)
+
+    # Check if the Origin header exists in the request
+    origin = request.headers.get("Origin")
+    if origin and origin == "https://summary-locust-arriving.ngrok-free.app":
+        # Add CORS headers
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+        response.headers["Access-Control-Allow-Methods"] = (
+            "GET, POST, PUT, DELETE, OPTIONS"
+        )
+        response.headers["Access-Control-Allow-Headers"] = (
+            "Content-Type, Authorization, X-Requested-With"
+        )
+
+    return response
 
 
 # Include API routes

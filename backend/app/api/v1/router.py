@@ -13,4 +13,4 @@ router = APIRouter(prefix="/v1")
 # Include routes from other routers
 router.include_router(slack_router)
 router.include_router(team_router)
-router.include_router(integration_router, prefix="/integrations", tags=["integrations"])
+router.include_router(integration_router)

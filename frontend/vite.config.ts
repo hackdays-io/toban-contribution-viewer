@@ -37,7 +37,15 @@ export default defineConfig(({ mode }) => {
       },
       cors: true,
       // Allow connections from these hosts
-      allowedHosts
+      allowedHosts,
+      proxy: {
+        // Proxy all API requests to the backend
+        '/api': {
+          target: 'http://localhost:8000',
+          changeOrigin: true,
+          secure: false,
+        }
+      }
     }
   }
 })
