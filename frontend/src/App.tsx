@@ -36,7 +36,11 @@ import ChannelAnalysisHistoryPage from './pages/slack/ChannelAnalysisHistoryPage
 import { TeamsPage, TeamDetailPage, TeamMembersPage } from './pages/team'
 
 // Integration Pages
-import { IntegrationsPage, IntegrationDetailPage } from './pages/integration'
+import {
+  IntegrationsPage,
+  IntegrationDetailPage,
+  IntegrationConnectPage,
+} from './pages/integration'
 
 // Profile Pages
 import { ProfilePage, EditProfilePage } from './pages/profile'
@@ -237,6 +241,16 @@ function App() {
                   <ProtectedRoute>
                     <AppLayout>
                       <IntegrationDetailPage />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard/integrations/connect"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <IntegrationConnectPage />
                     </AppLayout>
                   </ProtectedRoute>
                 }
