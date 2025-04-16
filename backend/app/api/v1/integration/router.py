@@ -431,23 +431,8 @@ async def sync_integration_resources(
                 # Commit the transaction
                 await db.commit()
             except ValueError as e:
-                # If token not found in DB and error message contains "No access token found",
-                # return mock data so the frontend can continue
-                if "No access token found" in str(e):
-                    logger.info(
-                        "No token in database. Using mock data for local development."
-                    )
-                    return {
-                        "status": "success",
-                        "message": "Mock resources synced successfully (local development)",
-                        "synced": {
-                            "channels": 5,  # Mock count
-                            "users": 10,  # Mock count
-                        },
-                    }
-                else:
-                    # For other ValueError types, re-raise
-                    raise
+                # For all ValueError types, re-raise
+                raise
 
             return {
                 "status": "success",
