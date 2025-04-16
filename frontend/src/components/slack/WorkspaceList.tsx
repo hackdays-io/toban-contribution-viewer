@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { useAuth } from '../../context/useAuth'
+import useAuth from '../../context/useAuth'
 import env from '../../config/env'
 import {
   Box,
