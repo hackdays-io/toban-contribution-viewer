@@ -67,7 +67,8 @@ app = FastAPI(
 allowed_origins = [str(origin) for origin in settings.ALLOWED_HOSTS]
 # Log all allowed origins for debugging
 logger.info(f"CORS allowed origins: {allowed_origins}")
-# Fix for ngrok domains - ensure specific ngrok domain is included
+
+# Add ngrok URL only once
 ngrok_url = os.environ.get("NGROK_URL")
 if ngrok_url and ngrok_url not in allowed_origins:
     allowed_origins.append(ngrok_url)
@@ -75,12 +76,6 @@ if ngrok_url and ngrok_url not in allowed_origins:
 
 # Let's print the exact allowed origins for debugging
 logger.info(f"CORS allowed origins (exact list): {allowed_origins}")
-
-# Make sure ngrok URL from environment is included for development
-ngrok_url = os.environ.get("NGROK_URL")
-if settings.DEBUG and ngrok_url and ngrok_url not in allowed_origins:
-    allowed_origins.append(ngrok_url)
-    logger.info(f"Added ngrok URL to allowed origins: {ngrok_url}")
 
 # Configure CORS middleware with appropriate settings for the environment
 app.add_middleware(
@@ -199,20 +194,23 @@ async def auth_debug():
 @app.middleware("http")
 async def add_cors_headers(request, call_next):
     response = await call_next(request)
-    
+
     # Only apply this in debug/development mode
     if not settings.DEBUG:
         return response
-        
+
     # Check if the Origin header exists in the request
     origin = request.headers.get("Origin")
     ngrok_url = os.environ.get("NGROK_URL")
-    
+
     # Only allow specific origins that are configured in environment
     if origin and (
-        origin in allowed_origins or 
-        (ngrok_url and origin == ngrok_url) or
-        (settings.DEBUG and (origin.endswith('.ngrok-free.app') or origin.endswith('.ngrok.io')))
+        origin in allowed_origins
+        or (ngrok_url and origin == ngrok_url)
+        or (
+            settings.DEBUG
+            and (origin.endswith(".ngrok-free.app") or origin.endswith(".ngrok.io"))
+        )
     ):
         # Add CORS headers
         response.headers["Access-Control-Allow-Origin"] = origin
@@ -223,7 +221,7 @@ async def add_cors_headers(request, call_next):
         response.headers["Access-Control-Allow-Headers"] = (
             "Content-Type, Authorization, X-Requested-With, Accept"
         )
-    
+
     return response
 
 
