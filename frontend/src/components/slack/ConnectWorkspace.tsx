@@ -9,14 +9,35 @@ import {
   Spinner,
   Alert,
   AlertIcon,
+  FormControl,
+  FormLabel,
+  Input,
+  FormHelperText,
+  FormErrorMessage,
+  InputGroup,
+  InputRightElement,
+  IconButton,
 } from '@chakra-ui/react'
+import { ViewIcon, ViewOffIcon } from '@chakra-ui/icons'
 import env from '../../config/env'
+
+interface ConnectWorkspaceProps {
+  redirectTo?: string
+}
 
 /**
  * Component to connect a Slack workspace using OAuth.
  */
-const ConnectWorkspace: React.FC = () => {
+const ConnectWorkspace: React.FC<ConnectWorkspaceProps> = ({
+  redirectTo = '/dashboard/slack/workspaces',
+}) => {
   const [isLoading, setIsLoading] = useState(false)
+  const [clientId, setClientId] = useState('')
+  const [clientSecret, setClientSecret] = useState('')
+  const [showClientSecret, setShowClientSecret] = useState(false)
+  const [clientIdError, setClientIdError] = useState('')
+  const [clientSecretError, setClientSecretError] = useState('')
+
   interface CorsDebugInfo {
     allowed_origins: string[]
     additional_cors_origins: string
@@ -35,6 +56,14 @@ const ConnectWorkspace: React.FC = () => {
     window.location.hostname.includes('ngrok') ||
     (!window.location.hostname.includes('localhost') &&
       env.apiUrl.includes('localhost'))
+
+  // Try to load credentials from localStorage
+  useEffect(() => {
+    const savedClientId = localStorage.getItem('slack_client_id')
+    if (savedClientId) {
+      setClientId(savedClientId)
+    }
+  }, [])
 
   // Fetch CORS debug info when in ngrok environment
   useEffect(() => {
@@ -72,24 +101,66 @@ const ConnectWorkspace: React.FC = () => {
     }
   }
 
+  // Validate inputs
+  const validateInputs = () => {
+    let isValid = true
+
+    if (!clientId.trim()) {
+      setClientIdError('Client ID is required')
+      isValid = false
+    } else {
+      setClientIdError('')
+    }
+
+    if (!clientSecret.trim()) {
+      setClientSecretError('Client Secret is required')
+      isValid = false
+    } else {
+      setClientSecretError('')
+    }
+
+    return isValid
+  }
+
   /**
    * Initiates the OAuth flow by redirecting to Slack.
    */
   const connectWorkspace = async () => {
     try {
+      if (!validateInputs()) {
+        return
+      }
+
       setIsLoading(true)
 
+      // Save client ID, redirect URL, and team ID in localStorage for the callback
+      localStorage.setItem('slack_client_id', clientId)
+      localStorage.setItem('slack_client_secret', clientSecret)
+      localStorage.setItem('slack_redirect_url', redirectTo)
+      // Store current team ID for use during callback
+      const currentTeamId = localStorage.getItem('currentTeamId')
+      if (currentTeamId) {
+        localStorage.setItem('slack_team_id', currentTeamId)
+      }
+
+      // Get the full redirect URI based on current location
+      const callbackUrl = window.location.origin + '/auth/slack/callback'
+      console.log('Using callback URL:', callbackUrl)
+
       // Get OAuth URL from backend with explicit CORS headers
-      const response = await fetch(`${env.apiUrl}/slack/oauth-url`, {
-        method: 'GET',
-        mode: 'cors',
-        credentials: 'include',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-          Origin: window.location.origin,
-        },
-      })
+      const response = await fetch(
+        `${env.apiUrl}/slack/oauth-url?client_id=${encodeURIComponent(clientId)}&client_secret=${encodeURIComponent(clientSecret)}&redirect_uri=${encodeURIComponent(callbackUrl)}`,
+        {
+          method: 'GET',
+          mode: 'cors',
+          credentials: 'include',
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+            Origin: window.location.origin,
+          },
+        }
+      )
 
       if (!response.ok) {
         const error = await response.json()
@@ -209,6 +280,48 @@ const ConnectWorkspace: React.FC = () => {
           communication patterns. This will allow us to collect message data,
           reactions, and user information.
         </Text>
+
+        <FormControl isRequired isInvalid={!!clientIdError}>
+          <FormLabel>Slack Client ID</FormLabel>
+          <Input
+            value={clientId}
+            onChange={(e) => setClientId(e.target.value)}
+            placeholder="Enter your Slack Client ID"
+          />
+          {clientIdError && (
+            <FormErrorMessage>{clientIdError}</FormErrorMessage>
+          )}
+          <FormHelperText>
+            You can find this in your Slack App settings
+          </FormHelperText>
+        </FormControl>
+
+        <FormControl isRequired isInvalid={!!clientSecretError}>
+          <FormLabel>Slack Client Secret</FormLabel>
+          <InputGroup>
+            <Input
+              type={showClientSecret ? 'text' : 'password'}
+              value={clientSecret}
+              onChange={(e) => setClientSecret(e.target.value)}
+              placeholder="Enter your Slack Client Secret"
+            />
+            <InputRightElement>
+              <IconButton
+                aria-label={showClientSecret ? 'Hide secret' : 'Show secret'}
+                icon={showClientSecret ? <ViewOffIcon /> : <ViewIcon />}
+                onClick={() => setShowClientSecret(!showClientSecret)}
+                variant="ghost"
+                size="sm"
+              />
+            </InputRightElement>
+          </InputGroup>
+          {clientSecretError && (
+            <FormErrorMessage>{clientSecretError}</FormErrorMessage>
+          )}
+          <FormHelperText>
+            You can find this in your Slack App settings
+          </FormHelperText>
+        </FormControl>
 
         <Text fontWeight="bold">We'll need the following permissions:</Text>
 

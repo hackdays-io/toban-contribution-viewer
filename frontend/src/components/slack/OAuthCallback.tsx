@@ -10,6 +10,9 @@ import {
 } from '@chakra-ui/react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import env from '../../config/env'
+import useIntegration from '../../context/useIntegration'
+import useAuth from '../../context/useAuth'
+import { IntegrationType } from '../../lib/integrationService'
 
 /**
  * Component to handle the Slack OAuth callback.
@@ -23,6 +26,10 @@ const OAuthCallback: React.FC = () => {
   const [errorMessage, setErrorMessage] = useState('')
   // Use a ref to track if we've already processed the code
   const hasProcessedCode = useRef<boolean>(false)
+
+  // Get the integration context to create a Slack integration
+  const { createSlackIntegration } = useIntegration()
+  const { teamContext } = useAuth()
 
   // Check for development environment
   const isDevEnvironment =
@@ -39,9 +46,13 @@ const OAuthCallback: React.FC = () => {
 
       // No mock data for development
       if (!env.apiUrl || env.apiUrl === 'your_api_url') {
-        console.error('API URL is not configured. Please set proper API URL in environment variables.')
+        console.error(
+          'API URL is not configured. Please set proper API URL in environment variables.'
+        )
         setStatus('error')
-        setErrorMessage('API URL not configured. Please check application settings.')
+        setErrorMessage(
+          'API URL not configured. Please check application settings.'
+        )
         return
       }
 
@@ -59,65 +70,169 @@ const OAuthCallback: React.FC = () => {
         hasProcessedCode.current = true
 
         try {
-          // Forward the code to our backend to exchange it for an access token
-          const response = await fetch(
-            `${env.apiUrl}/slack/oauth-callback?code=${code}&redirect_from_frontend=true`,
-            {
-              method: 'GET',
-              mode: 'cors',
-              credentials: 'include',
-              headers: {
-                Accept: 'application/json',
-                'Content-Type': 'application/json',
-                Origin: window.location.origin,
-              },
-            }
-          )
+          // Get client credentials from localStorage
+          const clientId = localStorage.getItem('slack_client_id')
+          const clientSecret = localStorage.getItem('slack_client_secret')
 
-          if (!response.ok) {
-            const errorData = await response.json()
+          if (!clientId || !clientSecret) {
             throw new Error(
-              errorData.detail || 'Failed to complete OAuth process'
+              'Missing Slack credentials. Please try connecting again.'
             )
           }
 
-          await response.json()
+          // Get the team ID from localStorage or fall back to the context
+          const storedTeamId = localStorage.getItem('slack_team_id')
+          const currentTeamId = storedTeamId || teamContext?.currentTeamId
+
+          if (!currentTeamId) {
+            throw new Error(
+              'No team ID found. Please select a team and try again.'
+            )
+          }
+
+          // Create an integration using the Integration API
+          console.log('Creating integration with team ID:', currentTeamId)
+
+          // Use the original window.location.origin for the redirect URI
+          const callbackUrl = window.location.origin + '/auth/slack/callback'
+
+          console.log('Sending integration request with params:', {
+            team_id: currentTeamId,
+            service_type: IntegrationType.SLACK,
+            redirect_uri: callbackUrl,
+            // Omitting sensitive data from logs
+          })
+
+          const integration = await createSlackIntegration({
+            team_id: currentTeamId,
+            service_type: IntegrationType.SLACK,
+            name: 'Slack Integration', // This will be updated with actual workspace name later
+            code: code,
+            redirect_uri: callbackUrl,
+            client_id: clientId,
+            client_secret: clientSecret,
+          })
+
+          console.log('Integration result:', integration)
+          console.log(
+            'Integration result type:',
+            integration ? typeof integration : 'null'
+          )
+
+          // Check if the integration was created successfully
+          if (!integration) {
+            throw new Error(
+              'Failed to create Slack integration: No response received'
+            )
+          }
+
+          // If the integration has a status property, it's an error
+          if (
+            typeof integration === 'object' &&
+            integration !== null &&
+            'status' in integration
+          ) {
+            console.error('Integration error:', integration)
+            throw new Error(
+              integration.message || 'Failed to create Slack integration'
+            )
+          }
 
           setStatus('success')
 
-          // Navigate to workspace list after a short delay
+          // Clear credentials from localStorage after successful connection
+          localStorage.removeItem('slack_client_id')
+          localStorage.removeItem('slack_client_secret')
+          localStorage.removeItem('slack_team_id')
+
+          // Get the redirect URL from localStorage or default to integrations page
+          const redirectUrl =
+            localStorage.getItem('slack_redirect_url') ||
+            '/dashboard/integrations'
+          localStorage.removeItem('slack_redirect_url')
+
+          // Navigate to the redirect URL after a short delay
           setTimeout(() => {
-            navigate('/dashboard/slack/workspaces')
+            navigate(redirectUrl)
           }, 2000)
         } catch (err) {
           console.error('Error connecting to Slack:', err)
 
-          // No mock success for network or CORS errors
+          // Handle network or backend connectivity issues
           if (
             err instanceof TypeError ||
             (err instanceof Error &&
               (err.message.includes('NetworkError') ||
                 err.message.includes('Failed to fetch') ||
-                err.message.includes('CORS')))
+                err.message.includes('CORS') ||
+                err.message.includes('connection failed') ||
+                err.message.includes('Connection refused')))
           ) {
-            console.error('Network or CORS error when connecting to backend:', err)
+            console.error(
+              'Network or CORS error when connecting to backend:',
+              err
+            )
+            setStatus('error')
+            setErrorMessage(
+              'Backend server is not running or not accessible. Please start the backend server and try again.'
+            )
+            return
           }
 
           setStatus('error')
 
-          // Handle specific error messages
+          // Variable to hold the error message
           let displayErrorMessage = 'Failed to connect workspace'
-          if (err instanceof Error) {
+
+          // Check if the error is an ApiError object
+          if (
+            err &&
+            typeof err === 'object' &&
+            'status' in err &&
+            'message' in err
+          ) {
+            const apiError = err as { status: number; message: string }
+
+            if (apiError.status === 503) {
+              displayErrorMessage =
+                'Backend server is not available. Please make sure the API server is running.'
+            } else {
+              displayErrorMessage =
+                apiError.message || 'Failed to connect workspace'
+            }
+          }
+          // Handle standard errors
+          else if (err instanceof Error) {
+            console.error('Error details:', err)
+
             // Shorten and simplify error messages for the user
             if (err.message.includes('invalid_code')) {
               displayErrorMessage =
                 'Authentication code expired or invalid. Please try again.'
+            } else if (err.message.includes('team')) {
+              displayErrorMessage = 'Team issue: ' + err.message
+            } else if (err.message.includes('token')) {
+              displayErrorMessage = 'Token issue: ' + err.message
+            } else if (
+              err.message.includes('server') ||
+              err.message.includes('connect')
+            ) {
+              displayErrorMessage =
+                'Server connection issue: The backend server appears to be offline or unreachable. Please make sure it is running.'
             } else {
               displayErrorMessage = err.message
             }
+          } else if (err) {
+            // Handle non-Error objects
+            console.error('Non-error object thrown:', typeof err, err)
+            displayErrorMessage = String(err)
           }
 
-          setErrorMessage(displayErrorMessage)
+          // Set the error message state
+          setErrorMessage(
+            displayErrorMessage ||
+              'Unknown error occurred while connecting to Slack'
+          )
         }
       } else {
         // No code provided - error condition
@@ -128,7 +243,13 @@ const OAuthCallback: React.FC = () => {
     }
 
     handleCallback()
-  }, [searchParams, navigate, isDevEnvironment])
+  }, [
+    searchParams,
+    navigate,
+    isDevEnvironment,
+    createSlackIntegration,
+    teamContext,
+  ])
 
   return (
     <Box p={6} maxWidth="600px" mx="auto" textAlign="center">
@@ -165,9 +286,45 @@ const OAuthCallback: React.FC = () => {
               Connection failed
             </Alert>
             <Text>{errorMessage}</Text>
-            <Text mt={4}>
-              Please try again or contact support if the problem persists.
-            </Text>
+
+            {/* Additional guidance for backend connection issues */}
+            {errorMessage.includes('backend') ||
+            errorMessage.includes('server') ? (
+              <Box mt={4} p={4} bg="gray.50" borderRadius="md">
+                <Text fontWeight="bold">Troubleshooting Steps:</Text>
+                <Text mt={2}>1. Make sure the backend server is running:</Text>
+                <Text
+                  as="code"
+                  display="block"
+                  p={2}
+                  bg="gray.100"
+                  borderRadius="md"
+                  mt={1}
+                >
+                  cd ../backend
+                  <br />
+                  uvicorn app.main:app --reload
+                </Text>
+                <Text mt={2}>2. Verify the API URL in your .env file:</Text>
+                <Text
+                  as="code"
+                  display="block"
+                  p={2}
+                  bg="gray.100"
+                  borderRadius="md"
+                  mt={1}
+                >
+                  VITE_API_URL=/api/v1
+                </Text>
+                <Text mt={2}>
+                  3. Wait a moment and try again after the backend is running.
+                </Text>
+              </Box>
+            ) : (
+              <Text mt={4}>
+                Please try again or contact support if the problem persists.
+              </Text>
+            )}
           </>
         )}
       </VStack>

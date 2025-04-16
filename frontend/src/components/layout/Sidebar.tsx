@@ -18,7 +18,6 @@ import { Link, useLocation } from 'react-router-dom'
 import {
   FiHome,
   FiUsers,
-  FiSlack,
   FiGithub,
   FiFileText,
   FiBarChart2,
@@ -197,15 +196,7 @@ const Sidebar = ({ onClose, ...rest }: SidebarProps) => {
             </NavItem>
           </ListItem>
 
-          <ListItem>
-            <NavItem
-              to="/dashboard/slack/workspaces"
-              icon={FiSlack}
-              isActive={isActivePath('/dashboard/slack')}
-            >
-              Slack
-            </NavItem>
-          </ListItem>
+          {/* Slack entry removed - now part of integrations */}
 
           <ListItem>
             <NavItem

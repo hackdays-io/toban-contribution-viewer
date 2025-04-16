@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import {
   Box,
   Heading,
@@ -14,17 +14,23 @@ import {
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbLink,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalCloseButton,
 } from '@chakra-ui/react'
 import { FiSlack, FiGithub, FiFileText, FiMessageSquare } from 'react-icons/fi'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { PageTitle } from '../../components/layout'
+import { ConnectWorkspace } from '../../components/slack'
 
 interface IntegrationOption {
   id: string
   name: string
   description: string
   icon: React.ElementType
-  path: string
   primary: boolean
 }
 
@@ -32,7 +38,9 @@ interface IntegrationOption {
  * Page for connecting a new integration, offering various integration options.
  */
 const IntegrationConnectPage: React.FC = () => {
-  const navigate = useNavigate()
+  const [selectedIntegration, setSelectedIntegration] = useState<IntegrationOption | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  
   const cardBg = useColorModeValue('white', 'gray.800')
   const cardBorder = useColorModeValue('gray.200', 'gray.700')
   const hoverBg = useColorModeValue('gray.50', 'gray.700')
@@ -46,7 +54,6 @@ const IntegrationConnectPage: React.FC = () => {
       description:
         'Connect your Slack workspace to analyze team communication and contributions.',
       icon: FiSlack,
-      path: '/dashboard/slack/connect',
       primary: true,
     },
     {
@@ -55,7 +62,6 @@ const IntegrationConnectPage: React.FC = () => {
       description:
         'Connect your GitHub repositories to analyze code contributions.',
       icon: FiGithub,
-      path: '/dashboard/github/connect',
       primary: false,
     },
     {
@@ -63,7 +69,6 @@ const IntegrationConnectPage: React.FC = () => {
       name: 'Notion',
       description: 'Connect Notion to analyze documentation contributions.',
       icon: FiFileText,
-      path: '/dashboard/notion/connect',
       primary: false,
     },
     {
@@ -72,13 +77,18 @@ const IntegrationConnectPage: React.FC = () => {
       description:
         'Connect your Discord server to analyze community contributions.',
       icon: FiMessageSquare,
-      path: '/dashboard/discord/connect',
       primary: false,
     },
   ]
 
   const handleIntegrationSelect = (option: IntegrationOption) => {
-    navigate(option.path)
+    setSelectedIntegration(option)
+    setIsModalOpen(true)
+  }
+
+  const closeModal = () => {
+    setIsModalOpen(false)
+    setSelectedIntegration(null)
   }
 
   return (
@@ -182,6 +192,31 @@ const IntegrationConnectPage: React.FC = () => {
           </Button>
         </VStack>
       </Box>
+      
+      {/* Integration Connection Modal */}
+      <Modal isOpen={isModalOpen} onClose={closeModal} size="xl">
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>
+            Connect {selectedIntegration?.name}
+          </ModalHeader>
+          <ModalCloseButton />
+          <ModalBody pb={6}>
+            {selectedIntegration?.id === 'slack' && (
+              <ConnectWorkspace redirectTo="/dashboard/integrations" />
+            )}
+            {selectedIntegration?.id === 'github' && (
+              <Text>GitHub integration is coming soon.</Text>
+            )}
+            {selectedIntegration?.id === 'notion' && (
+              <Text>Notion integration is coming soon.</Text>
+            )}
+            {selectedIntegration?.id === 'discord' && (
+              <Text>Discord integration is coming soon.</Text>
+            )}
+          </ModalBody>
+        </ModalContent>
+      </Modal>
     </Box>
   )
 }

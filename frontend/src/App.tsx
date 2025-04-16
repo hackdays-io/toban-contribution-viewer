@@ -20,17 +20,10 @@ import Home from './pages/Home'
 import Dashboard from './pages/Dashboard'
 import Analytics from './pages/Analytics'
 
-// Slack Pages
+// We keep one Slack component for the OAuth flow 
 import {
-  ConnectPage as SlackConnectPage,
   OAuthCallbackPage as SlackOAuthCallbackPage,
-  WorkspacesPage as SlackWorkspacesPage,
-  ChannelsPage as SlackChannelsPage,
-  MessagesPage as SlackMessagesPage,
-  AnalyticsPage as SlackAnalyticsPage,
-  ChannelAnalysisPage as SlackChannelAnalysisPage,
 } from './pages/slack'
-import ChannelAnalysisHistoryPage from './pages/slack/ChannelAnalysisHistoryPage'
 
 // Team Pages
 import { TeamsPage, TeamDetailPage, TeamMembersPage } from './pages/team'
@@ -120,57 +113,7 @@ function App() {
                 }
               />
 
-              {/* Slack routes */}
-              <Route
-                path="/dashboard/slack/workspaces"
-                element={
-                  <ProtectedRoute>
-                    <AppLayout>
-                      <SlackWorkspacesPage />
-                    </AppLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/dashboard/slack/connect"
-                element={
-                  <ProtectedRoute>
-                    <AppLayout>
-                      <SlackConnectPage />
-                    </AppLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/dashboard/slack/workspaces/:workspaceId/channels"
-                element={
-                  <ProtectedRoute>
-                    <AppLayout>
-                      <SlackChannelsPage />
-                    </AppLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/dashboard/slack/workspaces/:workspaceId"
-                element={
-                  <ProtectedRoute>
-                    <AppLayout>
-                      <SlackWorkspacesPage />
-                    </AppLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/dashboard/slack/workspaces/:workspaceId/channels/:channelId/messages"
-                element={
-                  <ProtectedRoute>
-                    <AppLayout>
-                      <SlackMessagesPage />
-                    </AppLayout>
-                  </ProtectedRoute>
-                }
-              />
+              {/* Removed legacy Slack routes */}
 
               {/* Analytics routes */}
               <Route
@@ -183,36 +126,7 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-              <Route
-                path="/dashboard/analytics/slack"
-                element={
-                  <ProtectedRoute>
-                    <AppLayout>
-                      <SlackAnalyticsPage />
-                    </AppLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/dashboard/analytics/slack/channels/:workspaceId/:channelId/analyze"
-                element={
-                  <ProtectedRoute>
-                    <AppLayout>
-                      <SlackChannelAnalysisPage />
-                    </AppLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/dashboard/analytics/slack/channels/:workspaceId/:channelId/history"
-                element={
-                  <ProtectedRoute>
-                    <AppLayout>
-                      <ChannelAnalysisHistoryPage />
-                    </AppLayout>
-                  </ProtectedRoute>
-                }
-              />
+              {/* Removed legacy Slack analytics routes */}
 
               {/* Integrations routes */}
               <Route
@@ -255,6 +169,7 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+              {/* Removed direct route to Slack connect page */}
 
               {/* Profile routes */}
               <Route

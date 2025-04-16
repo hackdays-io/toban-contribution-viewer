@@ -6,13 +6,16 @@ import {
   BreadcrumbItem,
   BreadcrumbLink,
 } from '@chakra-ui/react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { ConnectWorkspace } from '../../components/slack'
 
 /**
  * Page for connecting a new Slack workspace.
  */
 const ConnectPage: React.FC = () => {
+  const location = useLocation()
+  const fromIntegrations = location.search.includes('from=integrations')
+  
   return (
     <Box p={6}>
       <Breadcrumb mb={6}>
@@ -21,13 +24,30 @@ const ConnectPage: React.FC = () => {
             Dashboard
           </BreadcrumbLink>
         </BreadcrumbItem>
-        <BreadcrumbItem>
-          <BreadcrumbLink as={Link} to="/dashboard/slack/workspaces">
-            Slack
-          </BreadcrumbLink>
-        </BreadcrumbItem>
+        
+        {fromIntegrations ? (
+          <>
+            <BreadcrumbItem>
+              <BreadcrumbLink as={Link} to="/dashboard/integrations">
+                Integrations
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbItem>
+              <BreadcrumbLink as={Link} to="/dashboard/integrations/connect">
+                Connect
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+          </>
+        ) : (
+          <BreadcrumbItem>
+            <BreadcrumbLink as={Link} to="/dashboard/slack/workspaces">
+              Slack
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+        )}
+        
         <BreadcrumbItem isCurrentPage>
-          <BreadcrumbLink>Connect</BreadcrumbLink>
+          <BreadcrumbLink>Slack</BreadcrumbLink>
         </BreadcrumbItem>
       </Breadcrumb>
 
@@ -35,7 +55,7 @@ const ConnectPage: React.FC = () => {
         Connect Slack Workspace
       </Heading>
 
-      <ConnectWorkspace />
+      <ConnectWorkspace redirectTo={fromIntegrations ? '/dashboard/integrations' : '/dashboard/slack/workspaces'} />
     </Box>
   )
 }

@@ -27,7 +27,14 @@ from app.api.v1.integration.schemas import (
 )
 from app.core.auth import get_current_user
 from app.db.session import get_async_db
-from app.models.integration import AccessLevel, CredentialType, IntegrationCredential, IntegrationType, ServiceResource, ShareLevel
+from app.models.integration import (
+    AccessLevel,
+    CredentialType,
+    IntegrationCredential,
+    IntegrationType,
+    ServiceResource,
+    ShareLevel,
+)
 from app.services.integration.base import IntegrationService
 from app.services.integration.slack import SlackIntegrationService
 from app.services.team.permissions import has_team_permission
@@ -500,25 +507,31 @@ async def sync_integration_resources(
             try:
                 # Attempt to sync with the database token
                 token = await SlackIntegrationService.get_token(db, integration_id)
-                
+
                 if not token:
                     # Check if we can get the token from credentials associated with this integration
-                    logger.info(f"No token found in database for integration {integration_id}, checking credentials")
-                    
+                    logger.info(
+                        f"No token found in database for integration {integration_id}, checking credentials"
+                    )
+
                     # Get the credential if it exists
                     stmt = select(IntegrationCredential).where(
                         IntegrationCredential.integration_id == integration_id,
-                        IntegrationCredential.credential_type == "oauth_token"
+                        IntegrationCredential.credential_type == "oauth_token",
                     )
                     credential_result = await db.execute(stmt)
                     credential = credential_result.scalar_one_or_none()
-                    
+
                     if credential and credential.encrypted_value:
                         token = credential.encrypted_value
-                        logger.info(f"Found token in credentials for integration {integration_id}")
+                        logger.info(
+                            f"Found token in credentials for integration {integration_id}"
+                        )
                     else:
-                        raise ValueError("No access token found for this integration. Please reconnect your Slack workspace.")
-                
+                        raise ValueError(
+                            "No access token found for this integration. Please reconnect your Slack workspace."
+                        )
+
                 channels = await SlackIntegrationService.sync_channels(
                     db=db,
                     integration_id=integration_id,
@@ -533,7 +546,9 @@ async def sync_integration_resources(
                 await db.commit()
             except ValueError as e:
                 # For all ValueError types, re-raise
-                logger.error(f"Error syncing resources for integration {integration_id}: {str(e)}")
+                logger.error(
+                    f"Error syncing resources for integration {integration_id}: {str(e)}"
+                )
                 raise
 
             return {

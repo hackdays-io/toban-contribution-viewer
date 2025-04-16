@@ -102,6 +102,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           currentTeamRole: data.current_team_role as TeamRole,
           teams: data.teams || [],
         }
+        
+        // Store current team ID in localStorage for persistence
+        if (data.current_team_id) {
+          localStorage.setItem('currentTeamId', data.current_team_id)
+        }
 
         // Update the ref first
         prevTeamContextRef.current = newTeamContext
@@ -122,6 +127,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const switchTeam = async (teamId: string) => {
     try {
       setLoading(true)
+      
+      // Store team ID in localStorage for persistence across sessions
+      localStorage.setItem('currentTeamId', teamId)
 
       const response = await fetch(`${env.apiUrl}/teams/auth/switch-team`, {
         method: 'POST',
@@ -246,6 +254,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const signOut = async () => {
     try {
       setLoading(true)
+      
+      // Clear team-related data from localStorage
+      localStorage.removeItem('currentTeamId')
+      localStorage.removeItem('slack_client_id')
+      localStorage.removeItem('slack_client_secret')
+      localStorage.removeItem('slack_team_id')
+      localStorage.removeItem('slack_redirect_url')
+      
       const { error } = await supabase.auth.signOut()
       if (error) {
         throw error

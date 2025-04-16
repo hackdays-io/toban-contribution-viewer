@@ -136,6 +136,9 @@ const IntegrationDetail: React.FC = () => {
           duration: 3000,
           isClosable: true,
         })
+        
+        // Refresh resources after successful sync
+        await fetchResources(integrationId)
       } else {
         toast({
           title: 'Failed to sync resources',
@@ -145,13 +148,27 @@ const IntegrationDetail: React.FC = () => {
         })
       }
     } catch (error) {
-      toast({
-        title: 'Error syncing resources',
-        description: error instanceof Error ? error.message : 'Unknown error',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      })
+      console.error('Error syncing resources:', error)
+      
+      // Check if this is due to missing token
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      if (errorMessage.includes('No access token') || errorMessage.includes('token not found')) {
+        toast({
+          title: 'Authentication Error',
+          description: 'No valid access token found for this integration. Please reconnect your Slack workspace.',
+          status: 'error',
+          duration: 5000,
+          isClosable: true,
+        })
+      } else {
+        toast({
+          title: 'Error syncing resources',
+          description: errorMessage,
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        })
+      }
     } finally {
       setIsSyncing(false)
     }

@@ -181,6 +181,22 @@ class IntegrationService {
 
   constructor() {
     this.apiUrl = `${env.apiUrl}/integrations`
+
+    // Log the API URL for debugging purposes
+    if (env.isDev) {
+      console.log('IntegrationService initialized with API URL:', this.apiUrl)
+
+      // Check if API URL is relative or absolute
+      if (!env.apiUrl.startsWith('http') && !env.apiUrl.startsWith('https')) {
+        console.log(
+          'Using relative API URL. For local development, make sure your backend is running correctly.'
+        )
+        console.log(
+          'Full API URL resolved to:',
+          window.location.origin + env.apiUrl + '/integrations'
+        )
+      }
+    }
   }
 
   /**
@@ -202,14 +218,42 @@ class IntegrationService {
   /**
    * Helper method to handle API errors
    */
-  private handleError(error: unknown, defaultMessage: string): ApiError {
+  private async handleError(
+    error: unknown,
+    defaultMessage: string
+  ): Promise<ApiError> {
     console.error('API Error:', error)
+
+    // Handle network errors like "Failed to fetch" or "Connection refused"
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      console.error('Network error detected:', error.message)
+      return {
+        status: 503, // Service Unavailable
+        message: `Backend server connection failed: ${error.message}. Please make sure the API server is running.`,
+        details: { originalError: error.message },
+      }
+    }
 
     // Handle Response objects
     if (error instanceof Response) {
-      return {
-        status: error.status,
-        message: error.statusText || defaultMessage,
+      try {
+        // Try to get the error details from the response json
+        const errorData = await error.json()
+        return {
+          status: error.status,
+          message:
+            errorData.detail ||
+            errorData.message ||
+            error.statusText ||
+            defaultMessage,
+          details: errorData,
+        }
+      } catch {
+        // If we can't parse the JSON, use the response status text
+        return {
+          status: error.status,
+          message: error.statusText || defaultMessage,
+        }
       }
     }
 
@@ -219,13 +263,19 @@ class IntegrationService {
       typeof error === 'object' &&
       'ok' in error &&
       !error.ok &&
-      'status' in error &&
-      'statusText' in error
+      'status' in error
     ) {
-      const responseError = error as { status: number; statusText: string }
+      const responseError = error as {
+        status?: number
+        statusText?: string
+        message?: string
+        details?: unknown
+      }
       return {
-        status: responseError.status,
-        message: responseError.statusText || defaultMessage,
+        status: responseError.status || 500,
+        message:
+          responseError.statusText || responseError.message || defaultMessage,
+        details: responseError.details || responseError,
       }
     }
 
@@ -233,6 +283,7 @@ class IntegrationService {
     return {
       status: 500,
       message: error instanceof Error ? error.message : defaultMessage,
+      details: error,
     }
   }
 
@@ -264,7 +315,7 @@ class IntegrationService {
       const data = await response.json()
       return data
     } catch (error) {
-      return this.handleError(error, 'Failed to fetch integrations')
+      return await this.handleError(error, 'Failed to fetch integrations')
     }
   }
 
@@ -286,7 +337,7 @@ class IntegrationService {
 
       return await response.json()
     } catch (error) {
-      return this.handleError(error, 'Failed to fetch integration')
+      return await this.handleError(error, 'Failed to fetch integration')
     }
   }
 
@@ -311,7 +362,7 @@ class IntegrationService {
 
       return await response.json()
     } catch (error) {
-      return this.handleError(error, 'Failed to create integration')
+      return await this.handleError(error, 'Failed to create integration')
     }
   }
 
@@ -323,6 +374,20 @@ class IntegrationService {
   ): Promise<Integration | ApiError> {
     try {
       const headers = await this.getAuthHeaders()
+      console.log('API URL for Slack integration:', `${this.apiUrl}/slack`)
+
+      // Log request (without sensitive data)
+      console.log('Creating Slack integration with request:', {
+        method: 'POST',
+        url: `${this.apiUrl}/slack`,
+        contentType: headers['Content-Type'],
+        hasAuth: !!headers['Authorization'],
+        teamId: data.team_id,
+        serviceType: data.service_type,
+        redirect_uri: data.redirect_uri,
+        // Omitting sensitive fields
+      })
+
       const response = await fetch(`${this.apiUrl}/slack`, {
         method: 'POST',
         headers,
@@ -330,13 +395,39 @@ class IntegrationService {
         body: JSON.stringify(data),
       })
 
+      console.log(
+        'Slack integration response status:',
+        response.status,
+        response.statusText
+      )
+
       if (!response.ok) {
+        console.error(
+          'Error response from Slack integration API:',
+          response.status,
+          response.statusText
+        )
+
+        // Try to get more detailed error information
+        try {
+          const errorText = await response.text()
+          console.error('Error details:', errorText)
+        } catch (textError) {
+          console.error('Could not read error details:', textError)
+        }
+
         throw response
       }
 
-      return await response.json()
+      const result = await response.json()
+      console.log(
+        'Slack integration success, received data type:',
+        typeof result
+      )
+      return result
     } catch (error) {
-      return this.handleError(error, 'Failed to create Slack integration')
+      console.error('Error in createSlackIntegration:', error)
+      return await this.handleError(error, 'Failed to create Slack integration')
     }
   }
 
@@ -362,7 +453,7 @@ class IntegrationService {
 
       return await response.json()
     } catch (error) {
-      return this.handleError(error, 'Failed to update integration')
+      return await this.handleError(error, 'Failed to update integration')
     }
   }
 
@@ -396,7 +487,7 @@ class IntegrationService {
 
       return await response.json()
     } catch (error) {
-      return this.handleError(error, 'Failed to fetch resources')
+      return await this.handleError(error, 'Failed to fetch resources')
     }
   }
 
@@ -450,7 +541,7 @@ class IntegrationService {
       return result
     } catch (error) {
       console.error('Error in syncResources:', error)
-      return this.handleError(error, 'Failed to sync resources')
+      return await this.handleError(error, 'Failed to sync resources')
     }
   }
 
@@ -476,7 +567,7 @@ class IntegrationService {
 
       return await response.json()
     } catch (error) {
-      return this.handleError(error, 'Failed to share integration')
+      return await this.handleError(error, 'Failed to share integration')
     }
   }
 
@@ -504,7 +595,7 @@ class IntegrationService {
 
       return await response.json()
     } catch (error) {
-      return this.handleError(error, 'Failed to revoke share')
+      return await this.handleError(error, 'Failed to revoke share')
     }
   }
 
@@ -534,7 +625,7 @@ class IntegrationService {
 
       return await response.json()
     } catch (error) {
-      return this.handleError(error, 'Failed to grant resource access')
+      return await this.handleError(error, 'Failed to grant resource access')
     }
   }
 
