@@ -287,10 +287,9 @@ When creating your Slack app, the following scopes are required for comprehensiv
 2. Configure OAuth scopes listed above
 3. Set redirect URLs for OAuth flow
 4. Install app to your workspace
-5. Add Slack credentials to environment variables:
-   - `SLACK_CLIENT_ID`
-   - `SLACK_CLIENT_SECRET`
-   - `SLACK_SIGNING_SECRET`
+5. After creating your Slack app, you'll need the client ID and client secret:
+   - These will be entered directly in the application UI when connecting to Slack
+   - No environment variables are needed for Slack credentials
 
 ### Using ngrok for Slack OAuth
 
@@ -449,7 +448,7 @@ Required Docker environment variables:
 - `SUPABASE_URL`, `SUPABASE_KEY`, `SUPABASE_JWT_SECRET`, `SUPABASE_ANON_KEY`: Supabase authentication settings
 - `OPENAI_API_KEY`: For AI-powered analysis
 - Integration variables (as needed):
-  - `SLACK_CLIENT_ID`, `SLACK_CLIENT_SECRET`, `SLACK_SIGNING_SECRET`: For Slack integration
+  - Note: Slack credentials are now entered directly in the UI and not required as environment variables
   - `NGROK_URL`: Your ngrok HTTPS URL for development with Slack OAuth
 
 ### Backend Environment Variables
@@ -467,7 +466,7 @@ Required backend environment variables:
 - `SUPABASE_URL`, `SUPABASE_KEY`, `SUPABASE_JWT_SECRET`: Supabase authentication settings
 - `OPENROUTER_API_KEY`: API key for LLM access via OpenRouter
 - `OPENROUTER_DEFAULT_MODEL`: Default LLM model to use (e.g., `anthropic/claude-3-opus:20240229`)
-- `SLACK_CLIENT_ID`, `SLACK_CLIENT_SECRET`, `SLACK_SIGNING_SECRET`: For Slack integration
+- Note: Slack credentials are now entered directly in the UI and not required as environment variables
 
 ### Frontend Environment Variables
 

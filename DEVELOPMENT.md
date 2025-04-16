@@ -62,7 +62,6 @@ This will start both the frontend and backend containers, along with a PostgreSQ
 
 **Important Note about Environment Variables:** 
 - The Docker containers read environment variables from the `.env.docker` file in the project root.
-- If you're encountering issues with services not finding environment variables (particularly SLACK_CLIENT_ID, etc.), ensure these are correctly set in the `.env.docker` file.
 - You can check which environment variables are loaded by running:
   ```bash
   docker compose exec backend printenv | grep VARIABLE_NAME

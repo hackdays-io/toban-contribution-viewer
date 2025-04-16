@@ -57,7 +57,7 @@ cd backend
 ./scripts/run_channel_integration_tests.sh YOUR_WORKSPACE_ID
 ```
 
-Make sure your `.env` file contains a valid Slack token (SLACK_CLIENT_TOKEN).
+Make sure your `.env` file contains a valid Slack token to test with.
 
 ### Method 2: Manual Setup
 

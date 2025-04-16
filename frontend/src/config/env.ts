@@ -137,7 +137,7 @@ export const env = {
     enableGithub: getBooleanEnvVar('VITE_ENABLE_GITHUB_INTEGRATION'),
   },
   slack: {
-    clientId: import.meta.env.VITE_SLACK_CLIENT_ID || '',
+    // Client ID is now provided by the user in the UI
   },
   isDev: getBooleanEnvVar('VITE_DEV_MODE'),
 }
