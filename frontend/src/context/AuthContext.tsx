@@ -1,4 +1,10 @@
-import React, { createContext, useEffect, useState, useCallback } from 'react'
+import React, {
+  createContext,
+  useEffect,
+  useState,
+  useCallback,
+  useRef,
+} from 'react'
 import { Session, User } from '@supabase/supabase-js'
 import { supabase, getSession } from '../lib/supabase'
 import env from '../config/env'
