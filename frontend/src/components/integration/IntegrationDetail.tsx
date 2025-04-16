@@ -87,14 +87,6 @@ const IntegrationDetail: React.FC = () => {
   const [, setActiveTab] = useState<string>('overview')
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [isSyncing, setIsSyncing] = useState(false)
-  const [localSlackAuth, setLocalSlackAuth] = useState<boolean>(false)
-
-  // Check for local Slack auth info
-  useEffect(() => {
-    const hasLocalSlackAuth = Boolean(localStorage.getItem('slack_auth_code'))
-    const hasSlackClientId = Boolean(localStorage.getItem('slack_client_id'))
-    setLocalSlackAuth(hasLocalSlackAuth && hasSlackClientId)
-  }, [])
 
   // Initialize the integration data
   useEffect(() => {
@@ -133,31 +125,10 @@ const IntegrationDetail: React.FC = () => {
   const handleSyncResources = async () => {
     if (!integrationId) return
 
-    // If we're using local Slack auth, simulate a sync instead of calling backend
-    if (localSlackAuth && currentIntegration?.service_type === 'slack') {
-      setIsSyncing(true)
-
-      try {
-        // Simulate resource sync with a delay
-        await new Promise((resolve) => setTimeout(resolve, 1500))
-
-        toast({
-          title: 'Resources synced locally',
-          description: 'Using local credentials from browser storage',
-          status: 'info',
-          duration: 3000,
-          isClosable: true,
-        })
-      } finally {
-        setIsSyncing(false)
-      }
-      return
-    }
-
-    // Otherwise call the backend
     setIsSyncing(true)
     try {
       const success = await syncResources(integrationId)
+
       if (success) {
         toast({
           title: 'Resources synced successfully',
@@ -173,6 +144,14 @@ const IntegrationDetail: React.FC = () => {
           isClosable: true,
         })
       }
+    } catch (error) {
+      toast({
+        title: 'Error syncing resources',
+        description: error instanceof Error ? error.message : 'Unknown error',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      })
     } finally {
       setIsSyncing(false)
     }
@@ -219,52 +198,6 @@ const IntegrationDetail: React.FC = () => {
             ? `Error: ${error.message}`
             : 'Integration not found or error loading data'}
         </Heading>
-
-        {localSlackAuth && (
-          <Card
-            borderWidth="1px"
-            borderRadius="lg"
-            overflow="hidden"
-            bg={cardBg}
-            borderColor={cardBorder}
-            p={4}
-            mt={6}
-            mb={6}
-          >
-            <Flex alignItems="center" mb={4}>
-              <Box fontSize="2xl" mr={3}>
-                💬
-              </Box>
-              <VStack align="start" spacing={0} flex={1}>
-                <Heading size="md" noOfLines={1}>
-                  Slack Workspace
-                </Heading>
-                <Text color="gray.500" fontSize="sm">
-                  slack
-                </Text>
-              </VStack>
-              <Badge
-                colorScheme="green"
-                variant="subtle"
-                px={2}
-                py={1}
-                borderRadius="full"
-              >
-                locally authenticated
-              </Badge>
-            </Flex>
-
-            <Text fontSize="sm" color="gray.600" mb={4}>
-              Client ID:{' '}
-              {localStorage.getItem('slack_client_id')?.substring(0, 8)}...
-            </Text>
-
-            <Text fontSize="sm" color="green.600" mb={4}>
-              Authorization code is stored locally. Integration data is not
-              available from the backend.
-            </Text>
-          </Card>
-        )}
 
         <Button
           mt={4}
@@ -322,17 +255,6 @@ const IntegrationDetail: React.FC = () => {
             >
               {currentIntegration.status}
             </Badge>
-            {localSlackAuth && (
-              <Badge
-                colorScheme="blue"
-                variant="subtle"
-                px={2}
-                py={1}
-                borderRadius="full"
-              >
-                Local Auth
-              </Badge>
-            )}
           </HStack>
         </VStack>
 

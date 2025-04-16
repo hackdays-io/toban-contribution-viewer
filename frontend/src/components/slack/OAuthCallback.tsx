@@ -37,18 +37,11 @@ const OAuthCallback: React.FC = () => {
         return
       }
 
-      // In development mode with no API, bypass the OAuth flow
-      if (isDevEnvironment && (!env.apiUrl || env.apiUrl === 'your_api_url')) {
-        console.info(
-          'Running in development mode with mock Slack OAuth. Creating mock workspace connection.'
-        )
-        hasProcessedCode.current = true
-        setStatus('success')
-
-        // Navigate to workspace list after a short delay
-        setTimeout(() => {
-          navigate('/dashboard/slack/workspaces')
-        }, 2000)
+      // No mock data for development
+      if (!env.apiUrl || env.apiUrl === 'your_api_url') {
+        console.error('API URL is not configured. Please set proper API URL in environment variables.')
+        setStatus('error')
+        setErrorMessage('API URL not configured. Please check application settings.')
         return
       }
 
@@ -99,25 +92,15 @@ const OAuthCallback: React.FC = () => {
         } catch (err) {
           console.error('Error connecting to Slack:', err)
 
-          // In dev environment with CORS or connection errors, show mock success
+          // No mock success for network or CORS errors
           if (
-            isDevEnvironment &&
-            (err instanceof TypeError ||
-              (err instanceof Error &&
-                (err.message.includes('NetworkError') ||
-                  err.message.includes('Failed to fetch') ||
-                  err.message.includes('CORS'))))
+            err instanceof TypeError ||
+            (err instanceof Error &&
+              (err.message.includes('NetworkError') ||
+                err.message.includes('Failed to fetch') ||
+                err.message.includes('CORS')))
           ) {
-            console.info(
-              'CORS or network error in development mode. Using mock success flow.'
-            )
-            setStatus('success')
-
-            // Navigate to workspace list after a short delay
-            setTimeout(() => {
-              navigate('/dashboard/slack/workspaces')
-            }, 2000)
-            return
+            console.error('Network or CORS error when connecting to backend:', err)
           }
 
           setStatus('error')
@@ -137,21 +120,8 @@ const OAuthCallback: React.FC = () => {
           setErrorMessage(displayErrorMessage)
         }
       } else {
-        // In development mode with no code, use mock success
-        if (isDevEnvironment) {
-          console.info(
-            'No authorization code in development mode. Using mock success flow.'
-          )
-          setStatus('success')
-
-          // Navigate to workspace list after a short delay
-          setTimeout(() => {
-            navigate('/dashboard/slack/workspaces')
-          }, 2000)
-          return
-        }
-
-        // Neither error nor code in the parameters suggests something went wrong
+        // No code provided - error condition
+        console.error('No authorization code provided in URL parameters')
         setStatus('error')
         setErrorMessage('No authorization code received. Please try again.')
       }
@@ -175,12 +145,6 @@ const OAuthCallback: React.FC = () => {
             <Text color="gray.600">
               Please wait while we complete the connection process.
             </Text>
-            {isDevEnvironment && (
-              <Alert status="info" borderRadius="md">
-                <AlertIcon />
-                Running in development mode. The OAuth flow will be simulated.
-              </Alert>
-            )}
           </>
         )}
 
@@ -189,7 +153,6 @@ const OAuthCallback: React.FC = () => {
             <Alert status="success" borderRadius="md">
               <AlertIcon />
               Workspace successfully connected!
-              {isDevEnvironment && ' (Development Mode)'}
             </Alert>
             <Text>Redirecting to your workspaces...</Text>
           </>
@@ -205,13 +168,6 @@ const OAuthCallback: React.FC = () => {
             <Text mt={4}>
               Please try again or contact support if the problem persists.
             </Text>
-            {isDevEnvironment && (
-              <Alert status="info" mt={4} borderRadius="md">
-                <AlertIcon />
-                In development mode, you can bypass this error by using the mock
-                environment. Check your browser console for details.
-              </Alert>
-            )}
           </>
         )}
       </VStack>

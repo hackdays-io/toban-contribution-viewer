@@ -408,15 +408,25 @@ class IntegrationService {
     resourceTypes?: string[]
   ): Promise<Record<string, unknown> | ApiError> {
     try {
+      console.log(
+        'Starting syncResources in integrationService with ID:',
+        integrationId
+      )
+      console.log('Resource types:', resourceTypes)
+
       const headers = await this.getAuthHeaders()
       let url = `${this.apiUrl}/${integrationId}/sync`
 
       if (resourceTypes && resourceTypes.length > 0) {
+        // Using resource_type (singular) to match the API's expected parameter name
         const resourceTypeParams = resourceTypes
-          .map((type) => `resource_types=${type}`)
+          .map((type) => `resource_type=${type}`)
           .join('&')
         url += `?${resourceTypeParams}`
       }
+
+      console.log('Sync URL:', url)
+      console.log('Headers:', headers)
 
       const response = await fetch(url, {
         method: 'POST',
@@ -424,12 +434,22 @@ class IntegrationService {
         credentials: 'include',
       })
 
+      console.log('Sync response status:', response.status)
+
       if (!response.ok) {
+        console.error(
+          'Sync response not OK:',
+          response.status,
+          response.statusText
+        )
         throw response
       }
 
-      return await response.json()
+      const result = await response.json()
+      console.log('Sync result:', result)
+      return result
     } catch (error) {
+      console.error('Error in syncResources:', error)
       return this.handleError(error, 'Failed to sync resources')
     }
   }
