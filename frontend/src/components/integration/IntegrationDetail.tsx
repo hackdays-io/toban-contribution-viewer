@@ -131,10 +131,19 @@ const IntegrationDetail: React.FC = () => {
 
   // Handler for syncing resources
   const handleSyncResources = async () => {
-    if (!integrationId) return
+    console.log('Sync button clicked')
+    console.log('Integration ID:', integrationId)
+    console.log('Local Slack Auth:', localSlackAuth)
+    console.log('Integration service type:', currentIntegration?.service_type)
+
+    if (!integrationId) {
+      console.log('No integration ID, returning')
+      return
+    }
 
     // If we're using local Slack auth, simulate a sync instead of calling backend
     if (localSlackAuth && currentIntegration?.service_type === 'slack') {
+      console.log('Using local Slack auth, simulating sync')
       setIsSyncing(true)
 
       try {
@@ -148,6 +157,7 @@ const IntegrationDetail: React.FC = () => {
           duration: 3000,
           isClosable: true,
         })
+        console.log('Local sync complete')
       } finally {
         setIsSyncing(false)
       }
@@ -155,9 +165,13 @@ const IntegrationDetail: React.FC = () => {
     }
 
     // Otherwise call the backend
+    console.log('Calling backend sync resources')
     setIsSyncing(true)
     try {
+      console.log('Calling syncResources with ID:', integrationId)
       const success = await syncResources(integrationId)
+      console.log('Sync result:', success)
+
       if (success) {
         toast({
           title: 'Resources synced successfully',
@@ -173,6 +187,15 @@ const IntegrationDetail: React.FC = () => {
           isClosable: true,
         })
       }
+    } catch (error) {
+      console.error('Error syncing resources:', error)
+      toast({
+        title: 'Error syncing resources',
+        description: error instanceof Error ? error.message : 'Unknown error',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      })
     } finally {
       setIsSyncing(false)
     }
