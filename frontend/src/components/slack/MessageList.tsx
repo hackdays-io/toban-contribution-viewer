@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import env from '../../config/env';
+import env from '../../config/env'
 import {
   Box,
   Button,
@@ -145,10 +145,10 @@ const MessageList: React.FC<MessageListProps> = ({
         mode: 'cors',
         credentials: 'include',
         headers: {
-          'Accept': 'application/json',
+          Accept: 'application/json',
           'Content-Type': 'application/json',
-          'Origin': window.location.origin
-        }
+          Origin: window.location.origin,
+        },
       })
 
       if (!response.ok) {
@@ -237,8 +237,8 @@ const MessageList: React.FC<MessageListProps> = ({
 
       toast({
         title: 'Sync Started',
-        description: result.sync_threads 
-          ? 'Messages and thread replies are being synchronized in the background.' 
+        description: result.sync_threads
+          ? 'Messages and thread replies are being synchronized in the background.'
           : 'Messages are being synchronized in the background.',
         status: 'info',
         duration: 5000,
@@ -279,7 +279,6 @@ const MessageList: React.FC<MessageListProps> = ({
     const date = new Date(datetime)
     return date.toLocaleString()
   }
-
 
   /**
    * Load more messages when available.
@@ -332,7 +331,7 @@ const MessageList: React.FC<MessageListProps> = ({
               isLoading={isSyncing}
               onClick={() => {
                 // Use the unified sync endpoint that handles both messages and threads
-                syncMessages();
+                syncMessages()
               }}
             >
               Sync Messages & Threads
@@ -340,190 +339,208 @@ const MessageList: React.FC<MessageListProps> = ({
           </HStack>
         </HStack>
 
-      <Divider mb={6} />
+        <Divider mb={6} />
 
-      {/* Filters */}
-      <VStack spacing={4} align="stretch" mb={6}>
-        <HStack spacing={4}>
-          <FormControl>
-            <FormLabel>Start Date</FormLabel>
+        {/* Filters */}
+        <VStack spacing={4} align="stretch" mb={6}>
+          <HStack spacing={4}>
+            <FormControl>
+              <FormLabel>Start Date</FormLabel>
+              <InputGroup>
+                <InputLeftElement pointerEvents="none">
+                  <Icon as={FiCalendar} color="gray.500" />
+                </InputLeftElement>
+                <Input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  placeholder="Start Date"
+                />
+              </InputGroup>
+            </FormControl>
+
+            <FormControl>
+              <FormLabel>End Date</FormLabel>
+              <InputGroup>
+                <InputLeftElement pointerEvents="none">
+                  <Icon as={FiCalendar} color="gray.500" />
+                </InputLeftElement>
+                <Input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  placeholder="End Date"
+                />
+              </InputGroup>
+            </FormControl>
+          </HStack>
+
+          <HStack spacing={4}>
             <InputGroup>
               <InputLeftElement pointerEvents="none">
-                <Icon as={FiCalendar} color="gray.500" />
+                <Icon as={FiSearch} color="gray.500" />
               </InputLeftElement>
               <Input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                placeholder="Start Date"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search messages..."
               />
             </InputGroup>
-          </FormControl>
 
-          <FormControl>
-            <FormLabel>End Date</FormLabel>
-            <InputGroup>
-              <InputLeftElement pointerEvents="none">
-                <Icon as={FiCalendar} color="gray.500" />
-              </InputLeftElement>
-              <Input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                placeholder="End Date"
-              />
-            </InputGroup>
-          </FormControl>
-        </HStack>
+            <Button colorScheme="purple" onClick={applyFilters}>
+              Apply Filters
+            </Button>
+          </HStack>
+        </VStack>
 
-        <HStack spacing={4}>
-          <InputGroup>
-            <InputLeftElement pointerEvents="none">
-              <Icon as={FiSearch} color="gray.500" />
-            </InputLeftElement>
-            <Input
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search messages..."
-            />
-          </InputGroup>
-
-          <Button colorScheme="purple" onClick={applyFilters}>
-            Apply Filters
-          </Button>
-        </HStack>
-      </VStack>
-
-      {/* Messages List */}
-      {isLoading ? (
-        <Flex justify="center" align="center" minHeight="300px">
-          <Spinner size="xl" color="purple.500" thickness="4px" />
-        </Flex>
-      ) : filteredMessages.length === 0 ? (
-        <Box
-          p={8}
-          borderWidth="1px"
-          borderRadius="lg"
-          textAlign="center"
-          bg="gray.50"
-        >
-          <Text fontSize="lg" mb={4}>
-            No messages found
-          </Text>
-          <Button
-            colorScheme="purple"
-            leftIcon={<Icon as={FiRefreshCw} />}
-            onClick={syncMessages}
-            isLoading={isSyncing}
+        {/* Messages List */}
+        {isLoading ? (
+          <Flex justify="center" align="center" minHeight="300px">
+            <Spinner size="xl" color="purple.500" thickness="4px" />
+          </Flex>
+        ) : filteredMessages.length === 0 ? (
+          <Box
+            p={8}
+            borderWidth="1px"
+            borderRadius="lg"
+            textAlign="center"
+            bg="gray.50"
           >
-            Sync Messages
-          </Button>
-        </Box>
-      ) : (
-        <>
-          <Card>
-            <CardHeader>
-              <Heading size="md">Messages</Heading>
-            </CardHeader>
-            <CardBody>
-              <Stack spacing={4}>
-                {filteredMessages.map((message) => {
-                  // We no longer need user info since we're using SlackUserDisplay
-                  return (
-                    <Box key={message.id} p={3} borderWidth="1px" borderRadius="md">
-                      {/* Header row with user and timestamp */}
-                      <HStack justifyContent="space-between" width="100%" mb={2}>
-                        <Box>
-                          <SlackUserDisplay 
-                            userId={message.user_id || ''}
+            <Text fontSize="lg" mb={4}>
+              No messages found
+            </Text>
+            <Button
+              colorScheme="purple"
+              leftIcon={<Icon as={FiRefreshCw} />}
+              onClick={syncMessages}
+              isLoading={isSyncing}
+            >
+              Sync Messages
+            </Button>
+          </Box>
+        ) : (
+          <>
+            <Card>
+              <CardHeader>
+                <Heading size="md">Messages</Heading>
+              </CardHeader>
+              <CardBody>
+                <Stack spacing={4}>
+                  {filteredMessages.map((message) => {
+                    // We no longer need user info since we're using SlackUserDisplay
+                    return (
+                      <Box
+                        key={message.id}
+                        p={3}
+                        borderWidth="1px"
+                        borderRadius="md"
+                      >
+                        {/* Header row with user and timestamp */}
+                        <HStack
+                          justifyContent="space-between"
+                          width="100%"
+                          mb={2}
+                        >
+                          <Box>
+                            <SlackUserDisplay
+                              userId={message.user_id || ''}
+                              workspaceId={workspaceId}
+                              showAvatar={true}
+                              displayFormat="real_name"
+                              fetchFromSlack={true}
+                            />
+                          </Box>
+                          <HStack>
+                            <Text fontSize="sm" color="gray.500">
+                              {formatDateTime(message.message_datetime)}
+                            </Text>
+                            {message.is_edited && (
+                              <Badge size="sm" colorScheme="gray">
+                                Edited
+                              </Badge>
+                            )}
+                          </HStack>
+                        </HStack>
+
+                        {/* Message content */}
+                        <Box pl={10} pr={2}>
+                          <MessageText
+                            text={message.text}
                             workspaceId={workspaceId}
-                            showAvatar={true}
-                            displayFormat="real_name"
-                            fetchFromSlack={true}
+                            resolveMentions={true}
+                            fallbackToSimpleFormat={true}
                           />
                         </Box>
-                        <HStack>
-                          <Text fontSize="sm" color="gray.500">
-                            {formatDateTime(message.message_datetime)}
-                          </Text>
-                          {message.is_edited && (
-                            <Badge size="sm" colorScheme="gray">
-                              Edited
-                            </Badge>
-                          )}
-                        </HStack>
-                      </HStack>
-                      
-                      {/* Message content */}
-                      <Box pl={10} pr={2}>
-                        <MessageText 
-                          text={message.text} 
-                          workspaceId={workspaceId} 
-                          resolveMentions={true}
-                          fallbackToSimpleFormat={true}
-                        />
-                      </Box>
 
-                      {/* Footer row with thread and reaction info */}
-                      <Box pl={10} mt={2}>
-                        <HStack spacing={4}>
-                          {/* Thread info */}
-                          {message.is_thread_parent && message.reply_count > 0 && (
-                            <HStack spacing={2}>
-                              <Text fontSize="sm" color="purple.500">
-                                <Icon as={FiMessageSquare} mr={1} />
-                                {message.reply_count}{' '}
-                                {message.reply_count === 1 ? 'reply' : 'replies'}
+                        {/* Footer row with thread and reaction info */}
+                        <Box pl={10} mt={2}>
+                          <HStack spacing={4}>
+                            {/* Thread info */}
+                            {message.is_thread_parent &&
+                              message.reply_count > 0 && (
+                                <HStack spacing={2}>
+                                  <Text fontSize="sm" color="purple.500">
+                                    <Icon as={FiMessageSquare} mr={1} />
+                                    {message.reply_count}{' '}
+                                    {message.reply_count === 1
+                                      ? 'reply'
+                                      : 'replies'}
+                                  </Text>
+                                  <Tooltip label="View thread">
+                                    <IconButton
+                                      aria-label="View thread"
+                                      icon={<FiMessageCircle />}
+                                      size="xs"
+                                      colorScheme="purple"
+                                      variant="ghost"
+                                      onClick={() => openThreadView(message)}
+                                    />
+                                  </Tooltip>
+                                </HStack>
+                              )}
+
+                            {/* Reactions */}
+                            {message.reaction_count > 0 && (
+                              <Text fontSize="sm" color="gray.500">
+                                {message.reaction_count}{' '}
+                                {message.reaction_count === 1
+                                  ? 'reaction'
+                                  : 'reactions'}
                               </Text>
-                              <Tooltip label="View thread">
-                                <IconButton
-                                  aria-label="View thread"
-                                  icon={<FiMessageCircle />}
-                                  size="xs"
-                                  colorScheme="purple"
-                                  variant="ghost"
-                                  onClick={() => openThreadView(message)}
-                                />
-                              </Tooltip>
-                            </HStack>
-                          )}
-
-                          {/* Reactions */}
-                          {message.reaction_count > 0 && (
-                            <Text fontSize="sm" color="gray.500">
-                              {message.reaction_count}{' '}
-                              {message.reaction_count === 1 ? 'reaction' : 'reactions'}
-                            </Text>
-                          )}
-                        </HStack>
+                            )}
+                          </HStack>
+                        </Box>
                       </Box>
-                    </Box>
-                  )
-                })}
-              </Stack>
-            </CardBody>
-          </Card>
+                    )
+                  })}
+                </Stack>
+              </CardBody>
+            </Card>
 
-          {/* Pagination */}
-          {pagination?.has_more && (
-            <Flex justify="center" mt={6}>
-              <Button onClick={loadMore} colorScheme="purple" variant="outline">
-                Load More
-              </Button>
-            </Flex>
-          )}
-        </>
-      )}
-      {/* Thread View Modal */}
-      <ThreadView
-        isOpen={isThreadViewOpen}
-        onClose={() => setIsThreadViewOpen(false)}
-        workspaceId={workspaceId}
-        channelId={channelId}
-        threadTs={selectedThreadTs}
-        parentMessage={selectedThreadParent}
-      />
-    </Box>
+            {/* Pagination */}
+            {pagination?.has_more && (
+              <Flex justify="center" mt={6}>
+                <Button
+                  onClick={loadMore}
+                  colorScheme="purple"
+                  variant="outline"
+                >
+                  Load More
+                </Button>
+              </Flex>
+            )}
+          </>
+        )}
+        {/* Thread View Modal */}
+        <ThreadView
+          isOpen={isThreadViewOpen}
+          onClose={() => setIsThreadViewOpen(false)}
+          workspaceId={workspaceId}
+          channelId={channelId}
+          threadTs={selectedThreadTs}
+          parentMessage={selectedThreadParent}
+        />
+      </Box>
     </SlackUserCacheProvider>
   )
 }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from 'react'
 import {
   Box,
   Button,
@@ -11,17 +11,17 @@ import {
   Text,
   useToast,
   VStack,
-} from '@chakra-ui/react';
-import { signIn, signInWithGithub, signInWithGoogle } from '../../lib/supabase';
+} from '@chakra-ui/react'
+import { signIn, signInWithGithub, signInWithGoogle } from '../../lib/supabase'
 
 const Login: React.FC = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const toast = useToast();
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const toast = useToast()
 
   const handleEmailLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
 
     if (!email || !password) {
       toast({
@@ -30,15 +30,15 @@ const Login: React.FC = () => {
         status: 'error',
         duration: 3000,
         isClosable: true,
-      });
-      return;
+      })
+      return
     }
 
     try {
-      setLoading(true);
-      const { error } = await signIn(email, password);
+      setLoading(true)
+      const { error } = await signIn(email, password)
 
-      if (error) throw error;
+      if (error) throw error
 
       toast({
         title: 'Success',
@@ -46,7 +46,7 @@ const Login: React.FC = () => {
         status: 'success',
         duration: 3000,
         isClosable: true,
-      });
+      })
     } catch (error) {
       // Normal error handling
       toast({
@@ -55,53 +55,69 @@ const Login: React.FC = () => {
         status: 'error',
         duration: 3000,
         isClosable: true,
-      });
+      })
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const handleGithubLogin = async () => {
     try {
-      setLoading(true);
-      const { error } = await signInWithGithub();
-      if (error) throw error;
+      setLoading(true)
+      const { error } = await signInWithGithub()
+      if (error) throw error
     } catch (error) {
       toast({
         title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to login with GitHub',
+        description:
+          error instanceof Error
+            ? error.message
+            : 'Failed to login with GitHub',
         status: 'error',
         duration: 3000,
         isClosable: true,
-      });
+      })
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const handleGoogleLogin = async () => {
     try {
-      setLoading(true);
-      const { error } = await signInWithGoogle();
-      if (error) throw error;
+      setLoading(true)
+      const { error } = await signInWithGoogle()
+      if (error) throw error
     } catch (error) {
       toast({
         title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to login with Google',
+        description:
+          error instanceof Error
+            ? error.message
+            : 'Failed to login with Google',
         status: 'error',
         duration: 3000,
         isClosable: true,
-      });
+      })
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
-    <Box p={8} maxWidth="500px" borderWidth={1} borderRadius={8} boxShadow="lg" mx="auto" mt={10}>
+    <Box
+      p={8}
+      maxWidth="500px"
+      borderWidth={1}
+      borderRadius={8}
+      boxShadow="lg"
+      mx="auto"
+      mt={10}
+    >
       <VStack spacing={4} align="flex-start">
-        <Heading as="h1" size="xl">Login</Heading>
-        
+        <Heading as="h1" size="xl">
+          Login
+        </Heading>
+
         {/* Development mode alert removed */}
 
         <form onSubmit={handleEmailLogin} style={{ width: '100%' }}>
@@ -140,14 +156,20 @@ const Login: React.FC = () => {
 
         <Divider my={6} />
 
-        <Text width="100%" textAlign="center" mb={2}>Or continue with</Text>
+        <Text width="100%" textAlign="center" mb={2}>
+          Or continue with
+        </Text>
 
         <Stack direction="row" spacing={4} width="100%">
           <Button
             width="full"
             onClick={handleGithubLogin}
             isLoading={loading}
-            leftIcon={<Box as="span" fontSize="1.2em">🐱</Box>}
+            leftIcon={
+              <Box as="span" fontSize="1.2em">
+                🐱
+              </Box>
+            }
           >
             GitHub
           </Button>
@@ -156,14 +178,18 @@ const Login: React.FC = () => {
             width="full"
             onClick={handleGoogleLogin}
             isLoading={loading}
-            leftIcon={<Box as="span" fontSize="1.2em">G</Box>}
+            leftIcon={
+              <Box as="span" fontSize="1.2em">
+                G
+              </Box>
+            }
           >
             Google
           </Button>
         </Stack>
       </VStack>
     </Box>
-  );
-};
+  )
+}
 
-export default Login;
+export default Login

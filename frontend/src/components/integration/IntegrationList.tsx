@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react'
 import {
   Box,
   Heading,
@@ -16,132 +16,129 @@ import {
   Divider,
   useToast,
   useColorModeValue,
-} from '@chakra-ui/react';
-import { Link } from 'react-router-dom';
-import { FiPlus, FiSettings, FiRefreshCw, FiExternalLink } from 'react-icons/fi';
-import { 
-  Integration, 
+} from '@chakra-ui/react'
+import { Link } from 'react-router-dom'
+import { FiPlus, FiSettings, FiRefreshCw, FiExternalLink } from 'react-icons/fi'
+import {
+  Integration,
   IntegrationType,
-  IntegrationStatus 
-} from '../../lib/integrationService';
-import useIntegration from '../../context/useIntegration';
-import useAuth from '../../context/useAuth';
+  IntegrationStatus,
+} from '../../lib/integrationService'
+import useIntegration from '../../context/useIntegration'
+import useAuth from '../../context/useAuth'
 
 // Helper function to get an icon for the integration type
 const getIntegrationTypeIcon = (type: IntegrationType) => {
   switch (type) {
     case IntegrationType.SLACK:
-      return '💬';
+      return '💬'
     case IntegrationType.GITHUB:
-      return '📦';
+      return '📦'
     case IntegrationType.NOTION:
-      return '📝';
+      return '📝'
     case IntegrationType.DISCORD:
-      return '🎮';
+      return '🎮'
     default:
-      return '🔌';
+      return '🔌'
   }
-};
+}
 
 // Helper function to get color for status badge
 const getStatusColor = (status: IntegrationStatus) => {
   switch (status) {
     case IntegrationStatus.ACTIVE:
-      return 'green';
+      return 'green'
     case IntegrationStatus.DISCONNECTED:
-      return 'yellow';
+      return 'yellow'
     case IntegrationStatus.EXPIRED:
-      return 'orange';
+      return 'orange'
     case IntegrationStatus.REVOKED:
-      return 'red';
+      return 'red'
     case IntegrationStatus.ERROR:
-      return 'red';
+      return 'red'
     default:
-      return 'gray';
+      return 'gray'
   }
-};
+}
 
 interface IntegrationListProps {
-  teamId?: string; // Optional, will use current team if not provided
+  teamId?: string // Optional, will use current team if not provided
 }
 
 /**
  * Component to display a list of integrations with filtering capabilities
  */
 const IntegrationList: React.FC<IntegrationListProps> = ({ teamId }) => {
-  const { teamContext } = useAuth();
-  const { 
-    integrations, 
-    loading, 
-    error, 
-    fetchIntegrations,
-    selectIntegration
-  } = useIntegration();
-  
-  const [typeFilter, setTypeFilter] = useState<string>('');
-  const [filteredIntegrations, setFilteredIntegrations] = useState<Integration[]>([]);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  
-  const toast = useToast();
-  const cardBg = useColorModeValue('white', 'gray.800');
-  const cardBorder = useColorModeValue('gray.200', 'gray.700');
-  
+  const { teamContext } = useAuth()
+  const { integrations, loading, error, fetchIntegrations, selectIntegration } =
+    useIntegration()
+
+  const [typeFilter, setTypeFilter] = useState<string>('')
+  const [filteredIntegrations, setFilteredIntegrations] = useState<
+    Integration[]
+  >([])
+  const [isRefreshing, setIsRefreshing] = useState(false)
+
+  const toast = useToast()
+  const cardBg = useColorModeValue('white', 'gray.800')
+  const cardBorder = useColorModeValue('gray.200', 'gray.700')
+
   // Use provided teamId or current team's ID
-  const effectiveTeamId = teamId || teamContext?.currentTeamId;
-  
+  const effectiveTeamId = teamId || teamContext?.currentTeamId
+
   // Load integrations on component mount
   useEffect(() => {
     if (effectiveTeamId) {
-      fetchIntegrations(effectiveTeamId);
+      fetchIntegrations(effectiveTeamId)
     }
-  }, [effectiveTeamId, fetchIntegrations]);
-  
+  }, [effectiveTeamId, fetchIntegrations])
+
   // Apply filtering when integrations or filter change
   useEffect(() => {
     if (integrations) {
-      let filtered = [...integrations];
-      
+      let filtered = [...integrations]
+
       // Apply type filter if set
       if (typeFilter) {
         filtered = filtered.filter(
-          integration => integration.service_type === typeFilter
-        );
+          (integration) => integration.service_type === typeFilter
+        )
       }
-      
-      setFilteredIntegrations(filtered);
+
+      setFilteredIntegrations(filtered)
     }
-  }, [integrations, typeFilter]);
-  
+  }, [integrations, typeFilter])
+
   // Handler for refreshing integrations
   const handleRefresh = async () => {
-    if (!effectiveTeamId) return;
-    
-    setIsRefreshing(true);
+    if (!effectiveTeamId) return
+
+    setIsRefreshing(true)
     try {
-      await fetchIntegrations(effectiveTeamId);
+      await fetchIntegrations(effectiveTeamId)
       toast({
         title: 'Integrations refreshed',
         status: 'success',
         duration: 3000,
         isClosable: true,
-      });
+      })
     } catch {
       toast({
         title: 'Failed to refresh integrations',
         status: 'error',
         duration: 3000,
         isClosable: true,
-      });
+      })
     } finally {
-      setIsRefreshing(false);
+      setIsRefreshing(false)
     }
-  };
-  
+  }
+
   // Handler for selecting an integration
   const handleSelectIntegration = (integrationId: string) => {
-    selectIntegration(integrationId);
-  };
-  
+    selectIntegration(integrationId)
+  }
+
   // Render loading state
   if (loading && !isRefreshing) {
     return (
@@ -149,29 +146,27 @@ const IntegrationList: React.FC<IntegrationListProps> = ({ teamId }) => {
         <Spinner size="xl" />
         <Text mt={4}>Loading integrations...</Text>
       </Box>
-    );
+    )
   }
-  
+
   // Render error state
   if (error) {
     return (
       <Box textAlign="center" py={10}>
-        <Text color="red.500">
-          Error loading integrations: {error.message}
-        </Text>
+        <Text color="red.500">Error loading integrations: {error.message}</Text>
         <Button mt={4} onClick={handleRefresh} leftIcon={<FiRefreshCw />}>
           Try Again
         </Button>
       </Box>
-    );
+    )
   }
-  
+
   return (
     <Box w="100%">
       {/* Header with filters and actions */}
-      <Flex 
-        justifyContent="space-between" 
-        alignItems="center" 
+      <Flex
+        justifyContent="space-between"
+        alignItems="center"
         mb={6}
         flexDirection={{ base: 'column', md: 'row' }}
         gap={4}
@@ -179,11 +174,11 @@ const IntegrationList: React.FC<IntegrationListProps> = ({ teamId }) => {
         <Heading size="lg" as="h2">
           Integrations
         </Heading>
-        
+
         <HStack spacing={4} width={{ base: '100%', md: 'auto' }}>
-          <Select 
-            placeholder="All types" 
-            value={typeFilter} 
+          <Select
+            placeholder="All types"
+            value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
             width={{ base: '100%', md: '200px' }}
           >
@@ -192,61 +187,58 @@ const IntegrationList: React.FC<IntegrationListProps> = ({ teamId }) => {
             <option value={IntegrationType.NOTION}>Notion</option>
             <option value={IntegrationType.DISCORD}>Discord</option>
           </Select>
-          
-          <Button 
-            leftIcon={<FiRefreshCw />} 
+
+          <Button
+            leftIcon={<FiRefreshCw />}
             onClick={handleRefresh}
             isLoading={isRefreshing}
             variant="outline"
           >
             Refresh
           </Button>
-          
-          <Button 
-            as={Link} 
-            to="/integrations/connect" 
-            colorScheme="blue" 
+
+          <Button
+            as={Link}
+            to="/integrations/connect"
+            colorScheme="blue"
             leftIcon={<FiPlus />}
           >
             Connect
           </Button>
         </HStack>
       </Flex>
-      
+
       {/* Empty state */}
       {filteredIntegrations.length === 0 && (
-        <Box 
-          textAlign="center" 
-          py={12} 
-          px={6} 
-          borderWidth="1px" 
-          borderRadius="lg" 
+        <Box
+          textAlign="center"
+          py={12}
+          px={6}
+          borderWidth="1px"
+          borderRadius="lg"
           borderStyle="dashed"
           borderColor={cardBorder}
         >
           <Text fontSize="lg" mb={4}>
             No integrations found.
           </Text>
-          <Button 
-            as={Link} 
-            to="/integrations/connect" 
-            colorScheme="blue" 
+          <Button
+            as={Link}
+            to="/integrations/connect"
+            colorScheme="blue"
             leftIcon={<FiPlus />}
           >
             Connect your first integration
           </Button>
         </Box>
       )}
-      
+
       {/* Integration cards grid */}
       {filteredIntegrations.length > 0 && (
-        <SimpleGrid 
-          columns={{ base: 1, md: 2, lg: 3 }} 
-          spacing={6}
-        >
+        <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
           {filteredIntegrations.map((integration) => (
-            <Card 
-              key={integration.id} 
+            <Card
+              key={integration.id}
               borderWidth="1px"
               borderRadius="lg"
               overflow="hidden"
@@ -257,11 +249,10 @@ const IntegrationList: React.FC<IntegrationListProps> = ({ teamId }) => {
             >
               <CardBody>
                 <Flex alignItems="center" mb={4}>
-                  <Box
-                    fontSize="2xl"
-                    mr={3}
-                  >
-                    {getIntegrationTypeIcon(integration.service_type as IntegrationType)}
+                  <Box fontSize="2xl" mr={3}>
+                    {getIntegrationTypeIcon(
+                      integration.service_type as IntegrationType
+                    )}
                   </Box>
                   <VStack align="start" spacing={0} flex={1}>
                     <Heading size="md" noOfLines={1}>
@@ -271,8 +262,10 @@ const IntegrationList: React.FC<IntegrationListProps> = ({ teamId }) => {
                       {integration.service_type}
                     </Text>
                   </VStack>
-                  <Badge 
-                    colorScheme={getStatusColor(integration.status as IntegrationStatus)}
+                  <Badge
+                    colorScheme={getStatusColor(
+                      integration.status as IntegrationStatus
+                    )}
                     variant="subtle"
                     px={2}
                     py={1}
@@ -281,15 +274,15 @@ const IntegrationList: React.FC<IntegrationListProps> = ({ teamId }) => {
                     {integration.status}
                   </Badge>
                 </Flex>
-                
+
                 {integration.description && (
                   <Text fontSize="sm" color="gray.600" mb={4} noOfLines={2}>
                     {integration.description}
                   </Text>
                 )}
-                
+
                 <Divider my={3} />
-                
+
                 <Flex justify="space-between" mt={3}>
                   <Button
                     as={Link}
@@ -301,7 +294,7 @@ const IntegrationList: React.FC<IntegrationListProps> = ({ teamId }) => {
                   >
                     View
                   </Button>
-                  
+
                   <Button
                     as={Link}
                     to={`/integrations/${integration.id}/settings`}
@@ -319,7 +312,7 @@ const IntegrationList: React.FC<IntegrationListProps> = ({ teamId }) => {
         </SimpleGrid>
       )}
     </Box>
-  );
-};
+  )
+}
 
-export default IntegrationList;
+export default IntegrationList

@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react';
+import React, { ReactNode } from 'react'
 import {
   Box,
   Flex,
@@ -9,20 +9,20 @@ import {
   BreadcrumbLink,
   HStack,
   BoxProps,
-} from '@chakra-ui/react';
-import { Link } from 'react-router-dom';
-import { FiChevronRight } from 'react-icons/fi';
+} from '@chakra-ui/react'
+import { Link } from 'react-router-dom'
+import { FiChevronRight } from 'react-icons/fi'
 
 interface BreadcrumbItem {
-  label: string;
-  href?: string;
+  label: string
+  href?: string
 }
 
 interface PageTitleProps extends BoxProps {
-  title: string;
-  description?: string;
-  breadcrumbs?: BreadcrumbItem[];
-  actions?: ReactNode;
+  title: string
+  description?: string
+  breadcrumbs?: BreadcrumbItem[]
+  actions?: ReactNode
 }
 
 /**
@@ -45,7 +45,10 @@ const PageTitle: React.FC<PageTitleProps> = ({
           spacing="8px"
         >
           {breadcrumbs.map((crumb, index) => (
-            <BreadcrumbItem key={index} isCurrentPage={index === breadcrumbs.length - 1}>
+            <BreadcrumbItem
+              key={index}
+              isCurrentPage={index === breadcrumbs.length - 1}
+            >
               {crumb.href ? (
                 <BreadcrumbLink as={Link} to={crumb.href}>
                   {crumb.label}
@@ -57,7 +60,7 @@ const PageTitle: React.FC<PageTitleProps> = ({
           ))}
         </Breadcrumb>
       )}
-      
+
       <Flex justify="space-between" align="center">
         <Box>
           <Heading size="lg">{title}</Heading>
@@ -67,15 +70,11 @@ const PageTitle: React.FC<PageTitleProps> = ({
             </Text>
           )}
         </Box>
-        
-        {actions && (
-          <HStack spacing={3}>
-            {actions}
-          </HStack>
-        )}
+
+        {actions && <HStack spacing={3}>{actions}</HStack>}
       </Flex>
     </Box>
-  );
-};
+  )
+}
 
-export default PageTitle;
+export default PageTitle

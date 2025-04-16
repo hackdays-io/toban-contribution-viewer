@@ -1,7 +1,13 @@
-import React from 'react';
-import { Box, Heading, Breadcrumb, BreadcrumbItem, BreadcrumbLink } from '@chakra-ui/react';
-import { Link } from 'react-router-dom';
-import { ConnectWorkspace } from '../../components/slack';
+import React from 'react'
+import {
+  Box,
+  Heading,
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+} from '@chakra-ui/react'
+import { Link } from 'react-router-dom'
+import { ConnectWorkspace } from '../../components/slack'
 
 /**
  * Page for connecting a new Slack workspace.
@@ -31,7 +37,7 @@ const ConnectPage: React.FC = () => {
 
       <ConnectWorkspace />
     </Box>
-  );
-};
+  )
+}
 
-export default ConnectPage;
+export default ConnectPage

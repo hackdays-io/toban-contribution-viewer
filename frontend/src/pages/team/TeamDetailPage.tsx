@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react'
 import {
   Box,
   Button,
@@ -18,165 +18,173 @@ import {
   useToast,
   VStack,
   FormErrorMessage,
-} from '@chakra-ui/react';
-import { Link, useParams } from 'react-router-dom';
-import { FiArrowLeft, FiSave, FiUsers } from 'react-icons/fi';
+} from '@chakra-ui/react'
+import { Link, useParams } from 'react-router-dom'
+import { FiArrowLeft, FiSave, FiUsers } from 'react-icons/fi'
 
-import env from '../../config/env';
-import { supabase } from '../../lib/supabase';
+import env from '../../config/env'
+import { supabase } from '../../lib/supabase'
 
 interface Team {
-  id: string;
-  name: string;
-  slug: string;
-  description: string | null;
-  avatar_url: string | null;
-  team_size: number;
-  is_personal: boolean;
-  created_by_user_id: string;
-  created_by_email: string | null;
-  team_metadata: Record<string, unknown>;
+  id: string
+  name: string
+  slug: string
+  description: string | null
+  avatar_url: string | null
+  team_size: number
+  is_personal: boolean
+  created_by_user_id: string
+  created_by_email: string | null
+  team_metadata: Record<string, unknown>
 }
 
 const TeamDetailPage: React.FC = () => {
-  const { teamId } = useParams<{ teamId: string }>();
-  const toast = useToast();
-  
-  const [team, setTeam] = useState<Team | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-  const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
-  
-  // Form fields
-  const [name, setName] = useState('');
-  const [slug, setSlug] = useState('');
-  const [description, setDescription] = useState('');
+  const { teamId } = useParams<{ teamId: string }>()
+  const toast = useToast()
 
+  const [team, setTeam] = useState<Team | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSaving, setIsSaving] = useState(false)
+  const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({})
+
+  // Form fields
+  const [name, setName] = useState('')
+  const [slug, setSlug] = useState('')
+  const [description, setDescription] = useState('')
 
   const fetchTeam = useCallback(async () => {
     try {
-      setIsLoading(true);
-      
+      setIsLoading(true)
+
       // Get the session to include the auth token
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token;
-      
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+      const token = session?.access_token
+
       const response = await fetch(`${env.apiUrl}/teams/${teamId}`, {
         method: 'GET',
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : '',
+          Authorization: token ? `Bearer ${token}` : '',
         },
-      });
+      })
 
       if (!response.ok) {
-        throw new Error(`Error fetching team: ${response.status}`);
+        throw new Error(`Error fetching team: ${response.status}`)
       }
 
-      const data = await response.json();
-      setTeam(data);
-      
+      const data = await response.json()
+      setTeam(data)
+
       // Initialize form fields
-      setName(data.name || '');
-      setSlug(data.slug || '');
-      setDescription(data.description || '');
+      setName(data.name || '')
+      setSlug(data.slug || '')
+      setDescription(data.description || '')
     } catch (error) {
-      console.error('Error fetching team:', error);
+      console.error('Error fetching team:', error)
       toast({
         title: 'Error loading team',
-        description: error instanceof Error ? error.message : 'An unknown error occurred',
+        description:
+          error instanceof Error ? error.message : 'An unknown error occurred',
         status: 'error',
         duration: 5000,
         isClosable: true,
-      });
+      })
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  }, [teamId, toast]);
-  
+  }, [teamId, toast])
+
   // Call fetchTeam when component mounts or teamId changes
   useEffect(() => {
     if (teamId) {
-      fetchTeam();
+      fetchTeam()
     }
-  }, [teamId, fetchTeam]);
+  }, [teamId, fetchTeam])
 
   const validateForm = () => {
-    const errors: { [key: string]: string } = {};
+    const errors: { [key: string]: string } = {}
     if (!name.trim()) {
-      errors.name = 'Team name is required';
+      errors.name = 'Team name is required'
     }
     if (!slug.trim()) {
-      errors.slug = 'Team slug is required';
+      errors.slug = 'Team slug is required'
     } else if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
-      errors.slug = 'Slug can only contain lowercase letters, numbers, and hyphens';
+      errors.slug =
+        'Slug can only contain lowercase letters, numbers, and hyphens'
     }
-    return errors;
-  };
+    return errors
+  }
 
   const handleSave = async () => {
-    const validationErrors = validateForm();
+    const validationErrors = validateForm()
     if (Object.keys(validationErrors).length > 0) {
-      setFormErrors(validationErrors);
-      return;
+      setFormErrors(validationErrors)
+      return
     }
 
     try {
-      setIsSaving(true);
-      
+      setIsSaving(true)
+
       // Get the session to include the auth token
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token;
-      
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+      const token = session?.access_token
+
       const response = await fetch(`${env.apiUrl}/teams/${teamId}`, {
         method: 'PUT',
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : '',
+          Authorization: token ? `Bearer ${token}` : '',
         },
         body: JSON.stringify({
           name,
           slug,
           description: description || null,
         }),
-      });
+      })
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || `Failed to update team: ${response.status}`);
+        const errorData = await response.json()
+        throw new Error(
+          errorData.detail || `Failed to update team: ${response.status}`
+        )
       }
 
-      const updatedTeam = await response.json();
-      setTeam(updatedTeam);
-      
+      const updatedTeam = await response.json()
+      setTeam(updatedTeam)
+
       toast({
         title: 'Team updated successfully',
         status: 'success',
         duration: 3000,
         isClosable: true,
-      });
+      })
     } catch (error) {
-      console.error('Error updating team:', error);
+      console.error('Error updating team:', error)
       toast({
         title: 'Error updating team',
-        description: error instanceof Error ? error.message : 'An unknown error occurred',
+        description:
+          error instanceof Error ? error.message : 'An unknown error occurred',
         status: 'error',
         duration: 5000,
         isClosable: true,
-      });
+      })
     } finally {
-      setIsSaving(false);
+      setIsSaving(false)
     }
-  };
+  }
 
   if (isLoading) {
     return (
       <Flex justify="center" align="center" height="50vh">
         <Spinner size="xl" color="blue.500" thickness="4px" />
       </Flex>
-    );
+    )
   }
 
   if (!team) {
@@ -193,7 +201,7 @@ const TeamDetailPage: React.FC = () => {
           Back to Teams
         </Button>
       </Box>
-    );
+    )
   }
 
   return (
@@ -228,9 +236,9 @@ const TeamDetailPage: React.FC = () => {
                   <Input
                     value={name}
                     onChange={(e) => {
-                      setName(e.target.value);
+                      setName(e.target.value)
                       if (formErrors.name) {
-                        setFormErrors({ ...formErrors, name: '' });
+                        setFormErrors({ ...formErrors, name: '' })
                       }
                     }}
                   />
@@ -242,9 +250,9 @@ const TeamDetailPage: React.FC = () => {
                   <Input
                     value={slug}
                     onChange={(e) => {
-                      setSlug(e.target.value);
+                      setSlug(e.target.value)
                       if (formErrors.slug) {
-                        setFormErrors({ ...formErrors, slug: '' });
+                        setFormErrors({ ...formErrors, slug: '' })
                       }
                     }}
                     placeholder="team-slug"
@@ -296,14 +304,16 @@ const TeamDetailPage: React.FC = () => {
           {/* Integrations Tab */}
           <TabPanel>
             <Box borderWidth="1px" borderRadius="lg" p={6}>
-              <Heading size="md" mb={4}>Team Integrations</Heading>
+              <Heading size="md" mb={4}>
+                Team Integrations
+              </Heading>
               {/* Integrations content will go here in future implementation */}
             </Box>
           </TabPanel>
         </TabPanels>
       </Tabs>
     </Container>
-  );
-};
+  )
+}
 
-export default TeamDetailPage;
+export default TeamDetailPage

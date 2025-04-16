@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from 'react'
 import {
   Button,
   Modal,
@@ -18,142 +18,159 @@ import {
   Tooltip,
   HStack,
   Select,
-} from '@chakra-ui/react';
-import { FiMail, FiRefreshCw, FiEdit } from 'react-icons/fi';
-import { supabase } from '../../lib/supabase';
-import env from '../../config/env';
+} from '@chakra-ui/react'
+import { FiMail, FiRefreshCw, FiEdit } from 'react-icons/fi'
+import { supabase } from '../../lib/supabase'
+import env from '../../config/env'
 
 interface TeamInvitationResenderProps {
-  teamId: string;
-  memberId: string;
-  memberEmail: string;
-  onSuccess: () => void;
-  isExpired?: boolean;
+  teamId: string
+  memberId: string
+  memberEmail: string
+  onSuccess: () => void
+  isExpired?: boolean
 }
 
 /**
  * Component for resending team invitations
  */
-const TeamInvitationResender: React.FC<TeamInvitationResenderProps> = ({ 
-  teamId, 
+const TeamInvitationResender: React.FC<TeamInvitationResenderProps> = ({
+  teamId,
   memberId,
   memberEmail,
   onSuccess,
-  isExpired = false
+  isExpired = false,
 }) => {
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const toast = useToast();
-  
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [customMessage, setCustomMessage] = useState('');
+  const { isOpen, onOpen, onClose } = useDisclosure()
+  const toast = useToast()
+
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [customMessage, setCustomMessage] = useState('')
 
   const handleResendInvite = async () => {
     try {
-      setIsSubmitting(true);
-      
+      setIsSubmitting(true)
+
       // Get the session to include the auth token
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token;
-      
-      const response = await fetch(`${env.apiUrl}/teams/${teamId}/members/${memberId}/resend-invite`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : '',
-        },
-        body: JSON.stringify({ 
-          custom_message: customMessage 
-        }),
-      });
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+      const token = session?.access_token
+
+      const response = await fetch(
+        `${env.apiUrl}/teams/${teamId}/members/${memberId}/resend-invite`,
+        {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: token ? `Bearer ${token}` : '',
+          },
+          body: JSON.stringify({
+            custom_message: customMessage,
+          }),
+        }
+      )
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || `Failed to resend invitation: ${response.status}`);
+        const errorData = await response.json()
+        throw new Error(
+          errorData.detail || `Failed to resend invitation: ${response.status}`
+        )
       }
-      
+
       toast({
         title: 'Invitation resent',
         description: `A new invitation has been sent to ${memberEmail}`,
         status: 'success',
         duration: 3000,
         isClosable: true,
-      });
-      
+      })
+
       // Reset form and close modal
-      setCustomMessage('');
-      onClose();
-      
+      setCustomMessage('')
+      onClose()
+
       // Call the callback
-      onSuccess();
+      onSuccess()
     } catch (error) {
-      console.error('Error resending invitation:', error);
+      console.error('Error resending invitation:', error)
       toast({
         title: 'Error resending invitation',
-        description: error instanceof Error ? error.message : 'An unknown error occurred',
+        description:
+          error instanceof Error ? error.message : 'An unknown error occurred',
         status: 'error',
         duration: 5000,
         isClosable: true,
-      });
+      })
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   // Add manual status change functionality (for testing only)
-  const [invitationStatus, setInvitationStatus] = useState('pending');
-  
+  const [invitationStatus, setInvitationStatus] = useState('pending')
+
   const handleUpdateStatus = async () => {
     try {
-      setIsSubmitting(true);
-      
+      setIsSubmitting(true)
+
       // Get the session to include the auth token
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token;
-      
-      const response = await fetch(`${env.apiUrl}/teams/${teamId}/members/${memberId}`, {
-        method: 'PUT',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : '',
-        },
-        body: JSON.stringify({ 
-          invitation_status: invitationStatus 
-        }),
-      });
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+      const token = session?.access_token
+
+      const response = await fetch(
+        `${env.apiUrl}/teams/${teamId}/members/${memberId}`,
+        {
+          method: 'PUT',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: token ? `Bearer ${token}` : '',
+          },
+          body: JSON.stringify({
+            invitation_status: invitationStatus,
+          }),
+        }
+      )
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || `Failed to update invitation status: ${response.status}`);
+        const errorData = await response.json()
+        throw new Error(
+          errorData.detail ||
+            `Failed to update invitation status: ${response.status}`
+        )
       }
-      
+
       toast({
         title: 'Status updated',
         description: `Invitation status has been updated to ${invitationStatus}`,
         status: 'success',
         duration: 3000,
         isClosable: true,
-      });
-      
+      })
+
       // Close modal
-      onClose();
-      
+      onClose()
+
       // Call the callback
-      onSuccess();
+      onSuccess()
     } catch (error) {
-      console.error('Error updating invitation status:', error);
+      console.error('Error updating invitation status:', error)
       toast({
         title: 'Error updating status',
-        description: error instanceof Error ? error.message : 'An unknown error occurred',
+        description:
+          error instanceof Error ? error.message : 'An unknown error occurred',
         status: 'error',
         duration: 5000,
         isClosable: true,
-      });
+      })
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   return (
     <>
@@ -168,7 +185,7 @@ const TeamInvitationResender: React.FC<TeamInvitationResenderProps> = ({
             onClick={onOpen}
           />
         </Tooltip>
-        
+
         {/* Debug button for testing - more visible */}
         <Tooltip label="Debug: Change Status">
           <Button
@@ -178,8 +195,8 @@ const TeamInvitationResender: React.FC<TeamInvitationResenderProps> = ({
             variant="outline"
             colorScheme="purple"
             onClick={() => {
-              setInvitationStatus('pending');
-              onOpen();
+              setInvitationStatus('pending')
+              onOpen()
             }}
           >
             Debug
@@ -194,10 +211,11 @@ const TeamInvitationResender: React.FC<TeamInvitationResenderProps> = ({
           <ModalCloseButton />
           <ModalBody>
             <Text mb={4}>
-              This will send a new invitation email to <strong>{memberEmail}</strong> with a fresh invitation link.
+              This will send a new invitation email to{' '}
+              <strong>{memberEmail}</strong> with a fresh invitation link.
               {isExpired && ' The current invitation has expired.'}
             </Text>
-            
+
             <FormControl mb={4}>
               <FormLabel>Personal Message (Optional)</FormLabel>
               <Input
@@ -206,11 +224,11 @@ const TeamInvitationResender: React.FC<TeamInvitationResenderProps> = ({
                 placeholder="Add a note to the invitation email"
               />
             </FormControl>
-            
+
             {/* Debug control - for testing only */}
-            <FormControl 
-              mb={4} 
-              border="2px dashed purple" 
+            <FormControl
+              mb={4}
+              border="2px dashed purple"
               p={3}
               bg="purple.50"
               borderRadius="md"
@@ -231,9 +249,9 @@ const TeamInvitationResender: React.FC<TeamInvitationResenderProps> = ({
                 <option value="inactive">Inactive</option>
               </Select>
               <Text fontSize="sm" color="purple.700" mt={2}>
-                This feature allows direct manipulation of the invitation status 
-                to simulate a user accepting or declining an invitation.
-                Select "active" to simulate a user accepting the invitation.
+                This feature allows direct manipulation of the invitation status
+                to simulate a user accepting or declining an invitation. Select
+                "active" to simulate a user accepting the invitation.
               </Text>
             </FormControl>
           </ModalBody>
@@ -251,7 +269,7 @@ const TeamInvitationResender: React.FC<TeamInvitationResenderProps> = ({
             >
               {isExpired ? 'Send New Invitation' : 'Resend Invitation'}
             </Button>
-            
+
             {/* Debug button - for testing only */}
             <Button
               leftIcon={<FiEdit />}
@@ -267,7 +285,7 @@ const TeamInvitationResender: React.FC<TeamInvitationResenderProps> = ({
         </ModalContent>
       </Modal>
     </>
-  );
-};
+  )
+}
 
-export default React.memo(TeamInvitationResender);
+export default React.memo(TeamInvitationResender)

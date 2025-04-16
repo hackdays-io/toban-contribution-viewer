@@ -1,11 +1,19 @@
-import React from 'react';
-import { Box, Button, Container, Heading, Stack, Text, useColorModeValue } from '@chakra-ui/react';
-import { Link as RouterLink } from 'react-router-dom';
-import useAuth from '../context/useAuth';
+import React from 'react'
+import {
+  Box,
+  Button,
+  Container,
+  Heading,
+  Stack,
+  Text,
+  useColorModeValue,
+} from '@chakra-ui/react'
+import { Link as RouterLink } from 'react-router-dom'
+import useAuth from '../context/useAuth'
 
 const Home: React.FC = () => {
-  const { user } = useAuth();
-  const bgColor = useColorModeValue('gray.50', 'gray.800');
+  const { user } = useAuth()
+  const bgColor = useColorModeValue('gray.50', 'gray.800')
 
   return (
     <Box>
@@ -22,8 +30,8 @@ const Home: React.FC = () => {
             Toban Contribution Viewer
           </Heading>
           <Text fontSize="xl" mb={8} maxW="container.md" mx="auto">
-            Visualize and track contributions across various platforms.
-            Get insights into your team's activity and improve collaboration.
+            Visualize and track contributions across various platforms. Get
+            insights into your team's activity and improve collaboration.
           </Text>
           <Stack
             direction={{ base: 'column', md: 'row' }}
@@ -94,12 +102,12 @@ const Home: React.FC = () => {
         </Container>
       </Box>
     </Box>
-  );
-};
+  )
+}
 
 interface FeatureProps {
-  title: string;
-  description: string;
+  title: string
+  description: string
 }
 
 const Feature: React.FC<FeatureProps> = ({ title, description }) => {
@@ -118,7 +126,7 @@ const Feature: React.FC<FeatureProps> = ({ title, description }) => {
         {description}
       </Text>
     </Box>
-  );
-};
+  )
+}
 
-export default Home;
+export default Home

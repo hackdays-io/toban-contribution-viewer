@@ -1,4 +1,4 @@
-import { TeamRole } from '../context/AuthContext';
+import { TeamRole } from '../context/AuthContext'
 
 /**
  * Checks if a user has the required role(s) for an operation
@@ -7,12 +7,12 @@ import { TeamRole } from '../context/AuthContext';
  * @returns True if the user has one of the required roles
  */
 export function hasRequiredRole(
-  userRole: TeamRole | undefined, 
+  userRole: TeamRole | undefined,
   requiredRoles: TeamRole[]
 ): boolean {
-  if (!userRole) return false;
-  
-  return requiredRoles.includes(userRole);
+  if (!userRole) return false
+
+  return requiredRoles.includes(userRole)
 }
 
 /**
@@ -20,8 +20,10 @@ export function hasRequiredRole(
  * @param userRole The user's current role
  * @returns True if the user has admin privileges
  */
-export function canPerformAdminActions(userRole: TeamRole | undefined): boolean {
-  return hasRequiredRole(userRole, ['owner', 'admin']);
+export function canPerformAdminActions(
+  userRole: TeamRole | undefined
+): boolean {
+  return hasRequiredRole(userRole, ['owner', 'admin'])
 }
 
 /**
@@ -30,7 +32,7 @@ export function canPerformAdminActions(userRole: TeamRole | undefined): boolean 
  * @returns True if the user has view permissions
  */
 export function canViewTeamResources(userRole: TeamRole | undefined): boolean {
-  return hasRequiredRole(userRole, ['owner', 'admin', 'member', 'viewer']);
+  return hasRequiredRole(userRole, ['owner', 'admin', 'member', 'viewer'])
 }
 
 /**
@@ -39,7 +41,7 @@ export function canViewTeamResources(userRole: TeamRole | undefined): boolean {
  * @returns True if the user has edit permissions
  */
 export function canEditTeamResources(userRole: TeamRole | undefined): boolean {
-  return hasRequiredRole(userRole, ['owner', 'admin', 'member']);
+  return hasRequiredRole(userRole, ['owner', 'admin', 'member'])
 }
 
 /**
@@ -48,10 +50,10 @@ export function canEditTeamResources(userRole: TeamRole | undefined): boolean {
  * @returns A formatted display name for the role
  */
 export function getRoleDisplayName(role: TeamRole | undefined): string {
-  if (!role) return 'No Role';
-  
+  if (!role) return 'No Role'
+
   // Capitalize the first letter
-  return role.charAt(0).toUpperCase() + role.slice(1);
+  return role.charAt(0).toUpperCase() + role.slice(1)
 }
 
 /**
@@ -61,10 +63,15 @@ export function getRoleDisplayName(role: TeamRole | undefined): string {
  */
 export function getRoleBadgeColorScheme(role: TeamRole | undefined): string {
   switch (role) {
-    case 'owner': return 'purple';
-    case 'admin': return 'blue';
-    case 'member': return 'green';
-    case 'viewer': return 'teal';
-    default: return 'gray';
+    case 'owner':
+      return 'purple'
+    case 'admin':
+      return 'blue'
+    case 'member':
+      return 'green'
+    case 'viewer':
+      return 'teal'
+    default:
+      return 'gray'
   }
 }

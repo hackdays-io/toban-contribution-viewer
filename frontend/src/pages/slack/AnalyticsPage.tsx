@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react'
 import {
   Box,
   Breadcrumb,
@@ -21,144 +21,157 @@ import {
   FormLabel,
   Alert,
   AlertIcon,
-} from '@chakra-ui/react';
-import { FiChevronRight, FiArrowLeft, FiBarChart2, FiUsers, FiMessageSquare, FiTrendingUp } from 'react-icons/fi';
-import { Link, useNavigate } from 'react-router-dom';
-import env from '../../config/env';
+} from '@chakra-ui/react'
+import {
+  FiChevronRight,
+  FiArrowLeft,
+  FiBarChart2,
+  FiUsers,
+  FiMessageSquare,
+  FiTrendingUp,
+} from 'react-icons/fi'
+import { Link, useNavigate } from 'react-router-dom'
+import env from '../../config/env'
 
 interface Workspace {
-  id: string;
-  name: string;
-  slack_id: string;
-  domain?: string;
-  is_connected: boolean;
-  connection_status: string;
+  id: string
+  name: string
+  slack_id: string
+  domain?: string
+  is_connected: boolean
+  connection_status: string
 }
 
 interface Channel {
-  id: string;
-  name: string;
-  type: string;
-  is_archived: boolean;
-  num_members?: number;
-  topic?: string;
-  purpose?: string;
+  id: string
+  name: string
+  type: string
+  is_archived: boolean
+  num_members?: number
+  topic?: string
+  purpose?: string
 }
 
 /**
  * Page component for Slack analytics features.
  */
 const AnalyticsPage: React.FC = () => {
-  const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
-  const [channels, setChannels] = useState<Channel[]>([]);
-  const [selectedWorkspace, setSelectedWorkspace] = useState<string>('');
-  const [selectedChannel, setSelectedChannel] = useState<string>('');
-  const [isLoadingWorkspaces, setIsLoadingWorkspaces] = useState(true);
-  const [isLoadingChannels, setIsLoadingChannels] = useState(false);
-  const [hasWorkspaces, setHasWorkspaces] = useState(false);
-  const navigate = useNavigate();
-  const toast = useToast();
+  const [workspaces, setWorkspaces] = useState<Workspace[]>([])
+  const [channels, setChannels] = useState<Channel[]>([])
+  const [selectedWorkspace, setSelectedWorkspace] = useState<string>('')
+  const [selectedChannel, setSelectedChannel] = useState<string>('')
+  const [isLoadingWorkspaces, setIsLoadingWorkspaces] = useState(true)
+  const [isLoadingChannels, setIsLoadingChannels] = useState(false)
+  const [hasWorkspaces, setHasWorkspaces] = useState(false)
+  const navigate = useNavigate()
+  const toast = useToast()
 
   // Fetch workspaces on component mount
   useEffect(() => {
-    fetchWorkspaces();
+    fetchWorkspaces()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [])
 
   // Fetch channels when workspace is selected
   useEffect(() => {
     if (selectedWorkspace) {
-      fetchChannels(selectedWorkspace);
+      fetchChannels(selectedWorkspace)
     } else {
-      setChannels([]);
+      setChannels([])
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedWorkspace]);
+  }, [selectedWorkspace])
 
   /**
    * Fetch Slack workspaces from the API.
    */
   const fetchWorkspaces = async () => {
     try {
-      setIsLoadingWorkspaces(true);
-      const response = await fetch(`${env.apiUrl}/slack/workspaces`);
-      
+      setIsLoadingWorkspaces(true)
+      const response = await fetch(`${env.apiUrl}/slack/workspaces`)
+
       if (!response.ok) {
-        throw new Error(`Error fetching workspaces: ${response.status} ${response.statusText}`);
+        throw new Error(
+          `Error fetching workspaces: ${response.status} ${response.statusText}`
+        )
       }
-      
-      const data = await response.json();
-      setWorkspaces(data.workspaces || []);
-      setHasWorkspaces(data.workspaces && data.workspaces.length > 0);
-      
+
+      const data = await response.json()
+      setWorkspaces(data.workspaces || [])
+      setHasWorkspaces(data.workspaces && data.workspaces.length > 0)
+
       // Set the first workspace as selected if available
       if (data.workspaces && data.workspaces.length > 0) {
-        setSelectedWorkspace(data.workspaces[0].id);
+        setSelectedWorkspace(data.workspaces[0].id)
       }
     } catch (error) {
-      console.error('Error fetching workspaces:', error);
+      console.error('Error fetching workspaces:', error)
       toast({
         title: 'Error',
         description: 'Failed to load Slack workspaces',
         status: 'error',
         duration: 5000,
         isClosable: true,
-      });
+      })
     } finally {
-      setIsLoadingWorkspaces(false);
+      setIsLoadingWorkspaces(false)
     }
-  };
+  }
 
   /**
    * Fetch channels for a specific workspace.
    */
   const fetchChannels = async (workspaceId: string) => {
     try {
-      setIsLoadingChannels(true);
-      
+      setIsLoadingChannels(true)
+
       // Create URL with query parameters to get only bot-installed or selected channels
       const queryParams = new URLSearchParams({
         bot_installed_only: 'true',
-        include_archived: 'false'
-      });
-      
+        include_archived: 'false',
+      })
+
       const response = await fetch(
         `${env.apiUrl}/slack/workspaces/${workspaceId}/channels?${queryParams}`
-      );
-      
+      )
+
       if (!response.ok) {
-        throw new Error(`Error fetching channels: ${response.status} ${response.statusText}`);
+        throw new Error(
+          `Error fetching channels: ${response.status} ${response.statusText}`
+        )
       }
-      
-      const data = await response.json();
-      setChannels(data.channels || []);
-      
+
+      const data = await response.json()
+      setChannels(data.channels || [])
+
       // Set the first channel as selected if available
       if (data.channels && data.channels.length > 0) {
-        setSelectedChannel(data.channels[0].id);
+        setSelectedChannel(data.channels[0].id)
       } else {
-        setSelectedChannel('');
+        setSelectedChannel('')
       }
     } catch (error) {
-      console.error('Error fetching channels:', error);
+      console.error('Error fetching channels:', error)
       toast({
         title: 'Error',
         description: 'Failed to load Slack channels',
         status: 'error',
         duration: 5000,
         isClosable: true,
-      });
+      })
     } finally {
-      setIsLoadingChannels(false);
+      setIsLoadingChannels(false)
     }
-  };
+  }
 
   /**
    * Handle channel analysis selection.
    */
   const handleAnalyzeChannel = () => {
     if (selectedWorkspace && selectedChannel) {
-      navigate(`/dashboard/analytics/slack/channels/${selectedWorkspace}/${selectedChannel}/analyze`);
+      navigate(
+        `/dashboard/analytics/slack/channels/${selectedWorkspace}/${selectedChannel}/analyze`
+      )
     } else {
       toast({
         title: 'Selection Required',
@@ -166,26 +179,29 @@ const AnalyticsPage: React.FC = () => {
         status: 'warning',
         duration: 3000,
         isClosable: true,
-      });
+      })
     }
-  };
-  
+  }
+
   /**
    * Handle viewing analysis history for a channel.
    */
   const handleViewHistory = () => {
     if (selectedWorkspace && selectedChannel) {
-      navigate(`/dashboard/analytics/slack/channels/${selectedWorkspace}/${selectedChannel}/history`);
+      navigate(
+        `/dashboard/analytics/slack/channels/${selectedWorkspace}/${selectedChannel}/history`
+      )
     } else {
       toast({
         title: 'Selection Required',
-        description: 'Please select both a workspace and a channel to view history',
+        description:
+          'Please select both a workspace and a channel to view history',
         status: 'warning',
         duration: 3000,
         isClosable: true,
-      });
+      })
     }
-  };
+  }
 
   /**
    * Render the workspace and channel selection form.
@@ -196,7 +212,7 @@ const AnalyticsPage: React.FC = () => {
         <Heading size="md" mb={4}>
           Select a channel to analyze
         </Heading>
-        
+
         <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4} mb={6}>
           <FormControl>
             <FormLabel>Workspace</FormLabel>
@@ -213,14 +229,16 @@ const AnalyticsPage: React.FC = () => {
               ))}
             </Select>
           </FormControl>
-          
+
           <FormControl>
             <FormLabel>Channel</FormLabel>
             <Select
               value={selectedChannel}
               onChange={(e) => setSelectedChannel(e.target.value)}
               placeholder="Select channel"
-              isDisabled={isLoadingChannels || channels.length === 0 || !selectedWorkspace}
+              isDisabled={
+                isLoadingChannels || channels.length === 0 || !selectedWorkspace
+              }
             >
               {channels.map((channel) => (
                 <option key={channel.id} value={channel.id}>
@@ -230,7 +248,7 @@ const AnalyticsPage: React.FC = () => {
             </Select>
           </FormControl>
         </SimpleGrid>
-        
+
         <HStack spacing={4}>
           <Button
             colorScheme="purple"
@@ -250,8 +268,8 @@ const AnalyticsPage: React.FC = () => {
           </Button>
         </HStack>
       </Box>
-    );
-  };
+    )
+  }
 
   /**
    * Render analytics feature cards.
@@ -268,8 +286,8 @@ const AnalyticsPage: React.FC = () => {
           </CardHeader>
           <CardBody>
             <Text mb={4}>
-              Get AI-powered insights about communication patterns, topic discussions,
-              and contributor engagement in your Slack channels.
+              Get AI-powered insights about communication patterns, topic
+              discussions, and contributor engagement in your Slack channels.
             </Text>
             <Text fontSize="sm" color="gray.600">
               • Channel summary and purpose identification
@@ -295,10 +313,12 @@ const AnalyticsPage: React.FC = () => {
           </CardHeader>
           <CardBody>
             <Text mb={4}>
-              Understand team member participation and contribution patterns 
+              Understand team member participation and contribution patterns
               across channels and conversations.
             </Text>
-            <Text fontSize="sm" color="gray.500">Coming soon</Text>
+            <Text fontSize="sm" color="gray.500">
+              Coming soon
+            </Text>
           </CardBody>
         </Card>
 
@@ -311,15 +331,17 @@ const AnalyticsPage: React.FC = () => {
           </CardHeader>
           <CardBody>
             <Text mb={4}>
-              Track changes in communication patterns, engagement levels,
-              and discussion topics over time.
+              Track changes in communication patterns, engagement levels, and
+              discussion topics over time.
             </Text>
-            <Text fontSize="sm" color="gray.500">Coming soon</Text>
+            <Text fontSize="sm" color="gray.500">
+              Coming soon
+            </Text>
           </CardBody>
         </Card>
       </SimpleGrid>
-    );
-  };
+    )
+  }
 
   return (
     <Box p={4}>
@@ -383,13 +405,13 @@ const AnalyticsPage: React.FC = () => {
         <>
           {/* Analytics feature cards */}
           {renderFeatureCards()}
-          
+
           {/* Workspace and channel selection */}
           {renderSelectionForm()}
         </>
       )}
     </Box>
-  );
-};
+  )
+}
 
-export default AnalyticsPage;
+export default AnalyticsPage

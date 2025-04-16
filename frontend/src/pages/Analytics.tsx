@@ -1,4 +1,4 @@
-import React from 'react';
+import React from 'react'
 import {
   Box,
   Heading,
@@ -16,15 +16,15 @@ import {
   HStack,
   Flex,
   Divider,
-} from '@chakra-ui/react';
-import { 
-  FiUsers, 
-  FiMessageSquare, 
-  FiBarChart2, 
-  FiTrendingUp, 
-  FiActivity
-} from 'react-icons/fi';
-import { Link } from 'react-router-dom';
+} from '@chakra-ui/react'
+import {
+  FiUsers,
+  FiMessageSquare,
+  FiBarChart2,
+  FiTrendingUp,
+  FiActivity,
+} from 'react-icons/fi'
+import { Link } from 'react-router-dom'
 
 /**
  * Main Analytics page component to display various analytics features.
@@ -33,7 +33,9 @@ const Analytics: React.FC = () => {
   return (
     <Box>
       <Flex justifyContent="space-between" alignItems="center" mb={6}>
-        <Heading as="h1" size="xl">Analytics</Heading>
+        <Heading as="h1" size="xl">
+          Analytics
+        </Heading>
       </Flex>
 
       <Tabs colorScheme="purple" mb={6}>
@@ -51,8 +53,8 @@ const Analytics: React.FC = () => {
                 Platform Analytics Overview
               </Heading>
               <Text mb={4}>
-                View insights and analytics across all your connected platforms. Select a platform-specific tab for 
-                detailed analysis.
+                View insights and analytics across all your connected platforms.
+                Select a platform-specific tab for detailed analysis.
               </Text>
             </Box>
 
@@ -66,11 +68,13 @@ const Analytics: React.FC = () => {
                 </CardHeader>
                 <CardBody>
                   <Text>
-                    Analyze communication patterns, topic discussions, and contributor
-                    insights from your Slack workspaces.
+                    Analyze communication patterns, topic discussions, and
+                    contributor insights from your Slack workspaces.
                   </Text>
                   <Divider my={3} />
-                  <Link to="/dashboard/analytics/slack">View Slack Analytics</Link>
+                  <Link to="/dashboard/analytics/slack">
+                    View Slack Analytics
+                  </Link>
                 </CardBody>
               </Card>
 
@@ -83,8 +87,8 @@ const Analytics: React.FC = () => {
                 </CardHeader>
                 <CardBody>
                   <Text>
-                    Track code contributions, pull requests, reviews, and development
-                    metrics across repositories.
+                    Track code contributions, pull requests, reviews, and
+                    development metrics across repositories.
                   </Text>
                   <Divider my={3} />
                   <Text color="gray.500">Coming soon</Text>
@@ -100,8 +104,8 @@ const Analytics: React.FC = () => {
                 </CardHeader>
                 <CardBody>
                   <Text>
-                    Measure knowledge sharing, documentation quality, and collaborative
-                    editing across your Notion workspace.
+                    Measure knowledge sharing, documentation quality, and
+                    collaborative editing across your Notion workspace.
                   </Text>
                   <Divider my={3} />
                   <Text color="gray.500">Coming soon</Text>
@@ -150,24 +154,27 @@ const Analytics: React.FC = () => {
                 Slack Analytics
               </Heading>
               <Text mb={4}>
-                Analyze your Slack workspaces to gain insights about communication patterns,
-                topic discussions, and contributor engagement.
+                Analyze your Slack workspaces to gain insights about
+                communication patterns, topic discussions, and contributor
+                engagement.
               </Text>
               <HStack spacing={4} wrap="wrap">
-                <Box 
-                  as={Link} 
+                <Box
+                  as={Link}
                   to="/dashboard/analytics/slack/channels"
                   p={4}
                   borderWidth="1px"
                   borderRadius="md"
-                  _hover={{ boxShadow: "md", bg: "purple.50" }}
-                  width={{ base: "100%", md: "auto" }}
+                  _hover={{ boxShadow: 'md', bg: 'purple.50' }}
+                  width={{ base: '100%', md: 'auto' }}
                 >
                   <HStack mb={2}>
                     <Icon as={FiMessageSquare} color="purple.500" />
                     <Heading size="sm">Channel Analysis</Heading>
                   </HStack>
-                  <Text>Analyze communication patterns in specific channels</Text>
+                  <Text>
+                    Analyze communication patterns in specific channels
+                  </Text>
                 </Box>
               </HStack>
             </Box>
@@ -197,7 +204,7 @@ const Analytics: React.FC = () => {
         </TabPanels>
       </Tabs>
     </Box>
-  );
-};
+  )
+}
 
-export default Analytics;
+export default Analytics

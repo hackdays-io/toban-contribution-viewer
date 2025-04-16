@@ -1,4 +1,4 @@
-import React from 'react';
+import React from 'react'
 import {
   Box,
   Button,
@@ -15,33 +15,37 @@ import {
   HStack,
   Divider,
   useColorModeValue,
-} from '@chakra-ui/react';
-import { Link } from 'react-router-dom';
-import { FiSlack, FiGithub, FiUsers, FiBarChart2 } from 'react-icons/fi';
-import { TeamContext } from '../components/team';
-import useAuth from '../context/useAuth';
+} from '@chakra-ui/react'
+import { Link } from 'react-router-dom'
+import { FiSlack, FiGithub, FiUsers, FiBarChart2 } from 'react-icons/fi'
+import { TeamContext } from '../components/team'
+import useAuth from '../context/useAuth'
 
 /**
  * Dashboard home page with overview and quick access to key features
  */
 const Dashboard: React.FC = () => {
-  const { teamContext } = useAuth();
-  const cardBg = useColorModeValue('white', 'gray.800');
-  
+  const { teamContext } = useAuth()
+  const cardBg = useColorModeValue('white', 'gray.800')
+
   // Get current team name
-  const currentTeam = teamContext.teams?.find(team => team.id === teamContext.currentTeamId);
-  
+  const currentTeam = teamContext.teams?.find(
+    (team) => team.id === teamContext.currentTeamId
+  )
+
   return (
     <Box>
       <Box mb={6}>
-        <Heading size="lg" mb={2}>Welcome to your Dashboard</Heading>
+        <Heading size="lg" mb={2}>
+          Welcome to your Dashboard
+        </Heading>
         {currentTeam && (
           <Text color="gray.600">
             You're currently viewing the {currentTeam.name} team workspace.
           </Text>
         )}
       </Box>
-      
+
       <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
         <Box>
           {/* Stats Overview */}
@@ -51,28 +55,30 @@ const Dashboard: React.FC = () => {
               <StatNumber>7</StatNumber>
               <StatHelpText>Active contributors</StatHelpText>
             </Stat>
-            
+
             <Stat bg={cardBg} p={4} borderRadius="md" boxShadow="sm">
               <StatLabel>Integrations</StatLabel>
               <StatNumber>3</StatNumber>
               <StatHelpText>Connected services</StatHelpText>
             </Stat>
-            
+
             <Stat bg={cardBg} p={4} borderRadius="md" boxShadow="sm">
               <StatLabel>Messages</StatLabel>
               <StatNumber>1,204</StatNumber>
               <StatHelpText>Last 30 days</StatHelpText>
             </Stat>
-            
+
             <Stat bg={cardBg} p={4} borderRadius="md" boxShadow="sm">
               <StatLabel>PRs & Issues</StatLabel>
               <StatNumber>32</StatNumber>
               <StatHelpText>Open items</StatHelpText>
             </Stat>
           </SimpleGrid>
-          
+
           {/* Quick access cards */}
-          <Heading size="md" mb={4}>Quick Access</Heading>
+          <Heading size="md" mb={4}>
+            Quick Access
+          </Heading>
           <SimpleGrid columns={{ base: 1, sm: 2 }} spacing={4}>
             <Card variant="outline" bg={cardBg}>
               <CardBody>
@@ -99,7 +105,7 @@ const Dashboard: React.FC = () => {
                 </Button>
               </CardBody>
             </Card>
-            
+
             <Card variant="outline" bg={cardBg}>
               <CardBody>
                 <HStack>
@@ -125,7 +131,7 @@ const Dashboard: React.FC = () => {
                 </Button>
               </CardBody>
             </Card>
-            
+
             <Card variant="outline" bg={cardBg}>
               <CardBody>
                 <HStack>
@@ -151,7 +157,7 @@ const Dashboard: React.FC = () => {
                 </Button>
               </CardBody>
             </Card>
-            
+
             <Card variant="outline" bg={cardBg}>
               <CardBody>
                 <HStack>
@@ -179,14 +185,14 @@ const Dashboard: React.FC = () => {
             </Card>
           </SimpleGrid>
         </Box>
-        
+
         {/* Right column */}
         <Box>
           <TeamContext />
         </Box>
       </SimpleGrid>
     </Box>
-  );
-};
+  )
+}
 
-export default Dashboard;
+export default Dashboard
