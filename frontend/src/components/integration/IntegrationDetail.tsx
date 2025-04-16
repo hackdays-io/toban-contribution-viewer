@@ -87,14 +87,6 @@ const IntegrationDetail: React.FC = () => {
   const [, setActiveTab] = useState<string>('overview')
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [isSyncing, setIsSyncing] = useState(false)
-  const [localSlackAuth, setLocalSlackAuth] = useState<boolean>(false)
-
-  // Check for local Slack auth info
-  useEffect(() => {
-    const hasLocalSlackAuth = Boolean(localStorage.getItem('slack_auth_code'))
-    const hasSlackClientId = Boolean(localStorage.getItem('slack_client_id'))
-    setLocalSlackAuth(hasLocalSlackAuth && hasSlackClientId)
-  }, [])
 
   // Initialize the integration data
   useEffect(() => {
@@ -131,23 +123,11 @@ const IntegrationDetail: React.FC = () => {
 
   // Handler for syncing resources
   const handleSyncResources = async () => {
-    console.log('Sync button clicked')
-    console.log('Integration ID:', integrationId)
-    console.log('Local Slack Auth:', localSlackAuth)
-    console.log('Integration service type:', currentIntegration?.service_type)
+    if (!integrationId) return
 
-    if (!integrationId) {
-      console.log('No integration ID, returning')
-      return
-    }
-
-    // Always call backend to sync resources, regardless of local auth status
-    console.log('Calling backend sync resources')
     setIsSyncing(true)
     try {
-      console.log('Calling syncResources with ID:', integrationId)
       const success = await syncResources(integrationId)
-      console.log('Sync result:', success)
 
       if (success) {
         toast({
@@ -165,7 +145,6 @@ const IntegrationDetail: React.FC = () => {
         })
       }
     } catch (error) {
-      console.error('Error syncing resources:', error)
       toast({
         title: 'Error syncing resources',
         description: error instanceof Error ? error.message : 'Unknown error',
@@ -219,52 +198,6 @@ const IntegrationDetail: React.FC = () => {
             ? `Error: ${error.message}`
             : 'Integration not found or error loading data'}
         </Heading>
-
-        {localSlackAuth && (
-          <Card
-            borderWidth="1px"
-            borderRadius="lg"
-            overflow="hidden"
-            bg={cardBg}
-            borderColor={cardBorder}
-            p={4}
-            mt={6}
-            mb={6}
-          >
-            <Flex alignItems="center" mb={4}>
-              <Box fontSize="2xl" mr={3}>
-                💬
-              </Box>
-              <VStack align="start" spacing={0} flex={1}>
-                <Heading size="md" noOfLines={1}>
-                  Slack Workspace
-                </Heading>
-                <Text color="gray.500" fontSize="sm">
-                  slack
-                </Text>
-              </VStack>
-              <Badge
-                colorScheme="green"
-                variant="subtle"
-                px={2}
-                py={1}
-                borderRadius="full"
-              >
-                locally authenticated
-              </Badge>
-            </Flex>
-
-            <Text fontSize="sm" color="gray.600" mb={4}>
-              Client ID:{' '}
-              {localStorage.getItem('slack_client_id')?.substring(0, 8)}...
-            </Text>
-
-            <Text fontSize="sm" color="green.600" mb={4}>
-              Authorization code is stored locally. Integration data is not
-              available from the backend.
-            </Text>
-          </Card>
-        )}
 
         <Button
           mt={4}
@@ -322,17 +255,6 @@ const IntegrationDetail: React.FC = () => {
             >
               {currentIntegration.status}
             </Badge>
-            {localSlackAuth && (
-              <Badge
-                colorScheme="blue"
-                variant="subtle"
-                px={2}
-                py={1}
-                borderRadius="full"
-              >
-                Local Auth
-              </Badge>
-            )}
           </HStack>
         </VStack>
 
