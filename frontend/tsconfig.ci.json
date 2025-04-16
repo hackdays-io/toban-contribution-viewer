@@ -4,8 +4,5 @@
     "skipLibCheck": true
   },
   "include": ["src"],
-  "exclude": [
-    "src/__tests__/components/integration/IntegrationDetail.test.tsx",
-    "src/__tests__/pages/integration/IntegrationDetailPage.test.tsx"
-  ]
+  "exclude": []
 }

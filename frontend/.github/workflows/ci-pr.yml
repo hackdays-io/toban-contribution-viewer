@@ -1,4 +1,4 @@
-name: CI for PR 146
+name: CI for Integration Feature
 
 on:
   pull_request:
