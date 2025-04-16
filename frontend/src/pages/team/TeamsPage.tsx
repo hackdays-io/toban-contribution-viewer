@@ -35,6 +35,7 @@ import { FiPlus, FiUsers, FiSettings, FiTrash2, FiRefreshCw } from 'react-icons/
 
 import env from '../../config/env';
 import useAuth from '../../context/useAuth';
+import AuthContext from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { PageTitle } from '../../components/layout';
 // Will use in future implementation:
@@ -60,12 +61,12 @@ interface CreateTeamForm {
 }
 
 const TeamsPage: React.FC = () => {
-  useAuth(); // Used for authentication state
+  const { teamContext, loading: authLoading } = React.useContext(AuthContext);
   const toast = useToast();
   const navigate = useNavigate();
   const { isOpen, onOpen, onClose } = useDisclosure();
   
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(authLoading);
   const [teams, setTeams] = useState<Team[]>([]);
   const [formData, setFormData] = useState<CreateTeamForm>({
     name: '',
@@ -80,32 +81,31 @@ const TeamsPage: React.FC = () => {
     try {
       setIsLoading(true);
       
-      // Get the session to include the auth token
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token;
-      
-      // Construct the authorization header
-      const authHeader = token ? `Bearer ${token}` : '';
-      
-      const response = await fetch(`${env.apiUrl}/teams`, {
-        method: 'GET',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': authHeader,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Error fetching teams: ${response.status} ${response.statusText}`);
+      // Instead of fetching directly, use the teams from the AuthContext
+      if (teamContext && teamContext.teams) {
+        console.log('Using teams from AuthContext:', teamContext.teams);
+        
+        // Format each team to match our expected Team interface
+        const formattedTeams = teamContext.teams.map(team => ({
+          id: team.id,
+          name: team.name,
+          slug: team.slug,
+          description: '',  // Context doesn't provide description
+          avatar_url: null, // Context doesn't provide avatar_url
+          team_size: 0,     // Context doesn't provide team_size
+          is_personal: false, // Context doesn't provide is_personal flag
+          created_by_user_id: '', // Context doesn't provide created_by_user_id
+          created_by_email: null, // Context doesn't provide created_by_email
+          team_metadata: {} // Context doesn't provide team_metadata
+        }));
+        
+        setTeams(formattedTeams);
+      } else {
+        // If teamContext is not available, set empty array
+        setTeams([]);
       }
-
-      const data = await response.json();
-      console.log('DEBUG - Teams API response:', data);
-      // The response is an array directly, not wrapped in a 'teams' property
-      setTeams(Array.isArray(data) ? data : data.teams || []);
     } catch (error) {
-      console.error('Error fetching teams:', error);
+      console.error('Error processing teams:', error);
       toast({
         title: 'Error loading teams',
         description: error instanceof Error ? error.message : 'An unknown error occurred',
@@ -116,12 +116,12 @@ const TeamsPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [toast]);
+  }, [toast, teamContext]);
   
-  // Call fetchTeams when component mounts
+  // Call fetchTeams when component mounts or teamContext changes
   useEffect(() => {
     fetchTeams();
-  }, [fetchTeams]);
+  }, [fetchTeams, teamContext]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -218,7 +218,7 @@ const TeamsPage: React.FC = () => {
         <CardHeader>
           <Flex justify="space-between" align="center">
             <Heading size="md">{team.name}</Heading>
-            {team.is_personal && (
+            {teamContext.teams.length === 1 && (
               <Badge colorScheme="purple">Personal</Badge>
             )}
           </Flex>
@@ -256,7 +256,7 @@ const TeamsPage: React.FC = () => {
             >
               Settings
             </Button>
-            {!team.is_personal && (
+            {teamContext.teams.length > 1 && (
               <Button
                 leftIcon={<FiTrash2 />}
                 size="sm"
