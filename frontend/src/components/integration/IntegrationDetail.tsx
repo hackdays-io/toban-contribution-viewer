@@ -1,132 +1,75 @@
-import React, { useState, useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   Box,
   Heading,
-  Text,
-  VStack,
-  HStack,
-  Badge,
-  Spinner,
-  Button,
   Tabs,
   TabList,
-  TabPanels,
   Tab,
+  TabPanels,
   TabPanel,
+  VStack,
+  HStack,
+  Text,
   Flex,
+  Badge,
+  Button,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
   Divider,
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
-  IconButton,
-  Tag,
-  TagLabel,
+  Card,
+  CardHeader,
+  CardBody,
+  Spinner,
   useToast,
   useColorModeValue,
-  Card,
-  CardBody,
-  CardHeader,
-  SimpleGrid,
-  Stat,
-  StatLabel,
-  StatNumber,
-  StatHelpText,
 } from '@chakra-ui/react'
+import { useParams, useNavigate } from 'react-router-dom'
 import {
+  FiChevronDown,
   FiRefreshCw,
-  FiEdit2,
   FiSettings,
   FiTrash2,
-  FiLock,
-  FiUnlock,
-  FiUsers,
-  FiActivity,
-  FiClock,
+  FiShare2,
+  FiLink,
+  FiZap,
+  FiPlusCircle,
 } from 'react-icons/fi'
-import {
-  IntegrationType,
-  IntegrationStatus,
-  ServiceResource,
-  ResourceType,
-  ShareLevel,
-} from '../../lib/integrationService'
 import useIntegration from '../../context/useIntegration'
+import { IntegrationStatus, ResourceType } from '../../lib/integrationService'
+import ResourceList from './ResourceList'
 
-// Helper function to get an icon for the integration type
-const getIntegrationTypeIcon = (type: IntegrationType) => {
-  switch (type) {
-    case IntegrationType.SLACK:
-      return '💬'
-    case IntegrationType.GITHUB:
-      return '📦'
-    case IntegrationType.NOTION:
-      return '📝'
-    case IntegrationType.DISCORD:
-      return '🎮'
-    default:
-      return '🔌'
-  }
-}
-
-// Helper function to get color for status badge
-const getStatusColor = (status: IntegrationStatus) => {
-  switch (status) {
-    case IntegrationStatus.ACTIVE:
-      return 'green'
-    case IntegrationStatus.DISCONNECTED:
-      return 'yellow'
-    case IntegrationStatus.EXPIRED:
-      return 'orange'
-    case IntegrationStatus.REVOKED:
-      return 'red'
-    case IntegrationStatus.ERROR:
-      return 'red'
-    default:
-      return 'gray'
-  }
-}
-
-// Helper function to format date
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString)
-  return date.toLocaleString()
-}
-
-// Helper function to get readable resource type
-const getReadableResourceType = (type: ResourceType) => {
-  return type
-    .split('_')
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ')
-}
-
-// Helper function to get color for share level
-const getShareLevelColor = (shareLevel: ShareLevel) => {
-  switch (shareLevel) {
-    case ShareLevel.FULL_ACCESS:
-      return 'green'
-    case ShareLevel.LIMITED_ACCESS:
-      return 'blue'
-    case ShareLevel.READ_ONLY:
-      return 'yellow'
-    default:
-      return 'gray'
-  }
-}
-
-interface IntegrationDetailProps {
-  integrationId: string
+/**
+ * DetailPanel properties
+ */
+interface DetailPanelProps {
+  title: string
+  children: React.ReactNode
 }
 
 /**
- * Component to display detailed information about a specific integration
+ * DetailPanel component to show a section of integration details
  */
-const IntegrationDetail: React.FC<IntegrationDetailProps> = ({
-  integrationId,
-}) => {
+const DetailPanel: React.FC<DetailPanelProps> = ({ title, children }) => (
+  <Box mb={6}>
+    <Heading size="sm" mb={2}>
+      {title}
+    </Heading>
+    <Box>{children}</Box>
+  </Box>
+)
+
+/**
+ * IntegrationDetail component to view and manage an integration.
+ */
+const IntegrationDetail: React.FC = () => {
+  const { integrationId } = useParams<{ integrationId: string }>()
+  const navigate = useNavigate()
+  const toast = useToast()
+  const cardBg = useColorModeValue('white', 'gray.800')
+  const cardBorder = useColorModeValue('gray.200', 'gray.700')
+
   const {
     currentIntegration,
     currentResources,
@@ -138,25 +81,27 @@ const IntegrationDetail: React.FC<IntegrationDetailProps> = ({
     fetchResources,
     syncResources,
     updateIntegration,
+    selectIntegration,
   } = useIntegration()
 
+  const [, setActiveTab] = useState<string>('overview')
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [isSyncing, setIsSyncing] = useState(false)
-  const toast = useToast()
+  const [localSlackAuth, setLocalSlackAuth] = useState<boolean>(false)
 
-  const cardBg = useColorModeValue('white', 'gray.800')
-  const cardBorder = useColorModeValue('gray.200', 'gray.700')
-  const statBg = useColorModeValue('blue.50', 'blue.900')
-  const tableBg = useColorModeValue('white', 'gray.800')
-  const tableHeaderBg = useColorModeValue('gray.50', 'gray.700')
+  // Check for local Slack auth info
+  useEffect(() => {
+    const hasLocalSlackAuth = Boolean(localStorage.getItem('slack_auth_code'))
+    const hasSlackClientId = Boolean(localStorage.getItem('slack_client_id'))
+    setLocalSlackAuth(hasLocalSlackAuth && hasSlackClientId)
+  }, [])
 
-  // Load integration on component mount
+  // Initialize the integration data
   useEffect(() => {
     if (integrationId) {
-      fetchIntegration(integrationId)
-      fetchResources(integrationId)
+      selectIntegration(integrationId)
     }
-  }, [integrationId, fetchIntegration, fetchResources])
+  }, [integrationId, selectIntegration])
 
   // Handler for refreshing integration details
   const handleRefresh = async () => {
@@ -165,6 +110,7 @@ const IntegrationDetail: React.FC<IntegrationDetailProps> = ({
     setIsRefreshing(true)
     try {
       await fetchIntegration(integrationId)
+      await fetchResources(integrationId)
       toast({
         title: 'Integration details refreshed',
         status: 'success',
@@ -187,6 +133,28 @@ const IntegrationDetail: React.FC<IntegrationDetailProps> = ({
   const handleSyncResources = async () => {
     if (!integrationId) return
 
+    // If we're using local Slack auth, simulate a sync instead of calling backend
+    if (localSlackAuth && currentIntegration?.service_type === 'slack') {
+      setIsSyncing(true)
+
+      try {
+        // Simulate resource sync with a delay
+        await new Promise((resolve) => setTimeout(resolve, 1500))
+
+        toast({
+          title: 'Resources synced locally',
+          description: 'Using local credentials from browser storage',
+          status: 'info',
+          duration: 3000,
+          isClosable: true,
+        })
+      } finally {
+        setIsSyncing(false)
+      }
+      return
+    }
+
+    // Otherwise call the backend
     setIsSyncing(true)
     try {
       const success = await syncResources(integrationId)
@@ -234,77 +202,141 @@ const IntegrationDetail: React.FC<IntegrationDetailProps> = ({
   }
 
   // Render loading state
-  if (loading && !currentIntegration) {
+  if (loading && !isRefreshing) {
     return (
-      <Box textAlign="center" py={10}>
-        <Spinner size="xl" />
-        <Text mt={4}>Loading integration details...</Text>
-      </Box>
+      <Flex height="100%" justify="center" align="center" p={8}>
+        <Spinner size="xl" color="blue.500" thickness="4px" />
+      </Flex>
     )
   }
 
   // Render error state
-  if (error && !currentIntegration) {
+  if (error || !currentIntegration) {
     return (
-      <Box textAlign="center" py={10}>
-        <Text color="red.500">Error loading integration: {error.message}</Text>
-        <Button mt={4} onClick={handleRefresh} leftIcon={<FiRefreshCw />}>
-          Try Again
+      <Box p={6} textAlign="center">
+        <Heading size="md" mb={4} color="red.500">
+          {error
+            ? `Error: ${error.message}`
+            : 'Integration not found or error loading data'}
+        </Heading>
+
+        {localSlackAuth && (
+          <Card
+            borderWidth="1px"
+            borderRadius="lg"
+            overflow="hidden"
+            bg={cardBg}
+            borderColor={cardBorder}
+            p={4}
+            mt={6}
+            mb={6}
+          >
+            <Flex alignItems="center" mb={4}>
+              <Box fontSize="2xl" mr={3}>
+                💬
+              </Box>
+              <VStack align="start" spacing={0} flex={1}>
+                <Heading size="md" noOfLines={1}>
+                  Slack Workspace
+                </Heading>
+                <Text color="gray.500" fontSize="sm">
+                  slack
+                </Text>
+              </VStack>
+              <Badge
+                colorScheme="green"
+                variant="subtle"
+                px={2}
+                py={1}
+                borderRadius="full"
+              >
+                locally authenticated
+              </Badge>
+            </Flex>
+
+            <Text fontSize="sm" color="gray.600" mb={4}>
+              Client ID:{' '}
+              {localStorage.getItem('slack_client_id')?.substring(0, 8)}...
+            </Text>
+
+            <Text fontSize="sm" color="green.600" mb={4}>
+              Authorization code is stored locally. Integration data is not
+              available from the backend.
+            </Text>
+          </Card>
+        )}
+
+        <Button
+          mt={4}
+          onClick={() => navigate('/dashboard/integrations')}
+          colorScheme="blue"
+        >
+          Back to Integrations
         </Button>
       </Box>
     )
   }
 
-  // Return placeholder if no integration is loaded
-  if (!currentIntegration) {
-    return (
-      <Box textAlign="center" py={10}>
-        <Text>No integration selected</Text>
-      </Box>
-    )
+  // Get resources by type
+  const getResourcesByType = (type: ResourceType): number => {
+    return currentResources.filter((r) => r.resource_type === type).length
+  }
+
+  // Get the total number of resources
+  const getTotalResources = (): number => {
+    return currentResources.length
   }
 
   return (
-    <Box w="100%">
+    <Box p={6}>
+      {/* Integration header */}
       <Flex
-        justifyContent="space-between"
-        alignItems="center"
+        direction={{ base: 'column', md: 'row' }}
+        justify="space-between"
+        align={{ base: 'flex-start', md: 'center' }}
         mb={6}
-        flexDirection={{ base: 'column', md: 'row' }}
         gap={4}
       >
-        <HStack spacing={3} alignItems="center">
-          <Box fontSize="3xl">
-            {getIntegrationTypeIcon(
-              currentIntegration.service_type as IntegrationType
-            )}
-          </Box>
-          <Box>
-            <Heading
-              size="lg"
-              display="inline-flex"
-              alignItems="center"
-              gap={3}
+        <VStack align="start" spacing={1}>
+          <Heading as="h1" size="lg">
+            {currentIntegration.name}
+          </Heading>
+          <HStack spacing={2}>
+            <Text color="gray.500">{currentIntegration.service_type}</Text>
+            <Text color="gray.500">•</Text>
+            <Text color="gray.500">
+              Owned by {currentIntegration.owner_team.name}
+            </Text>
+            <Badge
+              colorScheme={
+                currentIntegration.status === IntegrationStatus.ACTIVE
+                  ? 'green'
+                  : currentIntegration.status === IntegrationStatus.DISCONNECTED
+                    ? 'yellow'
+                    : 'red'
+              }
+              variant="subtle"
+              px={2}
+              py={1}
+              borderRadius="full"
             >
-              {currentIntegration.name}
+              {currentIntegration.status}
+            </Badge>
+            {localSlackAuth && (
               <Badge
-                colorScheme={getStatusColor(
-                  currentIntegration.status as IntegrationStatus
-                )}
-                variant="solid"
-                fontSize="sm"
+                colorScheme="blue"
+                variant="subtle"
                 px={2}
                 py={1}
                 borderRadius="full"
               >
-                {currentIntegration.status}
+                Local Auth
               </Badge>
-            </Heading>
-            <Text color="gray.500">{currentIntegration.service_type}</Text>
-          </Box>
-        </HStack>
+            )}
+          </HStack>
+        </VStack>
 
-        <HStack spacing={2}>
+        <HStack spacing={4}>
           <Button
             leftIcon={<FiRefreshCw />}
             onClick={handleRefresh}
@@ -314,446 +346,352 @@ const IntegrationDetail: React.FC<IntegrationDetailProps> = ({
           >
             Refresh
           </Button>
-          <Button
-            leftIcon={
-              currentIntegration.status === IntegrationStatus.ACTIVE ? (
-                <FiLock />
-              ) : (
-                <FiUnlock />
-              )
-            }
-            onClick={handleToggleStatus}
-            colorScheme={
-              currentIntegration.status === IntegrationStatus.ACTIVE
-                ? 'red'
-                : 'green'
-            }
-            variant="outline"
-            size="sm"
-          >
-            {currentIntegration.status === IntegrationStatus.ACTIVE
-              ? 'Deactivate'
-              : 'Activate'}
-          </Button>
-          <Button leftIcon={<FiEdit2 />} colorScheme="blue" size="sm">
-            Edit
-          </Button>
+
+          <Menu>
+            <MenuButton
+              as={Button}
+              rightIcon={<FiChevronDown />}
+              colorScheme="blue"
+              size="sm"
+            >
+              Actions
+            </MenuButton>
+            <MenuList>
+              <MenuItem
+                icon={<FiZap />}
+                onClick={handleSyncResources}
+                isDisabled={isSyncing}
+              >
+                Sync Resources
+              </MenuItem>
+              <MenuItem
+                icon={<FiSettings />}
+                onClick={() =>
+                  navigate(`/dashboard/integrations/${integrationId}/settings`)
+                }
+              >
+                Settings
+              </MenuItem>
+              <MenuItem
+                icon={<FiShare2 />}
+                onClick={() => console.log('Share')}
+              >
+                Share Integration
+              </MenuItem>
+              <Divider />
+              <MenuItem
+                icon={
+                  currentIntegration.status === IntegrationStatus.ACTIVE ? (
+                    <FiLink />
+                  ) : (
+                    <FiLink />
+                  )
+                }
+                onClick={handleToggleStatus}
+              >
+                {currentIntegration.status === IntegrationStatus.ACTIVE
+                  ? 'Disconnect'
+                  : 'Reconnect'}
+              </MenuItem>
+              <MenuItem icon={<FiTrash2 />} color="red.500">
+                Delete Integration
+              </MenuItem>
+            </MenuList>
+          </Menu>
         </HStack>
       </Flex>
 
-      {currentIntegration.description && (
-        <Box mb={6}>
-          <Text>{currentIntegration.description}</Text>
-        </Box>
-      )}
-
-      {/* Stats Cards */}
-      <SimpleGrid columns={{ base: 1, md: 4 }} spacing={5} mb={6}>
-        <Card bg={statBg} borderRadius="lg">
-          <CardBody>
-            <Stat>
-              <StatLabel display="flex" alignItems="center">
-                <FiClock style={{ marginRight: '8px' }} /> Last Used
-              </StatLabel>
-              <StatNumber>
-                {currentIntegration.last_used_at
-                  ? new Date(
-                      currentIntegration.last_used_at
-                    ).toLocaleDateString()
-                  : 'Never'}
-              </StatNumber>
-              <StatHelpText>
-                {currentIntegration.last_used_at
-                  ? new Date(
-                      currentIntegration.last_used_at
-                    ).toLocaleTimeString()
-                  : ''}
-              </StatHelpText>
-            </Stat>
-          </CardBody>
-        </Card>
-
-        <Card bg={statBg} borderRadius="lg">
-          <CardBody>
-            <Stat>
-              <StatLabel display="flex" alignItems="center">
-                <FiUsers style={{ marginRight: '8px' }} /> Owner Team
-              </StatLabel>
-              <StatNumber fontSize="lg">
-                {currentIntegration.owner_team.name}
-              </StatNumber>
-              <StatHelpText>
-                Created by{' '}
-                {currentIntegration.created_by.name ||
-                  currentIntegration.created_by.email ||
-                  'Unknown'}
-              </StatHelpText>
-            </Stat>
-          </CardBody>
-        </Card>
-
-        <Card bg={statBg} borderRadius="lg">
-          <CardBody>
-            <Stat>
-              <StatLabel display="flex" alignItems="center">
-                <FiActivity style={{ marginRight: '8px' }} /> Resources
-              </StatLabel>
-              <StatNumber>
-                {loadingResources ? (
-                  <Spinner size="sm" />
-                ) : (
-                  currentResources.length
-                )}
-              </StatNumber>
-              <StatHelpText>Available resources</StatHelpText>
-            </Stat>
-          </CardBody>
-        </Card>
-
-        <Card bg={statBg} borderRadius="lg">
-          <CardBody>
-            <Stat>
-              <StatLabel display="flex" alignItems="center">
-                <FiUsers style={{ marginRight: '8px' }} /> Shared With
-              </StatLabel>
-              <StatNumber>
-                {currentIntegration.shared_with?.length || 0}
-              </StatNumber>
-              <StatHelpText>Teams with access</StatHelpText>
-            </Stat>
-          </CardBody>
-        </Card>
-      </SimpleGrid>
-
-      {/* Detailed content in tabs */}
-      <Tabs variant="enclosed" colorScheme="blue">
+      {/* Tab navigation */}
+      <Tabs
+        variant="enclosed"
+        colorScheme="blue"
+        onChange={(index) => {
+          setActiveTab(['overview', 'resources', 'settings'][index])
+        }}
+        defaultIndex={0}
+      >
         <TabList>
           <Tab>Overview</Tab>
           <Tab>
-            Resources {loadingResources && <Spinner size="xs" ml={2} />}
+            Resources {getTotalResources() > 0 && `(${getTotalResources()})`}
           </Tab>
-          <Tab>Sharing</Tab>
           <Tab>Settings</Tab>
         </TabList>
 
         <TabPanels>
-          {/* Overview Panel */}
+          {/* Overview tab */}
           <TabPanel>
-            <Card
-              bg={cardBg}
-              borderColor={cardBorder}
-              borderWidth="1px"
-              borderRadius="lg"
-            >
-              <CardHeader>
-                <Heading size="md">Integration Details</Heading>
-              </CardHeader>
-              <CardBody>
-                <VStack spacing={4} align="stretch">
-                  <Flex justifyContent="space-between">
-                    <Text fontWeight="bold">ID</Text>
-                    <Text>{currentIntegration.id}</Text>
-                  </Flex>
-                  <Divider />
+            <VStack align="stretch" spacing={6}>
+              {/* Description card */}
+              <Card
+                borderWidth="1px"
+                borderRadius="lg"
+                overflow="hidden"
+                bg={cardBg}
+                borderColor={cardBorder}
+              >
+                <CardHeader>
+                  <Heading size="md">Description</Heading>
+                </CardHeader>
+                <CardBody>
+                  <Text>
+                    {currentIntegration.description ||
+                      'No description provided.'}
+                  </Text>
+                </CardBody>
+              </Card>
 
-                  <Flex justifyContent="space-between">
-                    <Text fontWeight="bold">Type</Text>
-                    <Text>{currentIntegration.service_type}</Text>
-                  </Flex>
-                  <Divider />
+              {/* Integration details card */}
+              <Card
+                borderWidth="1px"
+                borderRadius="lg"
+                overflow="hidden"
+                bg={cardBg}
+                borderColor={cardBorder}
+              >
+                <CardHeader>
+                  <Heading size="md">Details</Heading>
+                </CardHeader>
+                <CardBody>
+                  <VStack align="stretch" spacing={4}>
+                    <DetailPanel title="Service">
+                      <Text>{currentIntegration.service_type}</Text>
+                    </DetailPanel>
 
-                  <Flex justifyContent="space-between">
-                    <Text fontWeight="bold">Status</Text>
-                    <Badge
-                      colorScheme={getStatusColor(
-                        currentIntegration.status as IntegrationStatus
-                      )}
-                    >
-                      {currentIntegration.status}
-                    </Badge>
-                  </Flex>
-                  <Divider />
+                    <DetailPanel title="Status">
+                      <Badge
+                        colorScheme={
+                          currentIntegration.status === IntegrationStatus.ACTIVE
+                            ? 'green'
+                            : currentIntegration.status ===
+                                IntegrationStatus.DISCONNECTED
+                              ? 'yellow'
+                              : 'red'
+                        }
+                      >
+                        {currentIntegration.status}
+                      </Badge>
+                    </DetailPanel>
 
-                  <Flex justifyContent="space-between">
-                    <Text fontWeight="bold">Created</Text>
-                    <Text>{formatDate(currentIntegration.created_at)}</Text>
-                  </Flex>
-                  <Divider />
+                    <DetailPanel title="Team">
+                      <Text>{currentIntegration.owner_team.name}</Text>
+                    </DetailPanel>
 
-                  <Flex justifyContent="space-between">
-                    <Text fontWeight="bold">Last Updated</Text>
-                    <Text>{formatDate(currentIntegration.updated_at)}</Text>
-                  </Flex>
-                  <Divider />
+                    <DetailPanel title="Created">
+                      <Text>
+                        {new Date(
+                          currentIntegration.created_at
+                        ).toLocaleString()}
+                      </Text>
+                    </DetailPanel>
 
-                  <Flex justifyContent="space-between">
-                    <Text fontWeight="bold">Last Used</Text>
-                    <Text>
-                      {currentIntegration.last_used_at
-                        ? formatDate(currentIntegration.last_used_at)
-                        : 'Never used'}
-                    </Text>
-                  </Flex>
+                    <DetailPanel title="Last Used">
+                      <Text>
+                        {currentIntegration.last_used_at
+                          ? new Date(
+                              currentIntegration.last_used_at
+                            ).toLocaleString()
+                          : 'Never'}
+                      </Text>
+                    </DetailPanel>
 
-                  {currentIntegration.metadata &&
-                    Object.keys(currentIntegration.metadata).length > 0 && (
-                      <>
-                        <Divider />
-                        <Box>
-                          <Text fontWeight="bold" mb={2}>
-                            Metadata
-                          </Text>
+                    {currentIntegration.metadata &&
+                      Object.keys(currentIntegration.metadata).length > 0 && (
+                        <DetailPanel title="Additional Info">
                           <VStack align="stretch" spacing={2}>
                             {Object.entries(currentIntegration.metadata).map(
                               ([key, value]) => (
-                                <Flex key={key} justifyContent="space-between">
-                                  <Text>{key}</Text>
+                                <HStack key={key} spacing={2}>
+                                  <Text fontWeight="bold">{key}:</Text>
                                   <Text>
                                     {typeof value === 'object'
                                       ? JSON.stringify(value)
                                       : String(value)}
                                   </Text>
-                                </Flex>
+                                </HStack>
                               )
                             )}
                           </VStack>
-                        </Box>
-                      </>
-                    )}
-                </VStack>
-              </CardBody>
-            </Card>
+                        </DetailPanel>
+                      )}
+                  </VStack>
+                </CardBody>
+              </Card>
+
+              {/* Resources summary card */}
+              <Card
+                borderWidth="1px"
+                borderRadius="lg"
+                overflow="hidden"
+                bg={cardBg}
+                borderColor={cardBorder}
+              >
+                <CardHeader pb={0}>
+                  <Flex justify="space-between" align="center">
+                    <Heading size="md">Resources</Heading>
+                    <Button
+                      size="sm"
+                      leftIcon={<FiZap />}
+                      colorScheme="blue"
+                      variant="outline"
+                      onClick={handleSyncResources}
+                      isLoading={isSyncing}
+                    >
+                      Sync Resources
+                    </Button>
+                  </Flex>
+                </CardHeader>
+                <CardBody>
+                  {loadingResources ? (
+                    <Flex justify="center" py={4}>
+                      <Spinner />
+                    </Flex>
+                  ) : resourceError ? (
+                    <Text color="red.500">{resourceError.message}</Text>
+                  ) : currentResources.length === 0 ? (
+                    <Box textAlign="center" py={4}>
+                      <Text mb={4}>No resources found.</Text>
+                      <Button
+                        leftIcon={<FiPlusCircle />}
+                        colorScheme="blue"
+                        onClick={handleSyncResources}
+                        isLoading={isSyncing}
+                      >
+                        Sync Resources
+                      </Button>
+                    </Box>
+                  ) : (
+                    <VStack align="stretch" spacing={4}>
+                      {currentIntegration.service_type === 'slack' && (
+                        <>
+                          <HStack justify="space-between">
+                            <Text fontWeight="bold">Channels</Text>
+                            <Text>
+                              {getResourcesByType(ResourceType.SLACK_CHANNEL)}
+                            </Text>
+                          </HStack>
+                          <HStack justify="space-between">
+                            <Text fontWeight="bold">Users</Text>
+                            <Text>
+                              {getResourcesByType(ResourceType.SLACK_USER)}
+                            </Text>
+                          </HStack>
+                        </>
+                      )}
+                      <HStack justify="space-between">
+                        <Text fontWeight="bold">Total Resources</Text>
+                        <Text>{getTotalResources()}</Text>
+                      </HStack>
+                    </VStack>
+                  )}
+                </CardBody>
+              </Card>
+            </VStack>
           </TabPanel>
 
-          {/* Resources Panel */}
+          {/* Resources tab */}
           <TabPanel>
-            <Flex justifyContent="space-between" alignItems="center" mb={4}>
-              <Heading size="md">Resources</Heading>
-              <Button
-                leftIcon={<FiRefreshCw />}
-                onClick={handleSyncResources}
-                isLoading={isSyncing}
-                size="sm"
-              >
-                Sync Resources
-              </Button>
-            </Flex>
-
-            {resourceError && (
-              <Box bg="red.50" color="red.500" p={3} borderRadius="md" mb={4}>
-                Error loading resources: {resourceError.message}
-              </Box>
-            )}
-
-            {loadingResources && !currentResources.length ? (
-              <Flex justify="center" align="center" p={10}>
-                <Spinner />
-                <Text ml={3}>Loading resources...</Text>
-              </Flex>
-            ) : currentResources.length === 0 ? (
-              <Box
-                p={6}
-                textAlign="center"
-                borderWidth="1px"
-                borderStyle="dashed"
-                borderRadius="lg"
-              >
-                <Text mb={4}>No resources found for this integration.</Text>
+            <Box>
+              <Flex justify="space-between" mb={4}>
+                <Heading size="md">Resources</Heading>
                 <Button
-                  onClick={handleSyncResources}
+                  leftIcon={<FiZap />}
                   colorScheme="blue"
-                  leftIcon={<FiRefreshCw />}
+                  onClick={handleSyncResources}
                   isLoading={isSyncing}
                 >
-                  Sync Now
+                  Sync Resources
                 </Button>
-              </Box>
-            ) : (
-              <Box overflowX="auto">
-                <Table
-                  variant="simple"
-                  bg={tableBg}
-                  borderRadius="lg"
-                  overflow="hidden"
-                >
-                  <Thead bg={tableHeaderBg}>
-                    <Tr>
-                      <Th>Name</Th>
-                      <Th>Type</Th>
-                      <Th>External ID</Th>
-                      <Th>Last Synced</Th>
-                      <Th>Actions</Th>
-                    </Tr>
-                  </Thead>
-                  <Tbody>
-                    {currentResources.map((resource: ServiceResource) => (
-                      <Tr key={resource.id}>
-                        <Td fontWeight="medium">{resource.name}</Td>
-                        <Td>
-                          <Tag size="sm" colorScheme="blue" borderRadius="full">
-                            <TagLabel>
-                              {getReadableResourceType(
-                                resource.resource_type as ResourceType
-                              )}
-                            </TagLabel>
-                          </Tag>
-                        </Td>
-                        <Td>
-                          <Text fontSize="sm" isTruncated maxW="200px">
-                            {resource.external_id}
-                          </Text>
-                        </Td>
-                        <Td>
-                          {resource.last_synced_at
-                            ? new Date(resource.last_synced_at).toLocaleString()
-                            : 'Never'}
-                        </Td>
-                        <Td>
-                          <HStack spacing={1}>
-                            <IconButton
-                              aria-label="View resource"
-                              icon={<FiSettings />}
-                              size="sm"
-                              variant="ghost"
-                            />
-                          </HStack>
-                        </Td>
-                      </Tr>
-                    ))}
-                  </Tbody>
-                </Table>
-              </Box>
-            )}
+              </Flex>
+
+              {loadingResources ? (
+                <Flex justify="center" py={8}>
+                  <Spinner size="xl" />
+                </Flex>
+              ) : resourceError ? (
+                <Text color="red.500" mb={4}>
+                  {resourceError.message}
+                </Text>
+              ) : (
+                <ResourceList
+                  resources={currentResources}
+                  integrationId={integrationId || ''}
+                />
+              )}
+            </Box>
           </TabPanel>
 
-          {/* Sharing Panel */}
+          {/* Settings tab */}
           <TabPanel>
-            <Card
-              bg={cardBg}
-              borderColor={cardBorder}
-              borderWidth="1px"
-              borderRadius="lg"
-            >
-              <CardHeader>
-                <Heading size="md">Sharing Settings</Heading>
-              </CardHeader>
-              <CardBody>
-                {!currentIntegration.shared_with ||
-                currentIntegration.shared_with.length === 0 ? (
-                  <Box
-                    p={6}
-                    textAlign="center"
-                    borderWidth="1px"
-                    borderStyle="dashed"
-                    borderRadius="lg"
-                  >
-                    <Text mb={4}>
-                      This integration is not shared with any teams.
-                    </Text>
-                    <Button colorScheme="blue">Share Integration</Button>
-                  </Box>
-                ) : (
-                  <Box overflowX="auto">
-                    <Table variant="simple">
-                      <Thead>
-                        <Tr>
-                          <Th>Team</Th>
-                          <Th>Access Level</Th>
-                          <Th>Shared By</Th>
-                          <Th>Shared On</Th>
-                          <Th>Actions</Th>
-                        </Tr>
-                      </Thead>
-                      <Tbody>
-                        {currentIntegration.shared_with.map((share) => (
-                          <Tr key={share.id}>
-                            <Td fontWeight="medium">{share.team.name}</Td>
-                            <Td>
-                              <Badge
-                                colorScheme={getShareLevelColor(
-                                  share.share_level as ShareLevel
-                                )}
-                              >
-                                {share.share_level}
-                              </Badge>
-                            </Td>
-                            <Td>
-                              {share.shared_by.name || share.shared_by.email}
-                            </Td>
-                            <Td>
-                              {new Date(share.created_at).toLocaleDateString()}
-                            </Td>
-                            <Td>
-                              <IconButton
-                                aria-label="Revoke access"
-                                icon={<FiTrash2 />}
-                                colorScheme="red"
-                                size="sm"
-                                variant="ghost"
-                              />
-                            </Td>
-                          </Tr>
-                        ))}
-                      </Tbody>
-                    </Table>
-                  </Box>
-                )}
-              </CardBody>
-            </Card>
-          </TabPanel>
+            <VStack align="stretch" spacing={6}>
+              {/* Basic settings card */}
+              <Card
+                borderWidth="1px"
+                borderRadius="lg"
+                overflow="hidden"
+                bg={cardBg}
+                borderColor={cardBorder}
+              >
+                <CardHeader>
+                  <Heading size="md">Basic Settings</Heading>
+                </CardHeader>
+                <CardBody>
+                  <Text>Settings controls will be implemented here.</Text>
+                </CardBody>
+              </Card>
 
-          {/* Settings Panel */}
-          <TabPanel>
-            <Card
-              bg={cardBg}
-              borderColor={cardBorder}
-              borderWidth="1px"
-              borderRadius="lg"
-            >
-              <CardHeader>
-                <Heading size="md">Integration Settings</Heading>
-              </CardHeader>
-              <CardBody>
-                <VStack spacing={6} align="stretch">
-                  <Box>
-                    <Button leftIcon={<FiEdit2 />} colorScheme="blue" mb={4}>
-                      Edit Integration
-                    </Button>
-                    <Text fontSize="sm" color="gray.500">
-                      Update the integration name, description, or other
-                      settings.
-                    </Text>
-                  </Box>
+              {/* Danger zone card */}
+              <Card
+                borderWidth="1px"
+                borderRadius="lg"
+                overflow="hidden"
+                bg={cardBg}
+                borderColor="red.200"
+              >
+                <CardHeader bg="red.50" _dark={{ bg: 'red.900' }}>
+                  <Heading size="md" color="red.500">
+                    Danger Zone
+                  </Heading>
+                </CardHeader>
+                <CardBody>
+                  <VStack align="stretch" spacing={4}>
+                    <Box>
+                      <Heading size="sm" mb={2}>
+                        Disconnect Integration
+                      </Heading>
+                      <Text mb={2}>
+                        Temporarily disable this integration without deleting
+                        it.
+                      </Text>
+                      <Button
+                        colorScheme="orange"
+                        variant="outline"
+                        onClick={handleToggleStatus}
+                        isDisabled={
+                          currentIntegration.status ===
+                          IntegrationStatus.DISCONNECTED
+                        }
+                      >
+                        Disconnect
+                      </Button>
+                    </Box>
 
-                  <Divider />
+                    <Divider />
 
-                  <Box>
-                    <Button
-                      leftIcon={<FiRefreshCw />}
-                      colorScheme="teal"
-                      mb={4}
-                    >
-                      Reconnect
-                    </Button>
-                    <Text fontSize="sm" color="gray.500">
-                      Reauthenticate or refresh the connection to the service.
-                    </Text>
-                  </Box>
-
-                  <Divider />
-
-                  <Box>
-                    <Button leftIcon={<FiTrash2 />} colorScheme="red" mb={4}>
-                      Delete Integration
-                    </Button>
-                    <Text fontSize="sm" color="gray.500">
-                      Permanently delete this integration and revoke all access.
-                      This action cannot be undone.
-                    </Text>
-                  </Box>
-                </VStack>
-              </CardBody>
-            </Card>
+                    <Box>
+                      <Heading size="sm" mb={2}>
+                        Delete Integration
+                      </Heading>
+                      <Text mb={2}>
+                        Permanently delete this integration and all its data.
+                        This action cannot be undone.
+                      </Text>
+                      <Button colorScheme="red">Delete Integration</Button>
+                    </Box>
+                  </VStack>
+                </CardBody>
+              </Card>
+            </VStack>
           </TabPanel>
         </TabPanels>
       </Tabs>
