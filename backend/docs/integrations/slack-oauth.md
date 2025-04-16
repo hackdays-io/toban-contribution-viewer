@@ -37,26 +37,24 @@ This guide explains how to set up and test the Slack OAuth integration in the To
    - Only localhost URLs can use http:// protocol
 6. Save your changes
 
-## Configuring Environment Variables
+## Slack Credentials
 
-Add the following variables to your environment:
+This application no longer requires Slack credentials to be stored in environment variables:
+
+1. Users will enter their Slack client ID and client secret directly in the UI when connecting to Slack
+2. The credentials are securely passed from the frontend to the backend during the OAuth flow
+3. This simplifies setup as you don't need to manage these variables in your environment
+
+You'll still need to configure your backend URL:
 
 ```
-SLACK_CLIENT_ID=your_slack_client_id
-SLACK_CLIENT_SECRET=your_slack_client_secret
-SLACK_SIGNING_SECRET=your_slack_signing_secret
 API_URL=your_backend_url # e.g., http://localhost:8000 for local development
 ```
 
-### Development Environment
-
-For local development, add these to:
-1. `.env` file in the backend directory
-2. `.env.docker` file in the root directory (for Docker development)
-
-### Production Environment
-
-In production, set these as environment variables in your deployment platform.
+This approach provides several benefits:
+- Each team can use their own Slack app
+- No need to redeploy when changing Slack credentials
+- More flexible for multi-tenant environments
 
 ## Testing the Integration
 

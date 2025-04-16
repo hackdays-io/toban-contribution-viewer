@@ -33,10 +33,6 @@ services:
     # Explicit environment variables that override env_file
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER:-toban_admin}:${POSTGRES_PASSWORD:-postgres}@postgres/${POSTGRES_DB:-tobancv}
-      # Use Slack variables from .env.docker file
-      - SLACK_CLIENT_ID=${SLACK_CLIENT_ID}
-      - SLACK_CLIENT_SECRET=${SLACK_CLIENT_SECRET}
-      - SLACK_SIGNING_SECRET=${SLACK_SIGNING_SECRET}
       # API and Frontend URLs
       - API_URL=http://localhost:8000
       - FRONTEND_URL=${NGROK_URL:-http://localhost:5173}
@@ -77,8 +73,6 @@ services:
       - VITE_ENABLE_NOTION_INTEGRATION=true
       - VITE_ENABLE_SLACK_INTEGRATION=true
       - VITE_ENABLE_GITHUB_INTEGRATION=true
-      # Variables for Slack integration in the frontend
-      - VITE_SLACK_CLIENT_ID=${SLACK_CLIENT_ID}
     ports:
       - "5173:5173"
     depends_on:

@@ -140,6 +140,23 @@ class SlackIntegrationCreate(IntegrationCreate):
     service_type: IntegrationTypeEnum = IntegrationTypeEnum.SLACK
     code: str
     redirect_uri: str
+    client_id: str
+    client_secret: str
+
+
+class SlackCredentials(BaseModel):
+    """Schema for manual Slack credentials."""
+
+    client_id: str
+    client_secret: str
+    bot_token: str
+
+
+class ManualSlackIntegrationCreate(IntegrationCreate):
+    """Schema for creating a new Slack integration with manual credentials."""
+
+    service_type: IntegrationTypeEnum = IntegrationTypeEnum.SLACK
+    credentials: SlackCredentials
 
 
 class GitHubIntegrationCreate(IntegrationCreate):
@@ -253,7 +270,9 @@ class IntegrationResponse(BaseModel):
     description: Optional[str] = None
     service_type: IntegrationTypeEnum
     status: IntegrationStatusEnum
-    metadata: Dict = Field(default_factory=dict)  # Maps to integration_metadata in the model
+    metadata: Dict = Field(
+        default_factory=dict
+    )  # Maps to integration_metadata in the model
     last_used_at: Optional[datetime] = None
 
     owner_team: TeamInfo
@@ -268,7 +287,7 @@ class IntegrationResponse(BaseModel):
 
     class Config:
         orm_mode = True
-        
+
         # Specify field mappings
         fields = {
             "metadata": "integration_metadata",

@@ -95,9 +95,8 @@ class Settings(BaseSettings):
     OPENROUTER_DEFAULT_MODEL: str = "anthropic/claude-3-sonnet:20240229"
     OPENROUTER_MAX_TOKENS: int = 4000
     OPENROUTER_TEMPERATURE: float = 0.7
-    SLACK_CLIENT_ID: Optional[str] = None
-    SLACK_CLIENT_SECRET: Optional[SecretStr] = None
-    SLACK_SIGNING_SECRET: Optional[SecretStr] = None
+    # Slack credentials are now provided by the user through the UI
+    # rather than through environment variables
     GITHUB_CLIENT_ID: Optional[str] = None
     GITHUB_CLIENT_SECRET: Optional[SecretStr] = None
     NOTION_API_KEY: Optional[SecretStr] = None

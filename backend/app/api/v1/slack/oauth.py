@@ -48,19 +48,25 @@ class SlackOAuthResponse(BaseModel):
 
 @router.get("/oauth-url")
 async def get_oauth_url(
+    client_id: Optional[str] = Query(None),
+    client_secret: Optional[str] = Query(None),
     # No longer accepting redirect_uri from frontend
 ) -> Dict[str, str]:
     """
     Generate OAuth URL for Slack.
 
+    Args:
+        client_id: Optional Slack client ID provided by frontend. If not provided, uses env settings.
+        client_secret: Optional Slack client secret provided by frontend. If not provided, uses env settings.
+
     Returns:
         Dictionary containing the OAuth URL.
     """
-    if not settings.SLACK_CLIENT_ID:
-        logger.error("SLACK_CLIENT_ID is not configured")
-        raise HTTPException(
-            status_code=500, detail="Slack integration is not properly configured"
-        )
+    # Client ID must be provided by the user through the UI
+    if not client_id:
+        logger.error("Slack client ID not provided")
+        raise HTTPException(status_code=400, detail="Slack client ID is required")
+    actual_client_id = client_id
 
     # Define OAuth scopes needed for the application
     scopes = [
@@ -76,7 +82,7 @@ async def get_oauth_url(
 
     # Create the OAuth URL
     params = {
-        "client_id": settings.SLACK_CLIENT_ID,
+        "client_id": actual_client_id,
         "scope": ",".join(scopes),
         "user_scope": "",  # No user tokens needed for our use case
     }
@@ -125,12 +131,16 @@ async def get_oauth_url(
     return {"url": oauth_url}
 
 
-async def _exchange_code_for_token(code: str) -> Dict[str, Any]:
+async def _exchange_code_for_token(
+    code: str, client_id: Optional[str] = None, client_secret: Optional[str] = None
+) -> Dict[str, Any]:
     """
     Exchange OAuth code for an access token.
 
     Args:
         code: Authorization code from Slack
+        client_id: Optional client_id to use instead of environment variable
+        client_secret: Optional client_secret to use instead of environment variable
 
     Returns:
         Parsed token response data
@@ -138,20 +148,43 @@ async def _exchange_code_for_token(code: str) -> Dict[str, Any]:
     Raises:
         HTTPException: If the request fails or returns an error
     """
-    if not settings.SLACK_CLIENT_ID or not settings.SLACK_CLIENT_SECRET:
-        logger.error("Slack credentials not configured")
-        raise HTTPException(
-            status_code=500, detail="Slack integration is not properly configured"
-        )
+    # Client ID must be provided by the user through the UI
+    if not client_id:
+        logger.error("Slack client ID not provided")
+        raise HTTPException(status_code=400, detail="Slack client ID is required")
+    actual_client_id = client_id
+
+    # Client secret must be provided by the user through the UI
+    if not client_secret:
+        logger.error("Slack client secret not provided")
+        raise HTTPException(status_code=400, detail="Slack client secret is required")
+    actual_client_secret = client_secret
 
     try:
+        # Need to include the same redirect_uri as in the original authorization request
+
+        # Get base URL from settings.FRONTEND_URL or API_URL
+        if settings.FRONTEND_URL:
+            frontend_base_url = str(settings.FRONTEND_URL).rstrip("/")
+            frontend_callback = f"{frontend_base_url}/auth/slack/callback"
+        elif settings.API_URL:
+            api_url = str(settings.API_URL).rstrip("/")
+            if "/api/v1" in api_url:
+                base_url = api_url.split("/api/v1")[0]
+            else:
+                base_url = api_url
+            frontend_callback = f"{base_url}/auth/slack/callback"
+        else:
+            frontend_callback = "http://localhost:5173/auth/slack/callback"
+
         # Exchange the temporary code for an access token
         token_response = requests.post(
             "https://slack.com/api/oauth.v2.access",
             data={
-                "client_id": settings.SLACK_CLIENT_ID,
-                "client_secret": settings.SLACK_CLIENT_SECRET.get_secret_value(),
+                "client_id": actual_client_id,
+                "client_secret": actual_client_secret,
                 "code": code,
+                "redirect_uri": frontend_callback,
             },
         )
         token_response.raise_for_status()
@@ -286,6 +319,8 @@ async def slack_oauth_callback(
     state: Optional[str] = Query(None),
     error: Optional[str] = Query(None),
     redirect_from_frontend: Optional[bool] = Query(False),
+    client_id: Optional[str] = Query(None),
+    client_secret: Optional[str] = Query(None),
 ) -> Dict[str, str]:
     """
     Handle Slack OAuth callback.
@@ -297,6 +332,8 @@ async def slack_oauth_callback(
         state: Optional state parameter for CSRF validation
         error: Error message if authorization failed
         redirect_from_frontend: Whether the request came from the frontend
+        client_id: Optional client ID if provided from frontend
+        client_secret: Optional client secret if provided from frontend
 
     Returns:
         Dictionary with status message
@@ -305,18 +342,24 @@ async def slack_oauth_callback(
         logger.error(f"Slack OAuth error: {error}")
         raise HTTPException(status_code=400, detail=f"Slack OAuth error: {error}")
 
-    if not settings.SLACK_CLIENT_ID or not settings.SLACK_CLIENT_SECRET:
-        logger.error("Slack credentials not configured")
-        raise HTTPException(
-            status_code=500, detail="Slack integration is not properly configured"
-        )
+    # Client ID must be provided by the user through the UI
+    if not client_id:
+        logger.error("Slack client ID not provided")
+        raise HTTPException(status_code=400, detail="Slack client ID is required")
+    actual_client_id = client_id
+
+    # Client secret must be provided by the user through the UI
+    if not client_secret:
+        logger.error("Slack client secret not provided")
+        raise HTTPException(status_code=400, detail="Slack client secret is required")
+    actual_client_secret = client_secret
 
     # Log the OAuth callback (with only first few chars of the code for security)
     logger.info(f"OAuth callback received with code={code[:5]}... and state={state}")
 
     try:
         # Exchange code for token and handle errors
-        token_data = await _exchange_code_for_token(code)
+        token_data = await _exchange_code_for_token(code, client_id, client_secret)
 
         # Validate the token response
         oauth_response = SlackOAuthResponse(**token_data)

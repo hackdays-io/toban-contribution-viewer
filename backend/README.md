@@ -129,13 +129,11 @@ For details, see:
 In addition to the database configuration, you'll need to set the following environment variables:
 
 ```
-# Slack API credentials
-SLACK_CLIENT_ID=your_slack_client_id
-SLACK_CLIENT_SECRET=your_slack_client_secret
-
 # OpenRouter (for LLM analytics)
 OPENROUTER_API_KEY=your_openrouter_api_key
 OPENROUTER_DEFAULT_MODEL=anthropic/claude-3-opus:20240229
 OPENROUTER_MAX_TOKENS=4000
 OPENROUTER_TEMPERATURE=0.7
 ```
+
+Note: Slack integration no longer requires environment variables. Users will enter their Slack credentials directly in the application interface.
