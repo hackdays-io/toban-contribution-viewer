@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "npm run check-env && tsc -b && vite build",
+    "build:ci": "npm run check-env && tsc -p tsconfig.ci.json && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\"",
