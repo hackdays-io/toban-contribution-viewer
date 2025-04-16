@@ -1,4 +1,4 @@
-name: CI for PR 146
+name: CI for Integration Feature
 
 on:
   pull_request:
@@ -9,6 +9,7 @@ on:
   push:
     branches:
       - fix/integration-connect-page
+      - feature/125-integration-detail-component
 
 jobs:
   frontend-build:
@@ -32,3 +33,4 @@ jobs:
           VITE_SUPABASE_URL: https://example.supabase.co
           VITE_SUPABASE_ANON_KEY: test-supabase-key
           VITE_DEV_MODE: false
+
