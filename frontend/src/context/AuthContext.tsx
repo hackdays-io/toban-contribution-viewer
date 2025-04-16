@@ -59,6 +59,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   // Temporarily commenting out as it's not used yet but will be needed for future optimizations
   // const prevTeamContextRef = useRef<TeamContext>({ teams: [] });
 
+  // Reference to store previous teamContext to avoid dependency cycle
+  const prevTeamContextRef = useRef<TeamContext>({ teams: [] })
+
   // Function to load team context from API
   const loadTeamContext = useCallback(async () => {
     try {
@@ -78,19 +81,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       }
 
       const data = await response.json()
+      const prevTeamContext = prevTeamContextRef.current
 
       // Check if team context actually changed before updating state
       const hasChanged =
-        data.current_team_id !== teamContext.currentTeamId ||
-        data.current_team_role !== teamContext.currentTeamRole ||
-        JSON.stringify(data.teams || []) !== JSON.stringify(teamContext.teams)
+        data.current_team_id !== prevTeamContext.currentTeamId ||
+        data.current_team_role !== prevTeamContext.currentTeamRole ||
+        JSON.stringify(data.teams || []) !==
+          JSON.stringify(prevTeamContext.teams)
 
       if (hasChanged) {
-        setTeamContext({
+        const newTeamContext = {
           currentTeamId: data.current_team_id,
           currentTeamRole: data.current_team_role as TeamRole,
           teams: data.teams || [],
-        })
+        }
+
+        // Update the ref first
+        prevTeamContextRef.current = newTeamContext
+
+        // Then update state
+        setTeamContext(newTeamContext)
 
         // Only log when there's an actual change
         console.info('Team context updated')
@@ -99,7 +110,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       console.error('Error loading team context:', error)
       // Don't set error state here, as this is supplementary information
     }
-  }, [user, session?.access_token, teamContext])
+  }, [user, session?.access_token])
 
   // Function to switch the current team
   const switchTeam = async (teamId: string) => {
@@ -122,12 +133,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
       const data = await response.json()
 
-      // Update team context
-      setTeamContext({
+      // Create new team context
+      const newTeamContext = {
         currentTeamId: data.current_team_id,
         currentTeamRole: data.current_team_role as TeamRole,
         teams: data.teams || [],
-      })
+      }
+
+      // Update the ref first
+      prevTeamContextRef.current = newTeamContext
+
+      // Then update state
+      setTeamContext(newTeamContext)
 
       // Update session with new token if provided
       if (data.token && session) {
@@ -171,7 +188,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         } else {
           setSession(null)
           setUser(null)
-          setTeamContext({ teams: [] })
+          const emptyContext = { teams: [] }
+          prevTeamContextRef.current = emptyContext
+          setTeamContext(emptyContext)
         }
       } catch (error) {
         setError(error as Error)
@@ -192,7 +211,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       } else {
         setSession(null)
         setUser(null)
-        setTeamContext({ teams: [] })
+        const emptyContext = { teams: [] }
+        prevTeamContextRef.current = emptyContext
+        setTeamContext(emptyContext)
       }
       setLoading(false)
     })
@@ -210,7 +231,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     if (user && session) {
       loadTeamContext()
     }
-  }, [user, session, loadTeamContext])
+    // We're only using session?.access_token from the session object,
+    // so we're intentionally not adding the entire session object as a dependency
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, session?.access_token, loadTeamContext])
 
   // Sign out function
   const signOut = async () => {
