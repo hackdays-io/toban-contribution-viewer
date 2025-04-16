@@ -141,30 +141,7 @@ const IntegrationDetail: React.FC = () => {
       return
     }
 
-    // If we're using local Slack auth, simulate a sync instead of calling backend
-    if (localSlackAuth && currentIntegration?.service_type === 'slack') {
-      console.log('Using local Slack auth, simulating sync')
-      setIsSyncing(true)
-
-      try {
-        // Simulate resource sync with a delay
-        await new Promise((resolve) => setTimeout(resolve, 1500))
-
-        toast({
-          title: 'Resources synced locally',
-          description: 'Using local credentials from browser storage',
-          status: 'info',
-          duration: 3000,
-          isClosable: true,
-        })
-        console.log('Local sync complete')
-      } finally {
-        setIsSyncing(false)
-      }
-      return
-    }
-
-    // Otherwise call the backend
+    // Always call backend to sync resources, regardless of local auth status
     console.log('Calling backend sync resources')
     setIsSyncing(true)
     try {
