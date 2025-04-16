@@ -177,6 +177,7 @@ class IntegrationShare(Base, BaseModel):
     """
     Model for sharing integrations between teams.
     """
+    __tablename__ = "integration_share"
 
     # Sharing info
     share_level = Column(Enum(ShareLevel), default=ShareLevel.READ_ONLY, nullable=False)
@@ -201,7 +202,7 @@ class IntegrationShare(Base, BaseModel):
     # Ensure unique sharing between integration and team
     __table_args__ = (
         Index(
-            "ix_integrationshare_integration_id_team_id",
+            "ix_integration_share_integration_id_team_id",
             "integration_id",
             "team_id",
             unique=True,
