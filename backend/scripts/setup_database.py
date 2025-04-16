@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Database Setup Script for Toban Contribution Viewer
+Database Setup Script for Toban Contribution Viewer.
 
 This script initializes the database for the Toban Contribution Viewer.
 It is intended to be run once when setting up a new environment.
@@ -19,14 +19,14 @@ Options:
 
 import argparse
 import os
-import subprocess
+import subprocess  # nosec B404 - subprocess is used safely
 import sys
-import time
+from typing import Tuple
 
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine, engine, text
 
 
-def check_environment():
+def check_environment() -> None:
     """Check if we're in production environment."""
     is_production = os.environ.get("ENVIRONMENT") == "production"
     if is_production:
@@ -40,14 +40,14 @@ def check_environment():
         print("CAUTION: Proceeding with database setup in PRODUCTION environment!")
 
 
-def get_database_url():
+def get_database_url() -> str:
     """Get the database URL from environment variables or use default."""
     return os.environ.get(
         "DATABASE_URL", "postgresql://toban_admin:postgres@postgres/tobancv"
     )
 
 
-def reset_database(engine):
+def reset_database(db_engine: engine.Engine) -> None:
     """Reset the database by dropping all tables and alembic version info."""
     print("Resetting database...")
 
@@ -58,7 +58,7 @@ def reset_database(engine):
     CREATE SCHEMA public;
     GRANT ALL ON SCHEMA public TO toban_admin;
     GRANT ALL ON SCHEMA public TO public;
-    
+
     -- Drop enums if they exist
     DROP TYPE IF EXISTS teammemberrole CASCADE;
     DROP TYPE IF EXISTS integrationtype CASCADE;
@@ -70,75 +70,74 @@ def reset_database(engine):
     DROP TYPE IF EXISTS eventtype CASCADE;
     """
 
-    with engine.connect() as conn:
+    with db_engine.connect() as conn:
         conn.execute(text(reset_sql))
         conn.commit()
 
     print("Database reset completed.")
 
 
-def run_alembic_migrations():
+def run_alembic_command(command: str, target: str) -> Tuple[bool, str, str]:
+    """Run an Alembic command either directly or through Docker.
+
+    Args:
+        command: The Alembic command to run (e.g., 'upgrade', 'stamp')
+        target: The target revision (e.g., 'head', 'consolidated_schema')
+
+    Returns:
+        tuple: (success, stdout, stderr)
+    """
+    inside_docker = os.path.exists("/.dockerenv")
+
+    try:
+        if inside_docker:
+            # Inside Docker container
+            cmd = ["alembic", command, target]
+        else:
+            # Outside Docker
+            cmd = ["docker", "exec", "tobancv-backend", "alembic", command, target]
+
+        # We're using fixed command strings, so this is safe
+        result = subprocess.run(  # nosec
+            cmd,
+            check=True,
+            capture_output=True,
+        )
+        return True, result.stdout.decode("utf-8"), ""
+    except subprocess.CalledProcessError as e:
+        return False, e.stdout.decode("utf-8"), e.stderr.decode("utf-8")
+
+
+def run_alembic_migrations() -> None:
     """Run Alembic migrations to set up the database schema."""
     print("Running Alembic migrations...")
 
     # First try running the consolidated migration directly
-    try:
-        if os.path.exists("/.dockerenv"):
-            # Inside Docker container
-            result = subprocess.run(
-                ["alembic", "upgrade", "consolidated_schema"],
-                check=True,
-                capture_output=True,
-            )
-        else:
-            # Outside Docker
-            result = subprocess.run(
-                [
-                    "docker",
-                    "exec",
-                    "tobancv-backend",
-                    "alembic",
-                    "upgrade",
-                    "consolidated_schema",
-                ],
-                check=True,
-                capture_output=True,
-            )
+    success, stdout, stderr = run_alembic_command("upgrade", "consolidated_schema")
 
+    if success:
         print("Database migrations completed successfully with consolidated schema.")
-        print(result.stdout.decode("utf-8"))
+        print(stdout)
         return
-    except subprocess.CalledProcessError as e:
+    else:
         print(
             "Consolidated migration had issues, will try regular migration sequence..."
         )
-        print(e.stdout.decode("utf-8"))
-        print(e.stderr.decode("utf-8"))
+        print(stdout)
+        print(stderr)
 
     # If consolidated migration failed, try the normal migration path to head
-    try:
-        if os.path.exists("/.dockerenv"):
-            # Inside Docker container
-            result = subprocess.run(
-                ["alembic", "upgrade", "head"], check=True, capture_output=True
-            )
-        else:
-            # Outside Docker
-            result = subprocess.run(
-                ["docker", "exec", "tobancv-backend", "alembic", "upgrade", "head"],
-                check=True,
-                capture_output=True,
-            )
+    success, stdout, stderr = run_alembic_command("upgrade", "head")
 
+    if success:
         print("Database migrations completed successfully with regular sequence.")
-        print(result.stdout.decode("utf-8"))
-    except subprocess.CalledProcessError as e:
-        print(f"Error running migrations: {e}")
-        print(e.stdout.decode("utf-8"))
-        print(e.stderr.decode("utf-8"))
+        print(stdout)
+    else:
+        print("Error running migrations")
+        print(stdout)
+        print(stderr)
 
         # Check if certain errors are in the output that we can safely ignore
-        stderr = e.stderr.decode("utf-8")
         if "DuplicateObject" in stderr and ("already exists" in stderr):
             print("\nWARNING: Some objects already exist in the database.")
             print("This is typically fine for development environments.")
@@ -148,40 +147,20 @@ def run_alembic_migrations():
 
     # Make sure the database has the proper Alembic version stamped
     # This helps when the tables exist but Alembic's version tracking gets out of sync
-    try:
-        print("\nStamping database with consolidated schema version...")
-        if os.path.exists("/.dockerenv"):
-            # Inside Docker container
-            result = subprocess.run(
-                ["alembic", "stamp", "consolidated_schema"],
-                check=True,
-                capture_output=True,
-            )
-        else:
-            # Outside Docker
-            result = subprocess.run(
-                [
-                    "docker",
-                    "exec",
-                    "tobancv-backend",
-                    "alembic",
-                    "stamp",
-                    "consolidated_schema",
-                ],
-                check=True,
-                capture_output=True,
-            )
+    print("\nStamping database with consolidated schema version...")
+    success, stdout, stderr = run_alembic_command("stamp", "consolidated_schema")
 
+    if success:
         print("Database version stamped successfully.")
-        print(result.stdout.decode("utf-8"))
-    except subprocess.CalledProcessError as e:
-        print(f"Warning: Could not stamp database version: {e}")
-        print(e.stdout.decode("utf-8"))
-        print(e.stderr.decode("utf-8"))
+        print(stdout)
+    else:
+        print("Warning: Could not stamp database version.")
+        print(stdout)
+        print(stderr)
         print("This is not critical and the database should still work correctly.")
 
 
-def create_test_data(engine):
+def create_test_data(db_engine: engine.Engine) -> None:
     """Create test data for development purposes."""
     print("Creating test data...")
 
@@ -193,7 +172,7 @@ def create_test_data(engine):
     SELECT 1 FROM team WHERE id = '2eef945e-9596-4f8c-8cd0-761698121912'
     """
 
-    with engine.connect() as conn:
+    with db_engine.connect() as conn:
         result = conn.execute(text(test_team_exists_sql))
         exists = result.scalar() is not None
 
@@ -203,12 +182,12 @@ def create_test_data(engine):
         # Insert test team
         test_team_sql = """
         INSERT INTO team (
-            id, name, slug, description, team_size, is_personal, 
+            id, name, slug, description, team_size, is_personal,
             created_by_user_id, created_at, updated_at, is_active
         ) VALUES (
-            '2eef945e-9596-4f8c-8cd0-761698121912', 
-            'Test Team', 
-            'test-team', 
+            '2eef945e-9596-4f8c-8cd0-761698121912',
+            'Test Team',
+            'test-team',
             'A test team for development',
             0,
             false,
@@ -238,7 +217,7 @@ def create_test_data(engine):
         ) ON CONFLICT DO NOTHING
         """
 
-        with engine.connect() as conn:
+        with db_engine.connect() as conn:
             conn.execute(text(test_team_sql))
             conn.execute(text(test_member_sql))
             conn.commit()
@@ -248,8 +227,8 @@ def create_test_data(engine):
         print("Test team already exists, skipping test data creation.")
 
 
-def main():
-    """Main entry point."""
+def main() -> None:
+    """Initialize and set up the database."""
     parser = argparse.ArgumentParser(
         description="Setup database for Toban Contribution Viewer"
     )
@@ -265,18 +244,18 @@ def main():
     database_url = get_database_url()
 
     # Create engine
-    engine = create_engine(database_url)
+    db_engine = create_engine(database_url)
 
     # Reset database if requested
     if args.reset:
-        reset_database(engine)
+        reset_database(db_engine)
 
     # Run migrations
     run_alembic_migrations()
 
     # Create test data for development
     if os.environ.get("ENVIRONMENT") != "production":
-        create_test_data(engine)
+        create_test_data(db_engine)
 
     print("Database setup completed successfully.")
 
