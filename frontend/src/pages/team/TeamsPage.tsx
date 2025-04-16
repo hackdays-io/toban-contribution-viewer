@@ -87,7 +87,7 @@ const TeamsPage: React.FC = () => {
       // Construct the authorization header
       const authHeader = token ? `Bearer ${token}` : '';
       
-      const response = await fetch(`${env.apiUrl}/api/v1/teams`, {
+      const response = await fetch(`${env.apiUrl}/teams`, {
         method: 'GET',
         credentials: 'include',
         headers: {
@@ -167,7 +167,7 @@ const TeamsPage: React.FC = () => {
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
       
-      const response = await fetch(`${env.apiUrl}/api/v1/teams`, {
+      const response = await fetch(`${env.apiUrl}/teams`, {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -283,7 +283,7 @@ const TeamsPage: React.FC = () => {
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
       
-      const response = await fetch(`${env.apiUrl}/api/v1/teams/${teamId}`, {
+      const response = await fetch(`${env.apiUrl}/teams/${teamId}`, {
         method: 'DELETE',
         credentials: 'include',
         headers: {
