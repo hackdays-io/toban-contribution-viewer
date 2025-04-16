@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import useAuth from '../../context/useAuth'
 import env from '../../config/env'
 import {
   Box,
@@ -56,6 +57,9 @@ const WorkspaceList: React.FC = () => {
   const cancelRef = React.useRef<HTMLButtonElement>(null)
   const toast = useToast()
 
+  // Get current team ID from auth context
+  const { teamContext } = useAuth()
+
   // Detect if we're running in an environment that might have CORS issues
   const isNgrokOrRemote =
     window.location.hostname.includes('ngrok') ||
@@ -65,7 +69,7 @@ const WorkspaceList: React.FC = () => {
   useEffect(() => {
     fetchWorkspaces()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [teamContext.currentTeamId])
 
   /**
    * Fetch connected workspaces from the API.
@@ -75,17 +79,25 @@ const WorkspaceList: React.FC = () => {
     setCorsError(false)
 
     try {
+      // Add team_id param if available
+      const teamParam = teamContext.currentTeamId
+        ? `?team_id=${teamContext.currentTeamId}`
+        : ''
+
       // Make the API request with explicit CORS settings
-      const response = await fetch(`${env.apiUrl}/slack/workspaces`, {
-        method: 'GET',
-        mode: 'cors',
-        credentials: 'include',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-          Origin: window.location.origin,
-        },
-      })
+      const response = await fetch(
+        `${env.apiUrl}/slack/workspaces${teamParam}`,
+        {
+          method: 'GET',
+          mode: 'cors',
+          credentials: 'include',
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+            Origin: window.location.origin,
+          },
+        }
+      )
 
       if (!response.ok) {
         throw new Error('Failed to fetch workspaces')
