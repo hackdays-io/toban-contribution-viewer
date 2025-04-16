@@ -199,7 +199,7 @@ const IntegrationList: React.FC<IntegrationListProps> = ({ teamId }) => {
 
           <Button
             as={Link}
-            to="/integrations/connect"
+            to="/dashboard/integrations/connect"
             colorScheme="blue"
             leftIcon={<FiPlus />}
           >
@@ -224,7 +224,7 @@ const IntegrationList: React.FC<IntegrationListProps> = ({ teamId }) => {
           </Text>
           <Button
             as={Link}
-            to="/integrations/connect"
+            to="/dashboard/integrations/connect"
             colorScheme="blue"
             leftIcon={<FiPlus />}
           >
@@ -286,7 +286,7 @@ const IntegrationList: React.FC<IntegrationListProps> = ({ teamId }) => {
                 <Flex justify="space-between" mt={3}>
                   <Button
                     as={Link}
-                    to={`/integrations/${integration.id}`}
+                    to={`/dashboard/integrations/${integration.id}`}
                     size="sm"
                     variant="ghost"
                     leftIcon={<FiExternalLink />}
@@ -297,7 +297,7 @@ const IntegrationList: React.FC<IntegrationListProps> = ({ teamId }) => {
 
                   <Button
                     as={Link}
-                    to={`/integrations/${integration.id}/settings`}
+                    to={`/dashboard/integrations/${integration.id}/settings`}
                     size="sm"
                     variant="ghost"
                     leftIcon={<FiSettings />}
