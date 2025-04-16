@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react'
 import {
   Box,
   Button,
@@ -29,188 +29,204 @@ import {
   Input,
   Textarea,
   FormErrorMessage,
-} from '@chakra-ui/react';
-import { Link, useNavigate } from 'react-router-dom';
-import { FiPlus, FiUsers, FiSettings, FiTrash2, FiRefreshCw } from 'react-icons/fi';
+} from '@chakra-ui/react'
+import { Link, useNavigate } from 'react-router-dom'
+import {
+  FiPlus,
+  FiUsers,
+  FiSettings,
+  FiTrash2,
+  FiRefreshCw,
+} from 'react-icons/fi'
 
-import env from '../../config/env';
-import useAuth from '../../context/useAuth';
-import AuthContext from '../../context/AuthContext';
-import { supabase } from '../../lib/supabase';
-import { PageTitle } from '../../components/layout';
+import env from '../../config/env'
+import AuthContext from '../../context/AuthContext'
+import { supabase } from '../../lib/supabase'
+import { PageTitle } from '../../components/layout'
 // Will use in future implementation:
 // import { canPerformAdminActions } from '../../utils/teamUtils';
 
 interface Team {
-  id: string;
-  name: string;
-  slug: string;
-  description: string | null;
-  avatar_url: string | null;
-  team_size: number;
-  is_personal: boolean;
-  created_by_user_id: string;
-  created_by_email: string | null;
-  team_metadata: Record<string, unknown>;
+  id: string
+  name: string
+  slug: string
+  description: string | null
+  avatar_url: string | null
+  team_size: number
+  is_personal: boolean
+  created_by_user_id: string
+  created_by_email: string | null
+  team_metadata: Record<string, unknown>
 }
 
 interface CreateTeamForm {
-  name: string;
-  slug: string;
-  description: string;
+  name: string
+  slug: string
+  description: string
 }
 
 const TeamsPage: React.FC = () => {
-  const { teamContext, loading: authLoading } = React.useContext(AuthContext);
-  const toast = useToast();
-  const navigate = useNavigate();
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  
-  const [isLoading, setIsLoading] = useState(authLoading);
-  const [teams, setTeams] = useState<Team[]>([]);
+  const { teamContext, loading: authLoading } = React.useContext(AuthContext)
+  const toast = useToast()
+  const navigate = useNavigate()
+  const { isOpen, onOpen, onClose } = useDisclosure()
+
+  const [isLoading, setIsLoading] = useState(authLoading)
+  const [teams, setTeams] = useState<Team[]>([])
   const [formData, setFormData] = useState<CreateTeamForm>({
     name: '',
     slug: '',
     description: '',
-  });
-  const [formErrors, setFormErrors] = useState<Partial<CreateTeamForm>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
+  })
+  const [formErrors, setFormErrors] = useState<Partial<CreateTeamForm>>({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const fetchTeams = useCallback(async () => {
     try {
-      setIsLoading(true);
-      
+      setIsLoading(true)
+
       // Instead of fetching directly, use the teams from the AuthContext
       if (teamContext && teamContext.teams) {
-        console.log('Using teams from AuthContext:', teamContext.teams);
-        
+        console.log('Using teams from AuthContext:', teamContext.teams)
+
         // Format each team to match our expected Team interface
-        const formattedTeams = teamContext.teams.map(team => ({
+        const formattedTeams = teamContext.teams.map((team) => ({
           id: team.id,
           name: team.name,
           slug: team.slug,
-          description: '',  // Context doesn't provide description
+          description: '', // Context doesn't provide description
           avatar_url: null, // Context doesn't provide avatar_url
-          team_size: 0,     // Context doesn't provide team_size
+          team_size: 0, // Context doesn't provide team_size
           is_personal: false, // Context doesn't provide is_personal flag
           created_by_user_id: '', // Context doesn't provide created_by_user_id
           created_by_email: null, // Context doesn't provide created_by_email
-          team_metadata: {} // Context doesn't provide team_metadata
-        }));
-        
-        setTeams(formattedTeams);
+          team_metadata: {}, // Context doesn't provide team_metadata
+        }))
+
+        setTeams(formattedTeams)
       } else {
         // If teamContext is not available, set empty array
-        setTeams([]);
+        setTeams([])
       }
     } catch (error) {
-      console.error('Error processing teams:', error);
+      console.error('Error processing teams:', error)
       toast({
         title: 'Error loading teams',
-        description: error instanceof Error ? error.message : 'An unknown error occurred',
+        description:
+          error instanceof Error ? error.message : 'An unknown error occurred',
         status: 'error',
         duration: 5000,
         isClosable: true,
-      });
+      })
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  }, [toast, teamContext]);
-  
+  }, [toast, teamContext])
+
   // Call fetchTeams when component mounts or teamContext changes
   useEffect(() => {
-    fetchTeams();
-  }, [fetchTeams, teamContext]);
+    fetchTeams()
+  }, [fetchTeams, teamContext])
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target
+
     // Auto-generate slug from name if the slug field hasn't been manually edited
     if (name === 'name' && !formData.slug) {
-      const slug = value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-      setFormData(prev => ({ ...prev, name: value, slug }));
+      const slug = value
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '')
+      setFormData((prev) => ({ ...prev, name: value, slug }))
     } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
+      setFormData((prev) => ({ ...prev, [name]: value }))
     }
-    
+
     // Clear any previous error for this field
     if (formErrors[name as keyof CreateTeamForm]) {
-      setFormErrors(prev => ({ ...prev, [name]: undefined }));
+      setFormErrors((prev) => ({ ...prev, [name]: undefined }))
     }
-  };
+  }
 
   const validateForm = () => {
-    const errors: Partial<CreateTeamForm> = {};
+    const errors: Partial<CreateTeamForm> = {}
     if (!formData.name.trim()) {
-      errors.name = 'Team name is required';
+      errors.name = 'Team name is required'
     }
     if (!formData.slug.trim()) {
-      errors.slug = 'Team slug is required';
+      errors.slug = 'Team slug is required'
     } else if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(formData.slug)) {
-      errors.slug = 'Slug can only contain lowercase letters, numbers, and hyphens';
+      errors.slug =
+        'Slug can only contain lowercase letters, numbers, and hyphens'
     }
-    return errors;
-  };
+    return errors
+  }
 
   const handleCreateTeam = async () => {
-    const validationErrors = validateForm();
+    const validationErrors = validateForm()
     if (Object.keys(validationErrors).length > 0) {
-      setFormErrors(validationErrors);
-      return;
+      setFormErrors(validationErrors)
+      return
     }
 
     try {
-      setIsSubmitting(true);
-      
+      setIsSubmitting(true)
+
       // Get the session to include the auth token
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token;
-      
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+      const token = session?.access_token
+
       const response = await fetch(`${env.apiUrl}/teams`, {
         method: 'POST',
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : '',
+          Authorization: token ? `Bearer ${token}` : '',
         },
         body: JSON.stringify(formData),
-      });
+      })
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || `Failed to create team: ${response.status}`);
+        const errorData = await response.json()
+        throw new Error(
+          errorData.detail || `Failed to create team: ${response.status}`
+        )
       }
 
-      const data = await response.json();
-      setTeams(prev => [...prev, data]);
-      
+      const data = await response.json()
+      setTeams((prev) => [...prev, data])
+
       toast({
         title: 'Team created successfully',
         status: 'success',
         duration: 3000,
         isClosable: true,
-      });
-      
+      })
+
       // Reset form and close modal
-      setFormData({ name: '', slug: '', description: '' });
-      onClose();
-      
+      setFormData({ name: '', slug: '', description: '' })
+      onClose()
+
       // Navigate to the new team
-      navigate(`/dashboard/teams/${data.id}`);
+      navigate(`/dashboard/teams/${data.id}`)
     } catch (error) {
-      console.error('Error creating team:', error);
+      console.error('Error creating team:', error)
       toast({
         title: 'Error creating team',
-        description: error instanceof Error ? error.message : 'An unknown error occurred',
+        description:
+          error instanceof Error ? error.message : 'An unknown error occurred',
         status: 'error',
         duration: 5000,
         isClosable: true,
-      });
+      })
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   const renderTeamCard = (team: Team) => {
     return (
@@ -270,56 +286,62 @@ const TeamsPage: React.FC = () => {
           </HStack>
         </CardFooter>
       </Card>
-    );
-  };
+    )
+  }
 
   const handleDeleteTeam = async (teamId: string) => {
-    if (!window.confirm('Are you sure you want to delete this team? This action cannot be undone.')) {
-      return;
+    if (
+      !window.confirm(
+        'Are you sure you want to delete this team? This action cannot be undone.'
+      )
+    ) {
+      return
     }
 
     try {
       // Get the session to include the auth token
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token;
-      
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+      const token = session?.access_token
+
       const response = await fetch(`${env.apiUrl}/teams/${teamId}`, {
         method: 'DELETE',
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : '',
+          Authorization: token ? `Bearer ${token}` : '',
         },
-      });
+      })
 
       if (!response.ok) {
-        throw new Error(`Failed to delete team: ${response.status}`);
+        throw new Error(`Failed to delete team: ${response.status}`)
       }
 
-      setTeams(prev => prev.filter(team => team.id !== teamId));
-      
+      setTeams((prev) => prev.filter((team) => team.id !== teamId))
+
       toast({
         title: 'Team deleted successfully',
         status: 'success',
         duration: 3000,
         isClosable: true,
-      });
+      })
     } catch (error) {
-      console.error('Error deleting team:', error);
+      console.error('Error deleting team:', error)
       toast({
         title: 'Error deleting team',
-        description: error instanceof Error ? error.message : 'An unknown error occurred',
+        description:
+          error instanceof Error ? error.message : 'An unknown error occurred',
         status: 'error',
         duration: 5000,
         isClosable: true,
-      });
+      })
     }
-  };
-
+  }
 
   return (
     <Box p={4}>
-      <PageTitle 
+      <PageTitle
         title="Teams"
         description="Manage your teams and team members"
         actions={
@@ -332,11 +354,7 @@ const TeamsPage: React.FC = () => {
             >
               Refresh
             </Button>
-            <Button
-              leftIcon={<FiPlus />}
-              colorScheme="blue"
-              onClick={onOpen}
-            >
+            <Button leftIcon={<FiPlus />} colorScheme="blue" onClick={onOpen}>
               Create Team
             </Button>
           </>
@@ -349,13 +367,13 @@ const TeamsPage: React.FC = () => {
         </Flex>
       ) : teams.length === 0 ? (
         <Box p={8} textAlign="center" borderWidth="1px" borderRadius="lg">
-          <Heading size="md" mb={4}>No teams found</Heading>
-          <Text mb={6}>Create your first team to start managing your workspaces.</Text>
-          <Button
-            leftIcon={<FiPlus />}
-            colorScheme="blue"
-            onClick={onOpen}
-          >
+          <Heading size="md" mb={4}>
+            No teams found
+          </Heading>
+          <Text mb={6}>
+            Create your first team to start managing your workspaces.
+          </Text>
+          <Button leftIcon={<FiPlus />} colorScheme="blue" onClick={onOpen}>
             Create Team
           </Button>
         </Box>
@@ -426,7 +444,7 @@ const TeamsPage: React.FC = () => {
         </ModalContent>
       </Modal>
     </Box>
-  );
-};
+  )
+}
 
-export default TeamsPage;
+export default TeamsPage

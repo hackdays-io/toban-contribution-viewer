@@ -8,9 +8,7 @@ This migration updates the __tablename__ property in the IntegrationShare model
 to match the actual database table name.
 """
 
-import sqlalchemy as sa
 from alembic import op
-
 
 # revision identifiers, used by Alembic.
 revision = "fix_integration_share_naming"
@@ -22,11 +20,15 @@ depends_on = None
 def upgrade():
     """Fix the __tablename__ in SQLAlchemy model."""
     # This is a Python-only change, not a database change
-    print("No database changes needed. Please update the IntegrationShare model to use:")
+    print(
+        "No database changes needed. Please update the IntegrationShare model to use:"
+    )
     print("__tablename__ = 'integration_share'")
 
 
 def downgrade():
     """Revert the __tablename__ in SQLAlchemy model."""
     # This is a Python-only change, not a database change
-    print("No database changes needed. Please update the IntegrationShare model to use the original tablename.")
+    print(
+        "No database changes needed. Please update the IntegrationShare model to use the original tablename."
+    )

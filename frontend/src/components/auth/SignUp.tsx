@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from 'react'
 import {
   Box,
   Button,
@@ -11,19 +11,19 @@ import {
   useToast,
   VStack,
   Link as ChakraLink,
-} from '@chakra-ui/react';
-import { Link } from 'react-router-dom';
-import { signUp } from '../../lib/supabase';
+} from '@chakra-ui/react'
+import { Link } from 'react-router-dom'
+import { signUp } from '../../lib/supabase'
 
 const SignUp: React.FC = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const toast = useToast();
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const toast = useToast()
 
   const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
 
     if (!email || !password || !confirmPassword) {
       toast({
@@ -32,8 +32,8 @@ const SignUp: React.FC = () => {
         status: 'error',
         duration: 3000,
         isClosable: true,
-      });
-      return;
+      })
+      return
     }
 
     if (password !== confirmPassword) {
@@ -43,18 +43,18 @@ const SignUp: React.FC = () => {
         status: 'error',
         duration: 3000,
         isClosable: true,
-      });
-      return;
+      })
+      return
     }
 
     try {
-      setLoading(true);
-      const { error } = await signUp(email, password);
+      setLoading(true)
+      const { error } = await signUp(email, password)
 
-      if (error) throw error;
+      if (error) throw error
 
       // More detailed success message in development
-      const isDev = import.meta.env.VITE_DEV_MODE === 'true';
+      const isDev = import.meta.env.VITE_DEV_MODE === 'true'
 
       toast({
         title: 'Success',
@@ -64,26 +64,37 @@ const SignUp: React.FC = () => {
         status: 'success',
         duration: 10000,
         isClosable: true,
-      });
+      })
     } catch (error) {
       // Normal error handling
       toast({
         title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to sign up',
+        description:
+          error instanceof Error ? error.message : 'Failed to sign up',
         status: 'error',
         duration: 3000,
         isClosable: true,
-      });
+      })
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
-    <Box p={8} maxWidth="500px" borderWidth={1} borderRadius={8} boxShadow="lg" mx="auto" mt={10}>
+    <Box
+      p={8}
+      maxWidth="500px"
+      borderWidth={1}
+      borderRadius={8}
+      boxShadow="lg"
+      mx="auto"
+      mt={10}
+    >
       <VStack spacing={4} align="flex-start">
-        <Heading as="h1" size="xl">Sign Up</Heading>
-        
+        <Heading as="h1" size="xl">
+          Sign Up
+        </Heading>
+
         {/* Development mode alert removed */}
 
         <form onSubmit={handleSignUp} style={{ width: '100%' }}>
@@ -138,7 +149,7 @@ const SignUp: React.FC = () => {
         </Text>
       </VStack>
     </Box>
-  );
-};
+  )
+}
 
-export default SignUp;
+export default SignUp

@@ -33,22 +33,13 @@ import {
 import ChannelAnalysisHistoryPage from './pages/slack/ChannelAnalysisHistoryPage'
 
 // Team Pages
-import {
-  TeamsPage,
-  TeamDetailPage,
-  TeamMembersPage,
-} from './pages/team'
+import { TeamsPage, TeamDetailPage, TeamMembersPage } from './pages/team'
 
 // Integration Pages
-import {
-  IntegrationsPage,
-} from './pages/integration'
+import { IntegrationsPage } from './pages/integration'
 
 // Profile Pages
-import {
-  ProfilePage,
-  EditProfilePage,
-} from './pages/profile'
+import { ProfilePage, EditProfilePage } from './pages/profile'
 
 // Create a default theme
 const theme = extendTheme({

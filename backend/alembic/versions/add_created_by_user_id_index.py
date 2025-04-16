@@ -9,8 +9,8 @@ to improve performance when querying for teams by user.
 """
 
 import sqlalchemy as sa
-from alembic import op
 
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = "add_created_by_user_id_index"
@@ -23,7 +23,7 @@ def upgrade():
     """Add index to created_by_user_id column."""
     # Check if index already exists
     conn = op.get_bind()
-    
+
     # Check for existing index
     index_exists_query = """
     SELECT 1 
@@ -32,7 +32,7 @@ def upgrade():
     """
     result = conn.execute(sa.text(index_exists_query))
     index_exists = result.scalar() is not None
-    
+
     if not index_exists:
         # Create index on created_by_user_id for faster lookups
         op.create_index("ix_team_created_by_user_id", "team", ["created_by_user_id"])
@@ -45,7 +45,7 @@ def downgrade():
     """Remove index from created_by_user_id column."""
     # Check if index exists before dropping
     conn = op.get_bind()
-    
+
     # Check for existing index
     index_exists_query = """
     SELECT 1 
@@ -54,7 +54,7 @@ def downgrade():
     """
     result = conn.execute(sa.text(index_exists_query))
     index_exists = result.scalar() is not None
-    
+
     if index_exists:
         op.drop_index("ix_team_created_by_user_id", table_name="team")
         print("Dropped index from team.created_by_user_id")

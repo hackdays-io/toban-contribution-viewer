@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react'
 import {
   Box,
   Button,
@@ -49,154 +49,169 @@ import {
   AlertDialogHeader,
   AlertDialogContent,
   AlertDialogOverlay,
-} from '@chakra-ui/react';
-import { Link, useParams } from 'react-router-dom';
-import { FiArrowLeft, FiMoreVertical, FiPlus, FiUserPlus, FiMail, FiRefreshCw, FiTrash2 } from 'react-icons/fi';
+} from '@chakra-ui/react'
+import { Link, useParams } from 'react-router-dom'
+import {
+  FiArrowLeft,
+  FiMoreVertical,
+  FiPlus,
+  FiUserPlus,
+  FiMail,
+  FiRefreshCw,
+  FiTrash2,
+} from 'react-icons/fi'
 
-import env from '../../config/env';
-import { supabase } from '../../lib/supabase';
+import env from '../../config/env'
+import { supabase } from '../../lib/supabase'
 
 interface TeamMember {
-  id: string;
-  user_id: string;
-  email: string | null;
-  display_name: string | null;
-  role: 'owner' | 'admin' | 'member' | 'viewer';
-  invitation_status: 'active' | 'pending' | 'expired' | 'inactive' | string;
-  invitation_token: string | null;
-  invitation_expires_at: string | null;
-  last_active_at: string | null;
-  created_at: string;
-  updated_at: string;
+  id: string
+  user_id: string
+  email: string | null
+  display_name: string | null
+  role: 'owner' | 'admin' | 'member' | 'viewer'
+  invitation_status: 'active' | 'pending' | 'expired' | 'inactive' | string
+  invitation_token: string | null
+  invitation_expires_at: string | null
+  last_active_at: string | null
+  created_at: string
+  updated_at: string
 }
 
 interface Team {
-  id: string;
-  name: string;
-  slug: string;
-  description: string | null;
-  team_size: number;
-  is_personal: boolean;
-  avatar_url: string | null;
-  created_by_user_id: string;
-  created_by_email: string | null;
+  id: string
+  name: string
+  slug: string
+  description: string | null
+  team_size: number
+  is_personal: boolean
+  avatar_url: string | null
+  created_by_user_id: string
+  created_by_email: string | null
 }
 
 interface InviteFormData {
-  email: string;
-  role: 'admin' | 'member' | 'viewer';
-  display_name?: string;
-  message?: string;
+  email: string
+  role: 'admin' | 'member' | 'viewer'
+  display_name?: string
+  message?: string
 }
 
 interface ResendInviteData {
-  member_id: string;
-  custom_message?: string;
+  member_id: string
+  custom_message?: string
 }
 
 const TeamMembersPage: React.FC = () => {
-  const { teamId } = useParams<{ teamId: string }>();
-  const toast = useToast();
-  
+  const { teamId } = useParams<{ teamId: string }>()
+  const toast = useToast()
+
   // Multiple modals
-  const { 
-    isOpen: isInviteModalOpen, 
-    onOpen: onInviteModalOpen, 
-    onClose: onInviteModalClose 
-  } = useDisclosure();
-  
-  const { 
-    isOpen: isResendModalOpen, 
-    onOpen: onResendModalOpen, 
-    onClose: onResendModalClose 
-  } = useDisclosure();
-  
-  const { 
-    isOpen: isConfirmDeleteOpen, 
-    onOpen: onConfirmDeleteOpen, 
-    onClose: onConfirmDeleteClose 
-  } = useDisclosure();
-  
+  const {
+    isOpen: isInviteModalOpen,
+    onOpen: onInviteModalOpen,
+    onClose: onInviteModalClose,
+  } = useDisclosure()
+
+  const {
+    isOpen: isResendModalOpen,
+    onOpen: onResendModalOpen,
+    onClose: onResendModalClose,
+  } = useDisclosure()
+
+  const {
+    isOpen: isConfirmDeleteOpen,
+    onOpen: onConfirmDeleteOpen,
+    onClose: onConfirmDeleteClose,
+  } = useDisclosure()
+
   // Refs
-  const cancelRef = React.useRef<HTMLButtonElement>(null);
-  
+  const cancelRef = React.useRef<HTMLButtonElement>(null)
+
   // Entity state
-  const [team, setTeam] = useState<Team | null>(null);
-  const [members, setMembers] = useState<TeamMember[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  
+  const [team, setTeam] = useState<Team | null>(null)
+  const [members, setMembers] = useState<TeamMember[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
   // UI state
-  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState(0);
-  
+  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState(0)
+
   // Form data
   const [formData, setFormData] = useState<InviteFormData>({
     email: '',
     role: 'member',
     display_name: '',
     message: '',
-  });
-  
+  })
+
   const [resendData, setResendData] = useState<ResendInviteData>({
     member_id: '',
     custom_message: '',
-  });
-  
-  const [formErrors, setFormErrors] = useState<Partial<InviteFormData>>({});
+  })
 
+  const [formErrors, setFormErrors] = useState<Partial<InviteFormData>>({})
 
   const fetchTeam = useCallback(async () => {
     try {
       // Get the session to include the auth token
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token;
-      
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+      const token = session?.access_token
+
       const response = await fetch(`${env.apiUrl}/teams/${teamId}`, {
         method: 'GET',
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : '',
+          Authorization: token ? `Bearer ${token}` : '',
         },
-      });
+      })
 
       if (!response.ok) {
-        throw new Error(`Error fetching team: ${response.status}`);
+        throw new Error(`Error fetching team: ${response.status}`)
       }
 
-      const data = await response.json();
-      setTeam(data);
-      return data;
+      const data = await response.json()
+      setTeam(data)
+      return data
     } catch (error) {
-      console.error('Error fetching team:', error);
+      console.error('Error fetching team:', error)
       toast({
         title: 'Error loading team',
-        description: error instanceof Error ? error.message : 'An unknown error occurred',
+        description:
+          error instanceof Error ? error.message : 'An unknown error occurred',
         status: 'error',
         duration: 5000,
         isClosable: true,
-      });
-      throw error;
+      })
+      throw error
     }
-  }, [teamId, toast]);
+  }, [teamId, toast])
 
   const fetchMembers = useCallback(async () => {
     try {
       // Get the session to include the auth token
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token;
-      
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+      const token = session?.access_token
+
       // Using "status=all" query parameter to get all members including pending, expired, and inactive
-      const response = await fetch(`${env.apiUrl}/teams/${teamId}/members?status=all`, {
-        method: 'GET',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json', 
-          'Authorization': token ? `Bearer ${token}` : '',
-        },
-      });
+      const response = await fetch(
+        `${env.apiUrl}/teams/${teamId}/members?status=all`,
+        {
+          method: 'GET',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: token ? `Bearer ${token}` : '',
+          },
+        }
+      )
 
       if (!response.ok) {
         // If the "all" parameter isn't supported (in case you're using an older API version)
@@ -208,570 +223,620 @@ const TeamMembersPage: React.FC = () => {
               method: 'GET',
               credentials: 'include',
               headers: {
-                'Content-Type': 'application/json', 
-                'Authorization': token ? `Bearer ${token}` : '',
+                'Content-Type': 'application/json',
+                Authorization: token ? `Bearer ${token}` : '',
               },
             }),
             fetch(`${env.apiUrl}/teams/${teamId}/members?status=pending`, {
               method: 'GET',
               credentials: 'include',
               headers: {
-                'Content-Type': 'application/json', 
-                'Authorization': token ? `Bearer ${token}` : '',
+                'Content-Type': 'application/json',
+                Authorization: token ? `Bearer ${token}` : '',
               },
             }),
             fetch(`${env.apiUrl}/teams/${teamId}/members?status=expired`, {
               method: 'GET',
               credentials: 'include',
               headers: {
-                'Content-Type': 'application/json', 
-                'Authorization': token ? `Bearer ${token}` : '',
+                'Content-Type': 'application/json',
+                Authorization: token ? `Bearer ${token}` : '',
               },
-            })
-          ]);
-          
+            }),
+          ])
+
           if (!activeResp.ok) {
-            throw new Error(`Error fetching active members: ${activeResp.status}`);
+            throw new Error(
+              `Error fetching active members: ${activeResp.status}`
+            )
           }
-          
+
           // Get active members
-          const activeData = await activeResp.json();
-          let allMembers = activeData || [];
-          
+          const activeData = await activeResp.json()
+          let allMembers = activeData || []
+
           // Try to get pending invitations if available
           if (pendingResp.ok) {
-            const pendingData = await pendingResp.json();
+            const pendingData = await pendingResp.json()
             if (pendingData && Array.isArray(pendingData)) {
-              allMembers = [...allMembers, ...pendingData];
+              allMembers = [...allMembers, ...pendingData]
             }
           }
-          
+
           // Try to get expired invitations if available
           if (expiredResp.ok) {
-            const expiredData = await expiredResp.json();
+            const expiredData = await expiredResp.json()
             if (expiredData && Array.isArray(expiredData)) {
-              allMembers = [...allMembers, ...expiredData];
+              allMembers = [...allMembers, ...expiredData]
             }
           }
-          
-          setMembers(allMembers);
-          return allMembers;
+
+          setMembers(allMembers)
+          return allMembers
         }
-        
-        throw new Error(`Error fetching team members: ${response.status}`);
+
+        throw new Error(`Error fetching team members: ${response.status}`)
       }
 
-      const data = await response.json();
+      const data = await response.json()
       // Handle different API response structures
-      const membersList = Array.isArray(data) ? data : data.members || [];
-      setMembers(membersList);
-      return membersList;
+      const membersList = Array.isArray(data) ? data : data.members || []
+      setMembers(membersList)
+      return membersList
     } catch (error) {
-      console.error('Error fetching team members:', error);
+      console.error('Error fetching team members:', error)
       toast({
         title: 'Error loading team members',
-        description: error instanceof Error ? error.message : 'An unknown error occurred',
+        description:
+          error instanceof Error ? error.message : 'An unknown error occurred',
         status: 'error',
         duration: 5000,
         isClosable: true,
-      });
-      throw error;
+      })
+      throw error
     }
-  }, [teamId, toast]);
-  
+  }, [teamId, toast])
+
   const fetchTeamAndMembers = useCallback(async () => {
     try {
       if (isRefreshing) {
         // Just refreshing data, don't show full loading spinner
-        await Promise.all([fetchTeam(), fetchMembers()]);
+        await Promise.all([fetchTeam(), fetchMembers()])
       } else {
-        setIsLoading(true);
-        await Promise.all([fetchTeam(), fetchMembers()]);
+        setIsLoading(true)
+        await Promise.all([fetchTeam(), fetchMembers()])
       }
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error('Error fetching data:', error)
     } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
+      setIsLoading(false)
+      setIsRefreshing(false)
     }
-  }, [fetchTeam, fetchMembers, isRefreshing]);
-  
+  }, [fetchTeam, fetchMembers, isRefreshing])
+
   // Call fetchTeamAndMembers when component mounts or teamId changes
   useEffect(() => {
     if (teamId) {
-      fetchTeamAndMembers();
+      fetchTeamAndMembers()
     }
-  }, [teamId, fetchTeamAndMembers]);
-  
+  }, [teamId, fetchTeamAndMembers])
+
   // Memoized filtered lists to avoid recalculation on each render
   const activeMembers = useMemo(() => {
-    return members.filter(member => member.invitation_status === 'active');
-  }, [members]);
-  
+    return members.filter((member) => member.invitation_status === 'active')
+  }, [members])
+
   const pendingInvitations = useMemo(() => {
-    return members.filter(member => member.invitation_status === 'pending');
-  }, [members]);
-  
+    return members.filter((member) => member.invitation_status === 'pending')
+  }, [members])
+
   // Debug function to simulate accepting an invitation
   const simulateAcceptInvite = async (memberId: string) => {
     try {
-      setIsRefreshing(true);
-      
+      setIsRefreshing(true)
+
       // Get the session to include the auth token
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token;
-      
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+      const token = session?.access_token
+
       // Call the debug endpoint
-      const response = await fetch(`${env.apiUrl}/teams/${teamId}/members/${memberId}/debug-accept-invite`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : '',
+      const response = await fetch(
+        `${env.apiUrl}/teams/${teamId}/members/${memberId}/debug-accept-invite`,
+        {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: token ? `Bearer ${token}` : '',
+          },
         }
-      });
-      
+      )
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || `Failed to simulate invitation acceptance: ${response.status}`);
+        const errorData = await response.json()
+        throw new Error(
+          errorData.detail ||
+            `Failed to simulate invitation acceptance: ${response.status}`
+        )
       }
-      
+
       toast({
         title: 'DEBUG: Invitation Accepted',
-        description: 'The invitation has been automatically accepted for testing purposes',
+        description:
+          'The invitation has been automatically accepted for testing purposes',
         status: 'success',
         duration: 5000,
         isClosable: true,
-      });
-      
+      })
+
       // Refresh data
-      await fetchTeamAndMembers();
+      await fetchTeamAndMembers()
     } catch (error) {
-      console.error('Error in debug accept invitation:', error);
+      console.error('Error in debug accept invitation:', error)
       toast({
         title: 'Error',
-        description: error instanceof Error ? error.message : 'An unknown error occurred',
+        description:
+          error instanceof Error ? error.message : 'An unknown error occurred',
         status: 'error',
         duration: 5000,
         isClosable: true,
-      });
+      })
     } finally {
-      setIsRefreshing(false);
+      setIsRefreshing(false)
     }
-  };
-  
+  }
+
   const expiredInvitations = useMemo(() => {
-    return members.filter(member => 
-      member.invitation_status === 'expired' || 
-      member.invitation_status === 'inactive'
-    );
-  }, [members]);
-  
+    return members.filter(
+      (member) =>
+        member.invitation_status === 'expired' ||
+        member.invitation_status === 'inactive'
+    )
+  }, [members])
+
   // List of all email addresses (active, pending, expired) to prevent duplicates
   const allMemberEmails = useMemo(() => {
     return members
-      .filter(member => member.email)
-      .map(member => member.email?.toLowerCase() || '');
-  }, [members]);
-  
+      .filter((member) => member.email)
+      .map((member) => member.email?.toLowerCase() || '')
+  }, [members])
+
   // Handler for refreshing the data
   const handleRefresh = () => {
-    setIsRefreshing(true);
-    fetchTeamAndMembers();
-  };
+    setIsRefreshing(true)
+    fetchTeamAndMembers()
+  }
 
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({ ...prev, [name]: value }))
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    
     // Clear error when field is edited
     if (formErrors[name as keyof InviteFormData]) {
-      setFormErrors(prev => ({ ...prev, [name]: undefined }));
+      setFormErrors((prev) => ({ ...prev, [name]: undefined }))
     }
-    
+
     // If changing email, check for existing user on blur
     if (name === 'email' && value.trim() && value.includes('@')) {
-      const errors = validateForm();
+      const errors = validateForm()
       if (errors.email) {
-        setFormErrors(prev => ({ ...prev, email: errors.email }));
+        setFormErrors((prev) => ({ ...prev, email: errors.email }))
       }
     }
-  };
+  }
 
   const validateForm = () => {
-    const errors: Partial<InviteFormData> = {};
-    
+    const errors: Partial<InviteFormData> = {}
+
     if (!formData.email || !formData.email.trim()) {
-      errors.email = 'Email is required';
-      return errors; // Return early if no email to validate
+      errors.email = 'Email is required'
+      return errors // Return early if no email to validate
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      errors.email = 'Invalid email format';
-      return errors; // Return early if invalid format
+      errors.email = 'Invalid email format'
+      return errors // Return early if invalid format
     }
-    
+
     // Check if this email already exists in any state
-    const normalizedEmail = formData.email.toLowerCase();
+    const normalizedEmail = formData.email.toLowerCase()
     if (allMemberEmails.includes(normalizedEmail)) {
       // Find the member to determine the exact error message
       const existingMember = members.find(
-        m => m.email?.toLowerCase() === normalizedEmail
-      );
-      
+        (m) => m.email?.toLowerCase() === normalizedEmail
+      )
+
       if (existingMember) {
         switch (existingMember.invitation_status) {
           case 'active':
-            errors.email = 'This email is already an active member of the team';
-            break;
+            errors.email = 'This email is already an active member of the team'
+            break
           case 'pending':
-            errors.email = 'This email already has a pending invitation';
-            break;
+            errors.email = 'This email already has a pending invitation'
+            break
           case 'expired':
-            errors.email = 'This email has an expired invitation. Please resend the invitation instead.';
-            break;
+            errors.email =
+              'This email has an expired invitation. Please resend the invitation instead.'
+            break
           case 'inactive':
-            errors.email = 'This email was previously a member. Please reactivate or use a different email.';
-            break;
+            errors.email =
+              'This email was previously a member. Please reactivate or use a different email.'
+            break
           default:
-            errors.email = 'This email already exists in the system';
+            errors.email = 'This email already exists in the system'
         }
       } else {
-        errors.email = 'This email is already associated with the team';
+        errors.email = 'This email is already associated with the team'
       }
     }
-    
+
     // We don't validate role since it has a default value
     // and display_name and message are optional
-    
-    return errors;
-  };
-  
+
+    return errors
+  }
+
   // Handle resending an invitation
   const handleResendInvite = async () => {
-    if (!selectedMemberId) return;
-    
+    if (!selectedMemberId) return
+
     try {
-      setIsSubmitting(true);
-      
+      setIsSubmitting(true)
+
       // Get the session to include the auth token
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token;
-      
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+      const token = session?.access_token
+
       // In a real implementation, we would call a backend endpoint to resend the invitation
       // For now, let's simulate this by updating the invitation expiry date
-      const response = await fetch(`${env.apiUrl}/teams/${teamId}/members/${selectedMemberId}/resend-invite`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : '',
-        },
-        body: JSON.stringify({ 
-          custom_message: resendData.custom_message 
-        }),
-      });
+      const response = await fetch(
+        `${env.apiUrl}/teams/${teamId}/members/${selectedMemberId}/resend-invite`,
+        {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: token ? `Bearer ${token}` : '',
+          },
+          body: JSON.stringify({
+            custom_message: resendData.custom_message,
+          }),
+        }
+      )
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || `Failed to resend invitation: ${response.status}`);
+        const errorData = await response.json()
+        throw new Error(
+          errorData.detail || `Failed to resend invitation: ${response.status}`
+        )
       }
-      
-      await fetchMembers(); // Refresh the members list
-      
+
+      await fetchMembers() // Refresh the members list
+
       toast({
         title: 'Invitation resent',
         description: 'The invitation has been resent successfully',
         status: 'success',
         duration: 3000,
         isClosable: true,
-      });
-      
+      })
+
       // Reset form and close modal
-      setResendData({ member_id: '', custom_message: '' });
-      onResendModalClose();
+      setResendData({ member_id: '', custom_message: '' })
+      onResendModalClose()
     } catch (error) {
-      console.error('Error resending invitation:', error);
+      console.error('Error resending invitation:', error)
       toast({
         title: 'Error resending invitation',
-        description: error instanceof Error ? error.message : 'An unknown error occurred',
+        description:
+          error instanceof Error ? error.message : 'An unknown error occurred',
         status: 'error',
         duration: 5000,
         isClosable: true,
-      });
+      })
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   const handleInviteMember = async () => {
-    const validationErrors = validateForm();
+    const validationErrors = validateForm()
     if (Object.keys(validationErrors).length > 0) {
-      setFormErrors(validationErrors);
-      
+      setFormErrors(validationErrors)
+
       // Special case: If there's an expired/inactive invitation, ask to reactivate
-      const normalizedEmail = formData.email.toLowerCase();
+      const normalizedEmail = formData.email.toLowerCase()
       const existingMember = members.find(
-        m => m.email?.toLowerCase() === normalizedEmail && 
-             (m.invitation_status === 'expired' || m.invitation_status === 'inactive')
-      );
-      
+        (m) =>
+          m.email?.toLowerCase() === normalizedEmail &&
+          (m.invitation_status === 'expired' ||
+            m.invitation_status === 'inactive')
+      )
+
       if (existingMember) {
         // Handle reactivation instead
         try {
-          setIsSubmitting(true);
-          await handleReactivateInvitation(existingMember.id);
-          onInviteModalClose();
+          setIsSubmitting(true)
+          await handleReactivateInvitation(existingMember.id)
+          onInviteModalClose()
         } catch (error) {
-          console.error('Error reactivating invitation:', error);
+          console.error('Error reactivating invitation:', error)
         } finally {
-          setIsSubmitting(false);
+          setIsSubmitting(false)
         }
       }
-      
-      return;
+
+      return
     }
 
     try {
-      setIsSubmitting(true);
-      
+      setIsSubmitting(true)
+
       // Get the session to include the auth token
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token;
-      
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+      const token = session?.access_token
+
       const response = await fetch(`${env.apiUrl}/teams/${teamId}/invite`, {
         method: 'POST',
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : '',
+          Authorization: token ? `Bearer ${token}` : '',
         },
         body: JSON.stringify(formData),
-      });
+      })
 
       if (!response.ok) {
         // Handle 409 Conflict (user already exists)
         if (response.status === 409) {
-          const errorData = await response.json();
-          
+          const errorData = await response.json()
+
           // Check if error suggests this user already exists
           if (errorData.detail?.includes('already exists')) {
             setFormErrors({
-              email: 'This email already exists in the database. Try logging out and back in to refresh the member data.'
-            });
-            return;
+              email:
+                'This email already exists in the database. Try logging out and back in to refresh the member data.',
+            })
+            return
           }
-          
-          throw new Error(errorData.detail || 'User already exists with a different status');
+
+          throw new Error(
+            errorData.detail || 'User already exists with a different status'
+          )
         }
-        
-        const errorData = await response.json();
-        throw new Error(errorData.detail || `Failed to invite member: ${response.status}`);
+
+        const errorData = await response.json()
+        throw new Error(
+          errorData.detail || `Failed to invite member: ${response.status}`
+        )
       }
 
       // Get the response data and refresh the member list
-      await response.json();
-      
+      await response.json()
+
       // Refresh members list to ensure we have the latest data
-      await fetchMembers();
-      
+      await fetchMembers()
+
       // Switch to the Pending Invitations tab
-      setActiveTab(1);
-      
+      setActiveTab(1)
+
       toast({
         title: 'Invitation sent successfully',
         description: `Invitation sent to ${formData.email}`,
         status: 'success',
         duration: 5000,
         isClosable: true,
-      });
-      
+      })
+
       // Reset form and close modal
-      setFormData({ 
-        email: '', 
+      setFormData({
+        email: '',
         role: 'member',
         display_name: '',
-        message: ''
-      });
-      onInviteModalClose();
+        message: '',
+      })
+      onInviteModalClose()
     } catch (error) {
-      console.error('Error inviting member:', error);
+      console.error('Error inviting member:', error)
       toast({
         title: 'Error sending invitation',
-        description: error instanceof Error ? error.message : 'An unknown error occurred',
+        description:
+          error instanceof Error ? error.message : 'An unknown error occurred',
         status: 'error',
         duration: 5000,
         isClosable: true,
-      });
+      })
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   const handleUpdateMemberRole = async (memberId: string, newRole: string) => {
     try {
       // Get the session to include the auth token
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token;
-      
-      const response = await fetch(`${env.apiUrl}/teams/${teamId}/members/${memberId}`, {
-        method: 'PUT',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : '',
-        },
-        body: JSON.stringify({ role: newRole }),
-      });
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+      const token = session?.access_token
+
+      const response = await fetch(
+        `${env.apiUrl}/teams/${teamId}/members/${memberId}`,
+        {
+          method: 'PUT',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: token ? `Bearer ${token}` : '',
+          },
+          body: JSON.stringify({ role: newRole }),
+        }
+      )
 
       if (!response.ok) {
-        throw new Error(`Failed to update member role: ${response.status}`);
+        throw new Error(`Failed to update member role: ${response.status}`)
       }
 
-      const updatedMember = await response.json();
-      setMembers(prev => 
-        prev.map(member => 
-          member.id === memberId ? updatedMember : member
-        )
-      );
-      
+      const updatedMember = await response.json()
+      setMembers((prev) =>
+        prev.map((member) => (member.id === memberId ? updatedMember : member))
+      )
+
       toast({
         title: 'Role updated',
         status: 'success',
         duration: 3000,
         isClosable: true,
-      });
+      })
     } catch (error) {
-      console.error('Error updating member role:', error);
+      console.error('Error updating member role:', error)
       toast({
         title: 'Error updating role',
-        description: error instanceof Error ? error.message : 'An unknown error occurred',
+        description:
+          error instanceof Error ? error.message : 'An unknown error occurred',
         status: 'error',
         duration: 5000,
         isClosable: true,
-      });
+      })
     }
-  };
+  }
 
   const handleRemoveMember = async () => {
-    if (!selectedMemberId) return;
-    
+    if (!selectedMemberId) return
+
     try {
       // Get the session to include the auth token
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token;
-      
-      const response = await fetch(`${env.apiUrl}/teams/${teamId}/members/${selectedMemberId}`, {
-        method: 'DELETE',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : '',
-        },
-      });
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+      const token = session?.access_token
+
+      const response = await fetch(
+        `${env.apiUrl}/teams/${teamId}/members/${selectedMemberId}`,
+        {
+          method: 'DELETE',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: token ? `Bearer ${token}` : '',
+          },
+        }
+      )
 
       if (!response.ok) {
-        throw new Error(`Failed to remove member: ${response.status}`);
+        throw new Error(`Failed to remove member: ${response.status}`)
       }
 
       // Find the member we're removing to customize the message
-      const memberToRemove = members.find(m => m.id === selectedMemberId);
-      const isInvitation = memberToRemove?.invitation_status === 'pending' || 
-                         memberToRemove?.invitation_status === 'expired';
-      
-      setMembers(prev => prev.filter(member => member.id !== selectedMemberId));
-      
+      const memberToRemove = members.find((m) => m.id === selectedMemberId)
+      const isInvitation =
+        memberToRemove?.invitation_status === 'pending' ||
+        memberToRemove?.invitation_status === 'expired'
+
+      setMembers((prev) =>
+        prev.filter((member) => member.id !== selectedMemberId)
+      )
+
       toast({
         title: isInvitation ? 'Invitation canceled' : 'Member removed',
-        description: isInvitation 
+        description: isInvitation
           ? `The invitation to ${memberToRemove?.email || 'user'} has been canceled.`
           : `${memberToRemove?.display_name || memberToRemove?.email || 'Member'} has been removed from the team.`,
         status: 'success',
         duration: 3000,
         isClosable: true,
-      });
-      
+      })
+
       // Reset selected member id
-      setSelectedMemberId(null);
-      onConfirmDeleteClose();
+      setSelectedMemberId(null)
+      onConfirmDeleteClose()
     } catch (error) {
-      console.error('Error removing member:', error);
+      console.error('Error removing member:', error)
       toast({
         title: 'Error',
-        description: error instanceof Error ? error.message : 'An unknown error occurred',
+        description:
+          error instanceof Error ? error.message : 'An unknown error occurred',
         status: 'error',
         duration: 5000,
         isClosable: true,
-      });
+      })
     }
-  };
-  
+  }
+
   // Function to open the delete confirmation dialog
   const confirmRemoveMember = (memberId: string) => {
-    setSelectedMemberId(memberId);
-    onConfirmDeleteOpen();
-  };
-  
+    setSelectedMemberId(memberId)
+    onConfirmDeleteOpen()
+  }
+
   // Function to open the resend invitation modal
   const openResendInviteModal = (memberId: string) => {
-    setSelectedMemberId(memberId);
-    setResendData({ 
+    setSelectedMemberId(memberId)
+    setResendData({
       member_id: memberId,
-      custom_message: '' 
-    });
-    onResendModalOpen();
-  };
-  
+      custom_message: '',
+    })
+    onResendModalOpen()
+  }
+
   // Function to handle resend form input changes
-  const handleResendInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setResendData(prev => ({ ...prev, [name]: value }));
-  };
+  const handleResendInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target
+    setResendData((prev) => ({ ...prev, [name]: value }))
+  }
 
   const renderRoleBadge = (role: string) => {
-    let colorScheme = 'gray';
-    
+    let colorScheme = 'gray'
+
     switch (role) {
       case 'owner':
-        colorScheme = 'purple';
-        break;
+        colorScheme = 'purple'
+        break
       case 'admin':
-        colorScheme = 'blue';
-        break;
+        colorScheme = 'blue'
+        break
       case 'member':
-        colorScheme = 'green';
-        break;
+        colorScheme = 'green'
+        break
       case 'viewer':
-        colorScheme = 'teal';
-        break;
+        colorScheme = 'teal'
+        break
     }
-    
-    return <Badge colorScheme={colorScheme}>{role}</Badge>;
-  };
+
+    return <Badge colorScheme={colorScheme}>{role}</Badge>
+  }
 
   const renderStatusBadge = (status: string) => {
-    let colorScheme = 'gray';
-    
+    let colorScheme = 'gray'
+
     switch (status) {
       case 'active':
-        colorScheme = 'green';
-        break;
+        colorScheme = 'green'
+        break
       case 'pending':
-        colorScheme = 'yellow';
-        break;
+        colorScheme = 'yellow'
+        break
       case 'expired':
-        colorScheme = 'red';
-        break;
+        colorScheme = 'red'
+        break
     }
-    
-    return <Badge colorScheme={colorScheme}>{status}</Badge>;
-  };
+
+    return <Badge colorScheme={colorScheme}>{status}</Badge>
+  }
 
   if (isLoading) {
     return (
       <Flex justify="center" align="center" height="50vh">
         <Spinner size="xl" color="blue.500" thickness="4px" />
       </Flex>
-    );
+    )
   }
 
   if (!team) {
@@ -788,7 +853,7 @@ const TeamMembersPage: React.FC = () => {
           Back to Teams
         </Button>
       </Box>
-    );
+    )
   }
 
   // Active Members Table
@@ -812,25 +877,29 @@ const TeamMembersPage: React.FC = () => {
               </Td>
             </Tr>
           ) : (
-            activeMembers.map(member => (
+            activeMembers.map((member) => (
               <Tr key={member.id}>
                 <Td>
                   <HStack>
-                    <Avatar 
-                      size="sm" 
-                      name={member.display_name || member.email || member.user_id} 
+                    <Avatar
+                      size="sm"
+                      name={
+                        member.display_name || member.email || member.user_id
+                      }
                     />
                     <Box>
-                      <Text fontWeight="medium">{member.display_name || 'Unnamed User'}</Text>
-                      <Text fontSize="sm" color="gray.500">{member.email}</Text>
+                      <Text fontWeight="medium">
+                        {member.display_name || 'Unnamed User'}
+                      </Text>
+                      <Text fontSize="sm" color="gray.500">
+                        {member.email}
+                      </Text>
                     </Box>
                   </HStack>
                 </Td>
                 <Td>{renderRoleBadge(member.role)}</Td>
                 <Td>{renderStatusBadge(member.invitation_status)}</Td>
-                <Td>
-                  {new Date(member.created_at).toLocaleDateString()}
-                </Td>
+                <Td>{new Date(member.created_at).toLocaleDateString()}</Td>
                 <Td>
                   <Menu>
                     <MenuButton
@@ -842,27 +911,39 @@ const TeamMembersPage: React.FC = () => {
                     />
                     <MenuList>
                       <MenuGroup title="Change Role:">
-                        <MenuItem 
-                          isDisabled={member.role === 'owner' || member.role === 'admin'}
-                          onClick={() => handleUpdateMemberRole(member.id, 'admin')}
+                        <MenuItem
+                          isDisabled={
+                            member.role === 'owner' || member.role === 'admin'
+                          }
+                          onClick={() =>
+                            handleUpdateMemberRole(member.id, 'admin')
+                          }
                         >
                           Set as Admin
                         </MenuItem>
-                        <MenuItem 
-                          isDisabled={member.role === 'owner' || member.role === 'member'}
-                          onClick={() => handleUpdateMemberRole(member.id, 'member')}
+                        <MenuItem
+                          isDisabled={
+                            member.role === 'owner' || member.role === 'member'
+                          }
+                          onClick={() =>
+                            handleUpdateMemberRole(member.id, 'member')
+                          }
                         >
                           Set as Member
                         </MenuItem>
-                        <MenuItem 
-                          isDisabled={member.role === 'owner' || member.role === 'viewer'}
-                          onClick={() => handleUpdateMemberRole(member.id, 'viewer')}
+                        <MenuItem
+                          isDisabled={
+                            member.role === 'owner' || member.role === 'viewer'
+                          }
+                          onClick={() =>
+                            handleUpdateMemberRole(member.id, 'viewer')
+                          }
                         >
                           Set as Viewer
                         </MenuItem>
                       </MenuGroup>
                       <MenuDivider />
-                      <MenuItem 
+                      <MenuItem
                         onClick={() => confirmRemoveMember(member.id)}
                         isDisabled={member.role === 'owner'}
                         color="red.500"
@@ -878,7 +959,7 @@ const TeamMembersPage: React.FC = () => {
         </Tbody>
       </Table>
     </Box>
-  );
+  )
 
   // Pending Invitations Table
   const renderPendingInvitationsTable = () => (
@@ -902,20 +983,20 @@ const TeamMembersPage: React.FC = () => {
               </Td>
             </Tr>
           ) : (
-            pendingInvitations.map(member => (
+            pendingInvitations.map((member) => (
               <Tr key={member.id}>
                 <Td>
                   <Text fontWeight="medium">{member.email}</Text>
                 </Td>
                 <Td>{renderRoleBadge(member.role)}</Td>
                 <Td>{renderStatusBadge(member.invitation_status)}</Td>
+                <Td>{new Date(member.created_at).toLocaleDateString()}</Td>
                 <Td>
-                  {new Date(member.created_at).toLocaleDateString()}
-                </Td>
-                <Td>
-                  {member.invitation_expires_at ? 
-                    new Date(member.invitation_expires_at).toLocaleDateString() : 
-                    'N/A'}
+                  {member.invitation_expires_at
+                    ? new Date(
+                        member.invitation_expires_at
+                      ).toLocaleDateString()
+                    : 'N/A'}
                 </Td>
                 <Td>
                   <HStack spacing={1}>
@@ -958,52 +1039,58 @@ const TeamMembersPage: React.FC = () => {
         </Tbody>
       </Table>
     </Box>
-  );
+  )
 
   // Function to reactivate an inactive or expired invitation
   const handleReactivateInvitation = async (memberId: string) => {
     try {
       // Get the session to include the auth token
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token;
-      
-      const response = await fetch(`${env.apiUrl}/teams/${teamId}/members/${memberId}`, {
-        method: 'PUT',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : '',
-        },
-        body: JSON.stringify({ 
-          invitation_status: 'pending',
-        }),
-      });
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+      const token = session?.access_token
+
+      const response = await fetch(
+        `${env.apiUrl}/teams/${teamId}/members/${memberId}`,
+        {
+          method: 'PUT',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: token ? `Bearer ${token}` : '',
+          },
+          body: JSON.stringify({
+            invitation_status: 'pending',
+          }),
+        }
+      )
 
       if (!response.ok) {
-        throw new Error(`Failed to reactivate invitation: ${response.status}`);
+        throw new Error(`Failed to reactivate invitation: ${response.status}`)
       }
 
       // Refresh members list
-      await fetchMembers();
-      
+      await fetchMembers()
+
       toast({
         title: 'Invitation reactivated',
         description: 'The invitation has been reactivated and will be resent',
         status: 'success',
         duration: 3000,
         isClosable: true,
-      });
+      })
     } catch (error) {
-      console.error('Error reactivating invitation:', error);
+      console.error('Error reactivating invitation:', error)
       toast({
         title: 'Error reactivating invitation',
-        description: error instanceof Error ? error.message : 'An unknown error occurred',
+        description:
+          error instanceof Error ? error.message : 'An unknown error occurred',
         status: 'error',
         duration: 5000,
         isClosable: true,
-      });
+      })
     }
-  };
+  }
 
   // Expired Invitations Table
   const renderExpiredInvitationsTable = () => (
@@ -1027,20 +1114,20 @@ const TeamMembersPage: React.FC = () => {
               </Td>
             </Tr>
           ) : (
-            expiredInvitations.map(member => (
+            expiredInvitations.map((member) => (
               <Tr key={member.id}>
                 <Td>
                   <Text fontWeight="medium">{member.email}</Text>
                 </Td>
                 <Td>{renderRoleBadge(member.role)}</Td>
                 <Td>{renderStatusBadge(member.invitation_status)}</Td>
+                <Td>{new Date(member.created_at).toLocaleDateString()}</Td>
                 <Td>
-                  {new Date(member.created_at).toLocaleDateString()}
-                </Td>
-                <Td>
-                  {member.invitation_expires_at ? 
-                    new Date(member.invitation_expires_at).toLocaleDateString() : 
-                    'N/A'}
+                  {member.invitation_expires_at
+                    ? new Date(
+                        member.invitation_expires_at
+                      ).toLocaleDateString()
+                    : 'N/A'}
                 </Td>
                 <Td>
                   <HStack spacing={1}>
@@ -1072,7 +1159,7 @@ const TeamMembersPage: React.FC = () => {
         </Tbody>
       </Table>
     </Box>
-  );
+  )
 
   return (
     <Container maxW="container.xl" py={6}>
@@ -1111,17 +1198,17 @@ const TeamMembersPage: React.FC = () => {
         </HStack>
       </Flex>
 
-      <Tabs 
-        isFitted 
-        variant="enclosed" 
-        colorScheme="blue" 
-        index={activeTab} 
+      <Tabs
+        isFitted
+        variant="enclosed"
+        colorScheme="blue"
+        index={activeTab}
         onChange={setActiveTab}
         mb={6}
       >
         <TabList>
           <Tab>
-            Active Members 
+            Active Members
             <Badge ml={2} colorScheme="blue" borderRadius="full">
               {activeMembers.length}
             </Badge>
@@ -1237,9 +1324,10 @@ const TeamMembersPage: React.FC = () => {
           <ModalCloseButton />
           <ModalBody>
             <Text mb={4}>
-              This will send a new invitation email to the recipient with a fresh invitation link.
+              This will send a new invitation email to the recipient with a
+              fresh invitation link.
             </Text>
-            
+
             <FormControl mb={4}>
               <FormLabel>Personal Message (Optional)</FormLabel>
               <Input
@@ -1276,17 +1364,21 @@ const TeamMembersPage: React.FC = () => {
         <AlertDialogOverlay>
           <AlertDialogContent>
             <AlertDialogHeader fontSize="lg" fontWeight="bold">
-              {members.find(m => m.id === selectedMemberId)?.invitation_status === 'pending' || 
-               members.find(m => m.id === selectedMemberId)?.invitation_status === 'expired'
+              {members.find((m) => m.id === selectedMemberId)
+                ?.invitation_status === 'pending' ||
+              members.find((m) => m.id === selectedMemberId)
+                ?.invitation_status === 'expired'
                 ? 'Cancel Invitation'
                 : 'Remove Member'}
             </AlertDialogHeader>
 
             <AlertDialogBody>
-              {members.find(m => m.id === selectedMemberId)?.invitation_status === 'pending' || 
-               members.find(m => m.id === selectedMemberId)?.invitation_status === 'expired'
-                ? `Are you sure you want to cancel the invitation to ${members.find(m => m.id === selectedMemberId)?.email}?`
-                : `Are you sure you want to remove ${members.find(m => m.id === selectedMemberId)?.display_name || members.find(m => m.id === selectedMemberId)?.email} from the team?`}
+              {members.find((m) => m.id === selectedMemberId)
+                ?.invitation_status === 'pending' ||
+              members.find((m) => m.id === selectedMemberId)
+                ?.invitation_status === 'expired'
+                ? `Are you sure you want to cancel the invitation to ${members.find((m) => m.id === selectedMemberId)?.email}?`
+                : `Are you sure you want to remove ${members.find((m) => m.id === selectedMemberId)?.display_name || members.find((m) => m.id === selectedMemberId)?.email} from the team?`}
             </AlertDialogBody>
 
             <AlertDialogFooter>
@@ -1294,8 +1386,10 @@ const TeamMembersPage: React.FC = () => {
                 Cancel
               </Button>
               <Button colorScheme="red" onClick={handleRemoveMember} ml={3}>
-                {members.find(m => m.id === selectedMemberId)?.invitation_status === 'pending' || 
-                 members.find(m => m.id === selectedMemberId)?.invitation_status === 'expired'
+                {members.find((m) => m.id === selectedMemberId)
+                  ?.invitation_status === 'pending' ||
+                members.find((m) => m.id === selectedMemberId)
+                  ?.invitation_status === 'expired'
                   ? 'Cancel Invitation'
                   : 'Remove'}
               </Button>
@@ -1304,7 +1398,7 @@ const TeamMembersPage: React.FC = () => {
         </AlertDialogOverlay>
       </AlertDialog>
     </Container>
-  );
-};
+  )
+}
 
-export default TeamMembersPage;
+export default TeamMembersPage

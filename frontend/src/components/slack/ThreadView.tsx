@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import env from '../../config/env';
+import env from '../../config/env'
 import SlackUserDisplay from './SlackUserDisplay'
 import { SlackUserCacheProvider } from './SlackUserContext'
 import MessageText from './MessageText'
@@ -69,7 +69,7 @@ const ThreadView: React.FC<ThreadViewProps> = ({
   workspaceId,
   channelId,
   threadTs,
-  parentMessage
+  parentMessage,
   // users parameter removed as it's not used
 }) => {
   const [replies, setReplies] = useState<SlackMessage[]>([])
@@ -111,16 +111,16 @@ const ThreadView: React.FC<ThreadViewProps> = ({
       setIsLoading(true)
       const limit = 1000 // Increased limit to get more replies
       const url = `${env.apiUrl}/slack/workspaces/${workspaceId}/channels/${channelId}/threads/${threadTs}?limit=${limit}`
-      
+
       const response = await fetch(url, {
         method: 'GET',
         mode: 'cors',
         credentials: 'include',
         headers: {
-          'Accept': 'application/json',
+          Accept: 'application/json',
           'Content-Type': 'application/json',
-          'Origin': window.location.origin
-        }
+          Origin: window.location.origin,
+        },
       })
 
       if (!response.ok) {
@@ -130,7 +130,7 @@ const ThreadView: React.FC<ThreadViewProps> = ({
       }
 
       const data = await response.json()
-      
+
       setReplies(data.replies || [])
       setTotalReplies(data.total_replies || 0)
       setHasMore(data.has_more || false)
@@ -175,7 +175,7 @@ const ThreadView: React.FC<ThreadViewProps> = ({
         {/* Header row with user and timestamp */}
         <HStack justifyContent="space-between" width="100%" mb={2}>
           <Box>
-            <SlackUserDisplay 
+            <SlackUserDisplay
               userId={parentMessage.user_id || ''}
               workspaceId={workspaceId}
               showAvatar={true}
@@ -194,12 +194,12 @@ const ThreadView: React.FC<ThreadViewProps> = ({
             )}
           </HStack>
         </HStack>
-        
+
         {/* Message content */}
         <Box pl={10} pr={2}>
-          <MessageText 
-            text={parentMessage.text} 
-            workspaceId={workspaceId} 
+          <MessageText
+            text={parentMessage.text}
+            workspaceId={workspaceId}
             resolveMentions={true}
             fallbackToSimpleFormat={true}
           />
@@ -223,11 +223,19 @@ const ThreadView: React.FC<ThreadViewProps> = ({
    */
   const renderThreadReply = (message: SlackMessage) => {
     return (
-      <Box key={message.id} py={2} width="100%" borderWidth="1px" borderRadius="md" p={3} mb={2}>
+      <Box
+        key={message.id}
+        py={2}
+        width="100%"
+        borderWidth="1px"
+        borderRadius="md"
+        p={3}
+        mb={2}
+      >
         {/* Header row with user and timestamp */}
         <HStack justifyContent="space-between" width="100%" mb={2}>
           <Box>
-            <SlackUserDisplay 
+            <SlackUserDisplay
               userId={message.user_id || ''}
               workspaceId={workspaceId}
               showAvatar={true}
@@ -246,12 +254,12 @@ const ThreadView: React.FC<ThreadViewProps> = ({
             )}
           </HStack>
         </HStack>
-        
+
         {/* Message content */}
         <Box pl={10} pr={2}>
-          <MessageText 
-            text={message.text} 
-            workspaceId={workspaceId} 
+          <MessageText
+            text={message.text}
+            workspaceId={workspaceId}
             resolveMentions={true}
             fallbackToSimpleFormat={true}
           />
@@ -272,93 +280,99 @@ const ThreadView: React.FC<ThreadViewProps> = ({
 
   return (
     <SlackUserCacheProvider workspaceId={workspaceId}>
-      <Modal isOpen={isOpen} onClose={onClose} size="xl" scrollBehavior="inside">
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        size="xl"
+        scrollBehavior="inside"
+      >
         <ModalOverlay />
         <ModalContent maxWidth={{ base: '95%', md: '800px' }}>
           <ModalHeader>Thread</ModalHeader>
           <ModalCloseButton />
-        <ModalBody p={4}>
-          {isLoading && !isRefreshing ? (
-            <Box display="flex" justifyContent="center" py={8}>
-              <Spinner size="xl" color="purple.500" thickness="4px" />
-            </Box>
-          ) : (
-            <VStack spacing={4} align="stretch">
-              {/* Parent message */}
-              {renderParentMessage()}
-
-              {/* Divider with count */}
-              <Box position="relative" my={2}>
-                <Divider borderColor={borderColor} />
-                <Text
-                  position="absolute"
-                  top="50%"
-                  left="50%"
-                  transform="translate(-50%, -50%)"
-                  bg={textBgColor}
-                  px={2}
-                  fontSize="sm"
-                  color="gray.500"
-                >
-                  <Icon as={FiMessageSquare} mr={1} />
-                  {totalReplies} {totalReplies === 1 ? 'reply' : 'replies'}
-                </Text>
+          <ModalBody p={4}>
+            {isLoading && !isRefreshing ? (
+              <Box display="flex" justifyContent="center" py={8}>
+                <Spinner size="xl" color="purple.500" thickness="4px" />
               </Box>
+            ) : (
+              <VStack spacing={4} align="stretch">
+                {/* Parent message */}
+                {renderParentMessage()}
 
-              {/* Thread replies */}
-              {replies.length > 0 ? (
-                <VStack spacing={3} align="stretch">
-                  {replies.map(renderThreadReply)}
-                </VStack>
-              ) : (
-                <Box textAlign="center" py={4}>
-                  <Text>No replies in this thread</Text>
-                </Box>
-              )}
-
-              {/* Has more indicator */}
-              {hasMore && (
-                <Box textAlign="center" py={2}>
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    colorScheme="purple" 
-                    mb={2}
-                    onClick={() => {
-                      // Load more replies by increasing the limit
-                      // Now uses the same fetchThreadReplies function for consistency
-                      fetchThreadReplies();
-                    }}
+                {/* Divider with count */}
+                <Box position="relative" my={2}>
+                  <Divider borderColor={borderColor} />
+                  <Text
+                    position="absolute"
+                    top="50%"
+                    left="50%"
+                    transform="translate(-50%, -50%)"
+                    bg={textBgColor}
+                    px={2}
+                    fontSize="sm"
+                    color="gray.500"
                   >
-                    Load More Replies
-                  </Button>
-                  {hasMore && (
-                    <Text fontSize="sm" color="gray.500">
-                      Some replies couldn't be loaded. View the full thread in Slack.
-                    </Text>
-                  )}
+                    <Icon as={FiMessageSquare} mr={1} />
+                    {totalReplies} {totalReplies === 1 ? 'reply' : 'replies'}
+                  </Text>
                 </Box>
-              )}
-            </VStack>
-          )}
-        </ModalBody>
-        <ModalFooter>
-          <Button
-            leftIcon={<Icon as={FiRefreshCw} />}
-            colorScheme="purple"
-            onClick={refreshThreadReplies}
-            isLoading={isRefreshing}
-            mr={3}
-          >
-            Refresh
-          </Button>
-          
-          <Button variant="ghost" onClick={onClose}>
-            Close
-          </Button>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
+
+                {/* Thread replies */}
+                {replies.length > 0 ? (
+                  <VStack spacing={3} align="stretch">
+                    {replies.map(renderThreadReply)}
+                  </VStack>
+                ) : (
+                  <Box textAlign="center" py={4}>
+                    <Text>No replies in this thread</Text>
+                  </Box>
+                )}
+
+                {/* Has more indicator */}
+                {hasMore && (
+                  <Box textAlign="center" py={2}>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      colorScheme="purple"
+                      mb={2}
+                      onClick={() => {
+                        // Load more replies by increasing the limit
+                        // Now uses the same fetchThreadReplies function for consistency
+                        fetchThreadReplies()
+                      }}
+                    >
+                      Load More Replies
+                    </Button>
+                    {hasMore && (
+                      <Text fontSize="sm" color="gray.500">
+                        Some replies couldn't be loaded. View the full thread in
+                        Slack.
+                      </Text>
+                    )}
+                  </Box>
+                )}
+              </VStack>
+            )}
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              leftIcon={<Icon as={FiRefreshCw} />}
+              colorScheme="purple"
+              onClick={refreshThreadReplies}
+              isLoading={isRefreshing}
+              mr={3}
+            >
+              Refresh
+            </Button>
+
+            <Button variant="ghost" onClick={onClose}>
+              Close
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </SlackUserCacheProvider>
   )
 }

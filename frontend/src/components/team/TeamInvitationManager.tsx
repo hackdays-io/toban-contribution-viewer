@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from 'react'
 import {
   Box,
   Button,
@@ -19,99 +19,108 @@ import {
   useToast,
   VStack,
   Textarea,
-} from '@chakra-ui/react';
-import { FiMail, FiPlus } from 'react-icons/fi';
-import { supabase } from '../../lib/supabase';
-import env from '../../config/env';
+} from '@chakra-ui/react'
+import { FiMail, FiPlus } from 'react-icons/fi'
+import { supabase } from '../../lib/supabase'
+import env from '../../config/env'
 
 interface InviteFormData {
-  email: string;
-  role: 'admin' | 'member' | 'viewer';
-  display_name?: string;
-  message?: string;
+  email: string
+  role: 'admin' | 'member' | 'viewer'
+  display_name?: string
+  message?: string
 }
 
 interface TeamInvitationManagerProps {
-  teamId: string;
-  onInvitationSent: () => void;
-  existingMemberEmails?: string[];
+  teamId: string
+  onInvitationSent: () => void
+  existingMemberEmails?: string[]
 }
 
 /**
  * Component for managing team invitations
  */
-const TeamInvitationManager: React.FC<TeamInvitationManagerProps> = ({ 
-  teamId, 
+const TeamInvitationManager: React.FC<TeamInvitationManagerProps> = ({
+  teamId,
   onInvitationSent,
-  existingMemberEmails = []
+  existingMemberEmails = [],
 }) => {
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const toast = useToast();
-  
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { isOpen, onOpen, onClose } = useDisclosure()
+  const toast = useToast()
+
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState<InviteFormData>({
     email: '',
     role: 'member',
     display_name: '',
     message: '',
-  });
-  const [formErrors, setFormErrors] = useState<Partial<InviteFormData>>({});
+  })
+  const [formErrors, setFormErrors] = useState<Partial<InviteFormData>>({})
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    
-    setFormData(prev => ({ ...prev, [name]: value }));
-    
+  const handleInputChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
+  ) => {
+    const { name, value } = e.target
+
+    setFormData((prev) => ({ ...prev, [name]: value }))
+
     // Clear any previous error for this field
     if (formErrors[name as keyof InviteFormData]) {
-      setFormErrors(prev => ({ ...prev, [name]: undefined }));
+      setFormErrors((prev) => ({ ...prev, [name]: undefined }))
     }
-  };
+  }
 
   const validateForm = () => {
-    const errors: Partial<InviteFormData> = {};
-    
+    const errors: Partial<InviteFormData> = {}
+
     if (!formData.email.trim()) {
-      errors.email = 'Email is required';
+      errors.email = 'Email is required'
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      errors.email = 'Invalid email format';
+      errors.email = 'Invalid email format'
     }
-    
+
     // Check if this email is already a member
     if (existingMemberEmails.includes(formData.email.toLowerCase())) {
-      errors.email = 'This email is already a team member or has a pending invitation';
+      errors.email =
+        'This email is already a team member or has a pending invitation'
     }
-    
-    return errors;
-  };
+
+    return errors
+  }
 
   const handleInviteMember = async () => {
-    const validationErrors = validateForm();
+    const validationErrors = validateForm()
     if (Object.keys(validationErrors).length > 0) {
-      setFormErrors(validationErrors);
-      return;
+      setFormErrors(validationErrors)
+      return
     }
 
     try {
-      setIsSubmitting(true);
-      
+      setIsSubmitting(true)
+
       // Get the session to include the auth token
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token;
-      
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+      const token = session?.access_token
+
       const response = await fetch(`${env.apiUrl}/teams/${teamId}/invite`, {
         method: 'POST',
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : '',
+          Authorization: token ? `Bearer ${token}` : '',
         },
         body: JSON.stringify(formData),
-      });
+      })
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || `Failed to invite member: ${response.status}`);
+        const errorData = await response.json()
+        throw new Error(
+          errorData.detail || `Failed to invite member: ${response.status}`
+        )
       }
 
       toast({
@@ -120,40 +129,37 @@ const TeamInvitationManager: React.FC<TeamInvitationManagerProps> = ({
         status: 'success',
         duration: 5000,
         isClosable: true,
-      });
-      
+      })
+
       // Reset form and close modal
-      setFormData({ 
-        email: '', 
+      setFormData({
+        email: '',
         role: 'member',
         display_name: '',
-        message: ''
-      });
-      onClose();
-      
+        message: '',
+      })
+      onClose()
+
       // Call the callback
-      onInvitationSent();
+      onInvitationSent()
     } catch (error) {
-      console.error('Error inviting member:', error);
+      console.error('Error inviting member:', error)
       toast({
         title: 'Error sending invitation',
-        description: error instanceof Error ? error.message : 'An unknown error occurred',
+        description:
+          error instanceof Error ? error.message : 'An unknown error occurred',
         status: 'error',
         duration: 5000,
         isClosable: true,
-      });
+      })
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   return (
     <>
-      <Button
-        leftIcon={<FiPlus />}
-        colorScheme="blue"
-        onClick={onOpen}
-      >
+      <Button leftIcon={<FiPlus />} colorScheme="blue" onClick={onOpen}>
         Invite Member
       </Button>
 
@@ -201,11 +207,20 @@ const TeamInvitationManager: React.FC<TeamInvitationManagerProps> = ({
                   <option value="viewer">Viewer</option>
                 </Select>
                 <Text fontSize="sm" color="gray.500" mt={1}>
-                  <Box as="span" fontWeight="bold">Admin:</Box> Can manage team settings and members
+                  <Box as="span" fontWeight="bold">
+                    Admin:
+                  </Box>{' '}
+                  Can manage team settings and members
                   <br />
-                  <Box as="span" fontWeight="bold">Member:</Box> Can access all resources but can't manage the team
+                  <Box as="span" fontWeight="bold">
+                    Member:
+                  </Box>{' '}
+                  Can access all resources but can't manage the team
                   <br />
-                  <Box as="span" fontWeight="bold">Viewer:</Box> Read-only access to resources
+                  <Box as="span" fontWeight="bold">
+                    Viewer:
+                  </Box>{' '}
+                  Read-only access to resources
                 </Text>
               </FormControl>
 
@@ -238,7 +253,7 @@ const TeamInvitationManager: React.FC<TeamInvitationManagerProps> = ({
         </ModalContent>
       </Modal>
     </>
-  );
-};
+  )
+}
 
-export default React.memo(TeamInvitationManager);
+export default React.memo(TeamInvitationManager)

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react'
 import {
   Box,
   Heading,
@@ -18,18 +18,18 @@ import {
   SimpleGrid,
   useColorModeValue,
   useToast,
-} from '@chakra-ui/react';
-import { FiEdit, FiUsers } from 'react-icons/fi';
-import { Link, useNavigate } from 'react-router-dom';
-import useAuth from '../../context/useAuth';
+} from '@chakra-ui/react'
+import { FiEdit, FiUsers } from 'react-icons/fi'
+import { Link, useNavigate } from 'react-router-dom'
+import useAuth from '../../context/useAuth'
 
 interface UserProfile {
-  id: string;
-  email: string;
-  name?: string;
-  avatar_url?: string;
-  last_sign_in_at?: string;
-  created_at?: string;
+  id: string
+  email: string
+  name?: string
+  avatar_url?: string
+  last_sign_in_at?: string
+  created_at?: string
 }
 
 /**
@@ -37,59 +37,63 @@ interface UserProfile {
  * Displays user information and teams they belong to
  */
 const ProfilePage: React.FC = () => {
-  const { user, teamContext } = useAuth();
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const navigate = useNavigate();
-  const toast = useToast();
+  const { user, teamContext } = useAuth()
+  const [profile, setProfile] = useState<UserProfile | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const navigate = useNavigate()
+  const toast = useToast()
 
-  const cardBg = useColorModeValue('white', 'gray.700');
-  const borderColor = useColorModeValue('gray.200', 'gray.600');
+  const cardBg = useColorModeValue('white', 'gray.700')
+  const borderColor = useColorModeValue('gray.200', 'gray.600')
 
   // Load profile data when component mounts
   useEffect(() => {
     const loadProfile = async () => {
       try {
-        setIsLoading(true);
+        setIsLoading(true)
         // For now, use the user data from auth context
         // Later we can fetch additional profile data from an API
         if (user) {
           setProfile({
             id: user.id,
             email: user.email || '',
-            name: user.user_metadata?.name || user.user_metadata?.full_name || '',
+            name:
+              user.user_metadata?.name || user.user_metadata?.full_name || '',
             avatar_url: user.user_metadata?.avatar_url,
             last_sign_in_at: user?.last_sign_in_at,
             created_at: user?.created_at,
-          });
+          })
         }
       } catch (error) {
-        console.error('Error loading profile:', error);
+        console.error('Error loading profile:', error)
         toast({
           title: 'Error loading profile',
-          description: error instanceof Error ? error.message : 'An unknown error occurred',
+          description:
+            error instanceof Error
+              ? error.message
+              : 'An unknown error occurred',
           status: 'error',
           duration: 5000,
           isClosable: true,
-        });
+        })
       } finally {
-        setIsLoading(false);
+        setIsLoading(false)
       }
-    };
+    }
 
-    loadProfile();
-  }, [user, toast]);
+    loadProfile()
+  }, [user, toast])
 
   const handleEditProfile = () => {
-    navigate('/dashboard/profile/edit');
-  };
+    navigate('/dashboard/profile/edit')
+  }
 
   if (isLoading) {
     return (
       <Flex justify="center" align="center" minHeight="500px">
         <Spinner size="xl" color="purple.500" thickness="4px" />
       </Flex>
-    );
+    )
   }
 
   return (
@@ -104,7 +108,11 @@ const ProfilePage: React.FC = () => {
             border="3px solid"
             borderColor="purple.500"
           />
-          <VStack align={{ base: 'center', md: 'flex-start' }} spacing={2} flex={1}>
+          <VStack
+            align={{ base: 'center', md: 'flex-start' }}
+            spacing={2}
+            flex={1}
+          >
             <Heading size="xl">{profile?.name || 'User'}</Heading>
             <Text color="gray.500">{profile?.email}</Text>
             <HStack mt={2}>
@@ -133,7 +141,9 @@ const ProfilePage: React.FC = () => {
               <VStack align="stretch" spacing={4}>
                 <HStack justify="space-between">
                   <Text fontWeight="medium">User ID</Text>
-                  <Text fontFamily="mono" fontSize="sm">{profile?.id}</Text>
+                  <Text fontFamily="mono" fontSize="sm">
+                    {profile?.id}
+                  </Text>
                 </HStack>
                 <HStack justify="space-between">
                   <Text fontWeight="medium">Email</Text>
@@ -142,13 +152,17 @@ const ProfilePage: React.FC = () => {
                 {profile?.created_at && (
                   <HStack justify="space-between">
                     <Text fontWeight="medium">Account Created</Text>
-                    <Text>{new Date(profile.created_at).toLocaleDateString()}</Text>
+                    <Text>
+                      {new Date(profile.created_at).toLocaleDateString()}
+                    </Text>
                   </HStack>
                 )}
                 {profile?.last_sign_in_at && (
                   <HStack justify="space-between">
                     <Text fontWeight="medium">Last Sign In</Text>
-                    <Text>{new Date(profile.last_sign_in_at).toLocaleDateString()}</Text>
+                    <Text>
+                      {new Date(profile.last_sign_in_at).toLocaleDateString()}
+                    </Text>
                   </HStack>
                 )}
               </VStack>
@@ -178,22 +192,30 @@ const ProfilePage: React.FC = () => {
               ) : (
                 <VStack spacing={4} align="stretch">
                   {teamContext.teams.map((team) => (
-                    <HStack key={team.id} justify="space-between" p={2} borderWidth="1px" borderRadius="md">
+                    <HStack
+                      key={team.id}
+                      justify="space-between"
+                      p={2}
+                      borderWidth="1px"
+                      borderRadius="md"
+                    >
                       <VStack align="start" spacing={1}>
                         <Text fontWeight="bold">{team.name}</Text>
                         <Text fontSize="sm" color="gray.500">
                           Slug: {team.slug}
                         </Text>
                       </VStack>
-                      <Badge colorScheme={
-                        team.role === 'owner'
-                          ? 'purple'
-                          : team.role === 'admin'
-                          ? 'blue'
-                          : team.role === 'member'
-                          ? 'green'
-                          : 'gray'
-                      }>
+                      <Badge
+                        colorScheme={
+                          team.role === 'owner'
+                            ? 'purple'
+                            : team.role === 'admin'
+                              ? 'blue'
+                              : team.role === 'member'
+                                ? 'green'
+                                : 'gray'
+                        }
+                      >
                         {team.role}
                       </Badge>
                     </HStack>
@@ -215,7 +237,7 @@ const ProfilePage: React.FC = () => {
         </SimpleGrid>
       </VStack>
     </Container>
-  );
-};
+  )
+}
 
-export default ProfilePage;
+export default ProfilePage

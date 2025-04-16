@@ -8,8 +8,6 @@ This is a consolidated migration that defines the entire database schema
 with proper idempotency checks for all tables.
 """
 
-from datetime import datetime
-
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 

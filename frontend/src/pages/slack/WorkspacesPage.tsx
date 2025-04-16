@@ -1,7 +1,13 @@
-import React from 'react';
-import { Box, Heading, Breadcrumb, BreadcrumbItem, BreadcrumbLink } from '@chakra-ui/react';
-import { Link } from 'react-router-dom';
-import { WorkspaceList } from '../../components/slack';
+import React from 'react'
+import {
+  Box,
+  Heading,
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+} from '@chakra-ui/react'
+import { Link } from 'react-router-dom'
+import { WorkspaceList } from '../../components/slack'
 
 /**
  * Page for displaying and managing Slack workspaces.
@@ -26,7 +32,7 @@ const WorkspacesPage: React.FC = () => {
 
       <WorkspaceList />
     </Box>
-  );
-};
+  )
+}
 
-export default WorkspacesPage;
+export default WorkspacesPage
