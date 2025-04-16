@@ -31,9 +31,7 @@ class Settings(BaseSettings):
         "http://localhost:8000",
         "http://127.0.0.1:5173",
         "http://127.0.0.1:8000",
-        # Allow ngrok domains for development
-        "https://*.ngrok-free.app",
-        "https://*.ngrok.io",
+        # Specific ngrok domains should be added via NGROK_URL or ADDITIONAL_CORS_ORIGINS
     ]
 
     @validator("ALLOWED_HOSTS", pre=True)
@@ -42,11 +40,19 @@ class Settings(BaseSettings):
         allowed_hosts = list(v)
         additional_cors = values.get("ADDITIONAL_CORS_ORIGINS", "")
 
+        # Use a set to prevent duplicate entries
+        unique_hosts = set()
+
+        # Add base hosts
+        for host in allowed_hosts:
+            unique_hosts.add(host)
+
         # Add specific NGROK_URL if it exists
         ngrok_url = os.environ.get("NGROK_URL")
         if ngrok_url and ngrok_url.strip():
-            allowed_hosts.append(ngrok_url.strip())
+            unique_hosts.add(ngrok_url.strip())
 
+        # Add additional CORS origins
         if additional_cors:
             # Split by comma and filter out empty strings
             origins = [
@@ -54,31 +60,22 @@ class Settings(BaseSettings):
                 for origin in additional_cors.split(",")
                 if origin.strip()
             ]
-            allowed_hosts.extend(origins)
+            for origin in origins:
+                unique_hosts.add(origin)
 
-        # CORS security in browsers typically doesn't support wildcards,
-        # so we need to add specific domains
-        explicit_allowed_hosts = []
-        for host in allowed_hosts:
-            explicit_allowed_hosts.append(host)
-
-            # Handle wildcards in ngrok domains
-            if ("*.ngrok-free.app" in host or "*.ngrok.io" in host) and ngrok_url:
-                # If we have ngrok URL and we're dealing with a wildcard ngrok domain,
-                # add the specific domain explicitly
-                if "ngrok-free.app" in ngrok_url or "ngrok.io" in ngrok_url:
-                    explicit_allowed_hosts.append(ngrok_url)
+        # We no longer need wildcard processing since we have explicit ngrok URLs
 
         # Add any additional domains from DEBUG_DOMAINS environment variable
         debug_domains = os.environ.get("DEBUG_DOMAINS", "")
         if debug_domains:
             for domain in debug_domains.split(","):
                 domain = domain.strip()
-                if domain and domain not in explicit_allowed_hosts:
-                    explicit_allowed_hosts.append(domain)
+                if domain:
+                    unique_hosts.add(domain)
                     logger.info(f"Added debug domain: {domain}")
 
-        return explicit_allowed_hosts
+        # Convert back to list for return
+        return list(unique_hosts)
 
     # Secret Keys
     SECRET_KEY: str
