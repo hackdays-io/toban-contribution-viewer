@@ -57,8 +57,34 @@ const OAuthCallback: React.FC = () => {
       }
 
       // Look for error parameter
+      // Log all URL parameters for debugging
+      console.log('All URL parameters in OAuth callback:', Object.fromEntries(searchParams.entries()))
+      
+      // Ensure we have a valid auth token before continuing
+      console.log('Verifying authentication in OAuthCallback component...');
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        console.error('No active authentication session found in OAuthCallback!');
+        
+        // Try refreshing the session
+        console.log('Attempting to refresh authentication session...');
+        const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+        
+        if (refreshError || !refreshData.session) {
+          console.error('Failed to refresh authentication session:', refreshError);
+          setStatus('error');
+          setErrorMessage('Authentication expired. Please log in again and retry.');
+          return;
+        } else {
+          console.log('Successfully refreshed authentication session');
+        }
+      } else {
+        console.log('Found valid authentication session in OAuthCallback');
+      }
+      
       const error = searchParams.get('error')
       if (error) {
+        console.log('Error parameter found in callback URL:', error)
         setStatus('error')
         setErrorMessage(`Authorization failed: ${error}`)
         return
@@ -66,6 +92,7 @@ const OAuthCallback: React.FC = () => {
 
       const code = searchParams.get('code')
       if (code) {
+        console.log('Found authorization code in URL parameters:', code.substring(0, 5) + '...')
         // Mark that we've started processing this code
         hasProcessedCode.current = true
 
@@ -73,16 +100,29 @@ const OAuthCallback: React.FC = () => {
           // Get client credentials from localStorage
           const clientId = localStorage.getItem('slack_client_id')
           const clientSecret = localStorage.getItem('slack_client_secret')
+          console.log('Retrieved credentials from localStorage - clientId exists:', !!clientId, 'clientSecret exists:', !!clientSecret)
 
           if (!clientId || !clientSecret) {
             throw new Error(
               'Missing Slack credentials. Please try connecting again.'
             )
           }
+          
+          // Log localStorage contents for debugging
+          console.log('All Slack-related localStorage items:', {
+            slack_client_id: localStorage.getItem('slack_client_id')?.substring(0, 5) + '...',
+            slack_client_secret: localStorage.getItem('slack_client_secret') ? '(exists)' : '(missing)',
+            slack_team_id: localStorage.getItem('slack_team_id'),
+            slack_redirect_url: localStorage.getItem('slack_redirect_url'),
+            currentTeamId: localStorage.getItem('currentTeamId')
+          })
 
           // Get the team ID from localStorage or fall back to the context
           const storedTeamId = localStorage.getItem('slack_team_id')
-          const currentTeamId = storedTeamId || teamContext?.currentTeamId
+          const contextTeamId = teamContext?.currentTeamId
+          const currentTeamId = storedTeamId || contextTeamId
+          
+          console.log('Team ID determination - from localStorage:', storedTeamId, 'from context:', contextTeamId, 'using:', currentTeamId)
 
           if (!currentTeamId) {
             throw new Error(
@@ -93,8 +133,28 @@ const OAuthCallback: React.FC = () => {
           // Create an integration using the Integration API
           console.log('Creating integration with team ID:', currentTeamId)
 
+          // Check authentication state before making the request
+          console.log('Checking auth state before integration request...');
+          try {
+            const { data: { session } } = await supabase.auth.getSession();
+            console.log('Auth session before integration request:', !!session);
+            if (session) {
+              console.log('User email:', session.user?.email);
+              console.log('Auth valid:', new Date(session.expires_at * 1000) > new Date());
+            } else {
+              console.error('No active session found before integration request!');
+              // Try to refresh the session
+              console.log('Attempting to refresh auth session...');
+              const { data: refreshResult } = await supabase.auth.refreshSession();
+              console.log('Session refresh result:', !!refreshResult.session);
+            }
+          } catch (authError) {
+            console.error('Error checking auth state:', authError);
+          }
+
           // Use the original window.location.origin for the redirect URI
           const callbackUrl = window.location.origin + '/auth/slack/callback'
+          console.log('Callback URL set to:', callbackUrl, 'window.location:', window.location.toString())
 
           console.log('Sending integration request with params:', {
             team_id: currentTeamId,
@@ -118,6 +178,14 @@ const OAuthCallback: React.FC = () => {
             'Integration result type:',
             integration ? typeof integration : 'null'
           )
+          console.log('Integration result content:', integration ? JSON.stringify(integration).substring(0, 150) + '...' : 'null')
+          
+          // Additional debugging for integration response
+          if (!integration) {
+            console.error('Integration is null or undefined - checking teamContext:', teamContext);
+            console.error('Integration creation failed with no response - localStorage contains:', 
+              Object.keys(localStorage).filter(key => key.includes('slack') || key.includes('team')).map(key => `${key}: ${localStorage.getItem(key)}`));
+          }
 
           // Check if the integration was created successfully
           if (!integration) {

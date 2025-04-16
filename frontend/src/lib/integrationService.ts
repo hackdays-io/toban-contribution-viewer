@@ -203,16 +203,44 @@ class IntegrationService {
    * Helper method to create auth headers
    */
   private async getAuthHeaders(): Promise<HeadersInit> {
+    console.log('Getting auth headers for API request...');
     const {
       data: { session },
     } = await supabase.auth.getSession()
+    
+    // Debug auth session details
+    console.log('Auth session exists:', !!session);
+    console.log('Auth session status:', session ? 'Active' : 'Null or undefined');
+    
+    if (!session) {
+      console.error('No active auth session found when preparing API request!');
+    } else {
+      console.log('Session user:', session.user?.email);
+      console.log('Token expires at:', new Date(session.expires_at * 1000).toISOString());
+      console.log('Token valid?', new Date(session.expires_at * 1000) > new Date());
+    }
+    
     const token = session?.access_token
+    console.log('Access token exists:', !!token);
+    
+    if (token) {
+      console.log('Token length:', token.length);
+      console.log('Token preview:', token.substring(0, 10) + '...' + token.substring(token.length - 5));
+    }
 
-    return {
+    const headers = {
       'Content-Type': 'application/json',
       Authorization: token ? `Bearer ${token}` : '',
       Origin: window.location.origin,
-    }
+    };
+    
+    console.log('Headers prepared:', {
+      'Content-Type': headers['Content-Type'],
+      'Authorization': headers['Authorization'] ? 'Bearer token exists' : 'No token',
+      'Origin': headers['Origin']
+    });
+    
+    return headers;
   }
 
   /**
@@ -373,6 +401,11 @@ class IntegrationService {
     data: CreateSlackIntegrationRequest
   ): Promise<Integration | ApiError> {
     try {
+      // Log environment and context
+      console.log('Current window.location.origin:', window.location.origin);
+      console.log('Current API URL configuration:', env.apiUrl);
+      
+      // Get auth headers with detailed logging
       const headers = await this.getAuthHeaders()
       console.log('API URL for Slack integration:', `${this.apiUrl}/slack`)
 
@@ -388,12 +421,40 @@ class IntegrationService {
         // Omitting sensitive fields
       })
 
+      // Log the full headers for debugging (omitting sensitive values)
+      const debugHeaders = {...headers};
+      if (debugHeaders['Authorization']) {
+        debugHeaders['Authorization'] = '(Bearer token exists)';
+      }
+      console.log('Request headers:', debugHeaders);
+      
+      // Deep debugging of the data being sent
+      console.log('POST body sent to server (sensitive data redacted):', {
+        ...data, 
+        code: data.code ? data.code.substring(0, 5) + '...' : null,
+        client_id: data.client_id ? data.client_id.substring(0, 5) + '...' : null,
+        client_secret: data.client_secret ? '(secret exists)' : null
+      });
+      
+      // Try with a timeout to catch hanging requests
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => {
+        console.log('Request timeout - aborting after 15 seconds');
+        controller.abort();
+      }, 15000); // 15 second timeout
+      
+      console.log('Starting fetch request to Slack integration endpoint...');
+      
       const response = await fetch(`${this.apiUrl}/slack`, {
         method: 'POST',
         headers,
         credentials: 'include',
         body: JSON.stringify(data),
-      })
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      console.log('Fetch request completed with status:', response.status, response.statusText);
 
       console.log(
         'Slack integration response status:',
@@ -419,12 +480,30 @@ class IntegrationService {
         throw response
       }
 
-      const result = await response.json()
-      console.log(
-        'Slack integration success, received data type:',
-        typeof result
-      )
-      return result
+      console.log('Response is OK, attempting to parse JSON response');
+      let responseText;
+      try {
+        // First get the raw text for debugging
+        responseText = await response.clone().text();
+        console.log('Raw response text:', responseText.substring(0, 200) + (responseText.length > 200 ? '...' : ''));
+      } catch (e) {
+        console.error('Error reading response text:', e);
+      }
+      
+      try {
+        const result = await response.json();
+        console.log(
+          'Slack integration success, received data type:',
+          typeof result,
+          'data:', 
+          result ? JSON.stringify(result).substring(0, 100) + '...' : 'null'
+        );
+        return result;
+      } catch (e) {
+        console.error('Error parsing JSON from response:', e);
+        console.error('Failed to parse response body:', responseText);
+        throw new Error('Failed to parse response from server: ' + e.message);
+      }
     } catch (error) {
       console.error('Error in createSlackIntegration:', error)
       return await this.handleError(error, 'Failed to create Slack integration')
