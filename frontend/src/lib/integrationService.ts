@@ -142,9 +142,10 @@ export interface CreateIntegrationRequest {
   team_id: string
 }
 
-export interface CreateSlackIntegrationRequest
-  extends CreateIntegrationRequest {
+export interface CreateSlackIntegrationRequest {
+  team_id: string
   service_type: IntegrationType.SLACK
+  integration_id: string // The ID of the pre-created integration with credentials
   code: string
   redirect_uri: string
 }
@@ -316,19 +317,25 @@ class IntegrationService {
   }
 
   /**
-   * Create a new Slack integration using OAuth
+   * Complete a Slack integration setup using OAuth
    */
   async createSlackIntegration(
     data: CreateSlackIntegrationRequest
   ): Promise<Integration | ApiError> {
     try {
       const headers = await this.getAuthHeaders()
-      const response = await fetch(`${this.apiUrl}/slack`, {
-        method: 'POST',
-        headers,
-        credentials: 'include',
-        body: JSON.stringify(data),
-      })
+      const { integration_id, ...authData } = data
+
+      // Use the existing integration ID in the URL
+      const response = await fetch(
+        `${this.apiUrl}/${integration_id}/authorize/slack`,
+        {
+          method: 'POST',
+          headers,
+          credentials: 'include',
+          body: JSON.stringify(authData),
+        }
+      )
 
       if (!response.ok) {
         throw response
@@ -336,7 +343,7 @@ class IntegrationService {
 
       return await response.json()
     } catch (error) {
-      return this.handleError(error, 'Failed to create Slack integration')
+      return this.handleError(error, 'Failed to authorize Slack integration')
     }
   }
 

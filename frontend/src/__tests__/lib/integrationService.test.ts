@@ -564,9 +564,9 @@ describe('Integration API Service', () => {
       })
 
       const slackData: CreateSlackIntegrationRequest = {
-        name: 'Test Slack Integration',
         service_type: IntegrationType.SLACK,
         team_id: mockTeamId,
+        integration_id: 'integration-123',
         code: 'oauth-code',
         redirect_uri: 'http://localhost:3000/callback',
       }
@@ -574,7 +574,9 @@ describe('Integration API Service', () => {
       const result = await integrationService.createSlackIntegration(slackData)
 
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/integrations/slack'),
+        expect.stringContaining(
+          '/integrations/integration-123/authorize/slack'
+        ),
         expect.objectContaining({
           method: 'POST',
           body: JSON.stringify(slackData),

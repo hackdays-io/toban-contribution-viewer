@@ -1,15 +1,15 @@
 import React, { useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Box, Button, HStack, Icon, Divider } from '@chakra-ui/react'
+import { Box, Button, HStack, Icon } from '@chakra-ui/react'
 import { FiArrowLeft } from 'react-icons/fi'
-import { IntegrationDetail, ResourceList } from '../../components/integration'
+import { ResourceList } from '../../components/integration'
 import { PageTitle } from '../../components/layout'
 import useIntegration from '../../context/useIntegration'
 
 /**
- * Page component for displaying detailed information about a specific integration
+ * Page component for displaying and managing resources for a specific integration
  */
-const IntegrationDetailPage: React.FC = () => {
+const ResourceListPage: React.FC = () => {
   const { integrationId } = useParams<{ integrationId: string }>()
   const { currentIntegration, selectIntegration } = useIntegration()
   const navigate = useNavigate()
@@ -21,7 +21,7 @@ const IntegrationDetailPage: React.FC = () => {
   }, [integrationId, selectIntegration])
 
   const handleBack = () => {
-    navigate(-1)
+    navigate(`/integrations/${integrationId}`)
   }
 
   return (
@@ -32,20 +32,14 @@ const IntegrationDetailPage: React.FC = () => {
           variant="ghost"
           onClick={handleBack}
         >
-          Back to Integrations
+          Back to Integration Details
         </Button>
       </HStack>
 
       <PageTitle
-        title={currentIntegration?.name || 'Integration Details'}
-        description="View and manage integration details"
+        title={`${currentIntegration?.name || 'Integration'} Resources`}
+        description="View and manage integration resources"
       />
-
-      <Box mt={8}>
-        {integrationId && <IntegrationDetail integrationId={integrationId} />}
-      </Box>
-
-      <Divider my={8} />
 
       <Box mt={8}>
         {integrationId && <ResourceList integrationId={integrationId} />}
@@ -54,4 +48,4 @@ const IntegrationDetailPage: React.FC = () => {
   )
 }
 
-export default IntegrationDetailPage
+export default ResourceListPage

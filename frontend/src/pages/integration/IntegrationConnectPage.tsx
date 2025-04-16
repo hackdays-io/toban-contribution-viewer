@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import {
   Box,
   Heading,
@@ -14,10 +14,23 @@ import {
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbLink,
+  Alert,
+  AlertIcon,
+  Step,
+  StepDescription,
+  StepIcon,
+  StepIndicator,
+  StepNumber,
+  StepSeparator,
+  StepStatus,
+  StepTitle,
+  Stepper,
 } from '@chakra-ui/react'
 import { FiSlack, FiGithub, FiFileText, FiMessageSquare } from 'react-icons/fi'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { PageTitle } from '../../components/layout'
+import { SlackCredentialsForm } from '../../components/integration'
+import useAuth from '../../context/useAuth'
 
 interface IntegrationOption {
   id: string
@@ -30,9 +43,16 @@ interface IntegrationOption {
 
 /**
  * Page for connecting a new integration, offering various integration options.
+ * If a serviceType is provided in the URL, it will display a specific connection UI for that service.
  */
 const IntegrationConnectPage: React.FC = () => {
+  const { serviceType } = useParams<{ serviceType?: string }>()
   const navigate = useNavigate()
+  const { teamContext } = useAuth()
+  const [error, setError] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [step, setStep] = useState(0)
+
   const cardBg = useColorModeValue('white', 'gray.800')
   const cardBorder = useColorModeValue('gray.200', 'gray.700')
   const hoverBg = useColorModeValue('gray.50', 'gray.700')
@@ -46,7 +66,7 @@ const IntegrationConnectPage: React.FC = () => {
       description:
         'Connect your Slack workspace to analyze team communication and contributions.',
       icon: FiSlack,
-      path: '/dashboard/slack/connect',
+      path: '/dashboard/integrations/connect/slack',
       primary: true,
     },
     {
@@ -55,7 +75,7 @@ const IntegrationConnectPage: React.FC = () => {
       description:
         'Connect your GitHub repositories to analyze code contributions.',
       icon: FiGithub,
-      path: '/dashboard/github/connect',
+      path: '/dashboard/integrations/connect/github',
       primary: false,
     },
     {
@@ -63,7 +83,7 @@ const IntegrationConnectPage: React.FC = () => {
       name: 'Notion',
       description: 'Connect Notion to analyze documentation contributions.',
       icon: FiFileText,
-      path: '/dashboard/notion/connect',
+      path: '/dashboard/integrations/connect/notion',
       primary: false,
     },
     {
@@ -72,7 +92,7 @@ const IntegrationConnectPage: React.FC = () => {
       description:
         'Connect your Discord server to analyze community contributions.',
       icon: FiMessageSquare,
-      path: '/dashboard/discord/connect',
+      path: '/dashboard/integrations/connect/discord',
       primary: false,
     },
   ]
@@ -81,6 +101,184 @@ const IntegrationConnectPage: React.FC = () => {
     navigate(option.path)
   }
 
+  // Function to initiate Slack OAuth authentication
+  const initiateSlackAuth = () => {
+    const clientId = localStorage.getItem('slack_client_id')
+    if (!clientId) {
+      setError('Slack Client ID not found. Please configure it first.')
+      return
+    }
+
+    // Make sure we're using the correct Slack OAuth endpoint
+    const redirectUri = `${window.location.origin}/dashboard/integrations/oauth/slack`
+    const scope = 'channels:read,channels:history,users:read,groups:read'
+
+    // Use the stored client ID directly for OAuth - IMPORTANT: Use the correct OAuth v2 endpoint
+    const state = teamContext?.currentTeamId || 'unknown'
+    const authUrl = `https://slack.com/oauth/v2/authorize?client_id=${clientId}&scope=${scope}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}`
+
+    console.log('Redirecting to Slack OAuth URL:', authUrl)
+
+    // Navigate to Slack's OAuth page
+    window.location.href = authUrl
+  }
+
+  // Function to handle the connection of a specific service
+  const handleConnectService = () => {
+    if (!serviceType || !teamContext?.currentTeamId) return
+
+    setIsLoading(true)
+    setError(null)
+
+    if (serviceType === 'slack') {
+      initiateSlackAuth()
+    } else {
+      setError(`Integration with ${serviceType} is not yet implemented.`)
+      setIsLoading(false)
+    }
+  }
+
+  // Handler for when credentials form is successfully submitted
+  const handleCredentialsSuccess = () => {
+    setStep(1) // Move to next step
+  }
+
+  // Find the current service option if a serviceType is provided
+  const currentServiceOption = serviceType
+    ? integrationOptions.find((option) => option.id === serviceType)
+    : null
+
+  // Render the service-specific connection UI if a serviceType is provided
+  if (serviceType && currentServiceOption) {
+    return (
+      <Box>
+        <Breadcrumb mb={6}>
+          <BreadcrumbItem>
+            <BreadcrumbLink as={Link} to="/dashboard">
+              Dashboard
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbItem>
+            <BreadcrumbLink as={Link} to="/dashboard/integrations">
+              Integrations
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbItem>
+            <BreadcrumbLink as={Link} to="/dashboard/integrations/connect">
+              Connect
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbItem isCurrentPage>
+            <BreadcrumbLink>{currentServiceOption.name}</BreadcrumbLink>
+          </BreadcrumbItem>
+        </Breadcrumb>
+
+        <PageTitle
+          title={`Connect ${currentServiceOption.name}`}
+          description={`Connect your ${currentServiceOption.name} account to your team`}
+        />
+
+        {error && (
+          <Alert status="error" mb={6} borderRadius="md">
+            <AlertIcon />
+            {error}
+          </Alert>
+        )}
+
+        <Box mt={8}>
+          <Stepper index={step} mb={8} colorScheme="blue">
+            <Step>
+              <StepIndicator>
+                <StepStatus
+                  complete={<StepIcon />}
+                  incomplete={<StepNumber>1</StepNumber>}
+                  active={<StepNumber>1</StepNumber>}
+                />
+              </StepIndicator>
+              <Box flexShrink="0">
+                <StepTitle>API Credentials</StepTitle>
+                <StepDescription>
+                  Enter your Slack API credentials
+                </StepDescription>
+              </Box>
+              <StepSeparator />
+            </Step>
+            <Step>
+              <StepIndicator>
+                <StepStatus
+                  complete={<StepIcon />}
+                  incomplete={<StepNumber>2</StepNumber>}
+                  active={<StepNumber>2</StepNumber>}
+                />
+              </StepIndicator>
+              <Box flexShrink="0">
+                <StepTitle>Authorization</StepTitle>
+                <StepDescription>Authorize with Slack</StepDescription>
+              </Box>
+            </Step>
+          </Stepper>
+
+          <Card
+            bg={primaryBg}
+            borderWidth="1px"
+            borderColor={primaryBorder}
+            borderRadius="lg"
+            overflow="hidden"
+            p={6}
+          >
+            <Flex alignItems="center" mb={6}>
+              <Box p={3} borderRadius="md" bg="blue.100">
+                <Icon
+                  as={currentServiceOption.icon}
+                  boxSize={8}
+                  color="blue.500"
+                />
+              </Box>
+              <Heading size="lg" ml={4}>
+                {currentServiceOption.name}
+              </Heading>
+            </Flex>
+
+            {step === 0 ? (
+              <SlackCredentialsForm onSuccess={handleCredentialsSuccess} />
+            ) : (
+              <>
+                <Text mb={6}>{currentServiceOption.description}</Text>
+
+                <Text mb={8}>
+                  Now that you've set up your API credentials, you'll need to
+                  authorize this application to access your Slack workspace.
+                  Click the button below to start the authorization process.
+                </Text>
+
+                <Button
+                  colorScheme="blue"
+                  size="lg"
+                  onClick={handleConnectService}
+                  isLoading={isLoading}
+                  mb={4}
+                  width={{ base: 'full', md: 'auto' }}
+                >
+                  Authorize with {currentServiceOption.name}
+                </Button>
+
+                <Button variant="ghost" onClick={() => setStep(0)} mr={4}>
+                  Back to Credentials
+                </Button>
+
+                <Text fontSize="sm" color="gray.500" mt={4}>
+                  By connecting your account, you agree to our terms of service
+                  and privacy policy.
+                </Text>
+              </>
+            )}
+          </Card>
+        </Box>
+      </Box>
+    )
+  }
+
+  // Render the default integration options if no serviceType is provided
   return (
     <Box>
       <Breadcrumb mb={6}>

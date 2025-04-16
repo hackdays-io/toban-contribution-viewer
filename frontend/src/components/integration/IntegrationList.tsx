@@ -149,14 +149,77 @@ const IntegrationList: React.FC<IntegrationListProps> = ({ teamId }) => {
     )
   }
 
-  // Render error state
+  // Check if we have any Slack auth from local storage
+  const hasLocalSlackAuth = Boolean(localStorage.getItem('slack_auth_code'))
+
+  // Render error state with potential local Slack integration
   if (error) {
     return (
-      <Box textAlign="center" py={10}>
-        <Text color="red.500">Error loading integrations: {error.message}</Text>
-        <Button mt={4} onClick={handleRefresh} leftIcon={<FiRefreshCw />}>
-          Try Again
-        </Button>
+      <Box>
+        <Box textAlign="center" py={6}>
+          <Text
+            color={
+              error.message.includes('local Slack auth')
+                ? 'orange.500'
+                : 'red.500'
+            }
+          >
+            {error.message}
+          </Text>
+          <Button mt={4} onClick={handleRefresh} leftIcon={<FiRefreshCw />}>
+            Try Again
+          </Button>
+        </Box>
+
+        {hasLocalSlackAuth && (
+          <Box mt={8}>
+            <Heading size="md" mb={4}>
+              Locally Stored Integrations
+            </Heading>
+            <Text mb={4}>
+              You have successfully authenticated with Slack, but there was an
+              error connecting to the backend. Your authorization is saved
+              locally.
+            </Text>
+
+            <Card
+              borderWidth="1px"
+              borderRadius="lg"
+              overflow="hidden"
+              bg={cardBg}
+              borderColor={cardBorder}
+              p={4}
+            >
+              <Flex alignItems="center" mb={4}>
+                <Box fontSize="2xl" mr={3}>
+                  💬
+                </Box>
+                <VStack align="start" spacing={0} flex={1}>
+                  <Heading size="md" noOfLines={1}>
+                    Slack Workspace
+                  </Heading>
+                  <Text color="gray.500" fontSize="sm">
+                    slack
+                  </Text>
+                </VStack>
+                <Badge
+                  colorScheme="green"
+                  variant="subtle"
+                  px={2}
+                  py={1}
+                  borderRadius="full"
+                >
+                  authenticated
+                </Badge>
+              </Flex>
+
+              <Text fontSize="sm" color="gray.600" mb={4}>
+                Successfully authenticated with Slack. Authentication data is
+                stored locally.
+              </Text>
+            </Card>
+          </Box>
+        )}
       </Box>
     )
   }
@@ -210,26 +273,94 @@ const IntegrationList: React.FC<IntegrationListProps> = ({ teamId }) => {
 
       {/* Empty state */}
       {filteredIntegrations.length === 0 && (
-        <Box
-          textAlign="center"
-          py={12}
-          px={6}
-          borderWidth="1px"
-          borderRadius="lg"
-          borderStyle="dashed"
-          borderColor={cardBorder}
-        >
-          <Text fontSize="lg" mb={4}>
-            No integrations found.
-          </Text>
-          <Button
-            as={Link}
-            to="/dashboard/integrations/connect"
-            colorScheme="blue"
-            leftIcon={<FiPlus />}
-          >
-            Connect your first integration
-          </Button>
+        <Box>
+          {hasLocalSlackAuth ? (
+            <Box mt={4}>
+              <Heading size="md" mb={4}>
+                Locally Stored Integrations
+              </Heading>
+              <Text mb={4}>
+                You have successfully authenticated with Slack. Your
+                authorization data is saved locally.
+              </Text>
+
+              <Card
+                borderWidth="1px"
+                borderRadius="lg"
+                overflow="hidden"
+                bg={cardBg}
+                borderColor={cardBorder}
+                p={4}
+              >
+                <Flex alignItems="center" mb={4}>
+                  <Box fontSize="2xl" mr={3}>
+                    💬
+                  </Box>
+                  <VStack align="start" spacing={0} flex={1}>
+                    <Heading size="md" noOfLines={1}>
+                      Slack Workspace
+                    </Heading>
+                    <Text color="gray.500" fontSize="sm">
+                      slack
+                    </Text>
+                  </VStack>
+                  <Badge
+                    colorScheme="green"
+                    variant="subtle"
+                    px={2}
+                    py={1}
+                    borderRadius="full"
+                  >
+                    authenticated
+                  </Badge>
+                </Flex>
+
+                <Text fontSize="sm" color="gray.600" mb={4}>
+                  Client ID:{' '}
+                  {localStorage.getItem('slack_client_id')?.substring(0, 8)}...
+                </Text>
+
+                <Text fontSize="sm" color="green.600" mb={4}>
+                  Authorization code is stored locally. This integration is
+                  ready to use.
+                </Text>
+              </Card>
+
+              <Box mt={8} textAlign="center">
+                <Divider mb={6} />
+                <Button
+                  as={Link}
+                  to="/dashboard/integrations/connect"
+                  colorScheme="blue"
+                  leftIcon={<FiPlus />}
+                >
+                  Connect another integration
+                </Button>
+              </Box>
+            </Box>
+          ) : (
+            <Box
+              textAlign="center"
+              py={12}
+              px={6}
+              borderWidth="1px"
+              borderRadius="lg"
+              borderStyle="dashed"
+              borderColor={cardBorder}
+            >
+              <Text fontSize="lg" mb={4}>
+                No integrations found.
+              </Text>
+              <Button
+                as={Link}
+                to="/dashboard/integrations/connect"
+                colorScheme="blue"
+                leftIcon={<FiPlus />}
+              >
+                Connect your first integration
+              </Button>
+            </Box>
+          )}
         </Box>
       )}
 

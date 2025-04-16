@@ -20,17 +20,7 @@ import Home from './pages/Home'
 import Dashboard from './pages/Dashboard'
 import Analytics from './pages/Analytics'
 
-// Slack Pages
-import {
-  ConnectPage as SlackConnectPage,
-  OAuthCallbackPage as SlackOAuthCallbackPage,
-  WorkspacesPage as SlackWorkspacesPage,
-  ChannelsPage as SlackChannelsPage,
-  MessagesPage as SlackMessagesPage,
-  AnalyticsPage as SlackAnalyticsPage,
-  ChannelAnalysisPage as SlackChannelAnalysisPage,
-} from './pages/slack'
-import ChannelAnalysisHistoryPage from './pages/slack/ChannelAnalysisHistoryPage'
+// Removed legacy Slack imports
 
 // Team Pages
 import { TeamsPage, TeamDetailPage, TeamMembersPage } from './pages/team'
@@ -41,6 +31,7 @@ import {
   IntegrationDetailPage,
   IntegrationConnectPage,
 } from './pages/integration'
+import { SlackOAuthCallback } from './components/integration/oauth'
 
 // Profile Pages
 import { ProfilePage, EditProfilePage } from './pages/profile'
@@ -70,11 +61,7 @@ function App() {
               <Route path="/auth/callback" element={<AuthCallback />} />
 
               {/* Protected routes */}
-              {/* Public callback route */}
-              <Route
-                path="/auth/slack/callback"
-                element={<SlackOAuthCallbackPage />}
-              />
+              {/* Public callback routes - legacy Slack callbacks removed */}
 
               {/* Dashboard routes - all wrapped with AppLayout */}
               <Route
@@ -120,57 +107,7 @@ function App() {
                 }
               />
 
-              {/* Slack routes */}
-              <Route
-                path="/dashboard/slack/workspaces"
-                element={
-                  <ProtectedRoute>
-                    <AppLayout>
-                      <SlackWorkspacesPage />
-                    </AppLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/dashboard/slack/connect"
-                element={
-                  <ProtectedRoute>
-                    <AppLayout>
-                      <SlackConnectPage />
-                    </AppLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/dashboard/slack/workspaces/:workspaceId/channels"
-                element={
-                  <ProtectedRoute>
-                    <AppLayout>
-                      <SlackChannelsPage />
-                    </AppLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/dashboard/slack/workspaces/:workspaceId"
-                element={
-                  <ProtectedRoute>
-                    <AppLayout>
-                      <SlackWorkspacesPage />
-                    </AppLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/dashboard/slack/workspaces/:workspaceId/channels/:channelId/messages"
-                element={
-                  <ProtectedRoute>
-                    <AppLayout>
-                      <SlackMessagesPage />
-                    </AppLayout>
-                  </ProtectedRoute>
-                }
-              />
+              {/* Slack routes - removed as they're now part of the integration system */}
 
               {/* Analytics routes */}
               <Route
@@ -183,36 +120,7 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-              <Route
-                path="/dashboard/analytics/slack"
-                element={
-                  <ProtectedRoute>
-                    <AppLayout>
-                      <SlackAnalyticsPage />
-                    </AppLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/dashboard/analytics/slack/channels/:workspaceId/:channelId/analyze"
-                element={
-                  <ProtectedRoute>
-                    <AppLayout>
-                      <SlackChannelAnalysisPage />
-                    </AppLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/dashboard/analytics/slack/channels/:workspaceId/:channelId/history"
-                element={
-                  <ProtectedRoute>
-                    <AppLayout>
-                      <ChannelAnalysisHistoryPage />
-                    </AppLayout>
-                  </ProtectedRoute>
-                }
-              />
+              {/* Removed legacy Slack analytics routes */}
 
               {/* Integrations routes */}
               <Route
@@ -251,6 +159,26 @@ function App() {
                   <ProtectedRoute>
                     <AppLayout>
                       <IntegrationConnectPage />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard/integrations/connect/:serviceType"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <IntegrationConnectPage />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard/integrations/oauth/slack"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <SlackOAuthCallback />
                     </AppLayout>
                   </ProtectedRoute>
                 }

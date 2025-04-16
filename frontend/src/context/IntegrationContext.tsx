@@ -159,17 +159,37 @@ export const IntegrationProvider: React.FC<{ children: React.ReactNode }> = ({
       setState((prev) => ({ ...prev, loading: true, error: null }))
 
       try {
+        // Check if we have locally stored slack integration
+        const hasSlackAuth = Boolean(localStorage.getItem('slack_auth_code'))
+
         const result = await integrationService.getIntegrations(
           teamId,
           serviceType
         )
 
         if (integrationService.isApiError(result)) {
-          setState((prev) => ({
-            ...prev,
-            loading: false,
-            error: result,
-          }))
+          // If API failed but we have local Slack auth, don't consider it a complete error
+          if (hasSlackAuth) {
+            console.warn(
+              'API error when fetching integrations, but local Slack auth exists:',
+              result
+            )
+            setState((prev) => ({
+              ...prev,
+              loading: false,
+              // We still have local integration data, so this is a partial error
+              error: {
+                ...result,
+                message: 'Backend API error, but local Slack auth available',
+              },
+            }))
+          } else {
+            setState((prev) => ({
+              ...prev,
+              loading: false,
+              error: result,
+            }))
+          }
           return
         }
 

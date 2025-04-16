@@ -17,7 +17,7 @@ const IntegrationsPage: React.FC = () => {
         description="Manage all your team's integrations"
       />
 
-      <Box mt={8}>
+      <Box mt={4}>
         <IntegrationList teamId={teamContext?.currentTeamId} />
       </Box>
     </Box>
