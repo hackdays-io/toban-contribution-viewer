@@ -1,15 +1,21 @@
-import React from 'react'
+import * as React from 'react'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { ChakraProvider } from '@chakra-ui/react'
 import { BrowserRouter } from 'react-router-dom'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import IntegrationConnectPage from '../../../pages/integration/IntegrationConnectPage'
 
 // Mock useNavigate
-const mockNavigate = jest.fn()
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
-  useNavigate: () => mockNavigate,
-}))
+const mockNavigate = vi.fn()
+
+// Mock the react-router-dom module
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom')
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+  }
+})
 
 describe('IntegrationConnectPage', () => {
   const renderComponent = () => {
