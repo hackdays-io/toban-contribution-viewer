@@ -7,7 +7,7 @@ from enum import Enum
 from typing import Dict, List, Optional
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 # Enum definitions for API
@@ -253,11 +253,11 @@ class IntegrationResponse(BaseModel):
     description: Optional[str] = None
     service_type: IntegrationTypeEnum
     status: IntegrationStatusEnum
-    metadata: Optional[Dict] = None  # Maps to integration_metadata in the model
+    metadata: Dict = Field(default_factory=dict)  # Maps to integration_metadata in the model
     last_used_at: Optional[datetime] = None
 
     owner_team: TeamInfo
-    created_by: UserInfo
+    created_by: UserInfo = Field(default_factory=lambda: UserInfo(id="unknown"))
     created_at: datetime
     updated_at: datetime
 
@@ -268,3 +268,9 @@ class IntegrationResponse(BaseModel):
 
     class Config:
         orm_mode = True
+        
+        # Specify field mappings
+        fields = {
+            "metadata": "integration_metadata",
+            "created_by.id": "created_by_user_id",
+        }

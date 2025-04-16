@@ -20,6 +20,8 @@ from app.api.v1.integration.schemas import (
     ResourceAccessResponse,
     ServiceResourceResponse,
     SlackIntegrationCreate,
+    TeamInfo,
+    UserInfo,
 )
 from app.core.auth import get_current_user
 from app.db.session import get_async_db
@@ -31,6 +33,47 @@ from app.services.team.permissions import has_team_permission
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/integrations", tags=["integrations"])
+
+
+def prepare_integration_response(integration) -> IntegrationResponse:
+    """
+    Converts an Integration model to an IntegrationResponse schema.
+    Handles the field mappings and makes sure all required fields are present.
+    """
+    # Create the owner_team object
+    owner_team = TeamInfo(
+        id=integration.owner_team.id,
+        name=integration.owner_team.name,
+        slug=integration.owner_team.slug,
+    )
+    
+    # Create the created_by object - this was previously missing
+    created_by = UserInfo(id=integration.created_by_user_id)
+    
+    # Convert integration_metadata to metadata and ensure it's a dict
+    metadata = integration.integration_metadata if integration.integration_metadata is not None else {}
+    
+    # Create the response object with all required fields
+    response = IntegrationResponse(
+        id=integration.id,
+        name=integration.name,
+        description=integration.description,
+        service_type=integration.service_type.value,
+        status=integration.status.value,
+        metadata=metadata,
+        last_used_at=integration.last_used_at,
+        owner_team=owner_team,
+        created_by=created_by,
+        created_at=integration.created_at,
+        updated_at=integration.updated_at,
+        
+        # These will be handled automatically by Pydantic's ORM mode
+        credentials=integration.credentials,
+        resources=integration.resources,
+        shared_with=integration.shared_with,
+    )
+    
+    return response
 
 
 @router.get("", response_model=List[IntegrationResponse])
@@ -78,7 +121,8 @@ async def get_integrations(
             detail="team_id is required",
         )
 
-    return integrations
+    # Convert each integration to a proper response
+    return [prepare_integration_response(integration) for integration in integrations]
 
 
 @router.post(
@@ -122,7 +166,7 @@ async def create_integration(
     # Commit the transaction
     await db.commit()
 
-    return new_integration
+    return prepare_integration_response(new_integration)
 
 
 @router.post(
@@ -170,7 +214,7 @@ async def create_slack_integration(
         # Commit the transaction
         await db.commit()
 
-        return new_integration
+        return prepare_integration_response(new_integration)
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -214,7 +258,7 @@ async def get_integration(
             detail="Integration not found",
         )
 
-    return integration
+    return prepare_integration_response(integration)
 
 
 @router.put("/{integration_id}", response_model=IntegrationResponse)
@@ -276,7 +320,7 @@ async def update_integration(
     # Commit the transaction
     await db.commit()
 
-    return updated_integration
+    return prepare_integration_response(updated_integration)
 
 
 @router.get("/{integration_id}/resources", response_model=List[ServiceResourceResponse])
@@ -574,7 +618,15 @@ async def grant_resource_access(
         )
 
     # Get the resource
-    resource = await db.get(ServiceResource, resource_id)
+    stmt = await db.execute(
+        select(ServiceResource)
+        .options(
+            selectinload(ServiceResource.integration)
+        )
+        .where(ServiceResource.id == resource_id)
+    )
+    resource = stmt.scalar_one_or_none()
+    
     if not resource or resource.integration_id != integration_id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

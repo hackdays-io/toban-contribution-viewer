@@ -12,6 +12,7 @@ from typing import Dict, List, Optional
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.models.integration import (
     AccessLevel,
@@ -54,8 +55,21 @@ class IntegrationService:
         Returns:
             Integration object if found, None otherwise
         """
-        # Get the integration
-        integration = await db.get(Integration, integration_id)
+        # Get the integration with eager loading of relationships
+        stmt = (
+            select(Integration)
+            .where(Integration.id == integration_id)
+            .options(
+                selectinload(Integration.owner_team),
+                selectinload(Integration.credentials),
+                selectinload(Integration.shared_with),
+                selectinload(Integration.resources),
+                selectinload(Integration.events),
+            )
+        )
+        result = await db.execute(stmt)
+        integration = result.scalar_one_or_none()
+
         if not integration:
             return None
 
@@ -104,8 +118,18 @@ class IntegrationService:
         Returns:
             List of Integration objects
         """
-        # Build the query for owned integrations
-        query = select(Integration).where(Integration.owner_team_id == team_id)
+        # Build the query for owned integrations with eager loading
+        query = (
+            select(Integration)
+            .where(Integration.owner_team_id == team_id)
+            .options(
+                selectinload(Integration.owner_team),
+                selectinload(Integration.credentials),
+                selectinload(Integration.shared_with),
+                selectinload(Integration.resources),
+                selectinload(Integration.events),
+            )
+        )
 
         # Add service type filter if provided
         if service_type:
@@ -126,6 +150,13 @@ class IntegrationService:
                 .where(
                     IntegrationShare.team_id == team_id,
                     IntegrationShare.status == "active",
+                )
+                .options(
+                    selectinload(Integration.owner_team),
+                    selectinload(Integration.credentials),
+                    selectinload(Integration.shared_with),
+                    selectinload(Integration.resources),
+                    selectinload(Integration.events),
                 )
             )
 
@@ -238,8 +269,21 @@ class IntegrationService:
         Returns:
             Updated Integration object if successful, None otherwise
         """
-        # Get the integration
-        integration = await db.get(Integration, integration_id)
+        # Get the integration with eager loading of relationships
+        stmt = (
+            select(Integration)
+            .where(Integration.id == integration_id)
+            .options(
+                selectinload(Integration.owner_team),
+                selectinload(Integration.credentials),
+                selectinload(Integration.shared_with),
+                selectinload(Integration.resources),
+                selectinload(Integration.events),
+            )
+        )
+        result = await db.execute(stmt)
+        integration = result.scalar_one_or_none()
+
         if not integration:
             return None
 
@@ -305,8 +349,21 @@ class IntegrationService:
         Returns:
             IntegrationShare object if successful, None otherwise
         """
-        # Get the integration
-        integration = await db.get(Integration, integration_id)
+        # Get the integration with eager loading
+        stmt = (
+            select(Integration)
+            .where(Integration.id == integration_id)
+            .options(
+                selectinload(Integration.owner_team),
+                selectinload(Integration.credentials),
+                selectinload(Integration.shared_with),
+                selectinload(Integration.resources),
+                selectinload(Integration.events),
+            )
+        )
+        result = await db.execute(stmt)
+        integration = result.scalar_one_or_none()
+
         if not integration:
             return None
 
@@ -455,7 +512,14 @@ class IntegrationService:
             ResourceAccess object
         """
         # Get the resource
-        resource = await db.get(ServiceResource, resource_id)
+        stmt = (
+            select(ServiceResource)
+            .where(ServiceResource.id == resource_id)
+            .options(selectinload(ServiceResource.integration))
+        )
+        result = await db.execute(stmt)
+        resource = result.scalar_one_or_none()
+
         if not resource:
             raise ValueError(f"Resource {resource_id} not found")
 
