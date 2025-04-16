@@ -204,14 +204,7 @@ async def add_cors_headers(request, call_next):
     ngrok_url = os.environ.get("NGROK_URL")
 
     # Only allow specific origins that are configured in environment
-    if origin and (
-        origin in allowed_origins
-        or (ngrok_url and origin == ngrok_url)
-        or (
-            settings.DEBUG
-            and (origin.endswith(".ngrok-free.app") or origin.endswith(".ngrok.io"))
-        )
-    ):
+    if origin and (origin in allowed_origins or (ngrok_url and origin == ngrok_url)):
         # Add CORS headers
         response.headers["Access-Control-Allow-Origin"] = origin
         response.headers["Access-Control-Allow-Credentials"] = "true"

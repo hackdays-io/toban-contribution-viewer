@@ -31,9 +31,7 @@ class Settings(BaseSettings):
         "http://localhost:8000",
         "http://127.0.0.1:5173",
         "http://127.0.0.1:8000",
-        # Allow ngrok domains for development
-        "https://*.ngrok-free.app",
-        "https://*.ngrok.io",
+        # Specific ngrok domains should be added via NGROK_URL or ADDITIONAL_CORS_ORIGINS
     ]
 
     @validator("ALLOWED_HOSTS", pre=True)
@@ -65,14 +63,7 @@ class Settings(BaseSettings):
             for origin in origins:
                 unique_hosts.add(origin)
 
-        # Process wildcards for ngrok domains
-        for host in list(unique_hosts):
-            # Handle wildcards in ngrok domains
-            if ("*.ngrok-free.app" in host or "*.ngrok.io" in host) and ngrok_url:
-                # If we have ngrok URL and it matches the wildcard pattern,
-                # add it explicitly (it's already in the set, so no duplication)
-                if "ngrok-free.app" in ngrok_url or "ngrok.io" in ngrok_url:
-                    unique_hosts.add(ngrok_url)
+        # We no longer need wildcard processing since we have explicit ngrok URLs
 
         # Add any additional domains from DEBUG_DOMAINS environment variable
         debug_domains = os.environ.get("DEBUG_DOMAINS", "")
