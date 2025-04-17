@@ -445,6 +445,22 @@ class IntegrationService {
       
       console.log('Starting fetch request to Slack integration endpoint...');
       
+      // Try to use a different approach to identify the issue
+      try {
+        // Try a simpler approach first to test connectivity
+        console.log('Testing connectivity with a simple GET request...');
+        const testResponse = await fetch(`${env.apiUrl}/healthcheck`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+        });
+        console.log('Test connectivity result:', testResponse.status, testResponse.statusText);
+      } catch (testError) {
+        console.error('Test request failed:', testError);
+      }
+      
+      // Now try the real request
+      console.log('Proceeding with actual integration creation request...');
       const response = await fetch(`${this.apiUrl}/slack`, {
         method: 'POST',
         headers,
