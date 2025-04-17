@@ -13,6 +13,7 @@ import env from '../../config/env'
 import useIntegration from '../../context/useIntegration'
 import useAuth from '../../context/useAuth'
 import { IntegrationType } from '../../lib/integrationService'
+import { supabase } from '../../lib/supabase'
 
 /**
  * Component to handle the Slack OAuth callback.
