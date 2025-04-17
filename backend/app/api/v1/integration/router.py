@@ -37,6 +37,21 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/integrations", tags=["integrations"])
 
 
+def convert_resource_to_response(resource: ServiceResource) -> Dict:
+    """Convert a ServiceResource model to a format compatible with ServiceResourceResponse."""
+    return {
+        "id": resource.id,
+        "integration_id": resource.integration_id,
+        "resource_type": resource.resource_type,
+        "external_id": resource.external_id,
+        "name": resource.name,
+        "metadata": resource.resource_metadata,  # Map resource_metadata to metadata
+        "last_synced_at": resource.last_synced_at,
+        "created_at": resource.created_at,
+        "updated_at": resource.updated_at,
+    }
+
+
 def prepare_integration_response(integration) -> IntegrationResponse:
     """
     Converts an Integration model to an IntegrationResponse schema.
@@ -448,7 +463,9 @@ async def get_integration_resources(
         resource_types=resource_type,
     )
 
-    return resources
+    # Convert SQLAlchemy model objects to Pydantic schema objects
+    response_resources = [convert_resource_to_response(resource) for resource in resources]
+    return response_resources
 
 
 @router.post("/{integration_id}/sync", response_model=Dict)
@@ -519,18 +536,24 @@ async def sync_integration_resources(
                     else:
                         raise ValueError("No access token found for this integration. Please reconnect your Slack workspace.")
                 
-                channels = await SlackIntegrationService.sync_channels(
+                # Sync channels and users (these return ServiceResource objects)
+                channel_resources = await SlackIntegrationService.sync_channels(
                     db=db,
                     integration_id=integration_id,
                 )
 
-                users = await SlackIntegrationService.sync_users(
+                user_resources = await SlackIntegrationService.sync_users(
                     db=db,
                     integration_id=integration_id,
                 )
 
                 # Commit the transaction
                 await db.commit()
+                
+                # Return counts only, not the actual resources (to avoid conversion issues)
+                channel_count = len(channel_resources) if channel_resources else 0
+                user_count = len(user_resources) if user_resources else 0
+                
             except ValueError as e:
                 # For all ValueError types, re-raise
                 logger.error(f"Error syncing resources for integration {integration_id}: {str(e)}")
@@ -540,8 +563,8 @@ async def sync_integration_resources(
                 "status": "success",
                 "message": "Resources synced successfully",
                 "synced": {
-                    "channels": len(channels),
-                    "users": len(users),
+                    "channels": channel_count,
+                    "users": user_count,
                 },
             }
         else:
