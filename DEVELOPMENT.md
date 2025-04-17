@@ -236,20 +236,28 @@ For more details about the pre-commit setup, see [PRE-COMMIT.md](PRE-COMMIT.md).
 
 For Slack OAuth to work in local development, you need a public URL that Slack can redirect to. We use ngrok for this:
 
-1. Start ngrok on port 8000 (API) and 5173 (Frontend)
+1. Start ngrok on port 5173 (Frontend)
    ```bash
-   ./scripts/start-ngrok.sh
+   ./scripts/start-ngrok.sh your_ngrok_auth_token
    ```
 
-2. Update your environment variables to use the ngrok URLs
+2. Update your `.env.docker` environment file to use the ngrok URL:
    ```
-   # Backend .env
-   API_URL=https://your-ngrok-url.ngrok-free.app
-   FRONTEND_URL=https://your-frontend-ngrok-url.ngrok-free.app
+   NGROK_URL=https://your-ngrok-url.ngrok-free.app
    ```
 
-3. Update your Slack App configuration with the ngrok URLs
-   - Redirect URL: https://your-frontend-ngrok-url.ngrok-free.app/auth/slack/callback
+3. Start Docker using the `docker-dev.sh` script:
+   ```bash
+   ./docker-dev.sh start
+   ```
+   
+   **IMPORTANT**: Always use the `--env-file .env.docker` flag with Docker Compose commands when using ngrok:
+   ```bash
+   docker compose --env-file .env.docker up -d
+   ```
+
+4. Update your Slack App configuration with the ngrok URLs
+   - Redirect URL: https://your-ngrok-url.ngrok-free.app/auth/slack/callback
 
 ### Troubleshooting Slack Integration
 

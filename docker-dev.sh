@@ -89,7 +89,7 @@ backend_exec() {
   fi
 
   print_message "Executing in backend container: $*"
-  docker compose exec backend "$@"
+  docker compose --env-file .env.docker exec backend "$@"
 }
 
 # Execute a command in the frontend container
@@ -100,30 +100,30 @@ frontend_exec() {
   fi
 
   print_message "Executing in frontend container: $*"
-  docker compose exec frontend "$@"
+  docker compose --env-file .env.docker exec frontend "$@"
 }
 
 # Show logs
 show_logs() {
   if [ $# -eq 0 ]; then
     print_message "Showing logs for all services..."
-    docker compose logs -f
+    docker compose --env-file .env.docker logs -f
   else
     print_message "Showing logs for service: $1"
-    docker compose logs -f "$1"
+    docker compose --env-file .env.docker logs -f "$1"
   fi
 }
 
 # Run backend tests
 backend_test() {
   print_message "Running backend tests..."
-  docker compose exec backend pytest "$@"
+  docker compose --env-file .env.docker exec backend pytest "$@"
 }
 
 # Run frontend tests
 frontend_test() {
   print_message "Running frontend tests..."
-  docker compose exec frontend npm test "$@"
+  docker compose --env-file .env.docker exec frontend npm test "$@"
 }
 
 # Main function to handle commands
