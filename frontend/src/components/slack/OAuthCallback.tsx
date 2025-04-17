@@ -26,11 +26,13 @@ const OAuthCallback: React.FC = () => {
   )
   const [errorMessage, setErrorMessage] = useState('')
   const [shouldShowError, setShouldShowError] = useState(false)
-  const [integrationCreated, setIntegrationCreated] = useState<string | null>(null)
-  
+  const [integrationCreated, setIntegrationCreated] = useState<string | null>(
+    null
+  )
+
   // Use a timer to delay showing errors, to avoid flashing error messages
   const errorTimerRef = useRef<number | null>(null)
-  
+
   // Use a ref to track if we've already processed the code
   const hasProcessedCode = useRef<boolean>(false)
 
@@ -64,9 +66,9 @@ const OAuthCallback: React.FC = () => {
       // Reset error states at the start of processing
       setShouldShowError(false)
       setErrorMessage('')
-      
+
       // No mock data for development
-      if (\!env.apiUrl || env.apiUrl === 'your_api_url') {
+      if (!env.apiUrl || env.apiUrl === 'your_api_url') {
         console.error(
           'API URL is not configured. Please set proper API URL in environment variables.'
         )
@@ -82,15 +84,15 @@ const OAuthCallback: React.FC = () => {
       const {
         data: { session },
       } = await supabase.auth.getSession()
-      if (\!session) {
+      if (!session) {
         console.error(
-          'No active authentication session found in OAuthCallback\!'
+          'No active authentication session found in OAuthCallback!'
         )
         // Try refreshing the session
         const { data: refreshData, error: refreshError } =
           await supabase.auth.refreshSession()
 
-        if (refreshError || \!refreshData.session) {
+        if (refreshError || !refreshData.session) {
           console.error(
             'Failed to refresh authentication session:',
             refreshError
@@ -121,7 +123,7 @@ const OAuthCallback: React.FC = () => {
           const clientId = localStorage.getItem('slack_client_id')
           const clientSecret = localStorage.getItem('slack_client_secret')
 
-          if (\!clientId || \!clientSecret) {
+          if (!clientId || !clientSecret) {
             throw new Error(
               'Missing Slack credentials. Please try connecting again.'
             )
@@ -132,7 +134,7 @@ const OAuthCallback: React.FC = () => {
           const contextTeamId = teamContext?.currentTeamId
           const currentTeamId = storedTeamId || contextTeamId
 
-          if (\!currentTeamId) {
+          if (!currentTeamId) {
             throw new Error(
               'No team ID found. Please select a team and try again.'
             )
@@ -143,20 +145,24 @@ const OAuthCallback: React.FC = () => {
           const callbackUrl = window.location.origin + '/auth/slack/callback'
 
           // For making cross-origin requests to localhost, we need to be careful with credentials
-          const useCredentials = env.apiUrl.startsWith('/') || \!env.apiUrl.includes('localhost')
-            
-          const integration = await createSlackIntegration({
-            team_id: currentTeamId,
-            service_type: IntegrationType.SLACK,
-            name: 'Slack Integration', // This will be updated with actual workspace name later
-            code: code,
-            redirect_uri: callbackUrl,
-            client_id: clientId,
-            client_secret: clientSecret,
-          }, useCredentials)
+          const useCredentials =
+            env.apiUrl.startsWith('/') || !env.apiUrl.includes('localhost')
+
+          const integration = await createSlackIntegration(
+            {
+              team_id: currentTeamId,
+              service_type: IntegrationType.SLACK,
+              name: 'Slack Integration', // This will be updated with actual workspace name later
+              code: code,
+              redirect_uri: callbackUrl,
+              client_id: clientId,
+              client_secret: clientSecret,
+            },
+            useCredentials
+          )
 
           // If we didn't get an integration, something went wrong
-          if (\!integration) {
+          if (!integration) {
             throw new Error(
               'Failed to create Slack integration: No response received'
             )
@@ -166,31 +172,34 @@ const OAuthCallback: React.FC = () => {
           // Only consider it an error if it has an error or error_message property
           if (
             typeof integration === 'object' &&
-            integration \!== null &&
-            (
-              'error' in integration ||
+            integration !== null &&
+            ('error' in integration ||
               'error_message' in integration ||
-              'error_detail' in integration
-            )
+              'error_detail' in integration)
           ) {
             console.error('Integration error:', integration)
             throw new Error(
-              integration.message || integration.error_message || 'Failed to create Slack integration'
+              integration.message ||
+                integration.error_message ||
+                'Failed to create Slack integration'
             )
           }
-          
+
           // Log successful integration creation
-          console.log('Successfully created Slack integration, id:', integration.id)
-          
+          console.log(
+            'Successfully created Slack integration, id:',
+            integration.id
+          )
+
           // Clear any error timer
           if (errorTimerRef.current) {
             window.clearTimeout(errorTimerRef.current)
             errorTimerRef.current = null
           }
-          
+
           // Set integration ID to prevent duplicate processing
           setIntegrationCreated(integration.id)
-          
+
           // Set success status and ensure error is not shown
           setStatus('success')
           setShouldShowError(false)
@@ -233,34 +242,34 @@ const OAuthCallback: React.FC = () => {
               'Network or CORS error when connecting to backend:',
               err
             )
-            
+
             // Delay showing the error in case a retry succeeds
             errorTimerRef.current = window.setTimeout(() => {
               // Only show error if we haven't created an integration yet
-              if (\!integrationCreated) {
+              if (!integrationCreated) {
                 setStatus('error')
                 setShouldShowError(true)
                 setErrorMessage(
                   'Backend server is not running or not accessible. Please start the backend server and try again.'
                 )
               }
-            }, 5000); // 5 second delay
-            
+            }, 5000) // 5 second delay
+
             return
           }
 
           // Delay showing general errors as well
           errorTimerRef.current = window.setTimeout(() => {
             // Only show error if we haven't created an integration yet
-            if (\!integrationCreated) {
+            if (!integrationCreated) {
               setStatus('error')
               setShouldShowError(true)
             }
-          }, 5000); // 5 second delay
+          }, 5000) // 5 second delay
 
           // Variable to hold the error message
           let displayErrorMessage = 'Failed to connect workspace'
-          
+
           // Clear any existing error messages to prevent flashing
           setErrorMessage('')
 
@@ -271,7 +280,11 @@ const OAuthCallback: React.FC = () => {
             'status' in err &&
             'message' in err
           ) {
-            const apiError = err as { status: number; message: string; details?: Record<string, unknown> }
+            const apiError = err as {
+              status: number
+              message: string
+              details?: Record<string, unknown>
+            }
 
             if (apiError.status === 503) {
               displayErrorMessage =
@@ -281,8 +294,7 @@ const OAuthCallback: React.FC = () => {
               if (apiError.details && apiError.details.detail) {
                 displayErrorMessage = `API Error: ${apiError.details.detail}`
               } else {
-                displayErrorMessage = 
-                  `Bad request: ${apiError.message || 'Failed to connect workspace'}`
+                displayErrorMessage = `Bad request: ${apiError.message || 'Failed to connect workspace'}`
               }
               console.error('API Error details:', apiError.details)
             } else {
@@ -338,12 +350,13 @@ const OAuthCallback: React.FC = () => {
     isDevEnvironment,
     createSlackIntegration,
     teamContext,
-    integrationCreated
+    integrationCreated,
   ])
 
   // If we have successfully created an integration but status isn't set yet,
   // show success state immediately to avoid flashing error
-  const displayStatus = integrationCreated && status === 'loading' ? 'success' : status
+  const displayStatus =
+    integrationCreated && status === 'loading' ? 'success' : status
 
   return (
     <Box p={6} maxWidth="600px" mx="auto" textAlign="center">
@@ -367,7 +380,7 @@ const OAuthCallback: React.FC = () => {
           <>
             <Alert status="success" borderRadius="md">
               <AlertIcon />
-              Workspace successfully connected\!
+              Workspace successfully connected!
             </Alert>
             <Text>Redirecting to your workspaces...</Text>
           </>
