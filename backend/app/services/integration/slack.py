@@ -172,7 +172,6 @@ class SlackIntegrationService(IntegrationService):
         return integration, workspace_info
 
     @staticmethod
-    @staticmethod
     async def get_token(db: AsyncSession, integration_id: uuid.UUID) -> Optional[str]:
         """
         Get the access token for a Slack integration.
@@ -184,6 +183,19 @@ class SlackIntegrationService(IntegrationService):
         Returns:
             Access token if found, None otherwise
         """
+        # Get credentials with OAuth token type
+        result = await db.execute(
+            select(IntegrationCredential).where(
+                IntegrationCredential.integration_id == integration_id,
+                IntegrationCredential.credential_type == CredentialType.OAUTH_TOKEN,
+            )
+        )
+        credential = result.scalars().first()
+
+        if credential:
+            return credential.encrypted_value
+        
+        return None
     @staticmethod
     async def sync_channels(
         db: AsyncSession,
@@ -207,7 +219,7 @@ class SlackIntegrationService(IntegrationService):
             logger.error(f"Integration {integration_id} not found")
             raise ValueError(f"Integration {integration_id} not found")
             
-        if integration.service_type \!= IntegrationType.SLACK:
+        if integration.service_type != IntegrationType.SLACK:
             raise ValueError(f"Integration {integration_id} is not a Slack integration")
 
         # Get the access token
