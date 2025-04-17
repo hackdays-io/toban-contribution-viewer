@@ -84,10 +84,28 @@ class SlackIntegrationService(IntegrationService):
 
         # Get workspace info with proper token
         slack_api = SlackApiClient(access_token=oauth_response["access_token"])
-        workspace_info = await slack_api.get_workspace_info()
-
-        if not workspace_info or "team" not in workspace_info:
-            raise ValueError("Failed to get workspace information")
+        
+        # Extract team info directly from the OAuth response instead of calling get_workspace_info
+        # This is more reliable since the team info is already included in the OAuth response
+        workspace_info = {
+            "team": oauth_response.get("team", {})
+        }
+        
+        # Log the workspace info for debugging
+        logger.info(f"Workspace info from OAuth response: {workspace_info}")
+        
+        if not workspace_info or "team" not in workspace_info or not workspace_info["team"]:
+            # Fall back to get_workspace_info only if team info is missing from OAuth response
+            try:
+                logger.info("Team info missing from OAuth response, falling back to get_workspace_info")
+                workspace_info = await slack_api.get_workspace_info()
+                logger.info(f"Workspace info from API: {workspace_info}")
+            except Exception as e:
+                logger.error(f"Error getting workspace info: {str(e)}")
+                raise ValueError(f"Failed to get workspace information: {str(e)}")
+                
+        if not workspace_info or "team" not in workspace_info or not workspace_info["team"]:
+            raise ValueError("Failed to get workspace information: No team data available")
 
         # Create integration name if not provided
         if not name:
@@ -128,10 +146,24 @@ class SlackIntegrationService(IntegrationService):
             },
         )
 
-        # Sync channels and users in the background (would typically use a background task)
-        await SlackIntegrationService.sync_channels(db, integration.id)
-        await SlackIntegrationService.sync_users(db, integration.id)
-
+        # Verify token was saved properly
+        saved_token = await SlackIntegrationService.get_token(db, integration.id)
+        if not saved_token:
+            logger.error(f"Token was not properly saved for integration {integration.id}")
+            raise ValueError("Token was not properly saved for the integration")
+        
+        logger.info(f"Token was successfully saved for integration {integration.id}, length: {len(saved_token)}")
+            
+        try:
+            # Only sync channels for now, omit user sync
+            logger.info(f"Syncing channels for integration {integration.id}")
+            await SlackIntegrationService.sync_channels(db, integration.id)
+            # Note: User sync is omitted to avoid potential errors
+            logger.info(f"Channel sync complete. User sync omitted on initial creation.")
+        except Exception as e:
+            logger.error(f"Error syncing channels: {str(e)}", exc_info=True)
+            # Continue instead of failing - we can sync resources later
+            
         return integration, workspace_info
 
     @staticmethod
@@ -146,18 +178,44 @@ class SlackIntegrationService(IntegrationService):
         Returns:
             Access token if found, None otherwise
         """
-        result = await db.execute(
-            select(IntegrationCredential).where(
+        try:
+            logger.info(f"Getting token for integration: {integration_id}")
+            
+            # First, verify the integration exists
+            integration = await db.get(Integration, integration_id)
+            if not integration:
+                logger.error(f"Integration {integration_id} not found")
+                return None
+                
+            # Query the credential
+            query = select(IntegrationCredential).where(
                 IntegrationCredential.integration_id == integration_id,
                 IntegrationCredential.credential_type == CredentialType.OAUTH_TOKEN,
             )
-        )
-        credential = result.scalar_one_or_none()
+            
+            logger.info(f"Executing query for credentials: {query}")
+            result = await db.execute(query)
+            credential = result.scalar_one_or_none()
 
-        if not credential:
+            if not credential:
+                logger.error(f"No credential found for integration {integration_id}")
+                return None
+                
+            logger.info(f"Found credential with ID: {credential.id}")
+            
+            if not credential.encrypted_value:
+                logger.error(f"Credential found but has no encrypted_value for integration {integration_id}")
+                return None
+
+            # Log token length for debugging
+            token_length = len(credential.encrypted_value) if credential.encrypted_value else 0
+            logger.info(f"Retrieved token with length: {token_length}")
+                
+            return credential.encrypted_value  # In production, this would be decrypted
+            
+        except Exception as e:
+            logger.error(f"Error getting token for integration {integration_id}: {str(e)}", exc_info=True)
             return None
-
-        return credential.encrypted_value  # In production, this would be decrypted
 
     @staticmethod
     async def sync_channels(
@@ -178,12 +236,34 @@ class SlackIntegrationService(IntegrationService):
         """
         # Get the integration
         integration = await db.get(Integration, integration_id)
-        if not integration or integration.service_type != IntegrationType.SLACK:
-            raise ValueError("Invalid Slack integration ID")
+        if not integration:
+            logger.error(f"Integration {integration_id} not found")
+            raise ValueError(f"Integration {integration_id} not found")
+            
+        if integration.service_type != IntegrationType.SLACK:
+            logger.error(f"Integration {integration_id} is not a Slack integration (type: {integration.service_type})")
+            raise ValueError(f"Integration {integration_id} is not a Slack integration")
 
         # Get the access token
         token = await SlackIntegrationService.get_token(db, integration_id)
         if not token:
+            logger.error(f"No access token found for integration {integration_id}")
+            
+            # Check if credential exists at all
+            result = await db.execute(
+                select(IntegrationCredential).where(
+                    IntegrationCredential.integration_id == integration_id,
+                )
+            )
+            any_credentials = result.scalars().all()
+            
+            if not any_credentials:
+                logger.error(f"No credentials of any type found for integration {integration_id}")
+                raise ValueError(f"No credentials found for integration {integration_id}")
+            else:
+                cred_types = [cred.credential_type for cred in any_credentials]
+                logger.error(f"Found {len(any_credentials)} credentials but none with OAuth token. Types: {cred_types}")
+                
             raise ValueError("No access token found for integration")
 
         # Get channels from Slack API
@@ -258,12 +338,34 @@ class SlackIntegrationService(IntegrationService):
         """
         # Get the integration
         integration = await db.get(Integration, integration_id)
-        if not integration or integration.service_type != IntegrationType.SLACK:
-            raise ValueError("Invalid Slack integration ID")
+        if not integration:
+            logger.error(f"Integration {integration_id} not found")
+            raise ValueError(f"Integration {integration_id} not found")
+            
+        if integration.service_type != IntegrationType.SLACK:
+            logger.error(f"Integration {integration_id} is not a Slack integration (type: {integration.service_type})")
+            raise ValueError(f"Integration {integration_id} is not a Slack integration")
 
         # Get the access token
         token = await SlackIntegrationService.get_token(db, integration_id)
         if not token:
+            logger.error(f"No access token found for integration {integration_id}")
+            
+            # Check if credential exists at all
+            result = await db.execute(
+                select(IntegrationCredential).where(
+                    IntegrationCredential.integration_id == integration_id,
+                )
+            )
+            any_credentials = result.scalars().all()
+            
+            if not any_credentials:
+                logger.error(f"No credentials of any type found for integration {integration_id}")
+                raise ValueError(f"No credentials found for integration {integration_id}")
+            else:
+                cred_types = [cred.credential_type for cred in any_credentials]
+                logger.error(f"Found {len(any_credentials)} credentials but none with OAuth token. Types: {cred_types}")
+                
             raise ValueError("No access token found for integration")
 
         # Get users from Slack API

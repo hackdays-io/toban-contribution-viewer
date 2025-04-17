@@ -27,7 +27,7 @@ from app.models.integration import (
     ServiceResource,
     ShareLevel,
 )
-from app.models.team import Team
+from app.models.team import Team, TeamMember
 
 logger = logging.getLogger(__name__)
 
@@ -206,23 +206,47 @@ class IntegrationService:
         Returns:
             Newly created Integration object
         """
-        # Create the integration
-        integration = Integration(
-            id=uuid.uuid4(),
-            name=name,
-            description=description,
-            service_type=service_type,
-            status=IntegrationStatus.ACTIVE,
-            integration_metadata=metadata or {},
-            owner_team_id=team_id,
-            created_by_user_id=user_id,
-            last_used_at=datetime.utcnow(),
-        )
-        db.add(integration)
-        await db.flush()
+        logger.info(f"Creating new integration: name={name}, service_type={service_type}, team_id={team_id}")
+        
+        # Create unique ID
+        integration_id = uuid.uuid4()
+        logger.info(f"Generated integration ID: {integration_id}")
+        
+        try:
+            # Create the integration
+            integration = Integration(
+                id=integration_id,
+                name=name,
+                description=description,
+                service_type=service_type,
+                status=IntegrationStatus.ACTIVE,
+                integration_metadata=metadata or {},
+                owner_team_id=team_id,
+                created_by_user_id=user_id,
+                last_used_at=datetime.utcnow(),
+            )
+            db.add(integration)
+            
+            # Check if the team exists
+            team_result = await db.execute(select(Team).where(Team.id == team_id))
+            team = team_result.scalar_one_or_none()
+            
+            if not team:
+                logger.error(f"Team with ID {team_id} not found during integration creation")
+                raise ValueError(f"Team with ID {team_id} not found")
+                
+            logger.info(f"Team exists: {team.name} (ID: {team.id})")
+            
+            logger.info(f"Flushing integration to database")
+            await db.flush()
+            logger.info(f"Integration {integration_id} successfully created")
+        except Exception as e:
+            logger.error(f"Error creating integration: {str(e)}", exc_info=True)
+            raise
 
         # Create credential if provided
         if credential_data:
+            logger.info(f"Creating credential for integration {integration.id}")
             credential = IntegrationCredential(
                 id=uuid.uuid4(),
                 integration_id=integration.id,
@@ -233,6 +257,10 @@ class IntegrationService:
                 scopes=credential_data.get("scopes"),
             )
             db.add(credential)
+            # Flush to ensure credential is saved
+            logger.info(f"Flushing credential to database")
+            await db.flush()
+            logger.info(f"Credential successfully created with token length: {len(str(credential_data.get('encrypted_value', '')))}")
 
         # Record creation event
         event = IntegrationEvent(

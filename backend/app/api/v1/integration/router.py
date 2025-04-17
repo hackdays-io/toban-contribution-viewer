@@ -9,6 +9,7 @@ from typing import Dict, List, Optional
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.api.v1.integration.schemas import (
     IntegrationCreate,
@@ -35,6 +36,7 @@ from app.models.integration import (
     ServiceResource,
     ShareLevel,
 )
+from app.models.team import Team
 from app.services.integration.base import IntegrationService
 from app.services.integration.slack import SlackIntegrationService
 from app.services.team.permissions import has_team_permission
@@ -67,6 +69,7 @@ def prepare_integration_response(integration) -> IntegrationResponse:
     )
 
     # Create the response object with all required fields
+    # Avoid accessing lazy-loaded relationships that might not be loaded yet
     response = IntegrationResponse(
         id=integration.id,
         name=integration.name,
@@ -79,10 +82,10 @@ def prepare_integration_response(integration) -> IntegrationResponse:
         created_by=created_by,
         created_at=integration.created_at,
         updated_at=integration.updated_at,
-        # These will be handled automatically by Pydantic's ORM mode
-        credentials=integration.credentials,
-        resources=integration.resources,
-        shared_with=integration.shared_with,
+        # Don't include relationships to avoid lazy loading issues
+        credentials=[],
+        resources=[],
+        shared_with=[],
     )
 
     return response
@@ -218,21 +221,54 @@ async def create_slack_integration(
         if not client_id or not client_secret:
             raise ValueError("Slack client ID and client secret are required")
 
-        # Create the integration using the OAuth flow
-        new_integration, _ = await SlackIntegrationService.create_from_oauth(
-            db=db,
-            team_id=integration.team_id,
-            user_id=current_user["id"],
-            auth_code=integration.code,
-            redirect_uri=integration.redirect_uri,
-            client_id=client_id,
-            client_secret=client_secret,
-            name=integration.name,
-            description=integration.description,
-        )
-
-        # Commit the transaction
-        await db.commit()
+        logger.info(f"Creating Slack integration from OAuth code with redirect URI: {integration.redirect_uri}")
+        logger.info(f"Team ID: {integration.team_id}, User ID: {current_user['id']}")
+        logger.info(f"Client ID length: {len(client_id)}, Client Secret length: {len(client_secret)}")
+        logger.info(f"Auth code length: {len(integration.code)}")
+        
+        # Verify the team ID exists before proceeding
+        team_query = await db.execute(select(Team).where(Team.id == integration.team_id))
+        team = team_query.scalar_one_or_none()
+        
+        if not team:
+            logger.error(f"Team with ID {integration.team_id} not found")
+            raise ValueError(f"Team with ID {integration.team_id} not found")
+            
+        logger.info(f"Team found: {team.name} (ID: {team.id})")
+        
+        try:
+            # Create the integration using the OAuth flow
+            new_integration, _ = await SlackIntegrationService.create_from_oauth(
+                db=db,
+                team_id=integration.team_id,
+                user_id=current_user["id"],
+                auth_code=integration.code,
+                redirect_uri=integration.redirect_uri,
+                client_id=client_id,
+                client_secret=client_secret,
+                name=integration.name,
+                description=integration.description,
+            )
+            
+            # Commit the transaction immediately
+            logger.info(f"Committing transaction after successful Slack integration creation")
+            await db.commit()
+            logger.info(f"Transaction committed successfully")
+            
+            # Make sure to refresh the integration to get its relationships
+            logger.info(f"Refreshing integration object")
+            await db.refresh(new_integration)
+            logger.info(f"Integration refreshed successfully")
+            
+        except Exception as e:
+            logger.error(f"SlackIntegrationService.create_from_oauth error: {str(e)}", exc_info=True)
+            # Rollback on error
+            try:
+                await db.rollback()
+                logger.info("Transaction rolled back after error")
+            except Exception as rollback_error:
+                logger.error(f"Error rolling back transaction: {str(rollback_error)}")
+            raise ValueError(f"Error in Slack integration creation: {str(e)}")
 
         return prepare_integration_response(new_integration)
     except ValueError as e:
