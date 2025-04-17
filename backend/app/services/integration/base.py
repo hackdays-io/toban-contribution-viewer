@@ -206,12 +206,13 @@ class IntegrationService:
         Returns:
             Newly created Integration object
         """
-        logger.info(f"Creating new integration: name={name}, service_type={service_type}, team_id={team_id}")
-        
+        logger.info(
+            f"Creating new integration: name={name}, service_type={service_type}, team_id={team_id}"
+        )
+
         # Create unique ID
         integration_id = uuid.uuid4()
-        logger.info(f"Generated integration ID: {integration_id}")
-        
+
         try:
             # Create the integration
             integration = Integration(
@@ -226,27 +227,26 @@ class IntegrationService:
                 last_used_at=datetime.utcnow(),
             )
             db.add(integration)
-            
+
             # Check if the team exists
             team_result = await db.execute(select(Team).where(Team.id == team_id))
             team = team_result.scalar_one_or_none()
-            
+
             if not team:
-                logger.error(f"Team with ID {team_id} not found during integration creation")
+                logger.error(
+                    f"Team with ID {team_id} not found during integration creation"
+                )
                 raise ValueError(f"Team with ID {team_id} not found")
-                
-            logger.info(f"Team exists: {team.name} (ID: {team.id})")
-            
-            logger.info(f"Flushing integration to database")
+
+            # Flush to ensure integration is saved
             await db.flush()
-            logger.info(f"Integration {integration_id} successfully created")
+            logger.info(f"Integration {integration_id} created for team: {team.name}")
         except Exception as e:
             logger.error(f"Error creating integration: {str(e)}", exc_info=True)
             raise
 
         # Create credential if provided
         if credential_data:
-            logger.info(f"Creating credential for integration {integration.id}")
             credential = IntegrationCredential(
                 id=uuid.uuid4(),
                 integration_id=integration.id,
@@ -258,9 +258,8 @@ class IntegrationService:
             )
             db.add(credential)
             # Flush to ensure credential is saved
-            logger.info(f"Flushing credential to database")
             await db.flush()
-            logger.info(f"Credential successfully created with token length: {len(str(credential_data.get('encrypted_value', '')))}")
+            logger.info("Credential saved for integration")
 
         # Record creation event
         event = IntegrationEvent(
