@@ -436,6 +436,14 @@ class IntegrationService {
         client_secret: data.client_secret ? '(secret exists)' : null
       });
       
+      // Add more debugging for Slack developer platform
+      console.log('Creating Slack OAuth request with:');
+      console.log('- Team ID:', data.team_id);
+      console.log('- Auth code length:', data.code?.length || 0);
+      console.log('- Redirect URI:', data.redirect_uri);
+      console.log('- Client ID length:', data.client_id?.length || 0);
+      console.log('- Has client secret:', !!data.client_secret);
+      
       // Try with a timeout to catch hanging requests
       const controller = new AbortController();
       const timeoutId = setTimeout(() => {
