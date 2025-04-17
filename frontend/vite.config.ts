@@ -19,8 +19,17 @@ export default defineConfig(({ mode }) => {
     }
   }
 
-  // Add the specific ngrok domain we're using
-  allowedHosts.push('summary-locust-arriving.ngrok-free.app');
+  // Extract NGROK domain from VITE_FRONTEND_URL if it exists
+  try {
+    const frontendUrl = env.VITE_FRONTEND_URL || '';
+    if (frontendUrl && frontendUrl.includes('ngrok')) {
+      const url = new URL(frontendUrl);
+      allowedHosts.push(url.hostname);
+      console.log(`Added specific ngrok domain from env: ${url.hostname}`);
+    }
+  } catch (e) {
+    console.warn('Could not parse VITE_FRONTEND_URL as ngrok URL', e);
+  }
   
   // Also keep the wildcards for other ngrok domains
   allowedHosts.push('*.ngrok-free.app');
