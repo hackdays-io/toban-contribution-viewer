@@ -1,5 +1,6 @@
 # Load environment variables from .env.docker file
 # Copy .env.docker.example to .env.docker and fill in your values
+# Important: Run with 'docker compose --env-file .env.docker' to properly load all variables
 services:
   postgres:
     image: postgres:13
@@ -66,6 +67,9 @@ services:
       - VITE_ENVIRONMENT=development
       # Frontend URL for redirects (use ngrok tunnel if available)
       - VITE_FRONTEND_URL=${NGROK_URL:-http://localhost:5173}
+      # Add ngrok URL to allowed hosts for Vite server
+      # This variable is used by Vite to allow requests from the ngrok domain
+      - VITE_ADDITIONAL_ALLOWED_HOSTS=${NGROK_URL}
       - VITE_SUPABASE_URL=${SUPABASE_URL:-your_supabase_url}
       - VITE_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:-your_supabase_anon_key}
       - VITE_AUTH_REDIRECT_URI=${NGROK_URL:-http://localhost:5173}/auth/callback

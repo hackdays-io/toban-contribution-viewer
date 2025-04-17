@@ -4,26 +4,20 @@ import react from '@vitejs/plugin-react'
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   // Load env variables based on mode
+  // This loads .env files into env object - this is NOT the same as process.env
   const env = loadEnv(mode, process.cwd());
-
-  // Extract domain from NGROK_URL if it exists
-  const allowedHosts = [];
-  if (env.VITE_FRONTEND_URL || process.env.NGROK_URL) {
-    try {
-      const url = new URL(env.VITE_FRONTEND_URL || process.env.NGROK_URL || '');
-      if (url.hostname) {
-        allowedHosts.push(url.hostname);
-      }
-    } catch (e) {
-      console.warn('Could not parse NGROK_URL', e);
-    }
-  }
-
-  // Don't add specific ngrok domains - use wildcard patterns instead
-  // Add generic ngrok domains
-  allowedHosts.push('*.ngrok-free.app');
-  allowedHosts.push('*.ngrok.io');
-
+  
+  console.log('=== Vite Configuration ===');
+  console.log('Mode:', mode);
+  console.log('Environment variables:', {
+    VITE_FRONTEND_URL: env.VITE_FRONTEND_URL,
+    VITE_ADDITIONAL_ALLOWED_HOSTS: env.VITE_ADDITIONAL_ALLOWED_HOSTS,
+  });
+  
+  // For development with ngrok, allow all hosts
+  // This is a more permissive approach that will solve the immediate issue
+  const allowedHosts = true; // Allow all hosts
+  
   // Determine if we're in development mode
   const isDev = mode === 'development';
   
@@ -70,15 +64,16 @@ export default defineConfig(({ mode }) => {
     config.server.proxy = {
       // Proxy all API requests to the backend
       '/api': {
-        target: 'http://localhost:8000',
+        target: 'http://backend:8000',  // Use Docker service name
         changeOrigin: true,
         secure: false,
       }
     };
-    console.log('Development mode: API proxy enabled');
+    console.log('Development mode: API proxy enabled (target: http://backend:8000)');
   } else {
     console.log('Production mode: API proxy disabled');
   }
   
+  console.log('Allowed hosts:', allowedHosts);
   return config;
 })

@@ -2,6 +2,9 @@ FROM node:20-slim
 
 WORKDIR /app
 
+# Set environment variable to indicate we're in Docker
+ENV DOCKER_CONTAINER=true
+
 # Copy package files
 COPY package.json ./
 

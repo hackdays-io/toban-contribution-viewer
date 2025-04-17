@@ -68,11 +68,17 @@ allowed_origins = [str(origin) for origin in settings.ALLOWED_HOSTS]
 # Log all allowed origins for debugging
 logger.info(f"CORS allowed origins: {allowed_origins}")
 
-# Add ngrok URL only once
+# Check if we need to add the NGROK_URL
 ngrok_url = os.environ.get("NGROK_URL")
 if ngrok_url and ngrok_url not in allowed_origins:
     allowed_origins.append(ngrok_url)
     logger.info(f"Added ngrok URL to allowed origins: {ngrok_url}")
+
+# Check if we need to add additional allowed hosts from VITE_ADDITIONAL_ALLOWED_HOSTS
+additional_hosts = os.environ.get("VITE_ADDITIONAL_ALLOWED_HOSTS")
+if additional_hosts and additional_hosts not in allowed_origins:
+    allowed_origins.append(additional_hosts)
+    logger.info(f"Added additional host from VITE_ADDITIONAL_ALLOWED_HOSTS: {additional_hosts}")
 
 # Let's print the exact allowed origins for debugging
 logger.info(f"CORS allowed origins (exact list): {allowed_origins}")
