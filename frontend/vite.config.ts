@@ -19,8 +19,10 @@ export default defineConfig(({ mode }) => {
     }
   }
 
-  // Don't add specific ngrok domains - use wildcard patterns instead
-  // Add generic ngrok domains
+  // Add the specific ngrok domain we're using
+  allowedHosts.push('summary-locust-arriving.ngrok-free.app');
+  
+  // Also keep the wildcards for other ngrok domains
   allowedHosts.push('*.ngrok-free.app');
   allowedHosts.push('*.ngrok.io');
 
