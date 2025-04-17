@@ -7,11 +7,41 @@ const supabaseAnonKey = env.supabase.anonKey
 
 // The real Supabase client with appropriate types
 
-// Always use the real Supabase client
-const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// Validate Supabase URL before creating client to prevent URL construction errors
+const isValidUrl = (url: string): boolean => {
+  if (!url || url === 'your_supabase_url') return false;
+  
+  try {
+    new URL(url);
+    return true;
+  } catch (e) {
+    return false;
+  }
+};
 
-// Log auth configuration
-console.info('Using real Supabase authentication at:', supabaseUrl)
+// Create client with validation
+let supabase;
+if (isValidUrl(supabaseUrl)) {
+  // Always use the real Supabase client
+  supabase = createClient(supabaseUrl, supabaseAnonKey);
+  
+  // Log auth configuration
+  console.info('Using real Supabase authentication at:', supabaseUrl);
+} else {
+  console.error('Invalid Supabase URL:', supabaseUrl);
+  console.error('Check your environment variables. Using mock client.');
+  
+  // Create minimal mock client that won't throw errors
+  supabase = {
+    auth: {
+      signInWithPassword: () => Promise.resolve({ data: null, error: new Error('Supabase not configured') }),
+      signUp: () => Promise.resolve({ data: null, error: new Error('Supabase not configured') }),
+      signOut: () => Promise.resolve({ error: null }),
+      getSession: () => Promise.resolve({ data: { session: null }, error: null }),
+      signInWithOAuth: () => Promise.resolve({ data: null, error: new Error('Supabase not configured') })
+    }
+  };
+}
 
 export { supabase }
 
