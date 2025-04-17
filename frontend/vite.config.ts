@@ -9,21 +9,40 @@ export default defineConfig(({ mode }) => {
   // Create a list of allowed hosts, always starting with an empty array
   const allowedHosts = [];
   
+  // Log all environment variables to debug
+  console.log('Environment variables in Vite config:');
+  console.log('env.VITE_FRONTEND_URL:', env.VITE_FRONTEND_URL);
+  console.log('process.env.NGROK_URL:', process.env.NGROK_URL);
+  console.log('process.env.VITE_FRONTEND_URL:', process.env.VITE_FRONTEND_URL);
+  
   // Try to extract domain from VITE_FRONTEND_URL first (highest priority)
   if (env.VITE_FRONTEND_URL) {
     try {
       const url = new URL(env.VITE_FRONTEND_URL);
       if (url.hostname) {
         allowedHosts.push(url.hostname);
-        console.log(`Added host from VITE_FRONTEND_URL: ${url.hostname}`);
+        console.log(`Added host from env.VITE_FRONTEND_URL: ${url.hostname}`);
       }
     } catch (e) {
-      console.warn('Could not parse VITE_FRONTEND_URL:', env.VITE_FRONTEND_URL, e);
+      console.warn('Could not parse env.VITE_FRONTEND_URL:', env.VITE_FRONTEND_URL, e);
+    }
+  }
+  
+  // Try process.env.VITE_FRONTEND_URL as another option
+  if (process.env.VITE_FRONTEND_URL && !allowedHosts.some(h => h.includes('ngrok'))) {
+    try {
+      const url = new URL(process.env.VITE_FRONTEND_URL);
+      if (url.hostname) {
+        allowedHosts.push(url.hostname);
+        console.log(`Added host from process.env.VITE_FRONTEND_URL: ${url.hostname}`);
+      }
+    } catch (e) {
+      console.warn('Could not parse process.env.VITE_FRONTEND_URL:', process.env.VITE_FRONTEND_URL, e);
     }
   }
   
   // Then try NGROK_URL as a fallback
-  if (process.env.NGROK_URL && !allowedHosts.length) {
+  if (process.env.NGROK_URL && !allowedHosts.some(h => h.includes('ngrok'))) {
     try {
       const url = new URL(process.env.NGROK_URL);
       if (url.hostname) {
@@ -33,6 +52,12 @@ export default defineConfig(({ mode }) => {
     } catch (e) {
       console.warn('Could not parse NGROK_URL', e);
     }
+  }
+  
+  // Explicitly add the ngrok domain we know exists in container env
+  if (!allowedHosts.some(h => h.includes('ngrok'))) {
+    allowedHosts.push('summary-locust-arriving.ngrok-free.app');
+    console.log('Added hardcoded ngrok domain as last resort');
   }
   
   // Always add wildcard patterns as a further fallback
