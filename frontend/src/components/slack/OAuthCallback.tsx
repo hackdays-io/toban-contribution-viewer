@@ -82,17 +82,21 @@ const OAuthCallback: React.FC = () => {
       hasProcessedCode.current = true
 
       try {
-        // Retrieve client ID and client secret from session storage
+        // Retrieve client ID, client secret, and team ID from session storage
         const clientId = sessionStorage.getItem('slack_client_id')
         const clientSecret = sessionStorage.getItem('slack_client_secret')
         const integrationName =
           sessionStorage.getItem('slack_integration_name') || 'Slack Workspace'
+        const storedTeamId = sessionStorage.getItem('slack_team_id')
 
         if (!clientId || !clientSecret) {
           throw new Error('Missing credentials. Please try connecting again.')
         }
 
-        if (!teamContext.currentTeamId) {
+        // Use stored team ID if available, otherwise fall back to current team context
+        const teamId = storedTeamId || teamContext.currentTeamId
+
+        if (!teamId) {
           throw new Error(
             'No team selected. Please select a team before connecting Slack.'
           )
@@ -106,7 +110,7 @@ const OAuthCallback: React.FC = () => {
             client_id: clientId,
             client_secret: clientSecret,
           },
-          teamContext.currentTeamId,
+          teamId,
           integrationName
         )
 
@@ -121,6 +125,7 @@ const OAuthCallback: React.FC = () => {
         sessionStorage.removeItem('slack_client_id')
         sessionStorage.removeItem('slack_client_secret')
         sessionStorage.removeItem('slack_integration_name')
+        sessionStorage.removeItem('slack_team_id')
 
         setStatus('success')
 
@@ -149,6 +154,7 @@ const OAuthCallback: React.FC = () => {
         sessionStorage.removeItem('slack_client_id')
         sessionStorage.removeItem('slack_client_secret')
         sessionStorage.removeItem('slack_integration_name')
+        sessionStorage.removeItem('slack_team_id')
 
         setStatus('error')
 
