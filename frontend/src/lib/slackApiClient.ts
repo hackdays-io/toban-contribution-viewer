@@ -109,7 +109,8 @@ class SlackApiClient extends ApiClient {
       team_id: teamId,
     }
 
-    return this.post<Record<string, unknown>>('', data)
+    // Use the specific slack endpoint for creating Slack integrations
+    return this.post<Record<string, unknown>>('/slack', data)
   }
 
   /**
