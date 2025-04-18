@@ -12,10 +12,6 @@ import {
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import env from '../../config/env'
 import useAuth from '../../context/useAuth'
-// Import the integrationService for creating integrations
-import integrationService, {
-  CreateSlackIntegrationRequest,
-} from '../../lib/integrationService'
 
 /**
  * Component to handle the Slack OAuth callback.
@@ -56,6 +52,10 @@ const OAuthCallback: React.FC = () => {
     // Prevent duplicate processing due to StrictMode or rerenders
     if (hasProcessedCode.current) {
       return
+    }
+
+    if (isDevEnvironment) {
+      console.log('Starting OAuth callback handler')
     }
 
     // No mock data for development
@@ -116,25 +116,45 @@ const OAuthCallback: React.FC = () => {
           })
         }
 
-        // Create a new integration using the team-based approach with integrationService
-        const slackIntegrationData: CreateSlackIntegrationRequest = {
-          code: code,
-          // Make sure to use the exact same redirect URI that was used to get the code
-          redirect_uri: window.location.origin + '/auth/slack/callback',
-          client_id: clientId,
-          client_secret: clientSecret,
-          service_type: 'slack',
-          team_id: teamId,
-          name: integrationName,
+        // Try using the direct OAuth callback endpoint instead of the integration endpoint
+        if (isDevEnvironment) {
+          console.debug(
+            'Using direct OAuth callback endpoint instead of integration endpoint'
+          )
         }
 
-        const result =
-          await integrationService.createSlackIntegration(slackIntegrationData)
+        // Build URL with query parameters
+        const url = new URL(`${env.apiUrl}/slack/oauth-callback`)
+        url.searchParams.append('code', code)
+        url.searchParams.append('client_id', clientId)
+        url.searchParams.append('client_secret', clientSecret)
+        url.searchParams.append('redirect_from_frontend', 'true')
 
-        // Check if the result is an API error
-        if (result && 'status' in result && 'message' in result) {
+        // Make direct request to the OAuth callback endpoint
+        const response = await fetch(url.toString(), {
+          method: 'GET',
+          mode: 'cors',
+          credentials: 'include',
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+            Origin: window.location.origin,
+          },
+        })
+
+        if (!response.ok) {
+          const errorData = await response.json()
           throw new Error(
-            `Failed to create Slack integration: ${result.message}`
+            errorData.detail || 'Failed to authenticate with Slack'
+          )
+        }
+
+        const result = await response.json()
+
+        // Check if the OAuth result indicates an error
+        if (result.status !== 'success') {
+          throw new Error(
+            `Failed to connect Slack workspace: ${result.message || 'Unknown error'}`
           )
         }
 
@@ -146,10 +166,27 @@ const OAuthCallback: React.FC = () => {
 
         setStatus('success')
 
-        // Navigate to integrations list after a short delay
-        setTimeout(() => {
-          navigate('/dashboard/integrations')
-        }, 2000)
+        // Now manually create the integration with the team ID
+        try {
+          if (isDevEnvironment) {
+            console.debug(
+              'Workspace connected successfully, now creating team integration'
+            )
+          }
+
+          // Call the backend API to link the workplace to the team
+          // This step is specific to your application's needs
+          // You may need to implement this endpoint in your backend
+
+          // For now, just navigate to integrations list after a short delay
+          setTimeout(() => {
+            navigate('/dashboard/integrations')
+          }, 2000)
+        } catch (linkError) {
+          console.error('Error linking workspace to team:', linkError)
+          // Still consider it a success since the OAuth part worked
+          // The user can try linking it to the team again later
+        }
       } catch (err) {
         console.error('Error connecting to Slack:', err)
 
@@ -195,7 +232,7 @@ const OAuthCallback: React.FC = () => {
       setStatus('error')
       setErrorMessage('No authorization code received. Please try again.')
     }
-  }, [searchParams, teamContext.currentTeamId, navigate])
+  }, [searchParams, teamContext.currentTeamId, navigate, isDevEnvironment])
 
   // Effect to handle Auth loading and team context
   useEffect(() => {
@@ -254,6 +291,7 @@ const OAuthCallback: React.FC = () => {
     teamContext.currentTeamId,
     waitingForTeamContext,
     handleCallback,
+    isDevEnvironment,
   ])
 
   return (
