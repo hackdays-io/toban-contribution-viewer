@@ -27,7 +27,14 @@ from app.api.v1.integration.schemas import (
 )
 from app.core.auth import get_current_user
 from app.db.session import get_async_db
-from app.models.integration import AccessLevel, CredentialType, IntegrationCredential, IntegrationType, ServiceResource, ShareLevel
+from app.models.integration import (
+    AccessLevel,
+    CredentialType,
+    IntegrationCredential,
+    IntegrationType,
+    ServiceResource,
+    ShareLevel,
+)
 from app.services.integration.base import IntegrationService
 from app.services.integration.slack import SlackIntegrationService
 from app.services.team.permissions import has_team_permission
@@ -35,6 +42,21 @@ from app.services.team.permissions import has_team_permission
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/integrations", tags=["integrations"])
+
+
+def convert_resource_to_response(resource: ServiceResource) -> Dict:
+    """Convert a ServiceResource model to a format compatible with ServiceResourceResponse."""
+    return {
+        "id": resource.id,
+        "integration_id": resource.integration_id,
+        "resource_type": resource.resource_type,
+        "external_id": resource.external_id,
+        "name": resource.name,
+        "metadata": resource.resource_metadata,  # Map resource_metadata to metadata
+        "last_synced_at": resource.last_synced_at,
+        "created_at": resource.created_at,
+        "updated_at": resource.updated_at,
+    }
 
 
 def prepare_integration_response(integration) -> IntegrationResponse:
@@ -59,6 +81,51 @@ def prepare_integration_response(integration) -> IntegrationResponse:
         else {}
     )
 
+    # Convert credentials to the proper format
+    credentials_list = []
+    if integration.credentials:
+        for credential in integration.credentials:
+            credentials_list.append({
+                "id": credential.id,
+                "credential_type": credential.credential_type,
+                "expires_at": credential.expires_at,
+                "scopes": credential.scopes,
+                "created_at": credential.created_at,
+                "updated_at": credential.updated_at,
+            })
+    
+    # Convert resources to the proper format
+    resource_list = []
+    if integration.resources:
+        resource_list = [convert_resource_to_response(resource) for resource in integration.resources]
+    
+    # Convert shared_with to the proper format
+    shares_list = []
+    if integration.shared_with:
+        for share in integration.shared_with:
+            # Create the team info object for this share
+            team_info = TeamInfo(
+                id=share.team.id if share.team else share.team_id,
+                name=share.team.name if share.team else "Unknown Team",
+                slug=share.team.slug if share.team else "unknown",
+            )
+            
+            # Create the shared_by user info
+            shared_by = UserInfo(id=share.shared_by_user_id)
+            
+            shares_list.append({
+                "id": share.id,
+                "integration_id": share.integration_id,
+                "team_id": share.team_id,
+                "share_level": share.share_level.value,
+                "status": share.status,
+                "revoked_at": share.revoked_at,
+                "shared_by": shared_by,
+                "team": team_info,
+                "created_at": share.created_at,
+                "updated_at": share.updated_at,
+            })
+    
     # Create the response object with all required fields
     response = IntegrationResponse(
         id=integration.id,
@@ -72,10 +139,10 @@ def prepare_integration_response(integration) -> IntegrationResponse:
         created_by=created_by,
         created_at=integration.created_at,
         updated_at=integration.updated_at,
-        # These will be handled automatically by Pydantic's ORM mode
-        credentials=integration.credentials,
-        resources=integration.resources,
-        shared_with=integration.shared_with,
+        # Use the converted lists instead of the raw DB models
+        credentials=credentials_list,
+        resources=resource_list,
+        shared_with=shares_list,
     )
 
     return response
@@ -448,7 +515,11 @@ async def get_integration_resources(
         resource_types=resource_type,
     )
 
-    return resources
+    # Convert SQLAlchemy model objects to Pydantic schema objects
+    response_resources = [
+        convert_resource_to_response(resource) for resource in resources
+    ]
+    return response_resources
 
 
 @router.post("/{integration_id}/sync", response_model=Dict)
@@ -500,48 +571,62 @@ async def sync_integration_resources(
             try:
                 # Attempt to sync with the database token
                 token = await SlackIntegrationService.get_token(db, integration_id)
-                
+
                 if not token:
                     # Check if we can get the token from credentials associated with this integration
-                    logger.info(f"No token found in database for integration {integration_id}, checking credentials")
-                    
+                    logger.info(
+                        f"No token found in database for integration {integration_id}, checking credentials"
+                    )
+
                     # Get the credential if it exists
                     stmt = select(IntegrationCredential).where(
                         IntegrationCredential.integration_id == integration_id,
-                        IntegrationCredential.credential_type == "oauth_token"
+                        IntegrationCredential.credential_type == "oauth_token",
                     )
                     credential_result = await db.execute(stmt)
                     credential = credential_result.scalar_one_or_none()
-                    
+
                     if credential and credential.encrypted_value:
                         token = credential.encrypted_value
-                        logger.info(f"Found token in credentials for integration {integration_id}")
+                        logger.info(
+                            f"Found token in credentials for integration {integration_id}"
+                        )
                     else:
-                        raise ValueError("No access token found for this integration. Please reconnect your Slack workspace.")
-                
-                channels = await SlackIntegrationService.sync_channels(
+                        raise ValueError(
+                            "No access token found for this integration. Please reconnect your Slack workspace."
+                        )
+
+                # Sync channels and users (these return ServiceResource objects)
+                channel_resources = await SlackIntegrationService.sync_channels(
                     db=db,
                     integration_id=integration_id,
                 )
 
-                users = await SlackIntegrationService.sync_users(
+                user_resources = await SlackIntegrationService.sync_users(
                     db=db,
                     integration_id=integration_id,
                 )
 
                 # Commit the transaction
                 await db.commit()
+
+                # Return counts only, not the actual resources (to avoid conversion issues)
+                channel_count = len(channel_resources) if channel_resources else 0
+                user_count = len(user_resources) if user_resources else 0
+
             except ValueError as e:
                 # For all ValueError types, re-raise
-                logger.error(f"Error syncing resources for integration {integration_id}: {str(e)}")
+                logger.error(
+                    f"Error syncing resources for integration {integration_id}: {str(e)}"
+                )
                 raise
 
             return {
                 "status": "success",
                 "message": "Resources synced successfully",
                 "synced": {
-                    "channels": len(channels),
-                    "users": len(users),
+                    "channels": channel_count,
+                    "users": user_count,
                 },
             }
         else:
