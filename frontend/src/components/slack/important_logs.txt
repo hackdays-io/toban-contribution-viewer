@@ -1,0 +1,38 @@
+# OAuth Flow Debugging Logs
+
+## OAuth Flow Issues
+
+1. Client ID and Client Secret not being properly passed through the OAuth flow
+   - ConnectWorkspace component now saves these in sessionStorage
+   - OAuthCallback component retrieves them during the OAuth flow
+
+2. Team ID not available at the time of OAuth callback
+   - Added logic to wait for team context to load before proceeding
+   - Added timeout to prevent indefinite loading
+
+3. Slack API Client URL Formation
+   - Fixed base URL path in SlackApiClient to properly handle team-scoped integrations
+   - Added proper error handling for API responses
+
+## API Response Conversion
+
+1. Backend failing to properly convert SQLAlchemy models to Pydantic schemas
+   - Added conversion functions for ServiceResource, IntegrationShare, and ResourceAccess
+   - Updated error handling for null responses
+
+2. Resource Sync Button
+   - Fixed issues with the sync resources button not working properly
+   - Added proper URL formation in the API client
+
+## Team-Based Integration Model
+
+1. Transitioning from legacy Slack integration to team-based model
+   - Each team now has its own integration
+   - OAuth callback requires team context
+   - Client credentials collected on a per-team basis instead of environment variables
+
+## Next Steps
+
+1. Test the full OAuth flow with the restored form fields
+2. Verify the integration resource endpoints work correctly
+3. Ensure proper team context loading in all application flows
