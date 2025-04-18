@@ -104,9 +104,22 @@ const OAuthCallback: React.FC = () => {
           )
         }
 
+        // Log debug information
+        if (isDevEnvironment) {
+          console.debug('OAuth callback data:', {
+            code: code ? 'present (not shown for security)' : 'missing',
+            redirect_uri: window.location.origin + '/auth/slack/callback',
+            team_id: teamId,
+            name: integrationName,
+            has_client_id: Boolean(clientId),
+            has_client_secret: Boolean(clientSecret),
+          })
+        }
+
         // Create a new integration using the team-based approach with integrationService
         const slackIntegrationData: CreateSlackIntegrationRequest = {
           code: code,
+          // Make sure to use the exact same redirect URI that was used to get the code
           redirect_uri: window.location.origin + '/auth/slack/callback',
           client_id: clientId,
           client_secret: clientSecret,
