@@ -12,8 +12,10 @@ import {
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import env from '../../config/env'
 import useAuth from '../../context/useAuth'
-// Import the slackApiClient directly
-import slackApiClient from '../../lib/slackApiClient'
+// Import the integrationService for creating integrations
+import integrationService, {
+  CreateSlackIntegrationRequest,
+} from '../../lib/integrationService'
 
 /**
  * Component to handle the Slack OAuth callback.
@@ -102,17 +104,19 @@ const OAuthCallback: React.FC = () => {
           )
         }
 
-        // Create a new integration using the team-based approach with slackApiClient
-        const result = await slackApiClient.connectWorkspace(
-          {
-            code: code,
-            redirect_uri: window.location.origin + '/auth/slack/callback',
-            client_id: clientId,
-            client_secret: clientSecret,
-          },
-          teamId,
-          integrationName
-        )
+        // Create a new integration using the team-based approach with integrationService
+        const slackIntegrationData: CreateSlackIntegrationRequest = {
+          code: code,
+          redirect_uri: window.location.origin + '/auth/slack/callback',
+          client_id: clientId,
+          client_secret: clientSecret,
+          service_type: 'slack',
+          team_id: teamId,
+          name: integrationName,
+        }
+
+        const result =
+          await integrationService.createSlackIntegration(slackIntegrationData)
 
         // Check if the result is an API error
         if (result && 'status' in result && 'message' in result) {
