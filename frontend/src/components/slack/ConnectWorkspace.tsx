@@ -9,14 +9,37 @@ import {
   Spinner,
   Alert,
   AlertIcon,
+  FormControl,
+  FormLabel,
+  Input,
+  FormHelperText,
+  FormErrorMessage,
+  IconButton,
+  InputGroup,
+  InputRightElement,
+  Divider,
 } from '@chakra-ui/react'
+import { ViewIcon, ViewOffIcon } from '@chakra-ui/icons'
 import env from '../../config/env'
+import useAuth from '../../context/useAuth'
+import { TeamSelector } from '../team'
 
 /**
  * Component to connect a Slack workspace using OAuth.
  */
 const ConnectWorkspace: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false)
+  const [clientId, setClientId] = useState('')
+  const [clientSecret, setClientSecret] = useState('')
+  const [integrationName, setIntegrationName] = useState('Slack Workspace')
+  const [showClientSecret, setShowClientSecret] = useState(false)
+  const [selectedTeamId, setSelectedTeamId] = useState<string>('')
+  const [teamError, setTeamError] = useState('')
+  const [clientIdError, setClientIdError] = useState('')
+  const [clientSecretError, setClientSecretError] = useState('')
+  const [integrationNameError, setIntegrationNameError] = useState('')
+  const { teamContext } = useAuth()
+
   interface CorsDebugInfo {
     allowed_origins: string[]
     additional_cors_origins: string
@@ -72,15 +95,86 @@ const ConnectWorkspace: React.FC = () => {
     }
   }
 
+  // Handle team selection
+  const handleTeamChange = (teamId: string) => {
+    setSelectedTeamId(teamId)
+    if (teamId) {
+      setTeamError('')
+    }
+  }
+
+  // Initialize selectedTeamId with the current team if available
+  useEffect(() => {
+    if (teamContext.currentTeamId && !selectedTeamId) {
+      setSelectedTeamId(teamContext.currentTeamId)
+    }
+  }, [teamContext.currentTeamId, selectedTeamId])
+
+  // Form validation
+  const validateForm = (): boolean => {
+    let isValid = true
+
+    // Validate client ID
+    if (!clientId.trim()) {
+      setClientIdError('Client ID is required')
+      isValid = false
+    } else {
+      setClientIdError('')
+    }
+
+    // Validate client secret
+    if (!clientSecret.trim()) {
+      setClientSecretError('Client Secret is required')
+      isValid = false
+    } else {
+      setClientSecretError('')
+    }
+
+    // Validate integration name
+    if (!integrationName.trim()) {
+      setIntegrationNameError('Integration name is required')
+      isValid = false
+    } else {
+      setIntegrationNameError('')
+    }
+
+    // Validate team selection
+    if (!selectedTeamId) {
+      setTeamError('Please select a team')
+      toast({
+        title: 'No team selected',
+        description: 'Please select a team before connecting Slack.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      })
+      isValid = false
+    } else {
+      setTeamError('')
+    }
+
+    return isValid
+  }
+
   /**
    * Initiates the OAuth flow by redirecting to Slack.
    */
   const connectWorkspace = async () => {
     try {
+      // Validate form inputs first
+      if (!validateForm()) {
+        return
+      }
+
       setIsLoading(true)
 
+      // Build URL with query parameters for client_id and client_secret
+      const url = new URL(`${env.apiUrl}/slack/oauth-url`)
+      url.searchParams.append('client_id', clientId)
+      url.searchParams.append('client_secret', clientSecret)
+
       // Get OAuth URL from backend with explicit CORS headers
-      const response = await fetch(`${env.apiUrl}/slack/oauth-url`, {
+      const response = await fetch(url.toString(), {
         method: 'GET',
         mode: 'cors',
         credentials: 'include',
@@ -97,6 +191,12 @@ const ConnectWorkspace: React.FC = () => {
       }
 
       const data = await response.json()
+
+      // Store client_id, client_secret, integration_name, and selected team_id in session storage for OAuth callback
+      sessionStorage.setItem('slack_client_id', clientId)
+      sessionStorage.setItem('slack_client_secret', clientSecret)
+      sessionStorage.setItem('slack_integration_name', integrationName)
+      sessionStorage.setItem('slack_team_id', selectedTeamId)
 
       // Redirect to Slack OAuth page
       window.location.href = data.url
@@ -210,6 +310,22 @@ const ConnectWorkspace: React.FC = () => {
           reactions, and user information.
         </Text>
 
+        <Divider my={4} />
+
+        <Text fontWeight="bold" mb={2}>
+          Team Selection
+        </Text>
+
+        <TeamSelector
+          label="Select Team"
+          value={selectedTeamId}
+          onChange={handleTeamChange}
+          hasError={!!teamError}
+          errorMessage={teamError}
+          helperText="This integration will be associated with the selected team"
+          mb={4}
+        />
+
         <Text fontWeight="bold">We'll need the following permissions:</Text>
 
         <VStack align="flex-start" spacing={1} pl={4}>
@@ -224,6 +340,92 @@ const ConnectWorkspace: React.FC = () => {
           contribution analysis.
         </Text>
 
+        <Text fontWeight="bold" mt={4}>
+          Integration Settings
+        </Text>
+
+        <VStack spacing={4} width="100%" align="flex-start">
+          {/* Integration Name Field */}
+          <FormControl isRequired isInvalid={!!integrationNameError}>
+            <FormLabel htmlFor="integration-name">Integration Name</FormLabel>
+            <Input
+              id="integration-name"
+              placeholder="Enter a name for this integration"
+              value={integrationName}
+              onChange={(e) => setIntegrationName(e.target.value)}
+            />
+            {integrationNameError ? (
+              <FormErrorMessage>{integrationNameError}</FormErrorMessage>
+            ) : (
+              <FormHelperText>
+                A friendly name to identify this Slack workspace
+              </FormHelperText>
+            )}
+          </FormControl>
+        </VStack>
+
+        <Text fontWeight="bold" mt={4}>
+          Slack App Credentials
+        </Text>
+        <Text fontSize="sm" color="gray.600">
+          Enter your Slack application credentials to connect your workspace.
+        </Text>
+
+        <VStack spacing={4} width="100%" align="flex-start">
+          {/* Client ID Field */}
+          <FormControl isRequired isInvalid={!!clientIdError}>
+            <FormLabel htmlFor="client-id">Client ID</FormLabel>
+            <Input
+              id="client-id"
+              placeholder="Enter your Slack Client ID"
+              value={clientId}
+              onChange={(e) => setClientId(e.target.value)}
+            />
+            {clientIdError ? (
+              <FormErrorMessage>{clientIdError}</FormErrorMessage>
+            ) : (
+              <FormHelperText>
+                Find this in your Slack App's Basic Information page
+              </FormHelperText>
+            )}
+          </FormControl>
+
+          {/* Client Secret Field */}
+          <FormControl isRequired isInvalid={!!clientSecretError}>
+            <FormLabel htmlFor="client-secret">Client Secret</FormLabel>
+            <InputGroup>
+              <Input
+                id="client-secret"
+                type={showClientSecret ? 'text' : 'password'}
+                placeholder="Enter your Slack Client Secret"
+                value={clientSecret}
+                onChange={(e) => setClientSecret(e.target.value)}
+              />
+              <InputRightElement>
+                <IconButton
+                  aria-label={
+                    showClientSecret
+                      ? 'Hide client secret'
+                      : 'Show client secret'
+                  }
+                  icon={showClientSecret ? <ViewOffIcon /> : <ViewIcon />}
+                  variant="ghost"
+                  onClick={() => setShowClientSecret(!showClientSecret)}
+                  size="sm"
+                />
+              </InputRightElement>
+            </InputGroup>
+            {clientSecretError ? (
+              <FormErrorMessage>{clientSecretError}</FormErrorMessage>
+            ) : (
+              <FormHelperText>
+                Keep this confidential. Found in your Slack App's Basic
+                Information page
+              </FormHelperText>
+            )}
+          </FormControl>
+        </VStack>
+
         <Box width="100%" pt={4}>
           <Button
             colorScheme="purple"
@@ -232,6 +434,7 @@ const ConnectWorkspace: React.FC = () => {
             onClick={connectWorkspace}
             isLoading={isLoading}
             loadingText="Connecting..."
+            isDisabled={!teamContext.currentTeamId}
           >
             {isLoading ? <Spinner size="sm" mr={2} /> : null}
             Connect to Slack
