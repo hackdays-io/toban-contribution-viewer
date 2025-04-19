@@ -327,6 +327,11 @@ class IntegrationService:
             },
         )
         db.add(event)
+        
+        # Add an updated flag to indicate this was an existing integration that was updated
+        # We need to add this to the SQLAlchemy model's __dict__ since it's not a regular column
+        # This will be available when the object is returned but won't be stored in the database
+        integration.__dict__["updated"] = True
 
         return integration
 
@@ -413,6 +418,9 @@ class IntegrationService:
             )
             db.add(credential)
 
+        # Mark as a new integration (not updated)
+        integration.__dict__["updated"] = False
+        
         # Record creation event
         event = IntegrationEvent(
             id=uuid.uuid4(),

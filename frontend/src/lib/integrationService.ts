@@ -78,6 +78,7 @@ export interface Integration {
   status: IntegrationStatus
   metadata?: Record<string, unknown>
   last_used_at?: string
+  updated?: boolean  // Flag indicating if this was an update to an existing integration
 
   owner_team: TeamInfo
   created_by: UserInfo
@@ -297,7 +298,7 @@ class IntegrationService {
    */
   async createIntegration(
     data: CreateIntegrationRequest
-  ): Promise<Integration | ApiError> {
+  ): Promise<Integration & { updated?: boolean } | ApiError> {
     try {
       const headers = await this.getAuthHeaders()
       const response = await fetch(this.apiUrl, {
@@ -311,7 +312,10 @@ class IntegrationService {
         throw response
       }
 
-      return await response.json()
+      // Parse the response which may include an 'updated' field 
+      // to indicate if this was a reconnection
+      const result = await response.json()
+      return result
     } catch (error) {
       return this.handleError(error, 'Failed to create integration')
     }
