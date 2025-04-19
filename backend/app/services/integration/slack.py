@@ -17,7 +17,6 @@ from app.models.integration import (
     CredentialType,
     Integration,
     IntegrationCredential,
-    IntegrationStatus,
     IntegrationType,
     ResourceType,
     ServiceResource,

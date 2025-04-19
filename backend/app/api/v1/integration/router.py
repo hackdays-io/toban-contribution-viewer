@@ -21,7 +21,6 @@ from app.api.v1.integration.schemas import (
     IntegrationShareResponse,
     IntegrationTypeEnum,
     IntegrationUpdate,
-    ManualSlackIntegrationCreate,
     ResourceAccessCreate,
     ResourceAccessResponse,
     ServiceResourceResponse,
@@ -33,7 +32,6 @@ from app.core.auth import get_current_user
 from app.db.session import get_async_db
 from app.models.integration import (
     AccessLevel,
-    CredentialType,
     Integration,
     IntegrationCredential,
     IntegrationType,
