@@ -486,22 +486,24 @@ class IntegrationService {
           response.status,
           response.statusText
         )
-        
+
         // Try to get detailed error message
-        let errorDetail = '';
+        let errorDetail = ''
         try {
-          const errorData = await response.json();
-          errorDetail = errorData.detail || '';
-          console.log('Error detail:', errorDetail);
-        } catch (e) {
+          const errorData = await response.json()
+          errorDetail = errorData.detail || ''
+          console.log('Error detail:', errorDetail)
+        } catch {
           // Ignore JSON parsing errors
         }
-        
+
         // Return a friendly error instead of throwing
         return {
           status: response.status,
-          message: errorDetail || 'Failed to sync resources. Please reconnect the integration.',
-        };
+          message:
+            errorDetail ||
+            'Failed to sync resources. Please reconnect the integration.',
+        }
       }
 
       return result
