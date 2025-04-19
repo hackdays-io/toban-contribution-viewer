@@ -166,7 +166,7 @@ const OAuthCallback: React.FC = () => {
             console.error('Network error during fetch:', networkError)
           }
           throw new Error(
-            `Network error: ${networkError.message || 'Could not connect to server'}`
+            `Network error: ${networkError instanceof Error ? networkError.message : 'Could not connect to server'}`
           )
         }
 
