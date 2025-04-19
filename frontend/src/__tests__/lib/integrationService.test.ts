@@ -371,7 +371,14 @@ describe('Integration API Service', () => {
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve(syncResponse),
+        status: 200,
+        statusText: 'OK',
+        headers: { 
+          entries: () => [], 
+          forEach: () => {} 
+        },
+        text: () => Promise.resolve(JSON.stringify(syncResponse)),
+        json: () => Promise.resolve(syncResponse)
       })
 
       const result = await integrationService.syncResources(mockIntegrationId)
