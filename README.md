@@ -539,6 +539,9 @@ This project uses local CI check scripts to ensure code quality before pushing c
    
    # Or run all checks regardless of changes
    ./run-ci-checks.sh --all
+   
+   # Run checks with automatic fixing of common issues
+   ./run-ci-checks.sh --auto-fix
    ```
 
 2. You can also run specific checks:

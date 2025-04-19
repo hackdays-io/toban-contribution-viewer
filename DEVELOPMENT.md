@@ -203,6 +203,16 @@ The main script at the repository root (`run-ci-checks.sh`) automatically detect
    ./run-ci-checks.sh --all
    ```
 
+3. To automatically fix common issues (formatting, linting, etc.):
+   ```bash
+   ./run-ci-checks.sh --auto-fix
+   ```
+   
+   You can also combine options:
+   ```bash
+   ./run-ci-checks.sh --all --auto-fix
+   ```
+
 #### Included Checks
 
 The CI check scripts include:

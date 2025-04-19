@@ -47,6 +47,28 @@ git commit --no-verify -m "Your emergency commit message"
 
 ## Common Issues and Solutions
 
+### Using CI Check Scripts with Auto-Fix
+
+For a more streamlined approach to fixing common issues, you can use the CI check scripts with the `--auto-fix` option:
+
+```bash
+# Fix issues in both frontend and backend (only for changed files)
+./run-ci-checks.sh --auto-fix
+
+# Fix issues in frontend only
+./frontend/scripts/run-ci-checks.sh --auto-fix
+
+# Fix issues in backend only
+./backend/scripts/run-ci-checks.sh --auto-fix
+```
+
+This will automatically fix:
+- Formatting issues (Prettier for frontend, Black for backend)
+- Linting issues (ESLint for frontend, simple flake8 issues for backend)
+- Import sorting issues (isort for backend)
+
+For more complex issues that cannot be fixed automatically, you'll still need to resolve them manually.
+
 ### TypeScript Errors
 
 If you see TypeScript errors, the error message will tell you exactly what line and file needs to be fixed. For example:

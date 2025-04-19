@@ -31,6 +31,20 @@ This project uses pre-commit hooks to ensure code quality. Please set them up be
 
 For more details about the pre-commit configuration, see [PRE-COMMIT.md](PRE-COMMIT.md).
 
+### Alternative: CI Check Scripts
+
+As an alternative to pre-commit hooks, you can use the CI check scripts to verify your changes before committing:
+
+```bash
+# Run checks on changed files only
+./run-ci-checks.sh
+
+# Automatically fix common issues with formatting and linting
+./run-ci-checks.sh --auto-fix
+```
+
+These scripts mirror the GitHub Actions workflows and can automatically fix many common issues.
+
 ## Pull Request Process
 
 1. Fork the repository and create a new branch for your feature or bugfix.
