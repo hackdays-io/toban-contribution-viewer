@@ -144,25 +144,80 @@ const OAuthCallback: React.FC = () => {
         }
 
         // Make direct request to the OAuth callback endpoint
-        const response = await fetch(url.toString(), {
-          method: 'GET',
-          mode: 'cors',
-          credentials: 'include',
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-            Origin: window.location.origin,
-          },
-        })
+        if (isDevEnvironment) {
+          console.debug('Making OAuth callback request to:', url.toString())
+        }
 
-        if (!response.ok) {
-          const errorData = await response.json()
+        let response
+        try {
+          response = await fetch(url.toString(), {
+            method: 'GET',
+            mode: 'cors',
+            credentials: 'include',
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
+              Origin: window.location.origin,
+            },
+          })
+        } catch (networkError) {
+          // Handle network errors (CORS issues, connection failures, etc.)
+          if (isDevEnvironment) {
+            console.error('Network error during fetch:', networkError)
+          }
           throw new Error(
-            errorData.detail || 'Failed to authenticate with Slack'
+            `Network error: ${networkError.message || 'Could not connect to server'}`
           )
         }
 
-        const result = await response.json()
+        // Handle HTTP errors (4XX, 5XX responses)
+        if (!response.ok) {
+          let errorMessage = 'Failed to authenticate with Slack'
+
+          try {
+            // Try to parse the response as JSON first
+            const errorData = await response.json()
+            errorMessage =
+              errorData.detail ||
+              'An unexpected error occurred during Slack authentication'
+
+            if (isDevEnvironment) {
+              console.error('Server error response:', errorData)
+            }
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          } catch (_parseError) {
+            // If we can't parse JSON, try to get text
+            try {
+              const errorText = await response.text()
+              errorMessage = errorText || 'Failed to authenticate with Slack'
+
+              if (isDevEnvironment) {
+                console.error('Server error response (text):', errorText)
+              }
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            } catch (_textError) {
+              // If we can't get text either, use status code
+              errorMessage = `Server error ${response.status}: Failed to authenticate with Slack`
+
+              if (isDevEnvironment) {
+                console.error('Server error status:', response.status)
+              }
+            }
+          }
+
+          throw new Error(errorMessage)
+        }
+
+        // Parse successful response
+        let result
+        try {
+          result = await response.json()
+        } catch (parseError) {
+          if (isDevEnvironment) {
+            console.error('Error parsing JSON response:', parseError)
+          }
+          throw new Error('Failed to parse server response')
+        }
 
         // Debug log to see the full result structure
         if (isDevEnvironment) {
@@ -381,6 +436,17 @@ const OAuthCallback: React.FC = () => {
   useEffect(() => {
     // If we're waiting for team context and not loading anymore
     if (waitingForTeamContext && !authLoading) {
+      // Debug info for team context troubleshooting
+      if (isDevEnvironment) {
+        console.debug('Team context state:', {
+          authLoading,
+          teamContext,
+          hasCurrentTeam: Boolean(teamContext.currentTeamId),
+          teamCount: teamContext.teams?.length || 0,
+          waitingForTeamContext,
+        })
+      }
+
       // Check if we have team context now
       if (teamContext.currentTeamId) {
         console.log('Team context loaded, proceeding with OAuth flow')
@@ -390,23 +456,53 @@ const OAuthCallback: React.FC = () => {
       } else if (!authLoading) {
         // If auth is done loading but we still don't have a team, show an error
         console.error('Auth loaded but no team context available')
-        setStatus('error')
-        setErrorMessage(
-          'No team selected. Please select a team before connecting Slack.'
-        )
+
+        // Check for stored team ID in session storage as fallback
+        const storedTeamId = sessionStorage.getItem('slack_team_id')
+        if (storedTeamId) {
+          if (isDevEnvironment) {
+            console.debug(
+              'No team context, but found session stored team ID:',
+              storedTeamId
+            )
+          }
+          // We have a stored team ID, so we can continue with the flow
+          setWaitingForTeamContext(false)
+          handleCallback()
+        } else {
+          // No team context and no stored team ID, show an error
+          setStatus('error')
+          setErrorMessage(
+            'No team selected. Please select a team before connecting Slack.'
+          )
+        }
       }
     }
   }, [
     authLoading,
+    teamContext,
     teamContext.currentTeamId,
     waitingForTeamContext,
     handleCallback,
+    isDevEnvironment,
   ])
 
   // Effect to handle the OAuth callback
   useEffect(() => {
     // Only call handleCallback if we don't need to wait for team context
+    const storedTeamId = sessionStorage.getItem('slack_team_id')
+
     if (!authLoading && teamContext.currentTeamId) {
+      // We have team context, proceed directly
+      handleCallback()
+    } else if (storedTeamId && !authLoading) {
+      // We have a stored team ID but no team context, proceed directly
+      if (isDevEnvironment) {
+        console.debug(
+          'Using stored team ID instead of waiting for team context:',
+          storedTeamId
+        )
+      }
       handleCallback()
     } else if (!waitingForTeamContext) {
       // Set waiting flag if we need to wait
@@ -418,10 +514,26 @@ const OAuthCallback: React.FC = () => {
         if (waitingForTeamContext && !teamContext.currentTeamId) {
           console.error('Timeout waiting for team context')
           setTeamContextTimeout(true)
-          setStatus('error')
-          setErrorMessage(
-            'Unable to retrieve team information. Please try again or select a team first.'
-          )
+
+          // Check again for stored team ID as a fallback
+          const timeoutStoredTeamId = sessionStorage.getItem('slack_team_id')
+          if (timeoutStoredTeamId) {
+            if (isDevEnvironment) {
+              console.debug(
+                'Found stored team ID after timeout:',
+                timeoutStoredTeamId
+              )
+            }
+            // We have a stored team ID even after timeout, so proceed
+            setWaitingForTeamContext(false)
+            handleCallback()
+          } else {
+            // No stored team ID, show an error
+            setStatus('error')
+            setErrorMessage(
+              'Unable to retrieve team information. Please try again or select a team first.'
+            )
+          }
         }
       }, 10000)
 
