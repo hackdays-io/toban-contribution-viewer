@@ -310,10 +310,9 @@ async def create_slack_integration(
         if not client_id or not client_secret:
             raise ValueError("Slack client ID and client secret are required")
 
-        # Create the integration using the OAuth flow
-        # This will handle both new integrations and updates to existing ones
+        # Use the OAuth flow handler to create or update the integration
         integration_result, workspace_info = (
-            await SlackIntegrationService.create_from_oauth(
+            await SlackIntegrationService.handle_oauth_flow(
                 db=db,
                 team_id=integration.team_id,
                 user_id=current_user["id"],

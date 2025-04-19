@@ -180,6 +180,157 @@ class IntegrationService:
         return owned_integrations
 
     @staticmethod
+    async def find_integration_by_workspace_id(
+        db: AsyncSession, team_id: uuid.UUID, workspace_id: str, service_type: IntegrationType
+    ) -> Optional[Integration]:
+        """
+        Find an existing integration by team, workspace ID, and service type.
+
+        Args:
+            db: Database session
+            team_id: UUID of the team
+            workspace_id: External workspace ID to search for
+            service_type: Type of service (Slack, GitHub, etc.)
+
+        Returns:
+            Integration object if found, None otherwise
+        """
+        # First try to find by direct workspace_id field
+        query = select(Integration).where(
+            Integration.owner_team_id == team_id,
+            Integration.service_type == service_type,
+            Integration.workspace_id == workspace_id,
+        )
+
+        result = await db.execute(query)
+        integration = result.scalar_one_or_none()
+
+        if integration:
+            return integration
+
+        # Fall back to searching in metadata for backward compatibility
+        query = select(Integration).where(
+            Integration.owner_team_id == team_id,
+            Integration.service_type == service_type,
+        )
+
+        result = await db.execute(query)
+        integrations = result.scalars().all()
+
+        # Search through metadata for workspace_id match
+        for integration in integrations:
+            metadata = integration.integration_metadata or {}
+            # Check for service-specific IDs in metadata
+            service_id_key = f"{service_type.value.lower()}_id"
+            if metadata.get(service_id_key) == workspace_id or metadata.get("slack_id") == workspace_id:
+                # Update the workspace_id field for future queries
+                integration.workspace_id = workspace_id
+                return integration
+
+        return None
+
+    @staticmethod
+    async def update_existing_integration(
+        db: AsyncSession,
+        integration: Integration,
+        user_id: str,
+        name: Optional[str] = None,
+        description: Optional[str] = None,
+        metadata: Optional[Dict] = None,
+        credential_data: Optional[Dict] = None,
+    ) -> Integration:
+        """
+        Update an existing integration with new data.
+
+        Args:
+            db: Database session
+            integration: Existing integration to update
+            user_id: ID of the user updating the integration
+            name: New name (optional)
+            description: New description (optional)
+            metadata: New metadata to merge with existing (optional)
+            credential_data: New credential data (optional)
+
+        Returns:
+            Updated Integration object
+        """
+        # Update basic fields if provided
+        if name:
+            integration.name = name
+
+        if description:
+            integration.description = description
+
+        # Merge with existing metadata instead of replacing
+        if metadata:
+            integration.integration_metadata = {
+                **(integration.integration_metadata or {}),
+                **metadata,
+                "last_updated_by": user_id,
+                "last_updated_at": datetime.utcnow().isoformat(),
+            }
+
+        # Update credentials if provided
+        if credential_data:
+            # Find existing credential
+            result = await db.execute(
+                select(IntegrationCredential).where(
+                    IntegrationCredential.integration_id == integration.id,
+                    IntegrationCredential.credential_type == credential_data.get("credential_type"),
+                )
+            )
+            credential = result.scalar_one_or_none()
+
+            if credential:
+                # Update existing credential
+                if "encrypted_value" in credential_data:
+                    credential.encrypted_value = credential_data.get("encrypted_value")
+                if "refresh_token" in credential_data:
+                    credential.refresh_token = credential_data.get("refresh_token")
+                if "expires_at" in credential_data:
+                    credential.expires_at = credential_data.get("expires_at")
+                if "scopes" in credential_data:
+                    credential.scopes = credential_data.get("scopes")
+            else:
+                # Create new credential
+                credential = IntegrationCredential(
+                    id=uuid.uuid4(),
+                    integration_id=integration.id,
+                    credential_type=credential_data.get("credential_type"),
+                    encrypted_value=credential_data.get("encrypted_value"),
+                    refresh_token=credential_data.get("refresh_token"),
+                    expires_at=credential_data.get("expires_at"),
+                    scopes=credential_data.get("scopes"),
+                )
+                db.add(credential)
+
+        # Update status to ACTIVE in case it was previously disconnected
+        integration.status = IntegrationStatus.ACTIVE
+
+        # Update last_used_at
+        integration.last_used_at = datetime.utcnow()
+
+        # Record the update event
+        event = IntegrationEvent(
+            id=uuid.uuid4(),
+            integration_id=integration.id,
+            event_type=EventType.UPDATED,
+            actor_user_id=user_id,
+            affected_team_id=integration.owner_team_id,
+            details={
+                "updated_fields": {
+                    "name": name is not None,
+                    "description": description is not None,
+                    "metadata": metadata is not None,
+                    "credentials": credential_data is not None,
+                },
+            },
+        )
+        db.add(event)
+
+        return integration
+
+    @staticmethod
     async def create_integration(
         db: AsyncSession,
         team_id: uuid.UUID,
@@ -192,7 +343,10 @@ class IntegrationService:
         credential_data: Optional[Dict] = None,
     ) -> Integration:
         """
-        Create a new integration.
+        Create or update an integration with uniqueness constraint handling.
+
+        If an integration with the same team_id, workspace_id, and service_type 
+        already exists, it will be updated instead of creating a new one.
 
         Args:
             db: Database session
@@ -206,9 +360,31 @@ class IntegrationService:
             credential_data: Optional credential data
 
         Returns:
-            Newly created Integration object
+            Created or updated Integration object
         """
-        # Create the integration
+        # If workspace_id is provided, check for existing integration
+        if workspace_id:
+            existing_integration = await IntegrationService.find_integration_by_workspace_id(
+                db, team_id, workspace_id, service_type
+            )
+            
+            if existing_integration:
+                # Update existing integration
+                logger.info(
+                    f"Found existing {service_type.value} integration for team {team_id} "
+                    f"with workspace_id {workspace_id}, updating instead of creating new"
+                )
+                return await IntegrationService.update_existing_integration(
+                    db=db,
+                    integration=existing_integration,
+                    user_id=user_id,
+                    name=name,
+                    description=description,
+                    metadata=metadata,
+                    credential_data=credential_data,
+                )
+        
+        # Create a new integration if none exists or workspace_id is not provided
         integration = Integration(
             id=uuid.uuid4(),
             name=name,
