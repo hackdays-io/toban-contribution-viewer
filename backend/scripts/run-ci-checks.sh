@@ -9,18 +9,29 @@ NC='\033[0m' # No Color
 
 # Parse arguments
 AUTO_FIX=false
+SKIP_MYPY=false
+CI_COMPATIBLE=false
 
 for arg in "$@"; do
   case $arg in
     --auto-fix)
       AUTO_FIX=true
       ;;
+    --skip-mypy)
+      SKIP_MYPY=true
+      ;;
+    --ci-compatible)
+      CI_COMPATIBLE=true
+      SKIP_MYPY=true
+      ;;
     --help)
       echo "Usage: $0 [options]"
       echo ""
       echo "Options:"
-      echo "  --auto-fix  Automatically fix issues when possible"
-      echo "  --help      Show this help message"
+      echo "  --auto-fix       Automatically fix issues when possible"
+      echo "  --skip-mypy      Skip mypy type checking (not run in GitHub CI)"
+      echo "  --ci-compatible  Make checks match GitHub CI exactly (includes --skip-mypy)"
+      echo "  --help           Show this help message"
       exit 0
       ;;
   esac
@@ -77,7 +88,30 @@ fi
 
 # Step 3: flake8
 echo -e "\n${YELLOW}Step 3/5: Running flake8${NC}"
-if flake8 . --count --max-complexity=10 --max-line-length=120 --statistics --ignore=C901,E501,W503,W293,E203 --exclude=alembic/*,venv/*,__pycache__/*; then
+
+# Check if we're in a local environment with additional plugins
+FLAKE8_IGNORE="C901,E501,W503,W293,E203"
+
+# Add ignore rules for common plugins that might be installed locally but not in CI
+INSTALLED_PLUGINS=$(pip list 2>/dev/null | grep -i flake8 | grep -v "^flake8 " || echo "")
+if echo "$INSTALLED_PLUGINS" | grep -q "flake8-quotes"; then
+  echo -e "${YELLOW}Detected flake8-quotes plugin - adding Q000 to ignore list${NC}"
+  FLAKE8_IGNORE="${FLAKE8_IGNORE},Q000"
+fi
+
+if echo "$INSTALLED_PLUGINS" | grep -q "flake8-docstrings"; then
+  echo -e "${YELLOW}Detected flake8-docstrings plugin - adding D100-D999 to ignore list${NC}"
+  FLAKE8_IGNORE="${FLAKE8_IGNORE},D100,D101,D102,D103,D104,D105,D106,D107,D200,D205,D400,D401,D403,D415"
+fi
+
+if echo "$INSTALLED_PLUGINS" | grep -q "flake8-bugbear"; then
+  echo -e "${YELLOW}Detected flake8-bugbear plugin - adding B950 to ignore list${NC}"
+  FLAKE8_IGNORE="${FLAKE8_IGNORE},B950"
+fi
+
+echo -e "${YELLOW}Using flake8 ignore rules: ${FLAKE8_IGNORE}${NC}"
+
+if flake8 . --count --max-complexity=10 --max-line-length=120 --statistics --ignore=$FLAKE8_IGNORE --exclude=alembic/*,venv/*,__pycache__/*; then
   echo -e "${GREEN}✓ flake8 checks passed${NC}"
 else
   echo -e "${RED}✗ flake8 checks failed${NC}"
@@ -93,7 +127,7 @@ else
     fi
     
     # Run flake8 again to see if the issues were fixed
-    if flake8 . --count --max-complexity=10 --max-line-length=120 --statistics --ignore=C901,E501,W503,W293,E203 --exclude=alembic/*,venv/*,__pycache__/*; then
+    if flake8 . --count --max-complexity=10 --max-line-length=120 --statistics --ignore=$FLAKE8_IGNORE --exclude=alembic/*,venv/*,__pycache__/*; then
       echo -e "${GREEN}✓ flake8 issues fixed successfully${NC}"
     else
       echo -e "${RED}✗ Some flake8 issues could not be fixed automatically${NC}"
@@ -120,16 +154,22 @@ else
   echo -e "${YELLOW}If running tests, make sure your environment is properly configured${NC}"
 fi
 
-# Step 5: mypy
-echo -e "\n${YELLOW}Step 5/6: Running mypy${NC}"
-# Note: The GitHub CI doesn't explicitly run mypy checks, but we'll keep it with more permissive settings
-if mypy --ignore-missing-imports app/; then
-  echo -e "${GREEN}✓ mypy checks passed${NC}"
+# Step 5: mypy (optional - not run in GitHub CI)
+if [ "$SKIP_MYPY" = true ]; then
+  echo -e "\n${YELLOW}Step 5/6: Skipping mypy type checking (--skip-mypy flag used)${NC}"
+  echo -e "${YELLOW}Note: GitHub CI does not run mypy checks${NC}"
 else
-  echo -e "${RED}✗ mypy checks failed${NC}"
-  echo -e "${YELLOW}Type errors cannot be fixed automatically.${NC}"
-  echo -e "${YELLOW}Please fix the type errors manually and try again.${NC}"
-  exit 1
+  echo -e "\n${YELLOW}Step 5/6: Running mypy${NC}"
+  echo -e "${YELLOW}Note: GitHub CI doesn't run mypy. Use --skip-mypy to skip this step.${NC}"
+  if mypy --ignore-missing-imports app/; then
+    echo -e "${GREEN}✓ mypy checks passed${NC}"
+  else
+    echo -e "${RED}✗ mypy checks failed${NC}"
+    echo -e "${YELLOW}Type errors cannot be fixed automatically.${NC}"
+    echo -e "${YELLOW}Please fix the type errors manually and try again.${NC}"
+    echo -e "${YELLOW}Alternatively, use --skip-mypy to skip mypy checks (like GitHub CI).${NC}"
+    exit 1
+  fi
 fi
 
 # Step 6: Run tests

@@ -11,6 +11,8 @@ NC='\033[0m' # No Color
 # Parse arguments
 RUN_ALL=false
 AUTO_FIX=false
+CI_COMPATIBLE=false
+SKIP_MYPY=false
 
 for arg in "$@"; do
   case $arg in
@@ -20,13 +22,22 @@ for arg in "$@"; do
     --auto-fix)
       AUTO_FIX=true
       ;;
+    --ci-compatible)
+      CI_COMPATIBLE=true
+      SKIP_MYPY=true
+      ;;
+    --skip-mypy)
+      SKIP_MYPY=true
+      ;;
     --help)
       echo "Usage: $0 [options]"
       echo ""
       echo "Options:"
-      echo "  --all       Run all checks regardless of changed files"
-      echo "  --auto-fix  Automatically fix issues when possible"
-      echo "  --help      Show this help message"
+      echo "  --all           Run all checks regardless of changed files"
+      echo "  --auto-fix      Automatically fix issues when possible"
+      echo "  --ci-compatible Make checks match GitHub CI exactly"
+      echo "  --skip-mypy     Skip mypy type checking in backend (not run in GitHub CI)"
+      echo "  --help          Show this help message"
       exit 0
       ;;
   esac
@@ -47,10 +58,19 @@ fi
 FRONTEND_CHANGED=$(git diff --name-only HEAD main | grep -E '^frontend/' || true)
 BACKEND_CHANGED=$(git diff --name-only HEAD main | grep -E '^backend/' || true)
 
-AUTO_FIX_ARG=""
+# Build arguments for child scripts
+ARGS=""
 if [ "$AUTO_FIX" = true ]; then
-  AUTO_FIX_ARG="--auto-fix"
+  ARGS="$ARGS --auto-fix"
   echo -e "${YELLOW}Auto-fix mode enabled. Will attempt to fix issues automatically.${NC}"
+fi
+
+if [ "$CI_COMPATIBLE" = true ]; then
+  ARGS="$ARGS --ci-compatible"
+  echo -e "${YELLOW}CI compatibility mode enabled. Checks will match GitHub CI.${NC}"
+elif [ "$SKIP_MYPY" = true ]; then
+  ARGS="$ARGS --skip-mypy"
+  echo -e "${YELLOW}Skipping mypy checks in backend (not run in GitHub CI).${NC}"
 fi
 
 # Run frontend checks if frontend files changed or --all flag is passed
@@ -58,7 +78,7 @@ if [ -n "$FRONTEND_CHANGED" ] || [ "$RUN_ALL" = true ]; then
   echo -e "\n${BLUE}Frontend files changed, running frontend checks...${NC}"
   pushd frontend > /dev/null
   chmod +x scripts/run-ci-checks.sh
-  scripts/run-ci-checks.sh $AUTO_FIX_ARG
+  scripts/run-ci-checks.sh $ARGS
   FRONTEND_RESULT=$?
   popd > /dev/null
   if [ $FRONTEND_RESULT -ne 0 ]; then
@@ -75,7 +95,7 @@ if [ -n "$BACKEND_CHANGED" ] || [ "$RUN_ALL" = true ]; then
   echo -e "\n${BLUE}Backend files changed, running backend checks...${NC}"
   pushd backend > /dev/null
   chmod +x scripts/run-ci-checks.sh
-  scripts/run-ci-checks.sh $AUTO_FIX_ARG
+  scripts/run-ci-checks.sh $ARGS
   BACKEND_RESULT=$?
   popd > /dev/null
   if [ $BACKEND_RESULT -ne 0 ]; then

@@ -214,10 +214,20 @@ The main script at the repository root (`run-ci-checks.sh`) automatically detect
    ```bash
    ./run-ci-checks.sh --auto-fix
    ```
-   
-   You can also combine options:
+
+4. To make checks match GitHub CI exactly:
    ```bash
-   ./run-ci-checks.sh --all --auto-fix
+   ./run-ci-checks.sh --ci-compatible
+   ```
+   
+   This ensures that the local checks use the same configuration as GitHub Actions, including:
+   - Same ignore rules for flake8
+   - Skipping mypy checks (not run in GitHub CI)
+   - Auto-detecting and handling plugin differences
+   
+   You can combine options:
+   ```bash
+   ./run-ci-checks.sh --all --auto-fix --ci-compatible
    ```
 
 #### Included Checks
