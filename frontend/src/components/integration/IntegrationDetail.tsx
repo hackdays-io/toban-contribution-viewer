@@ -134,11 +134,24 @@ const IntegrationDetail: React.FC = () => {
     // Clear any previous error before starting the sync
     setIsSyncing(true)
     try {
-      console.log('Starting resource sync for integration:', integrationId)
-      const success = await syncResources(integrationId)
-      console.log('Sync result:', success)
+      console.log(
+        '[DETAIL] Starting resource sync for integration:',
+        integrationId
+      )
 
-      if (success) {
+      // DEBUG: Store the previous error to compare after sync
+      const prevError = resourceError
+      console.log('[DETAIL] Previous error state:', prevError)
+
+      const success = await syncResources(integrationId)
+      console.log('[DETAIL] Sync completed with result:', success)
+
+      // DEBUG: Log current error state after sync
+      console.log('[DETAIL] Current resourceError after sync:', resourceError)
+
+      // IMPORTANT: The success flag should be the primary determiner
+      if (success === true) {
+        console.log('[DETAIL] Showing success toast based on success flag')
         toast({
           title: 'Resources synced successfully',
           description: 'Channels and users have been updated',
@@ -151,7 +164,7 @@ const IntegrationDetail: React.FC = () => {
         // Get error message from context if available
         const errorMessage =
           resourceError?.message || 'Failed to sync resources'
-        console.error('Sync failed with error:', errorMessage)
+        console.error('[DETAIL] Showing error toast. Message:', errorMessage)
 
         toast({
           title: 'Failed to sync resources',
@@ -163,7 +176,7 @@ const IntegrationDetail: React.FC = () => {
         })
       }
     } catch (error) {
-      console.error('Exception during sync:', error)
+      console.error('[DETAIL] Exception during sync handler:', error)
       toast({
         title: 'Error syncing resources',
         description: error instanceof Error ? error.message : 'Unknown error',
