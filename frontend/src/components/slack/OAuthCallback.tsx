@@ -255,13 +255,6 @@ const OAuthCallback: React.FC = () => {
           )
         }
 
-        // Check if this was a reconnection/update or a new connection
-        const wasReconnected =
-          Boolean(sessionStorage.getItem('slack_integration_id')) ||
-          Boolean(result.updated) ||
-          Boolean(result.already_exists) ||
-          Boolean(result.existing_integration)
-
         // Debug log for reconnection detection
         if (isDevEnvironment) {
           console.debug('Reconnection detection:', {
@@ -273,8 +266,7 @@ const OAuthCallback: React.FC = () => {
             from_result_existing_integration: Boolean(
               result.existing_integration
             ),
-            from_result_integration_id: Boolean(result.integration_id),
-            final_wasReconnected: wasReconnected,
+            from_result_integration_id: Boolean(result.integration_id)
           })
         }
 
@@ -285,15 +277,8 @@ const OAuthCallback: React.FC = () => {
         sessionStorage.removeItem('slack_team_id')
         sessionStorage.removeItem('slack_integration_id')
 
-        if (wasReconnected) {
-          setStatus('reconnected')
-          setSuccessMessage(
-            'Reconnect to the integration: There is an integration already, the credential is updated.'
-          )
-        } else {
-          setStatus('success')
-          setSuccessMessage('Slack workspace connected successfully!')
-        }
+        setStatus('success')
+        setSuccessMessage('Slack workspace connected successfully!')
 
         // Now manually create the integration with the team ID
         try {
@@ -357,21 +342,22 @@ const OAuthCallback: React.FC = () => {
             )
           } else {
             console.log('Integration created successfully:', integrationResult)
-            
+            console.log(integrationResult)
             // Check if this was a reconnection from the integration API response
             // Set wasReconnected based on both the OAuth response and the Integration API response
             const isUpdatedIntegration = Boolean(integrationResult.updated);
             
-            if (isUpdatedIntegration && !wasReconnected) {
+            if (isUpdatedIntegration) {
               console.log('Integration API indicates this was a reconnection')
               setStatus('reconnected')
               setSuccessMessage('Workspace reconnected successfully! Existing integration was updated.')
+
             }
 
             // Navigate after a short delay
             setTimeout(() => {
               // If we detected this was a reconnection (from either source), navigate to the integration detail page
-              if (wasReconnected || isUpdatedIntegration) {
+              if (isUpdatedIntegration) {
                 // Use the integration ID from the API response if available, otherwise use the result from createIntegration
                 const targetId =
                   result.integration_id ||
@@ -387,7 +373,7 @@ const OAuthCallback: React.FC = () => {
                 // For new integrations, navigate to the integrations list
                 navigate('/dashboard/integrations')
               }
-            }, 1000)
+            }, 2000)
           }
         } catch (linkError) {
           console.error('Error linking workspace to team:', linkError)
