@@ -131,32 +131,46 @@ const IntegrationDetail: React.FC = () => {
   const handleSyncResources = async () => {
     if (!integrationId) return
 
+    // Clear any previous error before starting the sync
     setIsSyncing(true)
     try {
+      console.log('Starting resource sync for integration:', integrationId)
       const success = await syncResources(integrationId)
+      console.log('Sync result:', success)
 
       if (success) {
         toast({
           title: 'Resources synced successfully',
+          description: 'Channels and users have been updated',
           status: 'success',
           duration: 3000,
           isClosable: true,
+          position: 'top',
         })
       } else {
+        // Get error message from context if available
+        const errorMessage =
+          resourceError?.message || 'Failed to sync resources'
+        console.error('Sync failed with error:', errorMessage)
+
         toast({
           title: 'Failed to sync resources',
+          description: errorMessage,
           status: 'error',
           duration: 3000,
           isClosable: true,
+          position: 'top',
         })
       }
     } catch (error) {
+      console.error('Exception during sync:', error)
       toast({
         title: 'Error syncing resources',
         description: error instanceof Error ? error.message : 'Unknown error',
         status: 'error',
         duration: 3000,
         isClosable: true,
+        position: 'top',
       })
     } finally {
       setIsSyncing(false)

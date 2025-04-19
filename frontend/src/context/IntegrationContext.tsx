@@ -543,6 +543,7 @@ export const IntegrationProvider: React.FC<{ children: React.ReactNode }> = ({
     ): Promise<boolean> => {
       if (!session || !integrationId) return false
 
+      // Clear previous errors and set loading state
       setState((prev) => ({
         ...prev,
         loadingResources: true,
@@ -550,12 +551,20 @@ export const IntegrationProvider: React.FC<{ children: React.ReactNode }> = ({
       }))
 
       try {
+        console.log(`Syncing resources for integration ${integrationId}`, {
+          resourceTypes,
+        })
+
         const result = await integrationService.syncResources(
           integrationId,
           resourceTypes
         )
 
+        console.log('Sync result received:', result)
+
+        // Check if the result is an API error
         if (integrationService.isApiError(result)) {
+          console.error('API error during sync:', result)
           setState((prev) => ({
             ...prev,
             loadingResources: false,
@@ -564,10 +573,41 @@ export const IntegrationProvider: React.FC<{ children: React.ReactNode }> = ({
           return false
         }
 
-        // Refetch resources to get the updated list
-        await fetchResources(integrationId)
-        return true
+        // Check if the result has a status field indicating success
+        if (
+          result &&
+          typeof result === 'object' &&
+          result.status === 'success'
+        ) {
+          console.log('Sync successful, refreshing resources')
+          // Refetch resources to get the updated list
+          await fetchResources(integrationId)
+
+          // Make sure to set loadingResources to false
+          setState((prev) => ({
+            ...prev,
+            loadingResources: false,
+          }))
+
+          return true
+        } else {
+          // Handle case where result is not an error but also doesn't have status='success'
+          console.warn('Sync response is not marked as success:', result)
+          const errorMsg =
+            result && typeof result === 'object' && result.message
+              ? String(result.message)
+              : 'Failed to sync resources'
+
+          setState((prev) => ({
+            ...prev,
+            loadingResources: false,
+            resourceError: new Error(errorMsg),
+          }))
+          return false
+        }
       } catch (error) {
+        // Handle exceptions during sync
+        console.error('Exception during sync:', error)
         setState((prev) => ({
           ...prev,
           loadingResources: false,

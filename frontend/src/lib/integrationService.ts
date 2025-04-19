@@ -78,7 +78,7 @@ export interface Integration {
   status: IntegrationStatus
   metadata?: Record<string, unknown>
   last_used_at?: string
-  updated?: boolean  // Flag indicating if this was an update to an existing integration
+  updated?: boolean // Flag indicating if this was an update to an existing integration
 
   owner_team: TeamInfo
   created_by: UserInfo
@@ -298,7 +298,7 @@ class IntegrationService {
    */
   async createIntegration(
     data: CreateIntegrationRequest
-  ): Promise<Integration & { updated?: boolean } | ApiError> {
+  ): Promise<(Integration & { updated?: boolean }) | ApiError> {
     try {
       const headers = await this.getAuthHeaders()
       const response = await fetch(this.apiUrl, {
@@ -312,7 +312,7 @@ class IntegrationService {
         throw response
       }
 
-      // Parse the response which may include an 'updated' field 
+      // Parse the response which may include an 'updated' field
       // to indicate if this was a reconnection
       const result = await response.json()
       return result
@@ -432,7 +432,10 @@ class IntegrationService {
       }
 
       console.log('Sync URL:', url)
-      console.log('Headers:', headers)
+      console.log('Headers:', {
+        ...headers,
+        Authorization: 'Bearer [redacted]',
+      })
 
       const response = await fetch(url, {
         method: 'POST',
@@ -440,7 +443,18 @@ class IntegrationService {
         credentials: 'include',
       })
 
-      console.log('Sync response status:', response.status)
+      console.log('Sync response status:', response.status, response.statusText)
+
+      // Try to parse the response as JSON
+      let result: Record<string, unknown>
+      try {
+        result = await response.json()
+        console.log('Parsed sync result:', result)
+      } catch (parseError) {
+        console.error('Error parsing sync response:', parseError)
+        // If response is not valid JSON, create a default result object
+        result = { status: response.ok ? 'success' : 'error' }
+      }
 
       if (!response.ok) {
         console.error(
@@ -448,26 +462,23 @@ class IntegrationService {
           response.status,
           response.statusText
         )
-        
-        // Try to get detailed error message
-        let errorDetail = '';
-        try {
-          const errorData = await response.json();
-          errorDetail = errorData.detail || '';
-          console.log('Error detail:', errorDetail);
-        } catch (e) {
-          // Ignore JSON parsing errors
-        }
-        
-        // Return a friendly error instead of throwing
+
+        // Return an error object with status and message
         return {
           status: response.status,
-          message: errorDetail || 'Failed to sync resources. Please reconnect the integration.',
-        };
+          message:
+            result.detail ||
+            result.message ||
+            'Failed to sync resources. Please reconnect the integration.',
+        }
       }
 
-      const result = await response.json()
-      console.log('Sync result:', result)
+      // Ensure the result has a status field of 'success'
+      if (!result.status && response.ok) {
+        console.log('Adding success status to result')
+        result.status = 'success'
+      }
+
       return result
     } catch (error) {
       console.error('Error in syncResources:', error)
