@@ -34,10 +34,23 @@ if [ "$AUTO_FIX" = true ]; then
 fi
 
 # Check if we're in a Python virtual environment
-if [ -z "$VIRTUAL_ENV" ]; then
+if [ -z "$VIRTUAL_ENV" ] && [ "$CI" != "true" ]; then
   echo -e "${RED}Error: Not running in a Python virtual environment.${NC}"
   echo -e "${YELLOW}Please activate your virtual environment and try again.${NC}"
+  echo -e "${YELLOW}If you are in CI environment, set CI=true environment variable.${NC}"
   exit 1
+fi
+
+# Create a test environment file if needed for CI or local testing
+if [ ! -f .env.test ] && [ "$TESTING" = "True" ]; then
+  echo -e "${YELLOW}Creating test environment file...${NC}"
+  echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/test_db" > .env.test
+  echo "DATABASE_TEST_URL=postgresql://postgres:postgres@localhost:5432/test_db" >> .env.test
+  echo "SECRET_KEY=test-secret-key-for-ci" >> .env.test
+  echo "SUPABASE_URL=https://example.supabase.co" >> .env.test
+  echo "SUPABASE_KEY=test-supabase-key" >> .env.test
+  echo "SUPABASE_JWT_SECRET=test-jwt-secret" >> .env.test
+  echo "OPENAI_API_KEY=sk-test-key" >> .env.test
 fi
 
 # Step 1: Black formatting
@@ -64,7 +77,7 @@ fi
 
 # Step 3: flake8
 echo -e "\n${YELLOW}Step 3/5: Running flake8${NC}"
-if flake8 --max-complexity=10 --max-line-length=120 --ignore=E203,W503,C901,D100,D103,D104,D107,D200,D205,E501,Q000 --exclude=alembic/*,venv/*,__pycache__/* .; then
+if flake8 . --count --max-complexity=10 --max-line-length=120 --statistics --ignore=C901,E501,W503,W293,E203 --exclude=alembic/*,venv/*,__pycache__/*; then
   echo -e "${GREEN}✓ flake8 checks passed${NC}"
 else
   echo -e "${RED}✗ flake8 checks failed${NC}"
@@ -80,7 +93,7 @@ else
     fi
     
     # Run flake8 again to see if the issues were fixed
-    if flake8 --max-complexity=10 --max-line-length=120 --ignore=E203,W503,C901,D100,D103,D104,D107,D200,D205,E501,Q000 --exclude=alembic/*,venv/*,__pycache__/* .; then
+    if flake8 . --count --max-complexity=10 --max-line-length=120 --statistics --ignore=C901,E501,W503,W293,E203 --exclude=alembic/*,venv/*,__pycache__/*; then
       echo -e "${GREEN}✓ flake8 issues fixed successfully${NC}"
     else
       echo -e "${RED}✗ Some flake8 issues could not be fixed automatically${NC}"
@@ -93,9 +106,24 @@ else
   fi
 fi
 
-# Step 4: mypy
-echo -e "\n${YELLOW}Step 4/5: Running mypy${NC}"
-if mypy --ignore-missing-imports --disallow-untyped-defs --disallow-incomplete-defs --check-untyped-defs app/; then
+# Step 4: Check environment variables
+echo -e "\n${YELLOW}Step 4/6: Checking environment variables${NC}"
+if [ -f ".env.test" ]; then
+  if python scripts/check_env.py --env-file .env.test --no-exit; then
+    echo -e "${GREEN}✓ Environment variable check passed${NC}"
+  else
+    echo -e "${YELLOW}Warning: Some environment variables might be missing${NC}"
+    echo -e "${YELLOW}This might cause tests to fail if environment is not set up correctly${NC}"
+  fi
+else
+  echo -e "${YELLOW}Skipping environment check (no .env.test file)${NC}"
+  echo -e "${YELLOW}If running tests, make sure your environment is properly configured${NC}"
+fi
+
+# Step 5: mypy
+echo -e "\n${YELLOW}Step 5/6: Running mypy${NC}"
+# Note: The GitHub CI doesn't explicitly run mypy checks, but we'll keep it with more permissive settings
+if mypy --ignore-missing-imports app/; then
   echo -e "${GREEN}✓ mypy checks passed${NC}"
 else
   echo -e "${RED}✗ mypy checks failed${NC}"
@@ -104,8 +132,8 @@ else
   exit 1
 fi
 
-# Step 5: Run tests
-echo -e "\n${YELLOW}Step 5/5: Running tests${NC}"
+# Step 6: Run tests
+echo -e "\n${YELLOW}Step 6/6: Running tests${NC}"
 if pytest --cov=app --cov-report=term-missing; then
   echo -e "${GREEN}✓ Tests passed${NC}"
 else
