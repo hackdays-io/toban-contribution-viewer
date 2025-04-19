@@ -486,30 +486,22 @@ class IntegrationService {
           response.status,
           response.statusText
         )
-
-        // Return an error object with status and message
+        
+        // Try to get detailed error message
+        let errorDetail = '';
+        try {
+          const errorData = await response.json();
+          errorDetail = errorData.detail || '';
+          console.log('Error detail:', errorDetail);
+        } catch (e) {
+          // Ignore JSON parsing errors
+        }
+        
+        // Return a friendly error instead of throwing
         return {
           status: response.status,
-          message:
-            (result.detail as string) ||
-            (result.message as string) ||
-            'Failed to sync resources. Please reconnect the integration.',
-        }
-      }
-
-      // Ensure the result has a status field of 'success' for OK responses
-      if (response.ok) {
-        if (!result.status) {
-          console.log('[SYNC DEBUG] Adding success status to result')
-          result.status = 'success'
-        }
-
-        // Make sure there's a message too
-        if (!result.message) {
-          result.message = 'Resources synced successfully'
-        }
-
-        console.log('[SYNC DEBUG] Final result to return:', result)
+          message: errorDetail || 'Failed to sync resources. Please reconnect the integration.',
+        };
       }
 
       return result
