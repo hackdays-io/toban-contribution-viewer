@@ -131,32 +131,59 @@ const IntegrationDetail: React.FC = () => {
   const handleSyncResources = async () => {
     if (!integrationId) return
 
+    // Clear any previous error before starting the sync
     setIsSyncing(true)
     try {
-      const success = await syncResources(integrationId)
+      console.log(
+        '[DETAIL] Starting resource sync for integration:',
+        integrationId
+      )
 
-      if (success) {
+      // DEBUG: Store the previous error to compare after sync
+      const prevError = resourceError
+      console.log('[DETAIL] Previous error state:', prevError)
+
+      const success = await syncResources(integrationId)
+      console.log('[DETAIL] Sync completed with result:', success)
+
+      // DEBUG: Log current error state after sync
+      console.log('[DETAIL] Current resourceError after sync:', resourceError)
+
+      // IMPORTANT: The success flag should be the primary determiner
+      if (success === true) {
+        console.log('[DETAIL] Showing success toast based on success flag')
         toast({
           title: 'Resources synced successfully',
+          description: 'Channels and users have been updated',
           status: 'success',
           duration: 3000,
           isClosable: true,
+          position: 'top',
         })
       } else {
+        // Get error message from context if available
+        const errorMessage =
+          resourceError?.message || 'Failed to sync resources'
+        console.error('[DETAIL] Showing error toast. Message:', errorMessage)
+
         toast({
           title: 'Failed to sync resources',
+          description: errorMessage,
           status: 'error',
           duration: 3000,
           isClosable: true,
+          position: 'top',
         })
       }
     } catch (error) {
+      console.error('[DETAIL] Exception during sync handler:', error)
       toast({
         title: 'Error syncing resources',
         description: error instanceof Error ? error.message : 'Unknown error',
         status: 'error',
         duration: 3000,
         isClosable: true,
+        position: 'top',
       })
     } finally {
       setIsSyncing(false)

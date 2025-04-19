@@ -78,7 +78,7 @@ export interface Integration {
   status: IntegrationStatus
   metadata?: Record<string, unknown>
   last_used_at?: string
-  updated?: boolean  // Flag indicating if this was an update to an existing integration
+  updated?: boolean // Flag indicating if this was an update to an existing integration
 
   owner_team: TeamInfo
   created_by: UserInfo
@@ -298,7 +298,7 @@ class IntegrationService {
    */
   async createIntegration(
     data: CreateIntegrationRequest
-  ): Promise<Integration & { updated?: boolean } | ApiError> {
+  ): Promise<(Integration & { updated?: boolean }) | ApiError> {
     try {
       const headers = await this.getAuthHeaders()
       const response = await fetch(this.apiUrl, {
@@ -312,7 +312,7 @@ class IntegrationService {
         throw response
       }
 
-      // Parse the response which may include an 'updated' field 
+      // Parse the response which may include an 'updated' field
       // to indicate if this was a reconnection
       const result = await response.json()
       return result
@@ -414,11 +414,8 @@ class IntegrationService {
     resourceTypes?: string[]
   ): Promise<Record<string, unknown> | ApiError> {
     try {
-      console.log(
-        'Starting syncResources in integrationService with ID:',
-        integrationId
-      )
-      console.log('Resource types:', resourceTypes)
+      console.log('[SYNC DEBUG] Starting syncResources with ID:', integrationId)
+      console.log('[SYNC DEBUG] Resource types:', resourceTypes)
 
       const headers = await this.getAuthHeaders()
       let url = `${this.apiUrl}/${integrationId}/sync`
@@ -431,31 +428,93 @@ class IntegrationService {
         url += `?${resourceTypeParams}`
       }
 
-      console.log('Sync URL:', url)
-      console.log('Headers:', headers)
+      console.log('[SYNC DEBUG] Sync URL:', url)
+      console.log('[SYNC DEBUG] Headers:', {
+        ...headers,
+        Authorization: 'Bearer [redacted]',
+      })
 
+      // Make the request
+      console.log('[SYNC DEBUG] Making fetch request...')
       const response = await fetch(url, {
         method: 'POST',
         headers,
         credentials: 'include',
       })
 
-      console.log('Sync response status:', response.status)
+      console.log('[SYNC DEBUG] Response received:', {
+        ok: response.ok,
+        status: response.status,
+        statusText: response.statusText,
+        headers: Object.fromEntries([...response.headers.entries()]),
+      })
 
+      // Try to parse the response as JSON
+      let result: Record<string, unknown>
+      try {
+        const text = await response.text()
+        console.log('[SYNC DEBUG] Raw response text:', text)
+
+        try {
+          result = text ? JSON.parse(text) : {}
+          console.log('[SYNC DEBUG] Parsed JSON result:', result)
+        } catch (jsonError) {
+          console.error('[SYNC DEBUG] Failed to parse JSON:', jsonError)
+          // If can't parse as JSON, use a default result based on status
+          result = {
+            status: response.ok ? 'success' : 'error',
+            message: response.ok
+              ? 'Resources synced successfully'
+              : `Failed to parse response: ${text}`,
+          }
+        }
+      } catch (textError) {
+        console.error('[SYNC DEBUG] Failed to get response text:', textError)
+        // Fallback if we can't even get text
+        result = {
+          status: response.ok ? 'success' : 'error',
+          message: response.ok
+            ? 'Resources synced successfully'
+            : 'Failed to read response',
+        }
+      }
+
+      // For non-OK responses, return an error
       if (!response.ok) {
         console.error(
-          'Sync response not OK:',
+          '[SYNC DEBUG] Response not OK:',
           response.status,
           response.statusText
         )
-        throw response
+
+        // Return an error object with status and message
+        return {
+          status: response.status,
+          message:
+            (result.detail as string) ||
+            (result.message as string) ||
+            'Failed to sync resources. Please reconnect the integration.',
+        }
       }
 
-      const result = await response.json()
-      console.log('Sync result:', result)
+      // Ensure the result has a status field of 'success' for OK responses
+      if (response.ok) {
+        if (!result.status) {
+          console.log('[SYNC DEBUG] Adding success status to result')
+          result.status = 'success'
+        }
+
+        // Make sure there's a message too
+        if (!result.message) {
+          result.message = 'Resources synced successfully'
+        }
+
+        console.log('[SYNC DEBUG] Final result to return:', result)
+      }
+
       return result
     } catch (error) {
-      console.error('Error in syncResources:', error)
+      console.error('[SYNC DEBUG] Exception in syncResources:', error)
       return this.handleError(error, 'Failed to sync resources')
     }
   }
@@ -546,13 +605,23 @@ class IntegrationService {
 
   /**
    * Helper method to check if a response is an API error
+   *
+   * IMPORTANT: This needs to distinguish between success responses that have
+   * status/message fields and actual error responses
    */
   isApiError(response: unknown): response is ApiError {
+    // Only consider it an API error if:
+    // 1. It's an object with status and message properties
+    // 2. The status is a number (HTTP status code) OR status is not the string "success"
     return (
       response !== null &&
       typeof response === 'object' &&
       'status' in response &&
-      'message' in response
+      'message' in response &&
+      // If status is a number, it's likely an HTTP error status
+      (typeof response.status === 'number' ||
+        // Or if status is a string but not "success"
+        (typeof response.status === 'string' && response.status !== 'success'))
     )
   }
 }

@@ -605,9 +605,17 @@ async def sync_integration_resources(
                             f"Found token in credentials for integration {integration_id}"
                         )
                     else:
-                        raise ValueError(
-                            "No access token found for this integration. Please reconnect your Slack workspace."
-                        )
+                        # Check if token exists in metadata (for backward compatibility)
+                        metadata = integration.integration_metadata or {}
+                        if metadata.get("access_token"):
+                            token = metadata["access_token"]
+                            logger.info(
+                                f"Found token in metadata for integration {integration_id}"
+                            )
+                        else:
+                            raise ValueError(
+                                "No access token found for this integration. Please reconnect your Slack workspace."
+                            )
 
                 # Sync channels and users (these return ServiceResource objects)
                 channel_resources = await SlackIntegrationService.sync_channels(

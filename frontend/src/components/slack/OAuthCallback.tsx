@@ -266,7 +266,7 @@ const OAuthCallback: React.FC = () => {
             from_result_existing_integration: Boolean(
               result.existing_integration
             ),
-            from_result_integration_id: Boolean(result.integration_id)
+            from_result_integration_id: Boolean(result.integration_id),
           })
         }
 
