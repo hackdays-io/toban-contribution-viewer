@@ -123,6 +123,10 @@ class IntegrationCreate(BaseModel):
     service_type: IntegrationTypeEnum
     description: Optional[str] = None
     team_id: UUID
+    workspace_id: Optional[str] = (
+        None  # External workspace identifier for uniqueness constraints
+    )
+    metadata: Optional[Dict] = None
 
 
 class IntegrationUpdate(BaseModel):
@@ -284,6 +288,9 @@ class IntegrationResponse(BaseModel):
     credentials: Optional[List[CredentialResponse]] = None
     resources: Optional[List[ServiceResourceResponse]] = None
     shared_with: Optional[List[IntegrationShareResponse]] = None
+
+    # Flag to indicate if this was an update to an existing integration
+    updated: Optional[bool] = False
 
     class Config:
         orm_mode = True

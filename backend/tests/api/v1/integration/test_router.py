@@ -12,7 +12,12 @@ from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.integration.router import router
-from app.models.integration import Integration, IntegrationStatus, IntegrationType, ServiceResource
+from app.models.integration import (
+    Integration,
+    IntegrationStatus,
+    IntegrationType,
+    ServiceResource,
+)
 
 
 @pytest.fixture

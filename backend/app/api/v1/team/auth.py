@@ -14,7 +14,12 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.auth import create_token_with_team_context, get_current_user, get_user_team_context, switch_team_context
+from app.core.auth import (
+    create_token_with_team_context,
+    get_current_user,
+    get_user_team_context,
+    switch_team_context,
+)
 from app.db.session import get_async_db
 
 router = APIRouter(prefix="/auth", tags=["team auth"])

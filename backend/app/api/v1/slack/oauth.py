@@ -381,7 +381,17 @@ async def slack_oauth_callback(
         # This keeps the OAuth flow fast while still getting the additional data we need
         background_tasks.add_task(_fetch_workspace_metadata, db.bind, str(workspace.id))
 
-        return {"status": "success", "message": f"Connected to {team_name}"}
+        # Return more information for the frontend to create the integration
+        return {
+            "status": "success",
+            "message": f"Connected to {team_name}",
+            "access_token": oauth_response.access_token,
+            "workspace_id": team_id,
+            "workspace_name": team_name,
+            "workspace_domain": team_domain,
+            "bot_user_id": oauth_response.bot_user_id,
+            "scope": oauth_response.scope,
+        }
 
     except requests.exceptions.RequestException as e:
         logger.error(f"Request error during Slack OAuth: {str(e)}")

@@ -176,15 +176,13 @@ async def get_team(
 
     # Check if user has access to this team
     has_access = await check_team_access(
-        team_id=team_id, 
-        user_id=current_user["id"],
-        db=db
+        team_id=team_id, user_id=current_user["id"], db=db
     )
-    
+
     if not has_access:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="You don't have access to this team"
+            detail="You don't have access to this team",
         )
 
     # Convert to dictionary using our helper function
@@ -226,15 +224,13 @@ async def get_team_by_slug(
 
     # Check if user has access to this team
     has_access = await check_team_access(
-        team_id=team.id, 
-        user_id=current_user["id"],
-        db=db
+        team_id=team.id, user_id=current_user["id"], db=db
     )
-    
+
     if not has_access:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="You don't have access to this team"
+            detail="You don't have access to this team",
         )
 
     # Convert to dictionary using our helper function
@@ -270,13 +266,13 @@ async def update_team(
         team_id=team_id,
         user_id=current_user["id"],
         db=db,
-        roles=[TeamMemberRole.OWNER, TeamMemberRole.ADMIN]
+        roles=[TeamMemberRole.OWNER, TeamMemberRole.ADMIN],
     )
-    
+
     if not has_access:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="You don't have admin access to this team"
+            detail="You don't have admin access to this team",
         )
 
     # Update the team (service handles additional permission checks)
@@ -315,16 +311,13 @@ async def delete_team(
     from app.models.team import TeamMemberRole
 
     has_access = await check_team_access(
-        team_id=team_id,
-        user_id=current_user["id"],
-        db=db,
-        roles=[TeamMemberRole.OWNER]
+        team_id=team_id, user_id=current_user["id"], db=db, roles=[TeamMemberRole.OWNER]
     )
-    
+
     if not has_access:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only team owners can delete a team"
+            detail="Only team owners can delete a team",
         )
 
     # Delete the team

@@ -111,19 +111,19 @@ def create_default_teams(session: Session, dry_run: bool = False) -> Dict[str, i
 def create_test_user_team(session: Session, user_id: str, email: str = None):
     """
     Create a test team for a specific user.
-    
+
     Args:
         session: SQLAlchemy session
         user_id: User ID to create team for
         email: Optional email of the user
-        
+
     Returns:
         Created team
     """
     from app.models.team import Team, TeamMember, TeamMemberRole
-    
+
     logger.info(f"Creating test team for user {user_id}")
-    
+
     # Create the team
     team = Team(
         name="My Test Team",
@@ -134,11 +134,11 @@ def create_test_user_team(session: Session, user_id: str, email: str = None):
         created_by_email=email,
         team_metadata={"auto_created": True, "source": "test_script"},
     )
-    
+
     session.add(team)
     # Flush to get the team ID
     session.flush()
-    
+
     # Create the team member (owner)
     member = TeamMember(
         team_id=team.id,
@@ -148,12 +148,12 @@ def create_test_user_team(session: Session, user_id: str, email: str = None):
         invitation_status="active",
     )
     session.add(member)
-    
+
     session.commit()
-    
+
     logger.info(f"Created test team '{team.name}' (ID: {team.id}) for user {user_id}")
     return team
-    
+
 
 def main():
     """Run the script."""
@@ -162,7 +162,7 @@ def main():
     # Parse command line arguments
     dry_run = "--dry-run" in sys.argv
     create_test_team = "--create-test-team" in sys.argv
-    
+
     # Get custom user ID if specified
     user_id_arg = None
     user_email_arg = None
@@ -171,7 +171,7 @@ def main():
             user_id_arg = arg.split("=")[1]
         if arg.startswith("--email="):
             user_email_arg = arg.split("=")[1]
-    
+
     if dry_run:
         logger.info("Running in dry-run mode, no changes will be committed")
 
@@ -182,8 +182,10 @@ def main():
             # Create a test team for development
             test_user_id = user_id_arg or "auth0|user1234"
             test_email = user_email_arg or "test@example.com"
-            
-            logger.info(f"Creating test team for user ID: {test_user_id}, email: {test_email}")
+
+            logger.info(
+                f"Creating test team for user ID: {test_user_id}, email: {test_email}"
+            )
             create_test_user_team(session, test_user_id, test_email)
             logger.info(f"Test team created for user {test_user_id}")
         else:

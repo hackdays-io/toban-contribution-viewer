@@ -24,6 +24,10 @@ import {
   Spinner,
   useToast,
   useColorModeValue,
+  Alert,
+  AlertIcon,
+  AlertTitle,
+  AlertDescription,
 } from '@chakra-ui/react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
@@ -39,6 +43,7 @@ import {
 import useIntegration from '../../context/useIntegration'
 import { IntegrationStatus, ResourceType } from '../../lib/integrationService'
 import ResourceList from './ResourceList'
+import ReconnectIntegration from './ReconnectIntegration'
 
 /**
  * DetailPanel properties
@@ -87,6 +92,7 @@ const IntegrationDetail: React.FC = () => {
   const [, setActiveTab] = useState<string>('overview')
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [isSyncing, setIsSyncing] = useState(false)
+  const [isReconnectModalOpen, setIsReconnectModalOpen] = useState(false)
 
   // Initialize the integration data
   useEffect(() => {
@@ -220,8 +226,52 @@ const IntegrationDetail: React.FC = () => {
     return currentResources.length
   }
 
+  // Function to handle reconnection request
+  const handleReconnect = () => {
+    if (!currentIntegration || !integrationId) return
+
+    // Store integration details in session storage for reconnection flow
+    sessionStorage.setItem('slack_integration_id', integrationId)
+    sessionStorage.setItem('slack_team_id', currentIntegration.owner_team.id)
+
+    // Open reconnect modal
+    setIsReconnectModalOpen(true)
+  }
+
+  // Determine if the integration needs reconnection
+  const needsReconnection =
+    currentIntegration &&
+    (currentIntegration.status === IntegrationStatus.EXPIRED ||
+      currentIntegration.status === IntegrationStatus.REVOKED ||
+      (currentIntegration.status === IntegrationStatus.ERROR &&
+        currentIntegration.service_type === 'slack'))
+
   return (
     <Box p={6}>
+      {/* Banner for expired/revoked tokens */}
+      {needsReconnection && (
+        <Alert status="warning" mb={6} borderRadius="md">
+          <AlertIcon />
+          <Box flex="1">
+            <AlertTitle>
+              Authentication {currentIntegration.status.toLowerCase()}
+            </AlertTitle>
+            <AlertDescription>
+              This Slack integration's token has{' '}
+              {currentIntegration.status === IntegrationStatus.EXPIRED
+                ? 'expired'
+                : currentIntegration.status === IntegrationStatus.REVOKED
+                  ? 'been revoked'
+                  : 'an error'}
+              . You need to reconnect to continue accessing Slack data.
+            </AlertDescription>
+          </Box>
+          <Button colorScheme="blue" size="sm" onClick={handleReconnect}>
+            Reconnect
+          </Button>
+        </Alert>
+      )}
+
       {/* Integration header */}
       <Flex
         direction={{ base: 'column', md: 'row' }}
@@ -381,18 +431,35 @@ const IntegrationDetail: React.FC = () => {
                     </DetailPanel>
 
                     <DetailPanel title="Status">
-                      <Badge
-                        colorScheme={
-                          currentIntegration.status === IntegrationStatus.ACTIVE
-                            ? 'green'
-                            : currentIntegration.status ===
-                                IntegrationStatus.DISCONNECTED
-                              ? 'yellow'
-                              : 'red'
-                        }
-                      >
-                        {currentIntegration.status}
-                      </Badge>
+                      <Flex align="center">
+                        <Badge
+                          colorScheme={
+                            currentIntegration.status ===
+                            IntegrationStatus.ACTIVE
+                              ? 'green'
+                              : currentIntegration.status ===
+                                  IntegrationStatus.DISCONNECTED
+                                ? 'yellow'
+                                : 'red'
+                          }
+                        >
+                          {currentIntegration.status}
+                        </Badge>
+
+                        {/* Reconnect button for expired/revoked tokens */}
+                        {needsReconnection &&
+                          currentIntegration.service_type === 'slack' && (
+                            <Button
+                              ml={4}
+                              size="sm"
+                              colorScheme="blue"
+                              leftIcon={<FiLink />}
+                              onClick={handleReconnect}
+                            >
+                              Reconnect
+                            </Button>
+                          )}
+                      </Flex>
                     </DetailPanel>
 
                     <DetailPanel title="Team">
@@ -617,6 +684,15 @@ const IntegrationDetail: React.FC = () => {
           </TabPanel>
         </TabPanels>
       </Tabs>
+
+      {/* Reconnection Modal */}
+      {currentIntegration && (
+        <ReconnectIntegration
+          integration={currentIntegration}
+          isOpen={isReconnectModalOpen}
+          onClose={() => setIsReconnectModalOpen(false)}
+        />
+      )}
     </Box>
   )
 }

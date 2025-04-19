@@ -150,32 +150,34 @@ async def check_team_access(
     team_id: UUID,
     user_id: str,
     db: AsyncSession,
-    roles: Optional[List[TeamMemberRole]] = None
+    roles: Optional[List[TeamMemberRole]] = None,
 ) -> bool:
     """
     Check if a user has access to a team with specific roles.
-    
+
     Args:
         team_id: Team ID
         user_id: User ID
         db: Database session
         roles: Required roles (defaults to all roles)
-        
+
     Returns:
         True if user has access, False otherwise
     """
     try:
         # Check if the user is a member of the team
         member = await get_team_member(db, team_id, user_id)
-        
+
         if not member:
-            logger.warning(f"User {user_id} denied access to team {team_id} - not a member")
+            logger.warning(
+                f"User {user_id} denied access to team {team_id} - not a member"
+            )
             return False
-            
+
         # If no specific roles required, any membership is sufficient
         if not roles:
             return True
-            
+
         # Check if the user's role is in the allowed roles
         if member.role not in roles:
             logger.warning(
@@ -183,7 +185,7 @@ async def check_team_access(
                 f"(has {member.role}, needs one of {roles})"
             )
             return False
-            
+
         return True
     except Exception as e:
         logger.error(f"Error checking team access: {str(e)}")

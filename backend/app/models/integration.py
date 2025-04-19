@@ -116,11 +116,30 @@ class Integration(Base, BaseModel):
     )  # Service-specific configuration (renamed from metadata to avoid SQLAlchemy conflict)
     last_used_at = Column(DateTime, nullable=True)
 
+    # External service identifiers
+    workspace_id = Column(
+        String(255), nullable=True
+    )  # ID of the workspace in the external service
+
     # Owner info
     owner_team_id = Column(
         UUID(as_uuid=True), ForeignKey("team.id"), nullable=False, index=True
     )
     created_by_user_id = Column(String(255), nullable=False)
+
+    # Table constraints
+    __table_args__ = (
+        Index(
+            "ix_integration_owner_team_id_workspace_id_service_type",
+            "owner_team_id",
+            "workspace_id",
+            "service_type",
+            unique=True,
+            postgresql_where=workspace_id.isnot(
+                None
+            ),  # Only enforce uniqueness when workspace_id is not null
+        ),
+    )
 
     # Relationships
     owner_team: Mapped["Team"] = relationship(
@@ -177,6 +196,7 @@ class IntegrationShare(Base, BaseModel):
     """
     Model for sharing integrations between teams.
     """
+
     __tablename__ = "integration_share"
 
     # Sharing info

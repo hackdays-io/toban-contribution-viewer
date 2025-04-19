@@ -140,6 +140,8 @@ export interface CreateIntegrationRequest {
   service_type: IntegrationType
   description?: string
   team_id: string
+  workspace_id?: string // Add workspace_id field for external service identifier
+  metadata?: Record<string, unknown>
 }
 
 export interface CreateSlackIntegrationRequest

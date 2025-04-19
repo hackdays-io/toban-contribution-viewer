@@ -31,8 +31,36 @@
    - OAuth callback requires team context
    - Client credentials collected on a per-team basis instead of environment variables
 
+## Error Debugging (April 15-18)
+
+1. Authorization Error (April 17):
+   - Error: Failed to complete OAuth handshake with Slack
+   - Status: 400
+   - Details: Invalid client_secret parameter
+   - Resolution: Fixed parameter passing from frontend to backend
+
+2. OAuth Token Expiration (April 17):
+   - Error: Failed to fetch channel list
+   - Status: 401
+   - Details: Token expired or revoked
+   - Resolution: Added reconnection flow in IntegrationDetail component
+
+3. URL Construction Issue (April 15):
+   - Error: Duplicate path segment in URL 
+   - URL: https://api.example.com/api/slack/slack/oauth-callback
+   - Fixed URL: https://api.example.com/api/slack/oauth-callback
+
+4. Reconnection Error (April 18):
+   - Error: Failed to reconnect Slack workspace
+   - Status: 409
+   - Details: Workspace already connected to team "Engineering"
+   - WorkspaceID: W0123456789
+   - AttemptedTeamID: team_67890
+   - Resolution: Need to implement uniqueness constraints
+
 ## Next Steps
 
-1. Test the full OAuth flow with the restored form fields
-2. Verify the integration resource endpoints work correctly
-3. Ensure proper team context loading in all application flows
+1. Implement uniqueness constraints for (team_id, slack_workspace_id)
+2. Create detailed API and UI implementation plans
+3. Add proper error handling for duplicate workspace connections
+4. Implement reconnection flow for expired or revoked tokens

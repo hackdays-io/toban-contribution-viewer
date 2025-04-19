@@ -36,6 +36,146 @@ class SlackIntegrationService(IntegrationService):
     """
 
     @staticmethod
+    async def find_integration_by_workspace_id(
+        db: AsyncSession, team_id: uuid.UUID, workspace_id: str
+    ) -> Optional[Integration]:
+        """
+        Find an existing integration by team and Slack workspace ID.
+
+        Args:
+            db: Database session
+            team_id: UUID of the team
+            workspace_id: Slack workspace ID to search for
+
+        Returns:
+            Integration object if found, None otherwise
+        """
+        # First try to find by direct workspace_id field
+        query = select(Integration).where(
+            Integration.owner_team_id == team_id,
+            Integration.service_type == IntegrationType.SLACK,
+            Integration.workspace_id == workspace_id,
+        )
+
+        result = await db.execute(query)
+        integration = result.scalar_one_or_none()
+
+        if integration:
+            return integration
+
+        # Fall back to searching in metadata for backward compatibility
+        query = select(Integration).where(
+            Integration.owner_team_id == team_id,
+            Integration.service_type == IntegrationType.SLACK,
+        )
+
+        result = await db.execute(query)
+        integrations = result.scalars().all()
+
+        # Search through metadata for workspace_id match
+        for integration in integrations:
+            metadata = integration.integration_metadata or {}
+            if metadata.get("slack_id") == workspace_id:
+                # Update the workspace_id field for future queries
+                integration.workspace_id = workspace_id
+                return integration
+
+        return None
+
+    @staticmethod
+    async def update_existing_integration(
+        db: AsyncSession,
+        integration: Integration,
+        oauth_response: Dict,
+        workspace_info: Dict,
+        user_id: str,
+    ) -> Integration:
+        """
+        Update an existing integration with new OAuth data.
+
+        Args:
+            db: Database session
+            integration: Existing integration to update
+            oauth_response: OAuth response data with tokens
+            workspace_info: Workspace information from Slack API
+            user_id: ID of the user updating the integration
+
+        Returns:
+            Updated Integration object
+        """
+        logger.info(
+            f"Updating existing integration {integration.id} for workspace {workspace_info['team']['id']}"
+        )
+
+        # Update access token in credentials
+        access_token = oauth_response.get("access_token")
+        if not access_token:
+            raise ValueError("No access token in OAuth response")
+
+        # Find and update the OAuth credential
+        result = await db.execute(
+            select(IntegrationCredential).where(
+                IntegrationCredential.integration_id == integration.id,
+                IntegrationCredential.credential_type == CredentialType.OAUTH_TOKEN,
+            )
+        )
+        credential = result.scalar_one_or_none()
+
+        if credential:
+            # Update existing credential
+            credential.encrypted_value = access_token
+            credential.refresh_token = oauth_response.get("refresh_token")
+            credential.expires_at = (
+                datetime.utcnow()
+                + timedelta(seconds=oauth_response.get("expires_in", 86400))
+                if "expires_in" in oauth_response
+                else None
+            )
+            credential.scopes = oauth_response.get("scope", "").split(",")
+        else:
+            # Create new credential if none exists
+            credential = IntegrationCredential(
+                id=uuid.uuid4(),
+                integration_id=integration.id,
+                credential_type=CredentialType.OAUTH_TOKEN,
+                encrypted_value=access_token,
+                refresh_token=oauth_response.get("refresh_token"),
+                expires_at=(
+                    datetime.utcnow()
+                    + timedelta(seconds=oauth_response.get("expires_in", 86400))
+                    if "expires_in" in oauth_response
+                    else None
+                ),
+                scopes=oauth_response.get("scope", "").split(","),
+            )
+            db.add(credential)
+
+        # Update workspace_id field directly
+        integration.workspace_id = workspace_info["team"]["id"]
+
+        # Update metadata
+        integration.integration_metadata = {
+            **(integration.integration_metadata or {}),
+            "slack_id": workspace_info["team"]["id"],
+            "domain": workspace_info["team"].get("domain"),
+            "name": workspace_info["team"]["name"],
+            "icon_url": workspace_info["team"].get("icon", {}).get("image_132"),
+            "bot_user_id": oauth_response.get("bot_user_id"),
+            "scope": oauth_response.get("scope", ""),
+            "authed_user": oauth_response.get("authed_user", {}),
+            "last_updated_by": user_id,
+            "last_updated_at": datetime.utcnow().isoformat(),
+        }
+
+        # Update status to ACTIVE in case it was previously disconnected
+        integration.status = IntegrationStatus.ACTIVE
+
+        # Update last_used_at
+        integration.last_used_at = datetime.utcnow()
+
+        return integration
+
+    @staticmethod
     async def create_from_oauth(
         db: AsyncSession,
         team_id: uuid.UUID,
@@ -51,7 +191,8 @@ class SlackIntegrationService(IntegrationService):
         Create a Slack integration from an OAuth authorization code.
 
         This method exchanges the auth code for tokens, gets workspace info,
-        and creates the integration record.
+        and creates the integration record. If an integration with the same
+        workspace ID already exists for this team, it will be updated instead.
 
         Args:
             db: Database session
@@ -89,11 +230,35 @@ class SlackIntegrationService(IntegrationService):
         if not workspace_info or "team" not in workspace_info:
             raise ValueError("Failed to get workspace information")
 
+        # Extract workspace ID
+        workspace_id = workspace_info["team"]["id"]
+        if not workspace_id:
+            raise ValueError("No team ID in Slack workspace information")
+
+        # Check for existing integration with this workspace ID
+        existing_integration = (
+            await SlackIntegrationService.find_integration_by_workspace_id(
+                db, team_id, workspace_id
+            )
+        )
+
+        if existing_integration:
+            # Update existing integration with new OAuth data
+            integration = await SlackIntegrationService.update_existing_integration(
+                db, existing_integration, oauth_response, workspace_info, user_id
+            )
+
+            # Sync resources for the updated integration
+            await SlackIntegrationService.sync_channels(db, integration.id)
+            await SlackIntegrationService.sync_users(db, integration.id)
+
+            return integration, workspace_info
+
         # Create integration name if not provided
         if not name:
             name = f"{workspace_info['team']['name']} Slack"
 
-        # Create the integration
+        # Create a new integration
         integration = await IntegrationService.create_integration(
             db=db,
             team_id=team_id,
@@ -101,8 +266,9 @@ class SlackIntegrationService(IntegrationService):
             name=name,
             service_type=IntegrationType.SLACK,
             description=description,
+            workspace_id=workspace_id,  # Set the workspace_id directly
             metadata={
-                "slack_id": workspace_info["team"]["id"],
+                "slack_id": workspace_id,  # Keep this for backward compatibility
                 "domain": workspace_info["team"].get("domain"),
                 "name": workspace_info["team"]["name"],
                 "icon_url": workspace_info["team"].get("icon", {}).get("image_132"),
@@ -127,6 +293,24 @@ class SlackIntegrationService(IntegrationService):
                 "scopes": oauth_response.get("scope", "").split(","),
             },
         )
+
+        # Integration returned from create_integration already has relationships loaded
+        # but we'll verify it has the owner_team loaded to prevent MissingGreenlet errors
+        if not hasattr(integration, "owner_team") or integration.owner_team is None:
+            # If owner_team isn't loaded, reload the integration with relationships
+            stmt = (
+                select(Integration)
+                .where(Integration.id == integration.id)
+                .options(
+                    selectinload(Integration.owner_team),
+                    selectinload(Integration.credentials),
+                    selectinload(Integration.shared_with),
+                    selectinload(Integration.resources),
+                    selectinload(Integration.events),
+                )
+            )
+            result = await db.execute(stmt)
+            integration = result.scalar_one_or_none() or integration
 
         # Sync channels and users in the background (would typically use a background task)
         await SlackIntegrationService.sync_channels(db, integration.id)
