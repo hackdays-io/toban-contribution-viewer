@@ -285,6 +285,7 @@ const OAuthCallback: React.FC = () => {
         sessionStorage.removeItem('slack_client_secret')
         sessionStorage.removeItem('slack_integration_name')
         sessionStorage.removeItem('slack_team_id')
+        sessionStorage.removeItem('slack_integration_id')
 
         setStatus('error')
 
