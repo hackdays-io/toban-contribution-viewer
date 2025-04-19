@@ -28,7 +28,7 @@ interface Integration {
   name: string
   service_type: string
   status: string
-  metadata: Record<string, unknown>
+  metadata?: Record<string, unknown>
 }
 
 interface ReconnectIntegrationProps {

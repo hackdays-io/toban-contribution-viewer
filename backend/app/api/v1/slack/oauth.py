@@ -346,13 +346,11 @@ async def slack_oauth_callback(
     if not client_id:
         logger.error("Slack client ID not provided")
         raise HTTPException(status_code=400, detail="Slack client ID is required")
-    actual_client_id = client_id
 
     # Client secret must be provided by the user through the UI
     if not client_secret:
         logger.error("Slack client secret not provided")
         raise HTTPException(status_code=400, detail="Slack client secret is required")
-    actual_client_secret = client_secret
 
     # Log the OAuth callback (with only first few chars of the code for security)
     logger.info(f"OAuth callback received with code={code[:5]}... and state={state}")

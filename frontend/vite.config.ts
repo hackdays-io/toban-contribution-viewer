@@ -53,7 +53,7 @@ export default defineConfig(({ mode }) => {
       },
       cors: true,
       // Allow connections from these hosts
-      allowedHosts,
+      allowedHosts: typeof allowedHosts === 'boolean' ? ['localhost', '127.0.0.1'] : allowedHosts,
       // Initialize proxy as empty object to satisfy TypeScript
       proxy: {} as ServerConfig['proxy']
     } as ServerConfig

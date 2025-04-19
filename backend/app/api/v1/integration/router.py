@@ -21,7 +21,6 @@ from app.api.v1.integration.schemas import (
     IntegrationShareResponse,
     IntegrationTypeEnum,
     IntegrationUpdate,
-    ManualSlackIntegrationCreate,
     ResourceAccessCreate,
     ResourceAccessResponse,
     ServiceResourceResponse,
@@ -33,7 +32,6 @@ from app.core.auth import get_current_user
 from app.db.session import get_async_db
 from app.models.integration import (
     AccessLevel,
-    CredentialType,
     Integration,
     IntegrationCredential,
     IntegrationType,
@@ -284,20 +282,22 @@ async def create_integration(
     )
     result = await db.execute(stmt)
     loaded_integration = result.scalar_one_or_none() or new_integration
-    
+
     # Check if the updated flag exists and preserve it when reloading
     was_updated = getattr(new_integration, "updated", False)
     if was_updated:
         loaded_integration.__dict__["updated"] = was_updated
-    
+
     # Convert to response format
     response_data = prepare_integration_response(loaded_integration)
-    
+
     # Add the updated flag to the response
     response_dict = response_data.dict()
     response_dict["updated"] = was_updated
-    
-    return JSONResponse(content=jsonable_encoder(response_dict), status_code=status.HTTP_201_CREATED)
+
+    return JSONResponse(
+        content=jsonable_encoder(response_dict), status_code=status.HTTP_201_CREATED
+    )
 
 
 @router.post("/slack", response_model=IntegrationResponse)

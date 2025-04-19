@@ -17,7 +17,6 @@ from app.models.integration import (
     CredentialType,
     Integration,
     IntegrationCredential,
-    IntegrationStatus,
     IntegrationType,
     ResourceType,
     ServiceResource,
@@ -164,20 +163,18 @@ class SlackIntegrationService(IntegrationService):
 
         if credential and credential.encrypted_value:
             return credential.encrypted_value  # In production, this would be decrypted
-        
+
         # If not found in credentials, check metadata (for backward compatibility)
         integration_result = await db.execute(
-            select(Integration).where(
-                Integration.id == integration_id
-            )
+            select(Integration).where(Integration.id == integration_id)
         )
         integration = integration_result.scalar_one_or_none()
-        
+
         if integration and integration.integration_metadata:
             metadata = integration.integration_metadata
             if metadata.get("access_token"):
                 return metadata["access_token"]
-        
+
         return None
 
     @staticmethod

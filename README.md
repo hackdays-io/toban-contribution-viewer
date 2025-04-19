@@ -528,23 +528,34 @@ You can also trigger deployments manually through the GitHub Actions interface u
 
 Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
 
-### Pre-commit Hooks
+### Code Quality and CI Checks
 
-This project uses pre-commit hooks to ensure code quality. To set up the hooks:
+This project uses local CI check scripts to ensure code quality before pushing changes.
 
-1. Install pre-commit:
+1. Run the CI checks:
    ```bash
-   pip install pre-commit
+   # Run checks on changed files only
+   ./run-ci-checks.sh
+   
+   # Or run all checks regardless of changes
+   ./run-ci-checks.sh --all
+   
+   # Run checks with automatic fixing of common issues
+   ./run-ci-checks.sh --auto-fix
    ```
 
-2. Install the git hooks:
+2. You can also run specific checks:
    ```bash
-   pre-commit install
+   # Frontend checks only
+   ./frontend/scripts/run-ci-checks.sh
+   
+   # Backend checks only
+   ./backend/scripts/run-ci-checks.sh
    ```
 
-3. The hooks will now run automatically on every commit.
+3. These checks mirror the GitHub Actions workflow and help catch issues early.
 
-For more information on the pre-commit setup, see [PRE-COMMIT.md](PRE-COMMIT.md).
+For more information on development practices, see [DEVELOPMENT.md](DEVELOPMENT.md).
 
 ## License
 

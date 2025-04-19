@@ -15,26 +15,44 @@ Please help us maintain a positive and inclusive environment by following our co
 
 Please refer to the [DEVELOPMENT.md](DEVELOPMENT.md) file for detailed setup instructions.
 
-## Pre-commit Hooks
+## Code Quality Checks
 
-This project uses pre-commit hooks to ensure code quality. Please set them up before making any commits:
+> **Note**: We are transitioning away from pre-commit hooks to CI check scripts. The pre-commit hooks are being phased out in favor of a more flexible approach.
 
-1. Install pre-commit:
-   ```bash
-   pip install pre-commit
-   ```
+### CI Check Scripts (Recommended)
 
-2. Install the git hooks:
-   ```bash
-   pre-commit install
-   ```
+We recommend using the CI check scripts to verify your changes before committing. These scripts mirror the GitHub Actions workflows and provide more flexibility:
 
-For more details about the pre-commit configuration, see [PRE-COMMIT.md](PRE-COMMIT.md).
+```bash
+# Run checks on changed files only
+./run-ci-checks.sh
+
+# Run all checks regardless of what has changed
+./run-ci-checks.sh --all
+
+# Automatically fix common issues with formatting and linting
+./run-ci-checks.sh --auto-fix
+```
+
+These scripts provide several advantages:
+- They only run checks for the parts of the codebase that changed
+- They can automatically fix many common issues with the `--auto-fix` option
+- They match the checks that will run in CI, ensuring consistency
+
+### Removing Pre-commit Hooks
+
+If you have pre-commit hooks installed and want to remove them, run:
+
+```bash
+./scripts/remove-pre-commit.sh
+```
+
+For more details about the previous pre-commit configuration, see [PRE-COMMIT.md](PRE-COMMIT.md).
 
 ## Pull Request Process
 
 1. Fork the repository and create a new branch for your feature or bugfix.
-2. Ensure your code follows the style guidelines (enforced by pre-commit hooks).
+2. Ensure your code follows the style guidelines (verified with the CI check scripts).
 3. Make sure all tests pass.
 4. Update any relevant documentation.
 5. Submit a pull request with a clear description of the changes.
@@ -46,7 +64,7 @@ Before submitting a pull request, please ensure:
 - [ ] The code builds without errors or warnings
 - [ ] Tests have been added or updated to cover your changes
 - [ ] All existing tests pass
-- [ ] The pre-commit hooks pass
+- [ ] The CI check scripts pass (`./run-ci-checks.sh`)
 - [ ] Documentation has been updated if necessary
 - [ ] The PR title clearly describes the change
 - [ ] The PR description explains why the change is necessary and how it works

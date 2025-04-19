@@ -29,7 +29,7 @@ import {
   AlertTitle,
   AlertDescription,
 } from '@chakra-ui/react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import {
   FiChevronDown,
   FiRefreshCw,
@@ -68,8 +68,13 @@ const DetailPanel: React.FC<DetailPanelProps> = ({ title, children }) => (
 /**
  * IntegrationDetail component to view and manage an integration.
  */
-const IntegrationDetail: React.FC = () => {
-  const { integrationId } = useParams<{ integrationId: string }>()
+interface IntegrationDetailProps {
+  integrationId: string
+}
+
+const IntegrationDetail: React.FC<IntegrationDetailProps> = ({
+  integrationId,
+}) => {
   const navigate = useNavigate()
   const toast = useToast()
   const cardBg = useColorModeValue('white', 'gray.800')
@@ -192,7 +197,7 @@ const IntegrationDetail: React.FC = () => {
 
   // Handler for toggling integration status
   const handleToggleStatus = async () => {
-    if (!currentIntegration) return
+    if (!currentIntegration || !integrationId) return
 
     const newStatus =
       currentIntegration.status === IntegrationStatus.ACTIVE
