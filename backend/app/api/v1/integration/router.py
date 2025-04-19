@@ -12,6 +12,7 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.api.v1.integration.schemas import (
     IntegrationCreate,
@@ -252,7 +253,7 @@ async def create_integration(
             detail="You don't have permission to create integrations for this team",
         )
 
-    # Create the integration
+    # Create or update the integration
     new_integration = await IntegrationService.create_integration(
         db=db,
         team_id=integration.team_id,
@@ -267,7 +268,23 @@ async def create_integration(
     # Commit the transaction
     await db.commit()
 
-    return prepare_integration_response(new_integration)
+    # Reload the integration with all relationships to prevent MissingGreenlet errors
+    # when preparing the response
+    stmt = (
+        select(Integration)
+        .where(Integration.id == new_integration.id)
+        .options(
+            selectinload(Integration.owner_team),
+            selectinload(Integration.credentials),
+            selectinload(Integration.shared_with),
+            selectinload(Integration.resources),
+            selectinload(Integration.events),
+        )
+    )
+    result = await db.execute(stmt)
+    loaded_integration = result.scalar_one_or_none() or new_integration
+
+    return prepare_integration_response(loaded_integration)
 
 
 @router.post("/slack", response_model=IntegrationResponse)
@@ -310,10 +327,9 @@ async def create_slack_integration(
         if not client_id or not client_secret:
             raise ValueError("Slack client ID and client secret are required")
 
-        # Create the integration using the OAuth flow
-        # This will handle both new integrations and updates to existing ones
+        # Use the OAuth flow handler to create or update the integration
         integration_result, workspace_info = (
-            await SlackIntegrationService.create_from_oauth(
+            await SlackIntegrationService.handle_oauth_flow(
                 db=db,
                 team_id=integration.team_id,
                 user_id=current_user["id"],
