@@ -4,9 +4,12 @@ API endpoints for integration management.
 
 import logging
 import uuid
+from datetime import datetime
 from typing import Dict, List, Optional
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
+from fastapi.encoders import jsonable_encoder
+from fastapi.responses import JSONResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -65,11 +68,20 @@ def prepare_integration_response(integration) -> IntegrationResponse:
     Handles the field mappings and makes sure all required fields are present.
     """
     # Create the owner_team object
-    owner_team = TeamInfo(
-        id=integration.owner_team.id,
-        name=integration.owner_team.name,
-        slug=integration.owner_team.slug,
-    )
+    # Make sure owner_team is loaded to prevent MissingGreenlet errors in async context
+    if hasattr(integration, "owner_team") and integration.owner_team is not None:
+        owner_team = TeamInfo(
+            id=integration.owner_team.id,
+            name=integration.owner_team.name,
+            slug=integration.owner_team.slug,
+        )
+    else:
+        # Fall back to just using owner_team_id if the relationship isn't loaded
+        owner_team = TeamInfo(
+            id=integration.owner_team_id,
+            name="Unknown Team",  # Default name if relationship not loaded
+            slug="unknown",  # Default slug if relationship not loaded
+        )
 
     # Create the created_by object - this was previously missing
     created_by = UserInfo(id=integration.created_by_user_id)
@@ -83,49 +95,64 @@ def prepare_integration_response(integration) -> IntegrationResponse:
 
     # Convert credentials to the proper format
     credentials_list = []
-    if integration.credentials:
+    if hasattr(integration, "credentials") and integration.credentials:
         for credential in integration.credentials:
-            credentials_list.append({
-                "id": credential.id,
-                "credential_type": credential.credential_type,
-                "expires_at": credential.expires_at,
-                "scopes": credential.scopes,
-                "created_at": credential.created_at,
-                "updated_at": credential.updated_at,
-            })
-    
+            credentials_list.append(
+                {
+                    "id": credential.id,
+                    "credential_type": credential.credential_type,
+                    "expires_at": credential.expires_at,
+                    "scopes": credential.scopes,
+                    "created_at": credential.created_at,
+                    "updated_at": credential.updated_at,
+                }
+            )
+
     # Convert resources to the proper format
     resource_list = []
-    if integration.resources:
-        resource_list = [convert_resource_to_response(resource) for resource in integration.resources]
-    
+    if hasattr(integration, "resources") and integration.resources:
+        resource_list = [
+            convert_resource_to_response(resource) for resource in integration.resources
+        ]
+
     # Convert shared_with to the proper format
     shares_list = []
-    if integration.shared_with:
+    if hasattr(integration, "shared_with") and integration.shared_with:
         for share in integration.shared_with:
             # Create the team info object for this share
-            team_info = TeamInfo(
-                id=share.team.id if share.team else share.team_id,
-                name=share.team.name if share.team else "Unknown Team",
-                slug=share.team.slug if share.team else "unknown",
-            )
-            
+            # Check if team relationship is loaded
+            if hasattr(share, "team") and share.team:
+                team_info = TeamInfo(
+                    id=share.team.id,
+                    name=share.team.name,
+                    slug=share.team.slug,
+                )
+            else:
+                # Fall back to just the team_id if relationship isn't loaded
+                team_info = TeamInfo(
+                    id=share.team_id,
+                    name="Unknown Team",
+                    slug="unknown",
+                )
+
             # Create the shared_by user info
             shared_by = UserInfo(id=share.shared_by_user_id)
-            
-            shares_list.append({
-                "id": share.id,
-                "integration_id": share.integration_id,
-                "team_id": share.team_id,
-                "share_level": share.share_level.value,
-                "status": share.status,
-                "revoked_at": share.revoked_at,
-                "shared_by": shared_by,
-                "team": team_info,
-                "created_at": share.created_at,
-                "updated_at": share.updated_at,
-            })
-    
+
+            shares_list.append(
+                {
+                    "id": share.id,
+                    "integration_id": share.integration_id,
+                    "team_id": share.team_id,
+                    "share_level": share.share_level.value,
+                    "status": share.status,
+                    "revoked_at": share.revoked_at,
+                    "shared_by": shared_by,
+                    "team": team_info,
+                    "created_at": share.created_at,
+                    "updated_at": share.updated_at,
+                }
+            )
+
     # Create the response object with all required fields
     response = IntegrationResponse(
         id=integration.id,
@@ -233,6 +260,8 @@ async def create_integration(
         name=integration.name,
         service_type=IntegrationType(integration.service_type.value),
         description=integration.description,
+        workspace_id=integration.workspace_id,
+        metadata=integration.metadata,
     )
 
     # Commit the transaction
@@ -241,16 +270,19 @@ async def create_integration(
     return prepare_integration_response(new_integration)
 
 
-@router.post(
-    "/slack", response_model=IntegrationResponse, status_code=status.HTTP_201_CREATED
-)
+@router.post("/slack", response_model=IntegrationResponse)
 async def create_slack_integration(
     integration: SlackIntegrationCreate,
     db: AsyncSession = Depends(get_async_db),
     current_user: Dict = Depends(get_current_user),
 ):
     """
-    Create a new Slack integration via OAuth.
+    Create or update a Slack integration via OAuth.
+
+    This endpoint handles both new integrations and reconnection of existing
+    integrations based on the workspace ID from the OAuth flow. If an integration
+    for the same Slack workspace already exists for this team, it will be updated
+    instead of creating a duplicate.
 
     Args:
         integration: Slack integration data including OAuth code
@@ -258,7 +290,7 @@ async def create_slack_integration(
         current_user: Current authenticated user
 
     Returns:
-        Newly created integration
+        Created or updated integration
     """
     # Verify the user has permission to create integrations for this team
     if not await has_team_permission(
@@ -279,32 +311,57 @@ async def create_slack_integration(
             raise ValueError("Slack client ID and client secret are required")
 
         # Create the integration using the OAuth flow
-        new_integration, _ = await SlackIntegrationService.create_from_oauth(
-            db=db,
-            team_id=integration.team_id,
-            user_id=current_user["id"],
-            auth_code=integration.code,
-            redirect_uri=integration.redirect_uri,
-            client_id=client_id,
-            client_secret=client_secret,
-            name=integration.name,
-            description=integration.description,
+        # This will handle both new integrations and updates to existing ones
+        integration_result, workspace_info = (
+            await SlackIntegrationService.create_from_oauth(
+                db=db,
+                team_id=integration.team_id,
+                user_id=current_user["id"],
+                auth_code=integration.code,
+                redirect_uri=integration.redirect_uri,
+                client_id=client_id,
+                client_secret=client_secret,
+                name=integration.name,
+                description=integration.description,
+            )
+        )
+
+        # Determine if this was a new integration or an update to an existing one
+        # We'll use this to set the appropriate status code
+        is_new = not integration_result.created_at or (
+            integration_result.created_at
+            and (datetime.utcnow() - integration_result.created_at).total_seconds() < 60
         )
 
         # Commit the transaction
         await db.commit()
 
-        return prepare_integration_response(new_integration)
+        # Prepare the response with the integration data
+        response_data = prepare_integration_response(integration_result)
+
+        # Convert to dict to allow adding fields not in the model
+        response_dict = response_data.dict()
+
+        # Add a flag to indicate if this was an update to an existing integration
+        response_dict["updated"] = not is_new
+
+        # Set the correct status code
+        status_code = status.HTTP_201_CREATED if is_new else status.HTTP_200_OK
+        return JSONResponse(
+            content=jsonable_encoder(response_dict), status_code=status_code
+        )
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
         )
     except Exception as e:
-        logger.error(f"Error creating Slack integration: {str(e)}", exc_info=True)
+        logger.error(
+            f"Error creating/updating Slack integration: {str(e)}", exc_info=True
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An error occurred while creating the integration",
+            detail="An error occurred while processing the integration",
         )
 
 

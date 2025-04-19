@@ -12,6 +12,7 @@ import {
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import env from '../../config/env'
 import useAuth from '../../context/useAuth'
+import { IntegrationType } from '../../lib/integrationService'
 
 /**
  * Component to handle the Slack OAuth callback.
@@ -19,10 +20,11 @@ import useAuth from '../../context/useAuth'
 const OAuthCallback: React.FC = () => {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
-  const [status, setStatus] = useState<'loading' | 'success' | 'error'>(
-    'loading'
-  )
+  const [status, setStatus] = useState<
+    'loading' | 'success' | 'error' | 'reconnected'
+  >('loading')
   const [errorMessage, setErrorMessage] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
   // Use a ref to track if we've already processed the code
   const hasProcessedCode = useRef<boolean>(false)
   // Get auth context with teamContext and loading state
@@ -91,6 +93,10 @@ const OAuthCallback: React.FC = () => {
           sessionStorage.getItem('slack_integration_name') || 'Slack Workspace'
         const storedTeamId = sessionStorage.getItem('slack_team_id')
 
+        // Check if this is a reconnection flow by looking for integration_id in session storage
+        const integrationId = sessionStorage.getItem('slack_integration_id')
+        const isReconnection = Boolean(integrationId)
+
         if (!clientId || !clientSecret) {
           throw new Error('Missing credentials. Please try connecting again.')
         }
@@ -113,13 +119,15 @@ const OAuthCallback: React.FC = () => {
             name: integrationName,
             has_client_id: Boolean(clientId),
             has_client_secret: Boolean(clientSecret),
+            is_reconnection: isReconnection,
+            integration_id: integrationId || 'not provided',
           })
         }
 
         // Try using the direct OAuth callback endpoint instead of the integration endpoint
         if (isDevEnvironment) {
           console.debug(
-            'Using direct OAuth callback endpoint instead of integration endpoint'
+            `Using ${isReconnection ? 'reconnection' : 'direct OAuth'} callback endpoint`
           )
         }
 
@@ -129,6 +137,11 @@ const OAuthCallback: React.FC = () => {
         url.searchParams.append('client_id', clientId)
         url.searchParams.append('client_secret', clientSecret)
         url.searchParams.append('redirect_from_frontend', 'true')
+
+        // Add integration ID if this is a reconnection flow
+        if (isReconnection && integrationId) {
+          url.searchParams.append('integration_id', integrationId)
+        }
 
         // Make direct request to the OAuth callback endpoint
         const response = await fetch(url.toString(), {
@@ -158,13 +171,24 @@ const OAuthCallback: React.FC = () => {
           )
         }
 
+        // Check if this was a reconnection/update or a new connection
+        const wasReconnected =
+          sessionStorage.getItem('slack_integration_id') || result.updated
+
         // Clear sensitive data from session storage
         sessionStorage.removeItem('slack_client_id')
         sessionStorage.removeItem('slack_client_secret')
         sessionStorage.removeItem('slack_integration_name')
         sessionStorage.removeItem('slack_team_id')
+        sessionStorage.removeItem('slack_integration_id')
 
-        setStatus('success')
+        if (wasReconnected) {
+          setStatus('reconnected')
+          setSuccessMessage('Slack workspace reconnected successfully!')
+        } else {
+          setStatus('success')
+          setSuccessMessage('Slack workspace connected successfully!')
+        }
 
         // Now manually create the integration with the team ID
         try {
@@ -174,14 +198,66 @@ const OAuthCallback: React.FC = () => {
             )
           }
 
-          // Call the backend API to link the workplace to the team
-          // This step is specific to your application's needs
-          // You may need to implement this endpoint in your backend
+          // Import the integration service
+          const integrationService = (
+            await import('../../lib/integrationService')
+          ).default
 
-          // For now, just navigate to integrations list after a short delay
-          setTimeout(() => {
-            navigate('/dashboard/integrations')
-          }, 2000)
+          // Check if we received the access token from the OAuth response
+          if (
+            !result.access_token ||
+            !result.workspace_id ||
+            !result.workspace_name
+          ) {
+            console.error('Missing required data from OAuth response:', result)
+            throw new Error(
+              'Incomplete data from OAuth callback. Cannot create integration.'
+            )
+          }
+
+          // Use the direct integration method without a second OAuth code exchange
+          const integrationData = {
+            name: integrationName || result.workspace_name,
+            service_type: IntegrationType.SLACK,
+            team_id: teamId,
+            description: `Slack workspace: ${result.workspace_name}`,
+            // Set workspace_id directly from the Slack workspace ID
+            workspace_id: result.workspace_id,
+            metadata: {
+              slack_id: result.workspace_id, // Keep for backward compatibility
+              domain: result.workspace_domain,
+              name: result.workspace_name,
+              bot_user_id: result.bot_user_id,
+              scope: result.scope,
+              access_token: result.access_token,
+            },
+          }
+
+          console.log('Creating integration with data:', {
+            ...integrationData,
+            metadata: {
+              ...integrationData.metadata,
+              access_token: 'REDACTED',
+            },
+          })
+
+          // Create the integration directly without OAuth
+          const integrationResult =
+            await integrationService.createIntegration(integrationData)
+
+          if (integrationService.isApiError(integrationResult)) {
+            console.error('Error creating integration:', integrationResult)
+            throw new Error(
+              integrationResult.message || 'Failed to create integration'
+            )
+          } else {
+            console.log('Integration created successfully:', integrationResult)
+
+            // Navigate to integrations list after a short delay
+            setTimeout(() => {
+              navigate('/dashboard/integrations')
+            }, 1000)
+          }
         } catch (linkError) {
           console.error('Error linking workspace to team:', linkError)
           // Still consider it a success since the OAuth part worked
@@ -331,13 +407,17 @@ const OAuthCallback: React.FC = () => {
           </>
         )}
 
-        {status === 'success' && (
+        {(status === 'success' || status === 'reconnected') && (
           <>
             <Alert status="success" borderRadius="md">
               <AlertIcon />
-              Workspace successfully connected!
+              {status === 'reconnected'
+                ? 'Workspace successfully reconnected!'
+                : 'Workspace successfully connected!'}
             </Alert>
-            <Text>Redirecting to your integrations...</Text>
+            <Text>
+              {successMessage || 'Redirecting to your integrations...'}
+            </Text>
           </>
         )}
 

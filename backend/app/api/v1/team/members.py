@@ -10,7 +10,12 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.v1.team.schemas import TeamMemberCreate, TeamMemberInvite, TeamMemberResponse, TeamMemberUpdate
+from app.api.v1.team.schemas import (
+    TeamMemberCreate,
+    TeamMemberInvite,
+    TeamMemberResponse,
+    TeamMemberUpdate,
+)
 from app.core.auth import get_current_user
 from app.db.session import get_async_db
 

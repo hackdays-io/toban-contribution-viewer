@@ -187,6 +187,7 @@ class IntegrationService:
         name: str,
         service_type: IntegrationType,
         description: Optional[str] = None,
+        workspace_id: Optional[str] = None,
         metadata: Optional[Dict] = None,
         credential_data: Optional[Dict] = None,
     ) -> Integration:
@@ -200,6 +201,7 @@ class IntegrationService:
             name: Name of the integration
             service_type: Type of service (Slack, GitHub, etc.)
             description: Optional description
+            workspace_id: Optional external workspace identifier for uniqueness constraints
             metadata: Service-specific metadata
             credential_data: Optional credential data
 
@@ -214,6 +216,7 @@ class IntegrationService:
             service_type=service_type,
             status=IntegrationStatus.ACTIVE,
             integration_metadata=metadata or {},
+            workspace_id=workspace_id,
             owner_team_id=team_id,
             created_by_user_id=user_id,
             last_used_at=datetime.utcnow(),
@@ -248,7 +251,24 @@ class IntegrationService:
         )
         db.add(event)
 
-        return integration
+        # Eagerly load the owner_team to prevent MissingGreenlet errors
+        # when the relationship is accessed in an async context
+        stmt = (
+            select(Integration).where(Integration.id == integration.id)
+            # No need to filter by status here since we just created this integration
+            .options(
+                selectinload(Integration.owner_team),
+                selectinload(Integration.credentials),
+                selectinload(Integration.shared_with),
+                selectinload(Integration.resources),
+                selectinload(Integration.events),
+            )
+        )
+        result = await db.execute(stmt)
+        integration_with_relations = result.scalar_one_or_none()
+
+        # Return the integration with all relationships loaded
+        return integration_with_relations or integration
 
     @staticmethod
     async def update_integration(
