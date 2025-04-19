@@ -164,6 +164,35 @@ const OAuthCallback: React.FC = () => {
 
         const result = await response.json()
 
+        // Debug log to see the full result structure
+        if (isDevEnvironment) {
+          console.debug('OAuth callback result:', {
+            status: result.status,
+            message: result.message,
+            updated: result.updated,
+            already_exists: result.already_exists,
+            existing_integration: result.existing_integration,
+            integration_id: result.integration_id,
+            workspace_id: result.workspace_id,
+            workspace_name: result.workspace_name,
+            has_access_token: Boolean(result.access_token),
+            other_fields: Object.keys(result).filter(
+              (key) =>
+                ![
+                  'status',
+                  'message',
+                  'updated',
+                  'already_exists',
+                  'existing_integration',
+                  'integration_id',
+                  'workspace_id',
+                  'workspace_name',
+                  'access_token',
+                ].includes(key)
+            ),
+          })
+        }
+
         // Check if the OAuth result indicates an error
         if (result.status !== 'success') {
           throw new Error(
@@ -173,7 +202,26 @@ const OAuthCallback: React.FC = () => {
 
         // Check if this was a reconnection/update or a new connection
         const wasReconnected =
-          sessionStorage.getItem('slack_integration_id') || result.updated
+          Boolean(sessionStorage.getItem('slack_integration_id')) ||
+          Boolean(result.updated) ||
+          Boolean(result.already_exists) ||
+          Boolean(result.existing_integration)
+
+        // Debug log for reconnection detection
+        if (isDevEnvironment) {
+          console.debug('Reconnection detection:', {
+            from_session_storage: Boolean(
+              sessionStorage.getItem('slack_integration_id')
+            ),
+            from_result_updated: Boolean(result.updated),
+            from_result_exists: Boolean(result.already_exists),
+            from_result_existing_integration: Boolean(
+              result.existing_integration
+            ),
+            from_result_integration_id: Boolean(result.integration_id),
+            final_wasReconnected: wasReconnected,
+          })
+        }
 
         // Clear sensitive data from session storage
         sessionStorage.removeItem('slack_client_id')
@@ -184,7 +232,9 @@ const OAuthCallback: React.FC = () => {
 
         if (wasReconnected) {
           setStatus('reconnected')
-          setSuccessMessage('Slack workspace reconnected successfully!')
+          setSuccessMessage(
+            'Reconnect to the integration: There is an integration already, the credential is updated.'
+          )
         } else {
           setStatus('success')
           setSuccessMessage('Slack workspace connected successfully!')
@@ -253,9 +303,25 @@ const OAuthCallback: React.FC = () => {
           } else {
             console.log('Integration created successfully:', integrationResult)
 
-            // Navigate to integrations list after a short delay
+            // Navigate after a short delay
             setTimeout(() => {
-              navigate('/dashboard/integrations')
+              if (wasReconnected) {
+                // If we detected this was a reconnection, navigate to the integration detail page
+                // Use the integration ID from the API response if available, otherwise use the result from createIntegration
+                const targetId =
+                  result.integration_id ||
+                  result.existing_integration?.id ||
+                  integrationResult.id
+                if (targetId) {
+                  navigate(`/dashboard/integrations/${targetId}`)
+                } else {
+                  // Fallback to list if we couldn't get an ID
+                  navigate('/dashboard/integrations')
+                }
+              } else {
+                // For new integrations, navigate to the integrations list
+                navigate('/dashboard/integrations')
+              }
             }, 1000)
           }
         } catch (linkError) {
