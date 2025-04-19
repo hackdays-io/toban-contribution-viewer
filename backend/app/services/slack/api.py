@@ -89,6 +89,15 @@ class SlackApiClient:
         if headers:
             request_headers.update(headers)
 
+        # Filter out None values and convert booleans to strings for URL encoding
+        if params:
+            # Filter out None values and convert booleans to strings
+            params = {
+                k: ("true" if v is True else "false" if v is False else v) 
+                for k, v in params.items() 
+                if v is not None
+            }
+            
         # Build full URL
         url = f"{self.base_url}/{path}"
 
@@ -356,14 +365,18 @@ class SlackApiClient:
         page_limit = min(limit, 200)  # Each page request limit
 
         while len(all_users) < limit:
+            # Remove None values and convert boolean values to strings to avoid URL encoding errors
+            params = {
+                "limit": page_limit,
+                "include_locale": "true" if include_locale else "false"  # Convert bool to string
+            }
+            if cursor:
+                params["cursor"] = cursor
+            
             response = await self._make_request(
                 "GET",
                 "users.list",
-                params={
-                    "limit": page_limit,
-                    "cursor": cursor if cursor else None,
-                    "include_locale": include_locale,
-                },
+                params=params,
             )
 
             users = response.get("members", [])
@@ -401,10 +414,8 @@ class SlackApiClient:
         params = {
             "types": types,
             "limit": limit,
+            "exclude_archived": "true" if exclude_archived else "false"
         }
-
-        if exclude_archived:
-            params["exclude_archived"] = "true"
 
         if cursor:
             params["cursor"] = cursor
