@@ -181,7 +181,10 @@ class IntegrationService:
 
     @staticmethod
     async def find_integration_by_workspace_id(
-        db: AsyncSession, team_id: uuid.UUID, workspace_id: str, service_type: IntegrationType
+        db: AsyncSession,
+        team_id: uuid.UUID,
+        workspace_id: str,
+        service_type: IntegrationType,
     ) -> Optional[Integration]:
         """
         Find an existing integration by team, workspace ID, and service type.
@@ -222,7 +225,10 @@ class IntegrationService:
             metadata = integration.integration_metadata or {}
             # Check for service-specific IDs in metadata
             service_id_key = f"{service_type.value.lower()}_id"
-            if metadata.get(service_id_key) == workspace_id or metadata.get("slack_id") == workspace_id:
+            if (
+                metadata.get(service_id_key) == workspace_id
+                or metadata.get("slack_id") == workspace_id
+            ):
                 # Update the workspace_id field for future queries
                 integration.workspace_id = workspace_id
                 return integration
@@ -276,7 +282,8 @@ class IntegrationService:
             result = await db.execute(
                 select(IntegrationCredential).where(
                     IntegrationCredential.integration_id == integration.id,
-                    IntegrationCredential.credential_type == credential_data.get("credential_type"),
+                    IntegrationCredential.credential_type
+                    == credential_data.get("credential_type"),
                 )
             )
             credential = result.scalar_one_or_none()
@@ -327,7 +334,7 @@ class IntegrationService:
             },
         )
         db.add(event)
-        
+
         # Add an updated flag to indicate this was an existing integration that was updated
         # We need to add this to the SQLAlchemy model's __dict__ since it's not a regular column
         # This will be available when the object is returned but won't be stored in the database
@@ -350,7 +357,7 @@ class IntegrationService:
         """
         Create or update an integration with uniqueness constraint handling.
 
-        If an integration with the same team_id, workspace_id, and service_type 
+        If an integration with the same team_id, workspace_id, and service_type
         already exists, it will be updated instead of creating a new one.
 
         Args:
@@ -369,10 +376,12 @@ class IntegrationService:
         """
         # If workspace_id is provided, check for existing integration
         if workspace_id:
-            existing_integration = await IntegrationService.find_integration_by_workspace_id(
-                db, team_id, workspace_id, service_type
+            existing_integration = (
+                await IntegrationService.find_integration_by_workspace_id(
+                    db, team_id, workspace_id, service_type
+                )
             )
-            
+
             if existing_integration:
                 # Update existing integration
                 logger.info(
@@ -388,7 +397,7 @@ class IntegrationService:
                     metadata=metadata,
                     credential_data=credential_data,
                 )
-        
+
         # Create a new integration if none exists or workspace_id is not provided
         integration = Integration(
             id=uuid.uuid4(),
@@ -420,7 +429,7 @@ class IntegrationService:
 
         # Mark as a new integration (not updated)
         integration.__dict__["updated"] = False
-        
+
         # Record creation event
         event = IntegrationEvent(
             id=uuid.uuid4(),

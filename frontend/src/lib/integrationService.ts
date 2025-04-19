@@ -446,7 +446,10 @@ class IntegrationService {
         ok: response.ok,
         status: response.status,
         statusText: response.statusText,
-        headers: response.headers instanceof Headers ? Object.fromEntries([...response.headers.entries()]) : '(headers not available)',
+        headers:
+          response.headers instanceof Headers
+            ? Object.fromEntries([...response.headers.entries()])
+            : '(headers not available)',
       })
 
       // Try to parse the response as JSON

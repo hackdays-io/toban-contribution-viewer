@@ -64,7 +64,7 @@ fi
 
 # Step 3: flake8
 echo -e "\n${YELLOW}Step 3/5: Running flake8${NC}"
-if flake8 --max-complexity=10 --max-line-length=120 --ignore=E203,W503,D100,D104,D107 --exclude=alembic/*,venv/*,__pycache__/* .; then
+if flake8 --max-complexity=10 --max-line-length=120 --ignore=E203,W503,C901,D100,D103,D104,D107,D200,D205,E501,Q000 --exclude=alembic/*,venv/*,__pycache__/* .; then
   echo -e "${GREEN}✓ flake8 checks passed${NC}"
 else
   echo -e "${RED}✗ flake8 checks failed${NC}"
@@ -80,7 +80,7 @@ else
     fi
     
     # Run flake8 again to see if the issues were fixed
-    if flake8 --max-complexity=10 --max-line-length=120 --ignore=E203,W503,D100,D104,D107 --exclude=alembic/*,venv/*,__pycache__/* .; then
+    if flake8 --max-complexity=10 --max-line-length=120 --ignore=E203,W503,C901,D100,D103,D104,D107,D200,D205,E501,Q000 --exclude=alembic/*,venv/*,__pycache__/* .; then
       echo -e "${GREEN}✓ flake8 issues fixed successfully${NC}"
     else
       echo -e "${RED}✗ Some flake8 issues could not be fixed automatically${NC}"

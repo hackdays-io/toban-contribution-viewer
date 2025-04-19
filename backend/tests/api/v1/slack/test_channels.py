@@ -69,7 +69,6 @@ def mock_channels():
 def test_list_channels(mock_workspace, mock_channels):
     """Test listing channels for a workspace."""
     # This test is skipped because the channels API is not yet implemented
-    pass
 
 
 @pytest.mark.skip(
@@ -80,11 +79,9 @@ def test_sync_channels():
     # This test is skipped because it requires complex mocking of FastAPI's BackgroundTasks
     # and the CI environment has issues with socket connections
     # The functionality has been manually verified to work correctly
-    pass
 
 
 @pytest.mark.skip(reason="Channels API not yet implemented")
 def test_select_channels_for_analysis(mock_workspace, mock_channels):
     """Test selecting channels for analysis."""
     # This test is skipped because the channels API is not yet implemented
-    pass

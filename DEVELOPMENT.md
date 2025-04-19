@@ -172,6 +172,8 @@ npm run test:watch
 
 This project uses local CI check scripts to ensure code quality. These scripts mirror the GitHub Actions workflows and help catch issues early in the development process.
 
+> **Note**: We are transitioning away from pre-commit hooks to these CI check scripts. If you still have pre-commit hooks installed, you can remove them by running the `scripts/remove-pre-commit.sh` script.
+
 #### Available Scripts
 
 - **Root Script**: Run checks based on changes
@@ -187,6 +189,11 @@ This project uses local CI check scripts to ensure code quality. These scripts m
 - **Backend-only Checks**:
   ```bash
   ./backend/scripts/run-ci-checks.sh
+  ```
+
+- **Remove Pre-commit Hooks**:
+  ```bash
+  ./scripts/remove-pre-commit.sh
   ```
 
 #### Using the Scripts

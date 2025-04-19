@@ -1,6 +1,13 @@
-# Pre-commit Hook Configuration
+# Pre-commit Hook Configuration (Legacy)
 
-This project uses pre-commit hooks to ensure code quality and consistency. These hooks run automatically before each commit to catch issues early.
+> **Important Update**: We are transitioning away from pre-commit hooks to CI check scripts. This document is kept for reference, but the recommended approach is now to use the CI check scripts described in [DEVELOPMENT.md](DEVELOPMENT.md).
+>
+> To remove pre-commit hooks and switch to CI check scripts, run:
+> ```bash
+> ./scripts/remove-pre-commit.sh
+> ```
+
+This project previously used pre-commit hooks to ensure code quality and consistency. These hooks ran automatically before each commit to catch issues early.
 
 ## Setup
 
