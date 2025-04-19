@@ -34,6 +34,7 @@ from app.db.session import get_async_db
 from app.models.integration import (
     AccessLevel,
     CredentialType,
+    Integration,
     IntegrationCredential,
     IntegrationType,
     ServiceResource,
