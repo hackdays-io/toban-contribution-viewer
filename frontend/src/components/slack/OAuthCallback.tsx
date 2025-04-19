@@ -357,11 +357,21 @@ const OAuthCallback: React.FC = () => {
             )
           } else {
             console.log('Integration created successfully:', integrationResult)
+            
+            // Check if this was a reconnection from the integration API response
+            // Set wasReconnected based on both the OAuth response and the Integration API response
+            const isUpdatedIntegration = Boolean(integrationResult.updated);
+            
+            if (isUpdatedIntegration && !wasReconnected) {
+              console.log('Integration API indicates this was a reconnection')
+              setStatus('reconnected')
+              setSuccessMessage('Workspace reconnected successfully! Existing integration was updated.')
+            }
 
             // Navigate after a short delay
             setTimeout(() => {
-              if (wasReconnected) {
-                // If we detected this was a reconnection, navigate to the integration detail page
+              // If we detected this was a reconnection (from either source), navigate to the integration detail page
+              if (wasReconnected || isUpdatedIntegration) {
                 // Use the integration ID from the API response if available, otherwise use the result from createIntegration
                 const targetId =
                   result.integration_id ||
