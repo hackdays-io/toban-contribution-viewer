@@ -8,6 +8,30 @@ YELLOW='\033[0;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
+# Parse arguments
+RUN_ALL=false
+AUTO_FIX=false
+
+for arg in "$@"; do
+  case $arg in
+    --all)
+      RUN_ALL=true
+      ;;
+    --auto-fix)
+      AUTO_FIX=true
+      ;;
+    --help)
+      echo "Usage: $0 [options]"
+      echo ""
+      echo "Options:"
+      echo "  --all       Run all checks regardless of changed files"
+      echo "  --auto-fix  Automatically fix issues when possible"
+      echo "  --help      Show this help message"
+      exit 0
+      ;;
+  esac
+done
+
 echo -e "${BLUE}Running CI Checks for Both Frontend and Backend${NC}"
 echo "================================================"
 
@@ -23,12 +47,18 @@ fi
 FRONTEND_CHANGED=$(git diff --name-only HEAD main | grep -E '^frontend/' || true)
 BACKEND_CHANGED=$(git diff --name-only HEAD main | grep -E '^backend/' || true)
 
+AUTO_FIX_ARG=""
+if [ "$AUTO_FIX" = true ]; then
+  AUTO_FIX_ARG="--auto-fix"
+  echo -e "${YELLOW}Auto-fix mode enabled. Will attempt to fix issues automatically.${NC}"
+fi
+
 # Run frontend checks if frontend files changed or --all flag is passed
-if [ -n "$FRONTEND_CHANGED" ] || [ "$1" == "--all" ]; then
+if [ -n "$FRONTEND_CHANGED" ] || [ "$RUN_ALL" = true ]; then
   echo -e "\n${BLUE}Frontend files changed, running frontend checks...${NC}"
   pushd frontend > /dev/null
   chmod +x scripts/run-ci-checks.sh
-  scripts/run-ci-checks.sh
+  scripts/run-ci-checks.sh $AUTO_FIX_ARG
   FRONTEND_RESULT=$?
   popd > /dev/null
   if [ $FRONTEND_RESULT -ne 0 ]; then
@@ -41,11 +71,11 @@ else
 fi
 
 # Run backend checks if backend files changed or --all flag is passed
-if [ -n "$BACKEND_CHANGED" ] || [ "$1" == "--all" ]; then
+if [ -n "$BACKEND_CHANGED" ] || [ "$RUN_ALL" = true ]; then
   echo -e "\n${BLUE}Backend files changed, running backend checks...${NC}"
   pushd backend > /dev/null
   chmod +x scripts/run-ci-checks.sh
-  scripts/run-ci-checks.sh
+  scripts/run-ci-checks.sh $AUTO_FIX_ARG
   BACKEND_RESULT=$?
   popd > /dev/null
   if [ $BACKEND_RESULT -ne 0 ]; then

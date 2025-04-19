@@ -7,8 +7,31 @@ GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 NC='\033[0m' # No Color
 
+# Parse arguments
+AUTO_FIX=false
+
+for arg in "$@"; do
+  case $arg in
+    --auto-fix)
+      AUTO_FIX=true
+      ;;
+    --help)
+      echo "Usage: $0 [options]"
+      echo ""
+      echo "Options:"
+      echo "  --auto-fix  Automatically fix issues when possible"
+      echo "  --help      Show this help message"
+      exit 0
+      ;;
+  esac
+done
+
 echo -e "${YELLOW}Running Backend CI Checks${NC}"
 echo "================================================"
+
+if [ "$AUTO_FIX" = true ]; then
+  echo -e "${YELLOW}Auto-fix mode enabled. Will attempt to fix issues automatically.${NC}"
+fi
 
 # Check if we're in a Python virtual environment
 if [ -z "$VIRTUAL_ENV" ]; then
@@ -25,7 +48,7 @@ else
   echo -e "${RED}✗ Black formatting checks failed${NC}"
   echo -e "${YELLOW}Applying Black formatting...${NC}"
   black .
-  echo -e "${YELLOW}Please check the changes and commit them if needed${NC}"
+  echo -e "${YELLOW}Formatting issues fixed. Please check the changes and commit them.${NC}"
 fi
 
 # Step 2: isort
@@ -36,7 +59,7 @@ else
   echo -e "${RED}✗ isort checks failed${NC}"
   echo -e "${YELLOW}Applying isort changes...${NC}"
   isort --profile black .
-  echo -e "${YELLOW}Please check the changes and commit them if needed${NC}"
+  echo -e "${YELLOW}Import sorting issues fixed. Please check the changes and commit them.${NC}"
 fi
 
 # Step 3: flake8
@@ -45,8 +68,29 @@ if flake8 --max-complexity=10 --max-line-length=120 --ignore=E203,W503,D100,D104
   echo -e "${GREEN}✓ flake8 checks passed${NC}"
 else
   echo -e "${RED}✗ flake8 checks failed${NC}"
-  echo -e "${YELLOW}Please fix the flake8 issues and try again${NC}"
-  exit 1
+  if [ "$AUTO_FIX" = true ]; then
+    echo -e "${YELLOW}Attempting to fix simple flake8 issues...${NC}"
+    
+    # Handle unused imports using autoflake
+    if command -v autoflake &> /dev/null; then
+      echo -e "${YELLOW}Running autoflake to remove unused imports...${NC}"
+      autoflake --remove-all-unused-imports --recursive --in-place --exclude=venv,alembic,__pycache__ .
+    else
+      echo -e "${YELLOW}autoflake not found. Install with 'pip install autoflake' for better auto-fixing.${NC}"
+    fi
+    
+    # Run flake8 again to see if the issues were fixed
+    if flake8 --max-complexity=10 --max-line-length=120 --ignore=E203,W503,D100,D104,D107 --exclude=alembic/*,venv/*,__pycache__/* .; then
+      echo -e "${GREEN}✓ flake8 issues fixed successfully${NC}"
+    else
+      echo -e "${RED}✗ Some flake8 issues could not be fixed automatically${NC}"
+      echo -e "${YELLOW}Please fix the remaining issues manually and try again${NC}"
+      exit 1
+    fi
+  else
+    echo -e "${YELLOW}Please fix the flake8 issues and try again, or run with --auto-fix${NC}"
+    exit 1
+  fi
 fi
 
 # Step 4: mypy
@@ -55,7 +99,8 @@ if mypy --ignore-missing-imports --disallow-untyped-defs --disallow-incomplete-d
   echo -e "${GREEN}✓ mypy checks passed${NC}"
 else
   echo -e "${RED}✗ mypy checks failed${NC}"
-  echo -e "${YELLOW}Please fix the type errors and try again${NC}"
+  echo -e "${YELLOW}Type errors cannot be fixed automatically.${NC}"
+  echo -e "${YELLOW}Please fix the type errors manually and try again.${NC}"
   exit 1
 fi
 
@@ -65,6 +110,7 @@ if pytest --cov=app --cov-report=term-missing; then
   echo -e "${GREEN}✓ Tests passed${NC}"
 else
   echo -e "${RED}✗ Tests failed${NC}"
+  echo -e "${YELLOW}Test failures cannot be fixed automatically.${NC}"
   exit 1
 fi
 
