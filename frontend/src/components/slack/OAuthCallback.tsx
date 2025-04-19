@@ -351,7 +351,7 @@ const OAuthCallback: React.FC = () => {
             setTimeout(() => {
               if (integrationResult.updated) {
                 // If we detected this was a reconnection, navigate to the integration detail page
-                // Use the integration ID from the API response if available, otherwise use the result from createIntegration
+                // Use the integration ID from the API response if available, otherwise use the result from createIntegration.
                 const targetId =
                   result.integration_id ||
                   result.existing_integration?.id ||
