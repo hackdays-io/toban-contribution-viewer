@@ -284,8 +284,20 @@ async def create_integration(
     )
     result = await db.execute(stmt)
     loaded_integration = result.scalar_one_or_none() or new_integration
-
-    return prepare_integration_response(loaded_integration)
+    
+    # Check if the updated flag exists and preserve it when reloading
+    was_updated = getattr(new_integration, "updated", False)
+    if was_updated:
+        loaded_integration.__dict__["updated"] = was_updated
+    
+    # Convert to response format
+    response_data = prepare_integration_response(loaded_integration)
+    
+    # Add the updated flag to the response
+    response_dict = response_data.dict()
+    response_dict["updated"] = was_updated
+    
+    return JSONResponse(content=jsonable_encoder(response_dict), status_code=status.HTTP_201_CREATED)
 
 
 @router.post("/slack", response_model=IntegrationResponse)
@@ -379,79 +391,6 @@ async def create_slack_integration(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An error occurred while processing the integration",
-        )
-
-
-@router.post(
-    "/slack/manual",
-    response_model=IntegrationResponse,
-    status_code=status.HTTP_201_CREATED,
-)
-async def create_manual_slack_integration(
-    integration: ManualSlackIntegrationCreate,
-    db: AsyncSession = Depends(get_async_db),
-    current_user: Dict = Depends(get_current_user),
-):
-    """
-    Create a new Slack integration with manually provided credentials.
-
-    This endpoint allows creating a Slack integration without going through the OAuth flow,
-    by directly providing the client ID, client secret, and bot token.
-
-    Args:
-        integration: Slack integration data including credentials
-        db: Database session
-        current_user: Current authenticated user
-
-    Returns:
-        Newly created integration
-    """
-    # Verify the user has permission to create integrations for this team
-    if not await has_team_permission(
-        db, integration.team_id, current_user["id"], "admin"
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You don't have permission to create integrations for this team",
-        )
-
-    try:
-        # Create the integration with the manual credentials
-        new_integration = await IntegrationService.create_integration(
-            db=db,
-            team_id=integration.team_id,
-            user_id=current_user["id"],
-            name=integration.name,
-            service_type=IntegrationType.SLACK,
-            description=integration.description,
-            metadata={
-                "manually_configured": True,
-                "client_id": integration.credentials.client_id,
-            },
-            credential_data={
-                "credential_type": CredentialType.OAUTH_TOKEN,
-                "encrypted_value": integration.credentials.bot_token,  # This should be encrypted in production
-                "client_id": integration.credentials.client_id,
-                "client_secret": integration.credentials.client_secret,  # This should be encrypted in production
-            },
-        )
-
-        # Commit the transaction
-        await db.commit()
-
-        return prepare_integration_response(new_integration)
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e),
-        )
-    except Exception as e:
-        logger.error(
-            f"Error creating manual Slack integration: {str(e)}", exc_info=True
-        )
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An error occurred while creating the integration",
         )
 
 

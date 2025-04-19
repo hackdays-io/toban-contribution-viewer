@@ -78,6 +78,7 @@ export interface Integration {
   status: IntegrationStatus
   metadata?: Record<string, unknown>
   last_used_at?: string
+  updated?: boolean  // Flag indicating if this was an update to an existing integration
 
   owner_team: TeamInfo
   created_by: UserInfo
