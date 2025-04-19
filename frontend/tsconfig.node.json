@@ -3,7 +3,7 @@
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo",
     "target": "ES2022",
     "lib": ["ES2023"],
-    "module": "ESNext",
+    "module": "Node16",
     "skipLibCheck": true,
     "moduleResolution": "node16",
     "allowImportingTsExtensions": true,
