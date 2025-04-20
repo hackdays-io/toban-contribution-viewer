@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -556,7 +556,7 @@ async def get_integration_resources(
             workspace = workspace_result.scalars().first()
 
             if workspace:
-                # Get all selected channels for this workspace
+                # Try to get selected channels from SlackChannel table
                 selected_channels_result = await db.execute(
                     select(SlackChannel.slack_id).where(
                         SlackChannel.workspace_id == workspace.id,
@@ -567,8 +567,78 @@ async def get_integration_resources(
                     row[0] for row in selected_channels_result.fetchall()
                 ]
                 logger.info(
-                    f"Found {len(selected_channels)} selected channels in workspace {workspace.id}"
+                    f"Found {len(selected_channels)} selected channels in SlackChannel table for workspace {workspace.id}"
                 )
+
+                # If we don't have any selected channels, check if we need to populate data
+                if not selected_channels:
+                    # Count how many SlackChannel records exist for this workspace
+                    channel_count_result = await db.execute(
+                        select(func.count()).where(
+                            SlackChannel.workspace_id == workspace.id
+                        )
+                    )
+                    channel_count = channel_count_result.scalar_one_or_none() or 0
+
+                    if channel_count == 0:
+                        logger.info(
+                            f"No SlackChannel records found for workspace {workspace.id}. Creating from ServiceResource..."
+                        )
+
+                        # Get all resources for this integration
+                        channel_resources_result = await db.execute(
+                            select(ServiceResource).where(
+                                ServiceResource.integration_id == integration_id,
+                                ServiceResource.resource_type
+                                == ResourceType.SLACK_CHANNEL,
+                            )
+                        )
+                        channel_resources = channel_resources_result.scalars().all()
+
+                        # Create SlackChannel records from ServiceResource records
+                        created_count = 0
+                        for resource in channel_resources:
+                            metadata = resource.resource_metadata or {}
+
+                            # Create a new SlackChannel record
+                            new_channel = SlackChannel(
+                                id=resource.id,  # Use the same ID as the resource
+                                workspace_id=workspace.id,
+                                slack_id=resource.external_id,
+                                name=resource.name.lstrip(
+                                    "#"
+                                ),  # Remove the # prefix if present
+                                type=metadata.get("type", "public"),
+                                is_selected_for_analysis=False,  # Default to not selected
+                                is_supported=True,
+                                purpose=metadata.get("purpose", ""),
+                                topic=metadata.get("topic", ""),
+                                member_count=metadata.get("member_count", 0),
+                                is_archived=metadata.get("is_archived", False),
+                                last_sync_at=resource.last_synced_at,
+                            )
+                            db.add(new_channel)
+                            created_count += 1
+
+                        logger.info(
+                            f"Created {created_count} new SlackChannel records from resources"
+                        )
+                        if created_count > 0:
+                            await db.commit()
+
+                            # Re-query for selected channels just in case any were already selected
+                            selected_channels_result = await db.execute(
+                                select(SlackChannel.slack_id).where(
+                                    SlackChannel.workspace_id == workspace.id,
+                                    SlackChannel.is_selected_for_analysis.is_(True),
+                                )
+                            )
+                            selected_channels = [
+                                row[0] for row in selected_channels_result.fetchall()
+                            ]
+                            logger.info(
+                                f"After migration, found {len(selected_channels)} selected channels in workspace {workspace.id}"
+                            )
 
                 # Update the response resources with selection status
                 for resource in response_resources:
@@ -991,6 +1061,56 @@ async def select_channels_for_integration(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Slack workspace with ID {slack_workspace_id} not found",
             )
+
+        # First, check if we need to create SlackChannel records for these channels
+        # Get the resources for each channel ID
+        missing_channel_count = 0
+        for channel_id in selection.channel_ids:
+            # Check if a SlackChannel record exists for this channel
+            slack_channel_result = await db.execute(
+                select(SlackChannel).where(SlackChannel.id == channel_id)
+            )
+            slack_channel = slack_channel_result.scalars().first()
+
+            if not slack_channel:
+                # Channel doesn't exist in SlackChannel table, check if it exists in ServiceResource
+                resource_result = await db.execute(
+                    select(ServiceResource).where(
+                        ServiceResource.id == channel_id,
+                        ServiceResource.resource_type == ResourceType.SLACK_CHANNEL,
+                    )
+                )
+                resource = resource_result.scalars().first()
+
+                if resource:
+                    # Create a new SlackChannel record from the ServiceResource
+                    logger.info(
+                        f"Creating new SlackChannel record for {resource.name} (id={resource.id})"
+                    )
+                    metadata = resource.resource_metadata or {}
+
+                    new_channel = SlackChannel(
+                        id=resource.id,  # Use the same ID as the resource
+                        workspace_id=workspace.id,
+                        slack_id=resource.external_id,
+                        name=resource.name.lstrip(
+                            "#"
+                        ),  # Remove the # prefix if present
+                        type=metadata.get("type", "public"),
+                        is_selected_for_analysis=selection.for_analysis,
+                        is_supported=True,
+                        purpose=metadata.get("purpose", ""),
+                        topic=metadata.get("topic", ""),
+                        member_count=metadata.get("member_count", 0),
+                        is_archived=metadata.get("is_archived", False),
+                        last_sync_at=resource.last_synced_at,
+                    )
+                    db.add(new_channel)
+                    missing_channel_count += 1
+
+        if missing_channel_count > 0:
+            logger.info(f"Created {missing_channel_count} new SlackChannel records")
+            await db.commit()
 
         # Call the channel selection service with the database UUID
         result = await ChannelService.select_channels_for_analysis(
