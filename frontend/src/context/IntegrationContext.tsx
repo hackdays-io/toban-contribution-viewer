@@ -12,6 +12,7 @@ import integrationService, {
   IntegrationShareRequest,
   ResourceType,
   ResourceAccessRequest,
+  AnalysisOptions,
 } from '../lib/integrationService'
 
 /**
@@ -25,14 +26,19 @@ interface IntegrationState {
   // Currently selected integration
   currentIntegration: Integration | null
   currentResources: ServiceResource[]
-
+  
+  // Channel selection state for analysis
+  selectedChannels: ServiceResource[]
+  
   // Loading states
   loading: boolean
   loadingResources: boolean
+  loadingChannelSelection: boolean
 
   // Error states
   error: ApiError | Error | null
   resourceError: ApiError | Error | null
+  channelSelectionError: ApiError | Error | null
 }
 
 /**
@@ -80,9 +86,29 @@ interface IntegrationContextType extends IntegrationState {
 
   // Selection
   selectIntegration: (integrationId: string | null) => void
+  
+  // Channel selection operations
+  fetchSelectedChannels: (integrationId: string) => Promise<void>
+  selectChannelsForAnalysis: (
+    integrationId: string, 
+    channelIds: string[]
+  ) => Promise<boolean>
+  deselectChannelsForAnalysis: (
+    integrationId: string, 
+    channelIds: string[]
+  ) => Promise<boolean>
+  isChannelSelectedForAnalysis: (channelId: string) => boolean
+  
+  // Analysis operations
+  analyzeChannel: (
+    integrationId: string,
+    channelId: string,
+    options: AnalysisOptions
+  ) => Promise<{status: string; analysis_id: string} | null>
 
   // Error handling
   clearErrors: () => void
+  clearChannelSelectionError: () => void
 }
 
 // Create context with default values
@@ -92,10 +118,13 @@ const IntegrationContext = createContext<IntegrationContextType>({
   teamIntegrations: {},
   currentIntegration: null,
   currentResources: [],
+  selectedChannels: [],
   loading: false,
   loadingResources: false,
+  loadingChannelSelection: false,
   error: null,
   resourceError: null,
+  channelSelectionError: null,
 
   // CRUD operations
   fetchIntegrations: async () => {},
@@ -115,9 +144,19 @@ const IntegrationContext = createContext<IntegrationContextType>({
 
   // Selection
   selectIntegration: () => {},
+  
+  // Channel selection operations
+  fetchSelectedChannels: async () => {},
+  selectChannelsForAnalysis: async () => false,
+  deselectChannelsForAnalysis: async () => false,
+  isChannelSelectedForAnalysis: () => false,
+  
+  // Analysis operations
+  analyzeChannel: async () => null,
 
   // Error handling
   clearErrors: () => {},
+  clearChannelSelectionError: () => {},
 })
 
 /**
@@ -132,10 +171,13 @@ export const IntegrationProvider: React.FC<{ children: React.ReactNode }> = ({
     teamIntegrations: {},
     currentIntegration: null,
     currentResources: [],
+    selectedChannels: [],
     loading: false,
     loadingResources: false,
+    loadingChannelSelection: false,
     error: null,
     resourceError: null,
+    channelSelectionError: null,
   })
 
   /**
@@ -146,6 +188,17 @@ export const IntegrationProvider: React.FC<{ children: React.ReactNode }> = ({
       ...prev,
       error: null,
       resourceError: null,
+      channelSelectionError: null,
+    }))
+  }, [])
+  
+  /**
+   * Clear only channel selection error state
+   */
+  const clearChannelSelectionError = useCallback(() => {
+    setState((prev) => ({
+      ...prev,
+      channelSelectionError: null,
     }))
   }, [])
 
@@ -822,6 +875,214 @@ export const IntegrationProvider: React.FC<{ children: React.ReactNode }> = ({
   )
 
   /**
+   * Fetch selected channels for analysis
+   */
+  const fetchSelectedChannels = useCallback(
+    async (integrationId: string) => {
+      if (!session || !integrationId) return
+
+      setState((prev) => ({
+        ...prev,
+        loadingChannelSelection: true,
+        channelSelectionError: null,
+      }))
+
+      try {
+        const result = await integrationService.getSelectedChannels(integrationId)
+
+        if (integrationService.isApiError(result)) {
+          setState((prev) => ({
+            ...prev,
+            loadingChannelSelection: false,
+            channelSelectionError: result,
+          }))
+          return
+        }
+
+        setState((prev) => ({
+          ...prev,
+          selectedChannels: result,
+          loadingChannelSelection: false,
+        }))
+      } catch (error) {
+        setState((prev) => ({
+          ...prev,
+          loadingChannelSelection: false,
+          channelSelectionError:
+            error instanceof Error
+              ? error
+              : new Error('Failed to fetch selected channels'),
+        }))
+      }
+    },
+    [session]
+  )
+
+  /**
+   * Select channels for analysis
+   */
+  const selectChannelsForAnalysis = useCallback(
+    async (integrationId: string, channelIds: string[]): Promise<boolean> => {
+      if (!session || !integrationId || !channelIds.length) return false
+
+      setState((prev) => ({
+        ...prev,
+        loadingChannelSelection: true,
+        channelSelectionError: null,
+      }))
+
+      try {
+        const result = await integrationService.selectChannelsForAnalysis(
+          integrationId,
+          {
+            channel_ids: channelIds,
+            for_analysis: true,
+          }
+        )
+
+        if (integrationService.isApiError(result)) {
+          setState((prev) => ({
+            ...prev,
+            loadingChannelSelection: false,
+            channelSelectionError: result,
+          }))
+          return false
+        }
+
+        // After successful selection, refresh the selected channels list
+        await fetchSelectedChannels(integrationId)
+        return true
+      } catch (error) {
+        setState((prev) => ({
+          ...prev,
+          loadingChannelSelection: false,
+          channelSelectionError:
+            error instanceof Error
+              ? error
+              : new Error('Failed to select channels for analysis'),
+        }))
+        return false
+      }
+    },
+    [session, fetchSelectedChannels]
+  )
+
+  /**
+   * Deselect channels for analysis
+   */
+  const deselectChannelsForAnalysis = useCallback(
+    async (integrationId: string, channelIds: string[]): Promise<boolean> => {
+      if (!session || !integrationId || !channelIds.length) return false
+
+      setState((prev) => ({
+        ...prev,
+        loadingChannelSelection: true,
+        channelSelectionError: null,
+      }))
+
+      try {
+        const result = await integrationService.selectChannelsForAnalysis(
+          integrationId,
+          {
+            channel_ids: channelIds,
+            for_analysis: false, // false to deselect
+          }
+        )
+
+        if (integrationService.isApiError(result)) {
+          setState((prev) => ({
+            ...prev,
+            loadingChannelSelection: false,
+            channelSelectionError: result,
+          }))
+          return false
+        }
+
+        // After successful deselection, refresh the selected channels list
+        await fetchSelectedChannels(integrationId)
+        return true
+      } catch (error) {
+        setState((prev) => ({
+          ...prev,
+          loadingChannelSelection: false,
+          channelSelectionError:
+            error instanceof Error
+              ? error
+              : new Error('Failed to deselect channels for analysis'),
+        }))
+        return false
+      }
+    },
+    [session, fetchSelectedChannels]
+  )
+
+  /**
+   * Check if a channel is selected for analysis
+   */
+  const isChannelSelectedForAnalysis = useCallback(
+    (channelId: string): boolean => {
+      return state.selectedChannels.some(
+        (channel) => channel.id === channelId || channel.external_id === channelId
+      )
+    },
+    [state.selectedChannels]
+  )
+
+  /**
+   * Run analysis on a channel
+   */
+  const analyzeChannel = useCallback(
+    async (
+      integrationId: string,
+      channelId: string,
+      options: AnalysisOptions
+    ): Promise<{ status: string; analysis_id: string } | null> => {
+      if (!session || !integrationId || !channelId) return null
+
+      setState((prev) => ({
+        ...prev,
+        loadingChannelSelection: true,
+        channelSelectionError: null,
+      }))
+
+      try {
+        const result = await integrationService.analyzeChannel(
+          integrationId,
+          channelId,
+          options
+        )
+
+        if (integrationService.isApiError(result)) {
+          setState((prev) => ({
+            ...prev,
+            loadingChannelSelection: false,
+            channelSelectionError: result,
+          }))
+          return null
+        }
+
+        setState((prev) => ({
+          ...prev,
+          loadingChannelSelection: false,
+        }))
+
+        return result
+      } catch (error) {
+        setState((prev) => ({
+          ...prev,
+          loadingChannelSelection: false,
+          channelSelectionError:
+            error instanceof Error
+              ? error
+              : new Error('Failed to analyze channel'),
+        }))
+        return null
+      }
+    },
+    [session]
+  )
+
+  /**
    * Load integrations when the current team changes
    */
   useEffect(() => {
@@ -844,7 +1105,13 @@ export const IntegrationProvider: React.FC<{ children: React.ReactNode }> = ({
     revokeShare,
     grantResourceAccess,
     selectIntegration,
+    fetchSelectedChannels,
+    selectChannelsForAnalysis,
+    deselectChannelsForAnalysis,
+    isChannelSelectedForAnalysis,
+    analyzeChannel,
     clearErrors,
+    clearChannelSelectionError,
   }
 
   return (

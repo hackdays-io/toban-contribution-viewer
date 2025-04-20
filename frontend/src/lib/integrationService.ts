@@ -169,6 +169,18 @@ export interface ResourceAccessRequest {
   access_level: AccessLevel
 }
 
+export interface ChannelSelectionRequest {
+  channel_ids: string[]
+  for_analysis: boolean
+}
+
+export interface AnalysisOptions {
+  start_date?: string
+  end_date?: string
+  include_threads?: boolean
+  include_reactions?: boolean
+}
+
 // Error types
 export interface ApiError {
   status: number
@@ -597,6 +609,95 @@ class IntegrationService {
       return await response.json()
     } catch (error) {
       return this.handleError(error, 'Failed to grant resource access')
+    }
+  }
+  
+  /**
+   * Select channels for analysis
+   * Marks specified channels as selected for analysis
+   */
+  async selectChannelsForAnalysis(
+    integrationId: string,
+    data: ChannelSelectionRequest
+  ): Promise<{ status: string; message: string } | ApiError> {
+    try {
+      const headers = await this.getAuthHeaders()
+      const response = await fetch(
+        `${this.apiUrl}/${integrationId}/resources/channels/select`,
+        {
+          method: 'POST',
+          headers,
+          credentials: 'include',
+          body: JSON.stringify(data),
+        }
+      )
+
+      if (!response.ok) {
+        throw response
+      }
+
+      return await response.json()
+    } catch (error) {
+      return this.handleError(error, 'Failed to select channels for analysis')
+    }
+  }
+
+  /**
+   * Get selected channels for analysis
+   * Returns a list of channels that are marked for analysis
+   */
+  async getSelectedChannels(
+    integrationId: string
+  ): Promise<ServiceResource[] | ApiError> {
+    try {
+      const headers = await this.getAuthHeaders()
+      const response = await fetch(
+        `${this.apiUrl}/${integrationId}/resources/channels/selected`,
+        {
+          method: 'GET',
+          headers,
+          credentials: 'include',
+        }
+      )
+
+      if (!response.ok) {
+        throw response
+      }
+
+      return await response.json()
+    } catch (error) {
+      return this.handleError(error, 'Failed to get selected channels')
+    }
+  }
+
+  /**
+   * Run analysis on a channel
+   * Initiates an analysis job for the specified channel
+   */
+  async analyzeChannel(
+    integrationId: string,
+    channelId: string,
+    options: AnalysisOptions
+  ): Promise<{ status: string; analysis_id: string } | ApiError> {
+    try {
+      const headers = await this.getAuthHeaders()
+      const response = await fetch(
+        `${this.apiUrl}/${integrationId}/resources/channels/${channelId}/analyze`,
+        {
+          method: 'POST',
+          headers,
+          credentials: 'include',
+          body: JSON.stringify(options),
+        }
+      )
+
+      if (!response.ok) {
+        throw response
+      }
+
+      return await response.json()
+    } catch (error) {
+      return this.handleError(error, 'Failed to analyze channel')
     }
   }
 
