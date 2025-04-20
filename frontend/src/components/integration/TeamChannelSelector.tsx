@@ -22,7 +22,7 @@ import {
   useToast
 } from '@chakra-ui/react';
 import { FiSearch, FiSettings, FiCheck, FiBarChart2 } from 'react-icons/fi';
-import { ServiceResource, ResourceType } from '../../lib/integrationService';
+import { ResourceType } from '../../lib/integrationService';
 import useIntegration from '../../context/useIntegration';
 
 interface TeamChannelSelectorProps {
@@ -43,7 +43,8 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({ integrationId
     deselectChannelsForAnalysis,
     loadingChannelSelection,
     channelSelectionError,
-    clearChannelSelectionError
+    clearChannelSelectionError,
+    fetchSelectedChannels
   } = useIntegration();
 
   // Local state
@@ -53,6 +54,7 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({ integrationId
   // UI colors
   const tableBg = useColorModeValue('white', 'gray.800');
   const tableHeaderBg = useColorModeValue('gray.50', 'gray.700');
+  const rowHoverBg = useColorModeValue('gray.50', 'gray.700');
   
   // Filter to only show Slack channels
   const channels = currentResources.filter(
@@ -69,36 +71,73 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({ integrationId
   // Load resources and selected channels when component mounts
   useEffect(() => {
     if (integrationId) {
-      fetchResources(integrationId, [ResourceType.SLACK_CHANNEL]);
+      // Fetch both resources and selected channels
+      const loadData = async () => {
+        try {
+          await fetchResources(integrationId, [ResourceType.SLACK_CHANNEL]);
+          await fetchSelectedChannels(integrationId);
+        } catch (err) {
+          console.error("Error loading channel data:", err);
+          toast({
+            title: 'Error loading channels',
+            description: err instanceof Error 
+              ? `Error: ${err.message}` 
+              : 'There was an error loading the channel selection data.',
+            status: 'error',
+            duration: 5000,
+            isClosable: true,
+          });
+        }
+      };
+      
+      loadData();
     }
-  }, [integrationId, fetchResources]);
+  }, [integrationId, fetchResources, fetchSelectedChannels, toast]);
   
   // Initialize selected channels from context
   useEffect(() => {
-    const newSelectedChannels = new Set<string>();
-    channels.forEach(channel => {
-      if (isChannelSelectedForAnalysis(channel.id)) {
-        newSelectedChannels.add(channel.id);
-      }
-    });
-    setSelectedChannels(newSelectedChannels);
+    if (channels.length > 0) {
+      setSelectedChannels(prev => {
+        const newSelectedChannels = new Set<string>();
+        channels.forEach(channel => {
+          if (isChannelSelectedForAnalysis(channel.id)) {
+            newSelectedChannels.add(channel.id);
+          }
+        });
+        return newSelectedChannels;
+      });
+    }
   }, [channels, isChannelSelectedForAnalysis]);
 
   // Handle checkbox change
   const handleSelectChannel = (channelId: string) => {
+    console.log('Handling select channel:', channelId);
+    
+    // Use a callback to ensure we're working with the latest state
     setSelectedChannels(prev => {
+      // Create a new Set to avoid mutation
       const newSelection = new Set(prev);
+      
+      // Toggle the selection
       if (newSelection.has(channelId)) {
+        console.log('Removing channel:', channelId);
         newSelection.delete(channelId);
       } else {
+        console.log('Adding channel:', channelId);
         newSelection.add(channelId);
       }
-      return newSelection;
+      
+      // Return the updated selection immediately
+      const updatedSelection = new Set(newSelection);
+      console.log('Updated selection:', Array.from(updatedSelection));
+      return updatedSelection;
     });
   };
 
   // Save selected channels to backend
   const handleSaveSelection = async () => {
+    console.log('Saving channel selection to backend...');
+    
     // Find channels to select (in local selection but not in context)
     const channelsToSelect: string[] = [];
     // Find channels to deselect (in context but not in local selection)
@@ -109,22 +148,41 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({ integrationId
       const isSelected = selectedChannels.has(channel.id);
       const wasSelected = isChannelSelectedForAnalysis(channel.id);
       
+      console.log(`Channel ${channel.name} (${channel.id}):`, { isSelected, wasSelected });
+      
       if (isSelected && !wasSelected) {
+        console.log(`Adding ${channel.name} to selection list`);
         channelsToSelect.push(channel.id);
       } else if (!isSelected && wasSelected) {
+        console.log(`Adding ${channel.name} to deselection list`);
         channelsToDeselect.push(channel.id);
       }
     });
     
+    console.log('Channels to select:', channelsToSelect);
+    console.log('Channels to deselect:', channelsToDeselect);
+    
     // Perform API operations
     let success = true;
     
+    // First handle selections
     if (channelsToSelect.length > 0) {
+      console.log('Selecting channels:', channelsToSelect);
       success = await selectChannelsForAnalysis(integrationId, channelsToSelect);
+      console.log('Selection result:', success);
     }
     
+    // Then handle deselections
     if (success && channelsToDeselect.length > 0) {
+      console.log('Deselecting channels:', channelsToDeselect);
       success = await deselectChannelsForAnalysis(integrationId, channelsToDeselect);
+      console.log('Deselection result:', success);
+    }
+    
+    // Refresh selected channels from backend after saving
+    if (success) {
+      console.log('Refreshing selected channels from backend...');
+      await fetchSelectedChannels(integrationId);
     }
     
     // Show success or error toast
@@ -186,12 +244,25 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({ integrationId
           </Thead>
           <Tbody>
             {filteredChannels.map((channel) => (
-              <Tr key={channel.id}>
-                <Td>
+              <Tr 
+                key={channel.id} 
+                onClick={() => {
+                  console.log('Row clicked, handling select for channel:', channel.id);
+                  handleSelectChannel(channel.id);
+                }}
+                cursor="pointer"
+                _hover={{ bg: rowHoverBg }}
+                bg={selectedChannels.has(channel.id) ? 'blue.50' : undefined}
+                data-selected={selectedChannels.has(channel.id)}
+              >
+                <Td onClick={(e) => e.stopPropagation()}>
                   <Checkbox
                     isChecked={selectedChannels.has(channel.id)}
-                    onChange={() => handleSelectChannel(channel.id)}
                     colorScheme="blue"
+                    id={`checkbox-${channel.id}`}
+                    onChange={() => handleSelectChannel(channel.id)}
+                    // Add key to force re-render when selection changes
+                    key={`checkbox-${channel.id}-${selectedChannels.has(channel.id)}`}
                   />
                 </Td>
                 <Td fontWeight="medium">
@@ -212,7 +283,7 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({ integrationId
                     ? new Date(channel.last_synced_at).toLocaleString()
                     : 'Never'}
                 </Td>
-                <Td>
+                <Td onClick={(e) => e.stopPropagation()}>
                   <HStack spacing={1}>
                     <IconButton
                       aria-label="Analyze channel"

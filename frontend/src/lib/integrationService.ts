@@ -622,13 +622,18 @@ class IntegrationService {
   ): Promise<{ status: string; message: string } | ApiError> {
     try {
       const headers = await this.getAuthHeaders()
+      
+      // Use the direct integration API endpoint
       const response = await fetch(
-        `${this.apiUrl}/${integrationId}/resources/channels/select`,
+        `${this.apiUrl}/${integrationId}/resources/channel-selection`,
         {
           method: 'POST',
           headers,
           credentials: 'include',
-          body: JSON.stringify(data),
+          body: JSON.stringify({
+            channel_ids: data.channel_ids,
+            for_analysis: data.for_analysis
+          }),
         }
       )
 
@@ -636,7 +641,15 @@ class IntegrationService {
         throw response
       }
 
-      return await response.json()
+      // After successful selection/deselection, refresh the resources
+      await this.getResources(integrationId, [ResourceType.SLACK_CHANNEL])
+
+      return {
+        status: 'success',
+        message: data.for_analysis 
+          ? 'Channels selected for analysis' 
+          : 'Channels deselected from analysis'
+      }
     } catch (error) {
       return this.handleError(error, 'Failed to select channels for analysis')
     }
@@ -650,22 +663,24 @@ class IntegrationService {
     integrationId: string
   ): Promise<ServiceResource[] | ApiError> {
     try {
-      const headers = await this.getAuthHeaders()
-      const response = await fetch(
-        `${this.apiUrl}/${integrationId}/resources/channels/selected`,
-        {
-          method: 'GET',
-          headers,
-          credentials: 'include',
-        }
-      )
-
-      if (!response.ok) {
-        throw response
+      // Get all channels from the resources endpoint
+      const resources = await this.getResources(integrationId, [ResourceType.SLACK_CHANNEL])
+      
+      if (this.isApiError(resources)) {
+        throw resources
       }
-
-      return await response.json()
+      
+      // Filter for channels with the is_selected_for_analysis flag
+      const selectedChannels = resources.filter(resource => 
+        resource.resource_type === ResourceType.SLACK_CHANNEL && 
+        resource.metadata?.is_selected_for_analysis === true
+      )
+      
+      console.log('Selected channels from resources:', selectedChannels);
+      
+      return selectedChannels
     } catch (error) {
+      console.error('Error getting selected channels:', error)
       return this.handleError(error, 'Failed to get selected channels')
     }
   }
