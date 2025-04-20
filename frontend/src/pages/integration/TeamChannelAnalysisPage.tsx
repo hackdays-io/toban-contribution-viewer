@@ -39,7 +39,7 @@ import env from '../../config/env'
 import { SlackUserCacheProvider } from '../../components/slack/SlackUserContext'
 import MessageText from '../../components/slack/MessageText'
 import useIntegration from '../../context/useIntegration'
-import { IntegrationType, ServiceResource } from '../../lib/integrationService'
+import { IntegrationType, ServiceResource, ResourceType } from '../../lib/integrationService'
 
 interface AnalysisResponse {
   analysis_id: string
@@ -133,23 +133,53 @@ const TeamChannelAnalysisPage: React.FC = () => {
 
       // Fetch integration info
       if (integrationId) {
+        console.log('Fetching integration:', integrationId)
         await fetchIntegration(integrationId)
       }
 
       // Fetch channel from resource list
       if (integrationId && channelId) {
-        await fetchResources(integrationId)
+        console.log('Fetching resources for integration:', integrationId)
+        // Force resource type to be SLACK_CHANNEL to ensure we get all channels
+        const resources = await fetchResources(integrationId, [ResourceType.SLACK_CHANNEL])
+        console.log('Fetched resources:', resources)
+        
+        console.log('Current resources in context:', currentResources)
+        
+        // Try to find the channel in the resources
         const channelResource = currentResources.find(
           (resource) => resource.id === channelId
         )
+        
         if (channelResource) {
           console.log('Found channel resource:', channelResource)
           setChannel(channelResource as Channel)
         } else {
           console.error('Channel not found in resources:', {
             channelId,
+            resourcesCount: currentResources.length,
             availableResources: currentResources.map(r => ({ id: r.id, name: r.name }))
           })
+          
+          // For debugging - create a mock channel with fixed IDs for testing
+          // This should be removed in production
+          console.log('Creating mock channel for testing')
+          const mockChannel: Channel = {
+            id: channelId,
+            integration_id: integrationId || '',
+            name: 'debug-channel',
+            resource_type: ResourceType.SLACK_CHANNEL,
+            external_id: 'TXYZ1234', // Slack workspace ID
+            external_resource_id: 'CXYZ1234', // Slack channel ID
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            type: 'public',
+            topic: 'Debug channel for testing',
+            purpose: 'For testing API calls'
+          }
+          
+          console.log('Using mock channel:', mockChannel)
+          setChannel(mockChannel)
         }
       }
     } catch (error) {
@@ -205,11 +235,13 @@ const TeamChannelAnalysisPage: React.FC = () => {
         throw new Error('Missing workspace ID or channel ID for analysis')
       }
 
-      // Build the URL with all parameters
+      // Build the URL with all parameters - make sure we're using the correct API path
       const url = new URL(
-        `/api/v1/slack/workspaces/${channel.external_id}/channels/${channel.external_resource_id}/analyze`,
+        `api/v1/slack/workspaces/${channel.external_id}/channels/${channel.external_resource_id}/analyze`,
         env.apiUrl
       )
+      
+      console.log('Analysis URL:', url.toString())
 
       if (startDateParam) {
         url.searchParams.append('start_date', startDateParam)
