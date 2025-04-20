@@ -188,6 +188,13 @@ class ResourceAccessCreate(ResourceAccessBase):
     """Schema for creating a new resource access grant."""
 
 
+class ChannelSelectionRequest(BaseModel):
+    """Schema for selecting channels for analysis."""
+
+    channel_ids: List[str]
+    for_analysis: bool = True
+
+
 # Schemas for API responses
 class TeamInfo(BaseModel):
     """Schema for team information in responses."""
@@ -213,6 +220,9 @@ class ServiceResourceResponse(ServiceResourceBase):
     last_synced_at: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
+    is_selected_for_analysis: Optional[bool] = (
+        None  # Added for channel selection support
+    )
 
 
 class IntegrationShareResponse(IntegrationShareBase):

@@ -40,6 +40,7 @@ import {
   IntegrationsPage,
   IntegrationDetailPage,
   IntegrationConnectPage,
+  TeamChannelSelectorPage,
 } from './pages/integration'
 
 // Profile Pages
@@ -251,6 +252,16 @@ function App() {
                   <ProtectedRoute>
                     <AppLayout>
                       <IntegrationConnectPage />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard/integrations/:integrationId/channels"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <TeamChannelSelectorPage />
                     </AppLayout>
                   </ProtectedRoute>
                 }

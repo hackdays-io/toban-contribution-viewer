@@ -5,6 +5,7 @@ Service for managing Slack channels.
 import asyncio
 import logging
 import time
+import uuid
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Set, Tuple
 
@@ -464,6 +465,7 @@ class ChannelService:
         workspace_id: str,
         channel_ids: List[str],
         install_bot: bool = True,
+        for_analysis: bool = True,
     ) -> Dict[str, Any]:
         """
         Select channels for analysis and optionally install the bot in channels where it's not already a member.
@@ -473,6 +475,7 @@ class ChannelService:
             workspace_id: UUID of the workspace
             channel_ids: List of channel UUIDs to select for analysis
             install_bot: Whether to attempt to install the bot in selected channels where it's not already a member
+            for_analysis: Whether to mark channels for analysis (True) or remove them from analysis (False)
 
         Returns:
             Dictionary with status information
@@ -499,25 +502,78 @@ class ChannelService:
             if install_bot:
                 api_client = SlackApiClient(workspace.access_token)
 
-            # First, unselect all channels
-            await db.execute(
-                update(SlackChannel)
-                .where(SlackChannel.workspace_id == workspace_id)
-                .values(is_selected_for_analysis=False)
-            )
+            # Unselect all channels if we are setting for_analysis=True 
+            # This is for backward compatibility with old behavior
+            if for_analysis:
+                # First, unselect all channels
+                await db.execute(
+                    update(SlackChannel)
+                    .where(SlackChannel.workspace_id == workspace_id)
+                    .values(is_selected_for_analysis=False)
+                )
 
-            # Then select the specified channels
+            # Then update the specified channels based on for_analysis flag
             if channel_ids:
+                # Log the channels we're trying to update
+                logger.info(f"Attempting to update channels with IDs: {channel_ids}")
+                logger.info(f"for_analysis={for_analysis}, workspace_id={workspace_id}")
+
+                # Convert string IDs to UUIDs if needed
+                uuid_channel_ids = []
+                for channel_id in channel_ids:
+                    try:
+                        # Try to convert to UUID if it's not already
+                        uuid_channel_id = uuid.UUID(channel_id)
+                        uuid_channel_ids.append(uuid_channel_id)
+                    except ValueError:
+                        logger.error(f"Invalid channel ID format: {channel_id}")
+
+                if not uuid_channel_ids:
+                    logger.warning("No valid channel IDs to update")
+                    return {
+                        "status": "warning",
+                        "message": "No valid channel IDs provided",
+                        "selected_count": 0,
+                        "selected_channels": [],
+                    }
+
+                # Execute the update with the UUID list
                 await db.execute(
                     update(SlackChannel)
                     .where(
                         SlackChannel.workspace_id == workspace_id,
-                        SlackChannel.id.in_(channel_ids),
+                        SlackChannel.id.in_(uuid_channel_ids),
                     )
-                    .values(is_selected_for_analysis=True)
+                    .values(is_selected_for_analysis=for_analysis)
                 )
 
-            # Get selected channels
+            # First, let's log all channels for this workspace to debug
+            all_channels_result = await db.execute(
+                select(SlackChannel).where(SlackChannel.workspace_id == workspace_id)
+            )
+            all_channels = all_channels_result.scalars().all()
+            logger.info(
+                f"Found {len(all_channels)} total channels for workspace_id={workspace_id}"
+            )
+
+            # For debugging, check if the specific channel exists
+            for channel in all_channels:
+                logger.info(
+                    f"Channel in DB: id={channel.id}, name={channel.name}, slack_id={channel.slack_id}"
+                )
+
+                # Check if any of the requested channel_ids match this channel
+                for channel_id in channel_ids:
+                    try:
+                        check_uuid = uuid.UUID(channel_id)
+                        if check_uuid == channel.id:
+                            logger.info(
+                                f"Found match for requested channel_id={channel_id} → DB channel={channel.id}, name={channel.name}"
+                            )
+                    except ValueError:
+                        pass
+
+            # Get selected channels after our update
             selected_count_result = await db.execute(
                 select(SlackChannel).where(
                     SlackChannel.workspace_id == workspace_id,
@@ -525,6 +581,9 @@ class ChannelService:
                 )
             )
             selected_channels = selected_count_result.scalars().all()
+            logger.info(
+                f"Found {len(selected_channels)} channels marked for analysis after update"
+            )
 
             # Install bot in selected channels if requested
             bot_installation_results = []
