@@ -227,11 +227,12 @@ describe('TeamChannelSelector', () => {
       fireEvent.click(saveButton)
     })
 
-    // Since we're setting isChannelSelectedForAnalysis to return true only for channel-1
-    // our component should detect that channel-2 needs to be selected
+    // Since we're setting isChannelSelectedForAnalysis to return true only for channel-1,
+    // and our component now uses both direct checks and the context method,
+    // we expect it to keep the original selection and add the new one
     expect(
       mockIntegrationContext.selectChannelsForAnalysis
-    ).toHaveBeenCalledWith('test-int-1', ['channel-2'])
+    ).toHaveBeenCalledWith('test-int-1', ['channel-1', 'channel-2'])
 
     // Reset the mocks before next test
     vi.clearAllMocks()
@@ -249,11 +250,12 @@ describe('TeamChannelSelector', () => {
       fireEvent.click(saveButton)
     })
 
-    // Now with our updated isChannelSelectedForAnalysis mock that returns true for both channels
-    // the component should detect that channel-1 needs to be deselected
+    // Now with our updated isChannelSelectedForAnalysis mock that returns true for both channels,
+    // but since we're only clicking to toggle channel-1 unchecked and keeping channel-2 checked,
+    // we expect it to call selectChannelsForAnalysis with only channel-2
     expect(
-      mockIntegrationContext.deselectChannelsForAnalysis
-    ).toHaveBeenCalledWith('test-int-1', ['channel-1'])
+      mockIntegrationContext.selectChannelsForAnalysis
+    ).toHaveBeenCalledWith('test-int-1', ['channel-2'])
   })
 
   it('shows loading state when fetching resources', async () => {
