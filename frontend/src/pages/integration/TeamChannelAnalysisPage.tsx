@@ -143,7 +143,13 @@ const TeamChannelAnalysisPage: React.FC = () => {
           (resource) => resource.id === channelId
         )
         if (channelResource) {
+          console.log('Found channel resource:', channelResource)
           setChannel(channelResource as Channel)
+        } else {
+          console.error('Channel not found in resources:', {
+            channelId,
+            availableResources: currentResources.map(r => ({ id: r.id, name: r.name }))
+          })
         }
       }
     } catch (error) {
@@ -183,9 +189,26 @@ const TeamChannelAnalysisPage: React.FC = () => {
       const startDateParam = startDate ? new Date(startDate).toISOString() : ''
       const endDateParam = endDate ? new Date(endDate).toISOString() : ''
 
+      // Check if we have the required IDs
+      if (!channel) {
+        console.error('Channel object is null or undefined')
+        throw new Error('Channel data is missing')
+      }
+
+      console.log('Channel data for analysis:', {
+        channel: channel,
+        externalId: channel.external_id,
+        externalResourceId: channel.external_resource_id
+      })
+
+      if (!channel.external_id || !channel.external_resource_id) {
+        throw new Error('Missing workspace ID or channel ID for analysis')
+      }
+
       // Build the URL with all parameters
       const url = new URL(
-        `${env.apiUrl}/api/v1/slack/workspaces/${channel?.external_id || ''}/channels/${channel?.external_resource_id || ''}/analyze`
+        `/api/v1/slack/workspaces/${channel.external_id}/channels/${channel.external_resource_id}/analyze`,
+        env.apiUrl
       )
 
       if (startDateParam) {
@@ -198,6 +221,8 @@ const TeamChannelAnalysisPage: React.FC = () => {
 
       url.searchParams.append('include_threads', includeThreads.toString())
       url.searchParams.append('include_reactions', includeReactions.toString())
+
+      console.log('Making analysis request to:', url.toString())
 
       // Make the API request
       const response = await fetch(url.toString(), {
