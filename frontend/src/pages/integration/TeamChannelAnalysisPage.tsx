@@ -100,10 +100,20 @@ const TeamChannelAnalysisPage: React.FC = () => {
     setEndDate(formatDateForInput(end))
   }, [])
 
-  // Fetch integration and channel info
+  // Fetch integration first to ensure it's loaded
   useEffect(() => {
-    if (integrationId && channelId) {
-      // Important: Don't try to fetch again if we already have a channel
+    if (integrationId) {
+      console.log('Loading integration:', integrationId)
+      fetchIntegration(integrationId)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [integrationId])
+  
+  // Once integration is loaded, fetch channel info
+  useEffect(() => {
+    if (integrationId && channelId && currentIntegration) {
+      console.log('Integration loaded, fetching channel:', currentIntegration.id)
+      // Only fetch if we don't already have the channel
       if (!channel) {
         fetchIntegrationAndChannel()
       }
@@ -112,39 +122,34 @@ const TeamChannelAnalysisPage: React.FC = () => {
   }, [integrationId, channelId, currentIntegration])
 
   /**
-   * Fetch integration and channel information.
+   * Fetch channel information only - integration must already be loaded.
    */
   const fetchIntegrationAndChannel = async () => {
     try {
       setIsChannelLoading(true)
-
-      // Fetch integration info first
-      if (!integrationId) {
-        throw new Error('Missing integration ID')
+      
+      // Verify we have the integration and channel IDs
+      if (!currentIntegration) {
+        console.log('Integration not loaded yet - skipping channel fetch')
+        return // Just return and wait for the next render when integration is loaded
       }
       
-      // Fetch integration if needed
-      if (!currentIntegration) {
-        await fetchIntegration(integrationId)
-      }
-      
-      // We need the integration to proceed
-      if (!currentIntegration) {
-        throw new Error('Failed to load integration data')
-      }
-
-      // Now fetch channel data
       if (!channelId) {
-        throw new Error('Missing channel ID')
+        console.error('Missing channel ID')
+        return
       }
+      
+      console.log('Fetching channel data using integration:', currentIntegration.id)
       
       // Get channel via the integration service
-      const channelData = await integrationService.getResource(integrationId, channelId)
+      const channelData = await integrationService.getResource(integrationId || '', channelId)
       
       // Check if the result is an API error
       if (integrationService.isApiError(channelData)) {
         throw new Error(`Failed to fetch channel: ${channelData.message}`)
       }
+      
+      console.log('Channel data retrieved successfully:', channelData.name)
       
       // Create enriched channel data with proper IDs for the API
       const enrichedChannel: Channel = {
@@ -163,7 +168,7 @@ const TeamChannelAnalysisPage: React.FC = () => {
       
       setChannel(enrichedChannel)
     } catch (error) {
-      console.error('Error fetching info:', error)
+      console.error('Error fetching channel:', error)
       toast({
         title: 'Error',
         description: error instanceof Error ? error.message : 'Failed to load channel information',
