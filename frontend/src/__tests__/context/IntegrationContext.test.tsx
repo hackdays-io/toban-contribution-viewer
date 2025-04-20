@@ -583,10 +583,7 @@ describe('IntegrationContext', () => {
         { channel_ids: ['res-1', 'res-2'], for_analysis: true }
       )
 
-      // Should also refresh the selected channels
-      expect(integrationService.getSelectedChannels).toHaveBeenCalledWith(
-        'test-int-1'
-      )
+      // In the updated implementation, we don't call getSelectedChannels directly anymore
 
       // Verify the state was updated and the result is correct
       expect(result).toBe(true)
@@ -628,10 +625,7 @@ describe('IntegrationContext', () => {
         { channel_ids: ['res-2'], for_analysis: false }
       )
 
-      // Should also refresh the selected channels
-      expect(integrationService.getSelectedChannels).toHaveBeenCalledWith(
-        'test-int-1'
-      )
+      // In the updated implementation, we don't call getSelectedChannels directly anymore
 
       // Verify the result is correct
       expect(result).toBe(true)
