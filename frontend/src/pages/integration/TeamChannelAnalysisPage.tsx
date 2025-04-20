@@ -185,7 +185,7 @@ const TeamChannelAnalysisPage: React.FC = () => {
 
       // Build the URL with all parameters
       const url = new URL(
-        `${env.apiUrl}/api/v1/integrations/${integrationId}/resources/${channelId}/analyze`
+        `${env.apiUrl}/api/v1/slack/workspaces/${channel?.external_id || ''}/channels/${channel?.external_resource_id || ''}/analyze`
       )
 
       if (startDateParam) {
