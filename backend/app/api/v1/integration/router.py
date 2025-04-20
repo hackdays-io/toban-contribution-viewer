@@ -39,6 +39,7 @@ from app.models.integration import (
     ServiceResource,
     ShareLevel,
 )
+from app.models.slack import SlackWorkspace
 from app.services.integration.base import IntegrationService
 from app.services.integration.slack import SlackIntegrationService
 from app.services.slack.channels import ChannelService
@@ -919,19 +920,31 @@ async def select_channels_for_integration(
             )
 
         # Get the workspace ID from the integration metadata
-        metadata = integration.integration_metadata or {}
-        workspace_id = metadata.get("slack_id")
+        metadata: Dict[str, Any] = integration.integration_metadata or {}
+        slack_workspace_id = metadata.get("slack_id")
 
-        if not workspace_id:
+        if not slack_workspace_id:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Integration has no associated Slack workspace",
             )
 
-        # Call the channel selection service
+        # Get the workspace from the database using slack_id
+        workspace_result = await db.execute(
+            select(SlackWorkspace).where(SlackWorkspace.slack_id == slack_workspace_id)
+        )
+        workspace = workspace_result.scalars().first()
+
+        if not workspace:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Slack workspace with ID {slack_workspace_id} not found",
+            )
+
+        # Call the channel selection service with the database UUID
         result = await ChannelService.select_channels_for_analysis(
             db=db,
-            workspace_id=workspace_id,
+            workspace_id=str(workspace.id),  # Use the UUID from the database
             channel_ids=selection.channel_ids,
             install_bot=True,  # Default to installing bot
             for_analysis=selection.for_analysis,  # Use the frontend's flag
@@ -944,7 +957,8 @@ async def select_channels_for_integration(
             "status": "success",
             "message": f"Channels {'selected for' if selection.for_analysis else 'removed from'} analysis",
             "integration_id": str(integration_id),
-            "workspace_id": workspace_id,
+            "workspace_id": str(workspace.id),
+            "slack_workspace_id": slack_workspace_id,
             "result": result,
         }
     except HTTPException:
