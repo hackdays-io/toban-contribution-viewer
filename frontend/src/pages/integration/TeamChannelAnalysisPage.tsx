@@ -40,28 +40,10 @@ import { SlackUserCacheProvider } from '../../components/slack/SlackUserContext'
 import MessageText from '../../components/slack/MessageText'
 import useIntegration from '../../context/useIntegration'
 import { IntegrationType, ServiceResource, ResourceType } from '../../lib/integrationService'
+import slackApiClient, { SlackAnalysisResult } from '../../lib/slackApiClient'
 
-interface AnalysisResponse {
-  analysis_id: string
-  channel_id: string
-  channel_name: string
-  period: {
-    start: string
-    end: string
-  }
-  stats: {
-    message_count: number
-    participant_count: number
-    thread_count: number
-    reaction_count: number
-  }
-  channel_summary: string
-  topic_analysis: string
-  contributor_insights: string
-  key_highlights: string
-  model_used: string
-  generated_at: string
-}
+// Use the SlackAnalysisResult interface directly from slackApiClient.ts
+type AnalysisResponse = SlackAnalysisResult
 
 interface Channel extends ServiceResource {
   type: string
@@ -343,43 +325,38 @@ const TeamChannelAnalysisPage: React.FC = () => {
       
       console.log('Final IDs for analysis:', { workspaceId, channelSlackId })
 
-      // Build the URL with all parameters - make sure we're using the correct API path
-      // No leading slash to avoid URL issues
-      const path = `slack/workspaces/${workspaceId}/channels/${channelSlackId}/analyze`
-      const url = new URL(path, env.apiUrl)
+      // Prepare analysis options for the API client
+      const options = {
+        start_date: startDateParam,
+        end_date: endDateParam,
+        include_threads: includeThreads,
+        include_reactions: includeReactions,
+        // Add optional analysis type parameter for the API
+        analysis_type: 'contribution'
+      }
+
+      console.log('Preparing to run analysis with options:', options)
+
+      // Use the slack API client to run analysis with all options
+      const result = await slackApiClient.analyzeChannel(
+        workspaceId,
+        channelSlackId,
+        'contribution', // analysis_type
+        {
+          start_date: startDateParam,
+          end_date: endDateParam,
+          include_threads: includeThreads,
+          include_reactions: includeReactions
+        }
+      )
       
-      console.log('Analysis URL:', url.toString())
-
-      if (startDateParam) {
-        url.searchParams.append('start_date', startDateParam)
+      // Check if the result is an error
+      if (slackApiClient.isApiError(result)) {
+        throw new Error(`Analysis request failed: ${result.message}`)
       }
 
-      if (endDateParam) {
-        url.searchParams.append('end_date', endDateParam)
-      }
-
-      url.searchParams.append('include_threads', includeThreads.toString())
-      url.searchParams.append('include_reactions', includeReactions.toString())
-
-      console.log('Making analysis request to:', url.toString())
-
-      // Make the API request
-      const response = await fetch(url.toString(), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-
-      if (!response.ok) {
-        const errorText = await response.text()
-        throw new Error(
-          `Analysis request failed: ${response.status} ${response.statusText} - ${errorText}`
-        )
-      }
-
-      const analysisData = await response.json()
-      setAnalysis(analysisData)
+      // Set the analysis result
+      setAnalysis(result)
 
       toast({
         title: 'Analysis Complete',
@@ -390,9 +367,9 @@ const TeamChannelAnalysisPage: React.FC = () => {
       })
 
       // Navigate to the analysis result page
-      if (analysisData.analysis_id) {
+      if (result.analysis_id) {
         navigate(
-          `/dashboard/integrations/${integrationId}/channels/${channelId}/analysis/${analysisData.analysis_id}`
+          `/dashboard/integrations/${integrationId}/channels/${channelId}/analysis/${result.analysis_id}`
         )
       }
     } catch (error) {

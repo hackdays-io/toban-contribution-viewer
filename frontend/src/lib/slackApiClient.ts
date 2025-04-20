@@ -59,10 +59,28 @@ export interface SlackMessage {
 }
 
 export interface SlackAnalysisResult {
+  analysis_id: string
   channel_id: string
+  channel_name: string
   analysis_type: string
   result: Record<string, unknown>
   created_at: string
+  generated_at?: string
+  period?: {
+    start: string
+    end: string
+  }
+  stats?: {
+    message_count: number
+    participant_count: number
+    thread_count: number
+    reaction_count: number
+  }
+  channel_summary?: string
+  topic_analysis?: string
+  contributor_insights?: string
+  key_highlights?: string
+  model_used?: string
 }
 
 export interface SlackOAuthRequest {
@@ -181,11 +199,23 @@ class SlackApiClient extends ApiClient {
   async analyzeChannel(
     workspaceId: string,
     channelId: string,
-    analysisType: string
+    analysisType: string,
+    options?: {
+      start_date?: string;
+      end_date?: string;
+      include_threads?: boolean;
+      include_reactions?: boolean;
+      model?: string;
+    }
   ): Promise<SlackAnalysisResult | ApiError> {
+    const data = {
+      analysis_type: analysisType,
+      ...options
+    }
+    
     return this.post<SlackAnalysisResult>(
       `${workspaceId}/channels/${channelId}/analyze`,
-      { analysis_type: analysisType }
+      data
     )
   }
 
