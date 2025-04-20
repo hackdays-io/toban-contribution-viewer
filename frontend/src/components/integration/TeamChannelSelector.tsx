@@ -86,45 +86,49 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
     }
   }, [integrationId, fetchResources, fetchSelectedChannels])
 
-  // We'll use a simpler approach: load selection once on mount,
-  // then only update when explicitly intended (after saves or refreshes)
-  const [initialized, setInitialized] = useState(false)
+  // Track if we've done initial load - use ref to avoid re-renders
+  const didInitialLoadRef = React.useRef(false)
 
-  // Load initial selection only once when component mounts and channels are available
+  // Track if a save is in progress
+  const [isSaving, setIsSaving] = useState(false)
+
+  // Only run initialization once on mount
   useEffect(() => {
-    if (!initialized && channels.length > 0 && !loadingResources) {
-      console.log('🔄 INITIALIZATION: Loading initial channel selection')
+    const initializeComponent = async () => {
+      // Skip if already initialized or no channels
+      if (
+        didInitialLoadRef.current ||
+        channels.length === 0 ||
+        loadingResources
+      ) {
+        return
+      }
 
-      // Fetch selected channels from backend
-      fetchSelectedChannels(integrationId).then(() => {
-        console.log('✅ Initial fetch complete')
-        setInitialized(true)
-      })
+      console.log('🔄 INITIALIZATION: Starting component initialization')
+
+      try {
+        // If we have already loaded resources, just use those
+        if (channels.length > 0) {
+          // Get currently selected channels from context
+          const currentSelection = channels
+            .filter((channel) => isChannelSelectedForAnalysis(channel.id))
+            .map((channel) => channel.id)
+
+          console.log('📋 Setting initial selection:', currentSelection)
+
+          // Set initial checkbox states
+          setSelectedChannelIds(currentSelection)
+
+          // Mark as initialized
+          didInitialLoadRef.current = true
+        }
+      } catch (error) {
+        console.error('❌ Error during initialization:', error)
+      }
     }
-  }, [
-    initialized,
-    channels.length,
-    integrationId,
-    fetchSelectedChannels,
-    loadingResources,
-  ])
 
-  // When selectedChannels changes in context, update our local state
-  useEffect(() => {
-    if (initialized && channels.length > 0) {
-      console.log('🔄 SYNC: Updating selection from context state')
-
-      // Get IDs of selected channels from context
-      const contextSelection = channels
-        .filter((channel) => isChannelSelectedForAnalysis(channel.id))
-        .map((channel) => channel.id)
-
-      console.log('📋 Selected channel IDs:', contextSelection)
-
-      // Update our local state
-      setSelectedChannelIds(contextSelection)
-    }
-  }, [initialized, channels, isChannelSelectedForAnalysis])
+    initializeComponent()
+  }, [channels, isChannelSelectedForAnalysis, loadingResources])
 
   // Handle checkbox change
   const handleSelectChannel = (channelId: string) => {
@@ -142,10 +146,14 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
 
   // Save selected channels to backend
   const handleSaveSelection = async () => {
-    console.log('💾 SAVE: Saving channel selection')
+    if (isSaving) return // Prevent double-saves
 
-    // Instead of calculating diffs, we'll set entire selection at once
+    console.log('💾 SAVE: Saving channel selection')
+    console.log('📋 Current selection to save:', selectedChannelIds)
+
     try {
+      setIsSaving(true)
+
       // Show loading toast
       const loadingToastId = toast({
         title: 'Saving selection...',
@@ -173,10 +181,7 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
           isClosable: true,
         })
 
-        // Explicitly fetch the latest selection to update the context
-        await fetchSelectedChannels(integrationId)
-
-        console.log('✅ Save complete, fetched latest selection')
+        console.log('✅ Save complete')
       } else {
         // Error feedback
         toast({
@@ -201,6 +206,8 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
         duration: 5000,
         isClosable: true,
       })
+    } finally {
+      setIsSaving(false)
     }
   }
 
@@ -222,7 +229,7 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
           colorScheme="blue"
           leftIcon={<FiCheck />}
           onClick={handleSaveSelection}
-          isLoading={loadingChannelSelection}
+          isLoading={isSaving || loadingChannelSelection}
           isDisabled={loadingResources}
         >
           Save Selection
@@ -322,7 +329,7 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
           colorScheme="blue"
           leftIcon={<FiCheck />}
           onClick={handleSaveSelection}
-          isLoading={loadingChannelSelection}
+          isLoading={isSaving || loadingChannelSelection}
           isDisabled={loadingResources}
         >
           Save Selection
