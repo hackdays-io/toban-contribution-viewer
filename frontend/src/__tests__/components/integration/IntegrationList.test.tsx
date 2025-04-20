@@ -65,10 +65,13 @@ const mockIntegrationContext = {
   teamIntegrations: { 'team-1': mockIntegrations },
   currentIntegration: null,
   currentResources: [],
+  selectedChannels: [],
   loading: false,
   loadingResources: false,
+  loadingChannelSelection: false,
   error: null,
   resourceError: null,
+  channelSelectionError: null,
   fetchIntegrations: vi.fn().mockResolvedValue(undefined),
   fetchIntegration: vi.fn(),
   createIntegration: vi.fn(),
@@ -80,7 +83,13 @@ const mockIntegrationContext = {
   revokeShare: vi.fn(),
   grantResourceAccess: vi.fn(),
   selectIntegration: vi.fn(),
+  fetchSelectedChannels: vi.fn(),
+  selectChannelsForAnalysis: vi.fn(),
+  deselectChannelsForAnalysis: vi.fn(),
+  isChannelSelectedForAnalysis: vi.fn(),
+  analyzeChannel: vi.fn(),
   clearErrors: vi.fn(),
+  clearChannelSelectionError: vi.fn(),
 }
 
 describe('IntegrationList', () => {

@@ -121,7 +121,7 @@ const mockSelectedChannels = [
     name: 'random',
     created_at: '2023-01-01T00:00:00Z',
     updated_at: '2023-01-01T00:00:00Z',
-  }
+  },
 ]
 
 const mockAnalysisResult = {
@@ -212,14 +212,18 @@ describe('IntegrationContext', () => {
       status: 'success',
       message: 'Resources synced',
     })
-    
+
     // Setup channel selection mocks
-    vi.mocked(integrationService.getSelectedChannels).mockResolvedValue(mockSelectedChannels)
+    vi.mocked(integrationService.getSelectedChannels).mockResolvedValue(
+      mockSelectedChannels
+    )
     vi.mocked(integrationService.selectChannelsForAnalysis).mockResolvedValue({
-      status: 'success', 
+      status: 'success',
       message: 'Channels selected for analysis',
     })
-    vi.mocked(integrationService.analyzeChannel).mockResolvedValue(mockAnalysisResult)
+    vi.mocked(integrationService.analyzeChannel).mockResolvedValue(
+      mockAnalysisResult
+    )
 
     // Mock share response
     const mockShare = {
@@ -567,7 +571,10 @@ describe('IntegrationContext', () => {
       // Call the function
       let result: boolean | undefined
       await act(async () => {
-        result = await hookResult?.selectChannelsForAnalysis('test-int-1', ['res-1', 'res-2'])
+        result = await hookResult?.selectChannelsForAnalysis('test-int-1', [
+          'res-1',
+          'res-2',
+        ])
       })
 
       // Check that the service was called correctly
@@ -575,7 +582,7 @@ describe('IntegrationContext', () => {
         'test-int-1',
         { channel_ids: ['res-1', 'res-2'], for_analysis: true }
       )
-      
+
       // Should also refresh the selected channels
       expect(integrationService.getSelectedChannels).toHaveBeenCalledWith(
         'test-int-1'
@@ -585,7 +592,7 @@ describe('IntegrationContext', () => {
       expect(result).toBe(true)
       expect(hookResult?.loadingChannelSelection).toBe(false)
     })
-    
+
     it('should deselect channels for analysis', async () => {
       let hookResult: ReturnType<typeof useIntegration> | undefined
 
@@ -610,7 +617,9 @@ describe('IntegrationContext', () => {
       // Call the function
       let result: boolean | undefined
       await act(async () => {
-        result = await hookResult?.deselectChannelsForAnalysis('test-int-1', ['res-2'])
+        result = await hookResult?.deselectChannelsForAnalysis('test-int-1', [
+          'res-2',
+        ])
       })
 
       // Check that the service was called correctly
@@ -618,7 +627,7 @@ describe('IntegrationContext', () => {
         'test-int-1',
         { channel_ids: ['res-2'], for_analysis: false }
       )
-      
+
       // Should also refresh the selected channels
       expect(integrationService.getSelectedChannels).toHaveBeenCalledWith(
         'test-int-1'
@@ -627,7 +636,7 @@ describe('IntegrationContext', () => {
       // Verify the result is correct
       expect(result).toBe(true)
     })
-    
+
     it('should check if a channel is selected for analysis', async () => {
       let hookResult: ReturnType<typeof useIntegration> | undefined
 
@@ -657,11 +666,13 @@ describe('IntegrationContext', () => {
       // Check for known selected channel
       expect(hookResult?.isChannelSelectedForAnalysis('res-1')).toBe(true)
       expect(hookResult?.isChannelSelectedForAnalysis('C12345')).toBe(true) // Should work with external_id too
-      
+
       // Check for non-selected channel
-      expect(hookResult?.isChannelSelectedForAnalysis('non-existent')).toBe(false)
+      expect(hookResult?.isChannelSelectedForAnalysis('non-existent')).toBe(
+        false
+      )
     })
-    
+
     it('should run analysis on a channel', async () => {
       let hookResult: ReturnType<typeof useIntegration> | undefined
 
@@ -685,15 +696,19 @@ describe('IntegrationContext', () => {
 
       // Call the function with analysis options
       let result: { status: string; analysis_id: string } | null | undefined
-      const options = { 
-        start_date: '2023-01-01', 
+      const options = {
+        start_date: '2023-01-01',
         end_date: '2023-01-31',
         include_threads: true,
-        include_reactions: false
+        include_reactions: false,
       }
-      
+
       await act(async () => {
-        result = await hookResult?.analyzeChannel('test-int-1', 'res-1', options)
+        result = await hookResult?.analyzeChannel(
+          'test-int-1',
+          'res-1',
+          options
+        )
       })
 
       // Check that the service was called correctly
@@ -708,21 +723,27 @@ describe('IntegrationContext', () => {
       expect(result?.status).toBe('success')
       expect(result?.analysis_id).toBe('analysis-123')
     })
-    
+
     it('should handle errors when selecting channels', async () => {
       // Save original implementations to restore after the test
-      const originalSelectChannelsForAnalysis = vi.mocked(integrationService.selectChannelsForAnalysis).getMockImplementation()
-      const originalIsApiError = vi.mocked(integrationService.isApiError).getMockImplementation()
-      
+      const originalSelectChannelsForAnalysis = vi
+        .mocked(integrationService.selectChannelsForAnalysis)
+        .getMockImplementation()
+      const originalIsApiError = vi
+        .mocked(integrationService.isApiError)
+        .getMockImplementation()
+
       // Mock the service to return an error
-      vi.mocked(integrationService.selectChannelsForAnalysis).mockResolvedValueOnce({
+      vi.mocked(
+        integrationService.selectChannelsForAnalysis
+      ).mockResolvedValueOnce({
         status: 400,
-        message: 'Failed to select channels'
+        message: 'Failed to select channels',
       })
-      
+
       // Mock isApiError to identify this as an error
       vi.mocked(integrationService.isApiError).mockImplementation(() => true)
-      
+
       let hookResult: ReturnType<typeof useIntegration> | undefined
 
       await act(async () => {
@@ -742,27 +763,33 @@ describe('IntegrationContext', () => {
       // Call the function that should fail
       let result: boolean | undefined
       await act(async () => {
-        result = await hookResult?.selectChannelsForAnalysis('test-int-1', ['res-1'])
+        result = await hookResult?.selectChannelsForAnalysis('test-int-1', [
+          'res-1',
+        ])
       })
 
       // Verify the result and error state
       expect(result).toBe(false)
       expect(hookResult?.channelSelectionError).toBeDefined()
       expect(hookResult?.loadingChannelSelection).toBe(false)
-      
+
       // Test clearing the error
       await act(async () => {
         hookResult?.clearChannelSelectionError()
       })
-      
+
       expect(hookResult?.channelSelectionError).toBeNull()
-      
+
       // Restore original implementations
       if (originalSelectChannelsForAnalysis) {
-        vi.mocked(integrationService.selectChannelsForAnalysis).mockImplementation(originalSelectChannelsForAnalysis)
+        vi.mocked(
+          integrationService.selectChannelsForAnalysis
+        ).mockImplementation(originalSelectChannelsForAnalysis)
       }
       if (originalIsApiError) {
-        vi.mocked(integrationService.isApiError).mockImplementation(originalIsApiError)
+        vi.mocked(integrationService.isApiError).mockImplementation(
+          originalIsApiError
+        )
       }
     })
 

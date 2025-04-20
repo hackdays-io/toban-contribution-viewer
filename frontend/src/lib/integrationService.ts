@@ -611,7 +611,7 @@ class IntegrationService {
       return this.handleError(error, 'Failed to grant resource access')
     }
   }
-  
+
   /**
    * Select channels for analysis
    * Marks specified channels as selected for analysis

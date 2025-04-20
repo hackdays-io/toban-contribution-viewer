@@ -26,10 +26,10 @@ interface IntegrationState {
   // Currently selected integration
   currentIntegration: Integration | null
   currentResources: ServiceResource[]
-  
+
   // Channel selection state for analysis
   selectedChannels: ServiceResource[]
-  
+
   // Loading states
   loading: boolean
   loadingResources: boolean
@@ -86,25 +86,25 @@ interface IntegrationContextType extends IntegrationState {
 
   // Selection
   selectIntegration: (integrationId: string | null) => void
-  
+
   // Channel selection operations
   fetchSelectedChannels: (integrationId: string) => Promise<void>
   selectChannelsForAnalysis: (
-    integrationId: string, 
+    integrationId: string,
     channelIds: string[]
   ) => Promise<boolean>
   deselectChannelsForAnalysis: (
-    integrationId: string, 
+    integrationId: string,
     channelIds: string[]
   ) => Promise<boolean>
   isChannelSelectedForAnalysis: (channelId: string) => boolean
-  
+
   // Analysis operations
   analyzeChannel: (
     integrationId: string,
     channelId: string,
     options: AnalysisOptions
-  ) => Promise<{status: string; analysis_id: string} | null>
+  ) => Promise<{ status: string; analysis_id: string } | null>
 
   // Error handling
   clearErrors: () => void
@@ -144,13 +144,13 @@ const IntegrationContext = createContext<IntegrationContextType>({
 
   // Selection
   selectIntegration: () => {},
-  
+
   // Channel selection operations
   fetchSelectedChannels: async () => {},
   selectChannelsForAnalysis: async () => false,
   deselectChannelsForAnalysis: async () => false,
   isChannelSelectedForAnalysis: () => false,
-  
+
   // Analysis operations
   analyzeChannel: async () => null,
 
@@ -191,7 +191,7 @@ export const IntegrationProvider: React.FC<{ children: React.ReactNode }> = ({
       channelSelectionError: null,
     }))
   }, [])
-  
+
   /**
    * Clear only channel selection error state
    */
@@ -888,7 +888,8 @@ export const IntegrationProvider: React.FC<{ children: React.ReactNode }> = ({
       }))
 
       try {
-        const result = await integrationService.getSelectedChannels(integrationId)
+        const result =
+          await integrationService.getSelectedChannels(integrationId)
 
         if (integrationService.isApiError(result)) {
           setState((prev) => ({
@@ -1022,7 +1023,8 @@ export const IntegrationProvider: React.FC<{ children: React.ReactNode }> = ({
   const isChannelSelectedForAnalysis = useCallback(
     (channelId: string): boolean => {
       return state.selectedChannels.some(
-        (channel) => channel.id === channelId || channel.external_id === channelId
+        (channel) =>
+          channel.id === channelId || channel.external_id === channelId
       )
     },
     [state.selectedChannels]
