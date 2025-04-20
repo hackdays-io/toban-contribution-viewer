@@ -502,7 +502,7 @@ class ChannelService:
             if install_bot:
                 api_client = SlackApiClient(workspace.access_token)
 
-            # Only unselect all channels if we are setting for_analysis=True
+            # Unselect all channels if we are setting for_analysis=True 
             # This is for backward compatibility with old behavior
             if for_analysis:
                 # First, unselect all channels

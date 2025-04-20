@@ -541,8 +541,7 @@ async def get_integration_resources(
     if integration.service_type == IntegrationType.SLACK and any(
         r.resource_type == ResourceType.SLACK_CHANNEL for r in resources
     ):
-        # Get workspace ID from integration metadata
-        workspace_id = None
+        # Get slack workspace ID from integration metadata
         metadata: Dict[str, Any] = integration.integration_metadata or {}
         slack_workspace_id = metadata.get("slack_id")
 
@@ -650,7 +649,7 @@ async def get_integration_resources(
                         # Set selection status based on whether the channel is in our list
                         external_id = resource.get("external_id")
                         is_selected = external_id in selected_channels
-                        
+
                         # Add at both top level and in metadata for backward compatibility
                         resource["metadata"]["is_selected_for_analysis"] = is_selected
                         resource["is_selected_for_analysis"] = is_selected

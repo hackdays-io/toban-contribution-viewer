@@ -252,12 +252,14 @@ async def test_select_channels_for_analysis_without_bot_install(
         mock_update_result1,  # Second call (update unselect all)
         mock_update_result2,  # Third call (update select specific)
         mock_selected_result,  # Fourth call (get selected count)
+        mock_selected_result,  # Fifth call (all channels query for debugging)
     ]
 
     # Mock db commit
     mock_db_session.commit = AsyncMock()
 
     # Call the service method with install_bot=False
+    # This method will still call unselect all since for_analysis is True by default and channel_ids is not empty
     result = await ChannelService.select_channels_for_analysis(
         db=mock_db_session,
         workspace_id=str(mock_workspace.id),
@@ -273,7 +275,7 @@ async def test_select_channels_for_analysis_without_bot_install(
     assert "bot_installation" not in result
 
     # Verify the db operations
-    assert mock_db_session.execute.call_count == 4
+    assert mock_db_session.execute.call_count == 5  # Including all_channels query for debugging
     assert mock_db_session.commit.called
 
 
@@ -326,6 +328,7 @@ async def test_select_channels_for_analysis_with_bot_install(
         mock_update_result1,  # Second call (update unselect all)
         mock_update_result2,  # Third call (update select specific)
         mock_selected_result,  # Fourth call (get selected count)
+        mock_selected_result,  # Fifth call (all channels query for debugging)
     ]
 
     # Mock db commit
@@ -368,5 +371,5 @@ async def test_select_channels_for_analysis_with_bot_install(
         mock_client.join_channel.assert_called_once_with(channel_without_bot.slack_id)
 
         # Verify the db operations
-        assert mock_db_session.execute.call_count == 4
+        assert mock_db_session.execute.call_count == 5  # Including all_channels query for debugging
         assert mock_db_session.commit.called

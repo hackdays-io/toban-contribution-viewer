@@ -220,7 +220,9 @@ class ServiceResourceResponse(ServiceResourceBase):
     last_synced_at: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
-    is_selected_for_analysis: Optional[bool] = None  # Added for channel selection support
+    is_selected_for_analysis: Optional[bool] = (
+        None  # Added for channel selection support
+    )
 
 
 class IntegrationShareResponse(IntegrationShareBase):
