@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   Box,
   Table,
@@ -49,11 +49,12 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({ integrationId
 
   // Local state
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedChannels, setSelectedChannels] = useState<Set<string>>(new Set());
   
-  // Add a force update function
-  const [, forceUpdate] = useState({});
-  const forceRender = () => forceUpdate({});
+  // Use array-based selection instead of Set to avoid React optimization issues
+  const [selectedChannelIds, setSelectedChannelIds] = useState<string[]>([]);
+  
+  // Derived state: convert array to Set for faster lookups
+  const selectedChannelsSet = useMemo(() => new Set(selectedChannelIds), [selectedChannelIds]);
   
   // UI colors
   const tableBg = useColorModeValue('white', 'gray.800');
@@ -101,23 +102,21 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({ integrationId
   // Initialize selected channels from context
   useEffect(() => {
     if (channels.length > 0) {
-      setSelectedChannels(prev => {
-        const newSelectedChannels = new Set<string>();
-        channels.forEach(channel => {
-          if (isChannelSelectedForAnalysis(channel.id)) {
-            newSelectedChannels.add(channel.id);
-          }
-        });
-        return newSelectedChannels;
-      });
+      // Create a fresh array of selected channel IDs
+      const selectedIds = channels
+        .filter(channel => isChannelSelectedForAnalysis(channel.id))
+        .map(channel => channel.id);
+      
+      console.log('Initializing selection with:', selectedIds);
+      setSelectedChannelIds(selectedIds);
     }
   }, [channels, isChannelSelectedForAnalysis]);
 
   // Only log selection changes once when they actually change
   const prevSelectionRef = useRef<string[]>([]);
   useEffect(() => {
-    // Convert sets to sorted string arrays for comparison
-    const currentSelection = Array.from(selectedChannels).sort();
+    // We're already using arrays, just need to sort for consistent comparison
+    const currentSelection = [...selectedChannelIds].sort();
     const prevSelection = prevSelectionRef.current;
     
     // Only log if the selection actually changed
@@ -132,34 +131,20 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({ integrationId
       // Update the ref with current value
       prevSelectionRef.current = currentSelection;
     }
-  }, [selectedChannels]);
+  }, [selectedChannelIds]);
   
-  // Direct, simplified checkbox handler
+  // Simplified checkbox handler using array-based state
   const handleSelectChannel = (channelId: string) => {
-    // Force state update with explicit new Set creation
-    setSelectedChannels(prevSelected => {
-      // Convert to array and back to ensure a completely new Set instance
-      const prevArray = Array.from(prevSelected);
-      const newSelected = new Set(prevArray);
-      
-      // Toggle selection
-      if (newSelected.has(channelId)) {
-        newSelected.delete(channelId);
-        console.log(`Removed ${channelId} from selection`);
-      } else {
-        newSelected.add(channelId);
-        console.log(`Added ${channelId} to selection`);
-      }
-      
-      // Return completely new Set instance to trigger re-render
-      return newSelected;
-    });
-
-    // Force React to register the change
-    setTimeout(() => {
-      // Force component to re-render
-      forceRender();
-    }, 10);
+    // Update using array-based state which React handles properly
+    if (selectedChannelsSet.has(channelId)) {
+      // Remove item - filter out the channelId
+      console.log(`Removing ${channelId} from selection`);
+      setSelectedChannelIds(prev => prev.filter(id => id !== channelId));
+    } else {
+      // Add item - add to array
+      console.log(`Adding ${channelId} to selection`);
+      setSelectedChannelIds(prev => [...prev, channelId]);
+    }
   };
 
   // Save selected channels to backend
@@ -174,7 +159,7 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({ integrationId
     
     // Determine which channels need to be selected or deselected
     channels.forEach(channel => {
-      const isSelected = selectedChannels.has(channel.id);
+      const isSelected = selectedChannelsSet.has(channel.id);
       const wasSelected = isChannelSelectedForAnalysis(channel.id);
       
       if (isSelected && !wasSelected) {
@@ -279,12 +264,12 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({ integrationId
                 }}
                 cursor="pointer"
                 _hover={{ bg: rowHoverBg }}
-                bg={selectedChannels.has(channel.id) ? 'blue.50' : undefined}
-                data-selected={selectedChannels.has(channel.id)}
+                bg={selectedChannelsSet.has(channel.id) ? 'blue.50' : undefined}
+                data-selected={selectedChannelsSet.has(channel.id) ? 'true' : 'false'}
               >
                 <Td data-checkbox-cell="true">
                   <Checkbox
-                    isChecked={selectedChannels.has(channel.id)}
+                    isChecked={selectedChannelsSet.has(channel.id)}
                     colorScheme="blue"
                     id={`checkbox-${channel.id}`}
                     onChange={(e) => {
@@ -292,7 +277,7 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({ integrationId
                       handleSelectChannel(channel.id);
                     }}
                     // Add key with selection state to force re-render
-                    key={`checkbox-${channel.id}-${selectedChannels.has(channel.id)}`}
+                    key={`checkbox-${channel.id}-${selectedChannelIds.includes(channel.id)}`}
                     size="lg"
                     p={2}
                     data-checkbox-cell="true"
