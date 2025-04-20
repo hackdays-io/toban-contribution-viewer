@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react'
 import {
   Box,
   Table,
@@ -19,21 +19,23 @@ import {
   InputLeftElement,
   Button,
   Flex,
-  useToast
-} from '@chakra-ui/react';
-import { FiSearch, FiSettings, FiCheck, FiBarChart2 } from 'react-icons/fi';
-import { ResourceType } from '../../lib/integrationService';
-import useIntegration from '../../context/useIntegration';
+  useToast,
+} from '@chakra-ui/react'
+import { FiSearch, FiSettings, FiCheck, FiBarChart2 } from 'react-icons/fi'
+import { ResourceType } from '../../lib/integrationService'
+import useIntegration from '../../context/useIntegration'
 
 interface TeamChannelSelectorProps {
-  integrationId: string;
+  integrationId: string
 }
 
 /**
  * Component for selecting channels for analysis in team integrations
  */
-const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({ integrationId }) => {
-  const toast = useToast();
+const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
+  integrationId,
+}) => {
+  const toast = useToast()
   const {
     currentResources,
     loadingResources,
@@ -44,124 +46,117 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({ integrationId
     loadingChannelSelection,
     channelSelectionError,
     clearChannelSelectionError,
-    fetchSelectedChannels
-  } = useIntegration();
+    fetchSelectedChannels,
+  } = useIntegration()
 
   // Local state
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedChannelIds, setSelectedChannelIds] = useState<string[]>([]);
-  
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedChannelIds, setSelectedChannelIds] = useState<string[]>([])
+
   // UI colors
-  const tableBg = useColorModeValue('white', 'gray.800');
-  const tableHeaderBg = useColorModeValue('gray.50', 'gray.700');
-  const rowHoverBg = useColorModeValue('gray.50', 'gray.700');
-  
+  const tableBg = useColorModeValue('white', 'gray.800')
+  const tableHeaderBg = useColorModeValue('gray.50', 'gray.700')
+  const rowHoverBg = useColorModeValue('gray.50', 'gray.700')
+
   // Filter to only show Slack channels
   const channels = currentResources.filter(
-    resource => resource.resource_type === ResourceType.SLACK_CHANNEL
-  );
-  
+    (resource) => resource.resource_type === ResourceType.SLACK_CHANNEL
+  )
+
   // Apply search filter
-  const filteredChannels = searchQuery 
-    ? channels.filter(channel => 
+  const filteredChannels = searchQuery
+    ? channels.filter((channel) =>
         channel.name.toLowerCase().includes(searchQuery.toLowerCase())
       )
-    : channels;
+    : channels
 
   // Load resources and selected channels when component mounts
   useEffect(() => {
     if (integrationId) {
       const loadData = async () => {
         try {
-          await fetchResources(integrationId, [ResourceType.SLACK_CHANNEL]);
-          await fetchSelectedChannels(integrationId);
+          await fetchResources(integrationId, [ResourceType.SLACK_CHANNEL])
+          await fetchSelectedChannels(integrationId)
         } catch (err) {
-          console.error("Error loading channel data:", err);
+          console.error('Error loading channel data:', err)
         }
-      };
-      
-      loadData();
+      }
+
+      loadData()
     }
-  }, [integrationId, fetchResources, fetchSelectedChannels]);
-  
+  }, [integrationId, fetchResources, fetchSelectedChannels])
+
   // Initialize selected channels from context - BUT ONLY ONCE ON MOUNT OR WHEN CHANNELS CHANGE
   // This is crucial - we don't want to reset our local selection state after each checkbox click
-  const hasInitializedRef = React.useRef(false);
-  
+  const hasInitializedRef = React.useRef(false)
+
   useEffect(() => {
     // Only initialize if we haven't already or if channels have changed
-    if (channels.length > 0 && (!hasInitializedRef.current || channels.length !== prevChannelsRef.current?.length)) {
-      console.log('Initializing selection from context');
+    if (
+      channels.length > 0 &&
+      (!hasInitializedRef.current ||
+        channels.length !== prevChannelsRef.current?.length)
+    ) {
       const initialSelection = channels
-        .filter(channel => isChannelSelectedForAnalysis(channel.id))
-        .map(channel => channel.id);
-      
-      setSelectedChannelIds(initialSelection);
-      hasInitializedRef.current = true;
-      prevChannelsRef.current = [...channels];
-    }
-  }, [channels, isChannelSelectedForAnalysis]); // We need isChannelSelectedForAnalysis for filtering
-  
-  // We need this ref to track channels changes
-  const prevChannelsRef = React.useRef<typeof channels>();
+        .filter((channel) => isChannelSelectedForAnalysis(channel.id))
+        .map((channel) => channel.id)
 
-  // Handle checkbox change with debug output to ensure we're tracking state correctly
+      setSelectedChannelIds(initialSelection)
+      hasInitializedRef.current = true
+      prevChannelsRef.current = [...channels]
+    }
+  }, [channels, isChannelSelectedForAnalysis]) // We need isChannelSelectedForAnalysis for filtering
+
+  // We need this ref to track channels changes
+  const prevChannelsRef = React.useRef<typeof channels>()
+
+  // Handle checkbox change
   const handleSelectChannel = (channelId: string) => {
-    console.log(`Toggle channel ${channelId}, current selection:`, selectedChannelIds);
-    
-    setSelectedChannelIds(prev => {
+    setSelectedChannelIds((prev) => {
       // Ensure we're working with a fresh array
-      const newSelection = [...prev];
-      
+      const newSelection = [...prev]
+
       if (newSelection.includes(channelId)) {
-        console.log(`Removing ${channelId} from selection`);
-        const result = newSelection.filter(id => id !== channelId);
-        console.log('New selection will be:', result);
-        return result;
+        return newSelection.filter((id) => id !== channelId)
       } else {
-        console.log(`Adding ${channelId} to selection`);
-        const result = [...newSelection, channelId];
-        console.log('New selection will be:', result);
-        return result;
+        return [...newSelection, channelId]
       }
-    });
-    
-    // Debug: Let's see current state right after update
-    setTimeout(() => {
-      console.log('Selection after update:', selectedChannelIds);
-    }, 0);
-  };
+    })
+  }
 
   // Save selected channels to backend
   const handleSaveSelection = async () => {
     // Find channels to select (in local selection but not in context)
-    const channelsToSelect: string[] = [];
+    const channelsToSelect: string[] = []
     // Find channels to deselect (in context but not in local selection)
-    const channelsToDeselect: string[] = [];
-    
+    const channelsToDeselect: string[] = []
+
     // Determine which channels need to be selected or deselected
-    channels.forEach(channel => {
-      const isSelected = selectedChannelIds.includes(channel.id);
-      const wasSelected = isChannelSelectedForAnalysis(channel.id);
-      
+    channels.forEach((channel) => {
+      const isSelected = selectedChannelIds.includes(channel.id)
+      const wasSelected = isChannelSelectedForAnalysis(channel.id)
+
       if (isSelected && !wasSelected) {
-        channelsToSelect.push(channel.id);
+        channelsToSelect.push(channel.id)
       } else if (!isSelected && wasSelected) {
-        channelsToDeselect.push(channel.id);
+        channelsToDeselect.push(channel.id)
       }
-    });
-    
+    })
+
     // Perform API operations
-    let success = true;
-    
+    let success = true
+
     if (channelsToSelect.length > 0) {
-      success = await selectChannelsForAnalysis(integrationId, channelsToSelect);
+      success = await selectChannelsForAnalysis(integrationId, channelsToSelect)
     }
-    
+
     if (success && channelsToDeselect.length > 0) {
-      success = await deselectChannelsForAnalysis(integrationId, channelsToDeselect);
+      success = await deselectChannelsForAnalysis(
+        integrationId,
+        channelsToDeselect
+      )
     }
-    
+
     // Show success or error toast
     if (success) {
       toast({
@@ -170,24 +165,26 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({ integrationId
         status: 'success',
         duration: 5000,
         isClosable: true,
-      });
-      
+      })
+
       // Refresh selected channels from backend, but don't update our local state
       // This updates the context state only, without triggering our initialization effect
-      await fetchSelectedChannels(integrationId);
-      
+      await fetchSelectedChannels(integrationId)
+
       // Our selection is already in sync with the backend, so we don't need to re-initialize
     } else if (channelSelectionError) {
       toast({
         title: 'Error saving selection',
-        description: channelSelectionError.message || 'An error occurred while saving your selection.',
+        description:
+          channelSelectionError.message ||
+          'An error occurred while saving your selection.',
         status: 'error',
         duration: 5000,
         isClosable: true,
-      });
-      clearChannelSelectionError();
+      })
+      clearChannelSelectionError()
     }
-  };
+  }
 
   return (
     <Box>
@@ -202,7 +199,7 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({ integrationId
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </InputGroup>
-        
+
         <Button
           colorScheme="blue"
           leftIcon={<FiCheck />}
@@ -213,9 +210,14 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({ integrationId
           Save Selection
         </Button>
       </Flex>
-      
+
       <Box overflowX="auto">
-        <Table variant="simple" bg={tableBg} borderRadius="lg" overflow="hidden">
+        <Table
+          variant="simple"
+          bg={tableBg}
+          borderRadius="lg"
+          overflow="hidden"
+        >
           <Thead bg={tableHeaderBg}>
             <Tr>
               <Th width="50px">Select</Th>
@@ -227,10 +229,14 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({ integrationId
           </Thead>
           <Tbody>
             {filteredChannels.map((channel) => (
-              <Tr 
-                key={channel.id} 
+              <Tr
+                key={channel.id}
                 _hover={{ bg: rowHoverBg }}
-                bg={selectedChannelIds.includes(channel.id) ? 'blue.50' : undefined}
+                bg={
+                  selectedChannelIds.includes(channel.id)
+                    ? 'blue.50'
+                    : undefined
+                }
               >
                 <Td width="50px">
                   <Checkbox
@@ -251,9 +257,9 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({ integrationId
                   </HStack>
                 </Td>
                 <Td>
-                  {channel.metadata?.num_members !== undefined ? 
-                    String(channel.metadata.num_members) : 
-                    'Unknown'}
+                  {channel.metadata?.num_members !== undefined
+                    ? String(channel.metadata.num_members)
+                    : 'Unknown'}
                 </Td>
                 <Td>
                   {channel.last_synced_at
@@ -283,14 +289,16 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({ integrationId
             {filteredChannels.length === 0 && (
               <Tr>
                 <Td colSpan={5} textAlign="center" py={4}>
-                  {loadingResources ? 'Loading channels...' : 'No channels found'}
+                  {loadingResources
+                    ? 'Loading channels...'
+                    : 'No channels found'}
                 </Td>
               </Tr>
             )}
           </Tbody>
         </Table>
       </Box>
-      
+
       <Flex justifyContent="flex-end" mt={4}>
         <Button
           colorScheme="blue"
@@ -303,7 +311,7 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({ integrationId
         </Button>
       </Flex>
     </Box>
-  );
-};
+  )
+}
 
-export default TeamChannelSelector;
+export default TeamChannelSelector

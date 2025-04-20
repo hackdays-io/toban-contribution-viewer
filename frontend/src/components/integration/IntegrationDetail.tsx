@@ -617,17 +617,23 @@ const IntegrationDetail: React.FC<IntegrationDetailProps> = ({
               <Flex justify="space-between" mb={4}>
                 <Heading size="md">Resources</Heading>
                 <HStack spacing={2}>
-                  {currentIntegration.service_type === 'slack' && currentResources.some(
-                    resource => resource.resource_type === ResourceType.SLACK_CHANNEL
-                  ) && (
-                    <Button
-                      leftIcon={<FiCheck />}
-                      colorScheme="teal"
-                      onClick={() => navigate(`/dashboard/integrations/${integrationId}/channels`)}
-                    >
-                      Select Channels
-                    </Button>
-                  )}
+                  {currentIntegration.service_type === 'slack' &&
+                    currentResources.some(
+                      (resource) =>
+                        resource.resource_type === ResourceType.SLACK_CHANNEL
+                    ) && (
+                      <Button
+                        leftIcon={<FiCheck />}
+                        colorScheme="teal"
+                        onClick={() =>
+                          navigate(
+                            `/dashboard/integrations/${integrationId}/channels`
+                          )
+                        }
+                      >
+                        Select Channels
+                      </Button>
+                    )}
                   <Button
                     leftIcon={<FiZap />}
                     colorScheme="blue"
@@ -655,7 +661,7 @@ const IntegrationDetail: React.FC<IntegrationDetailProps> = ({
                       <Box>
                         <AlertTitle>Channel Selection Available</AlertTitle>
                         <AlertDescription>
-                          You can now select specific channels for analysis. 
+                          You can now select specific channels for analysis.
                           Click the "Select Channels" button to get started.
                         </AlertDescription>
                       </Box>

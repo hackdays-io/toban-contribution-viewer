@@ -622,7 +622,7 @@ class IntegrationService {
   ): Promise<{ status: string; message: string } | ApiError> {
     try {
       const headers = await this.getAuthHeaders()
-      
+
       // Use the direct integration API endpoint
       const response = await fetch(
         `${this.apiUrl}/${integrationId}/resources/channel-selection`,
@@ -632,7 +632,7 @@ class IntegrationService {
           credentials: 'include',
           body: JSON.stringify({
             channel_ids: data.channel_ids,
-            for_analysis: data.for_analysis
+            for_analysis: data.for_analysis,
           }),
         }
       )
@@ -646,9 +646,9 @@ class IntegrationService {
 
       return {
         status: 'success',
-        message: data.for_analysis 
-          ? 'Channels selected for analysis' 
-          : 'Channels deselected from analysis'
+        message: data.for_analysis
+          ? 'Channels selected for analysis'
+          : 'Channels deselected from analysis',
       }
     } catch (error) {
       return this.handleError(error, 'Failed to select channels for analysis')
@@ -664,21 +664,26 @@ class IntegrationService {
   ): Promise<ServiceResource[] | ApiError> {
     try {
       // Get all channels from the resources endpoint
-      const resources = await this.getResources(integrationId, [ResourceType.SLACK_CHANNEL])
-      
+      const resources = await this.getResources(integrationId, [
+        ResourceType.SLACK_CHANNEL,
+      ])
+
       if (this.isApiError(resources)) {
         throw resources
       }
-      
+
       // Filter for channels with the is_selected_for_analysis flag
-      const selectedChannels = resources.filter(resource => 
-        resource.resource_type === ResourceType.SLACK_CHANNEL && 
-        resource.metadata?.is_selected_for_analysis === true
+      const selectedChannels = resources.filter(
+        (resource) =>
+          resource.resource_type === ResourceType.SLACK_CHANNEL &&
+          resource.metadata?.is_selected_for_analysis === true
       )
-      
+
       // Only log count of selected channels, not the whole objects
-      console.log(`Found ${selectedChannels.length} channels selected for analysis`);
-      
+      console.log(
+        `Found ${selectedChannels.length} channels selected for analysis`
+      )
+
       return selectedChannels
     } catch (error) {
       console.error('Error getting selected channels:', error)
