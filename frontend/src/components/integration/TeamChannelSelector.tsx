@@ -84,26 +84,52 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({ integrationId
     }
   }, [integrationId, fetchResources, fetchSelectedChannels]);
   
-  // Initialize selected channels from context
+  // Initialize selected channels from context - BUT ONLY ONCE ON MOUNT OR WHEN CHANNELS CHANGE
+  // This is crucial - we don't want to reset our local selection state after each checkbox click
+  const hasInitializedRef = React.useRef(false);
+  
   useEffect(() => {
-    if (channels.length > 0) {
+    // Only initialize if we haven't already or if channels have changed
+    if (channels.length > 0 && (!hasInitializedRef.current || channels.length !== prevChannelsRef.current?.length)) {
+      console.log('Initializing selection from context');
       const initialSelection = channels
         .filter(channel => isChannelSelectedForAnalysis(channel.id))
         .map(channel => channel.id);
       
       setSelectedChannelIds(initialSelection);
+      hasInitializedRef.current = true;
+      prevChannelsRef.current = [...channels];
     }
-  }, [channels, isChannelSelectedForAnalysis]);
+  }, [channels]); // Only depend on channels changing, NOT on isChannelSelectedForAnalysis
+  
+  // We need this ref to track channels changes
+  const prevChannelsRef = React.useRef<typeof channels>();
 
-  // Handle checkbox change
+  // Handle checkbox change with debug output to ensure we're tracking state correctly
   const handleSelectChannel = (channelId: string) => {
+    console.log(`Toggle channel ${channelId}, current selection:`, selectedChannelIds);
+    
     setSelectedChannelIds(prev => {
-      if (prev.includes(channelId)) {
-        return prev.filter(id => id !== channelId);
+      // Ensure we're working with a fresh array
+      const newSelection = [...prev];
+      
+      if (newSelection.includes(channelId)) {
+        console.log(`Removing ${channelId} from selection`);
+        const result = newSelection.filter(id => id !== channelId);
+        console.log('New selection will be:', result);
+        return result;
       } else {
-        return [...prev, channelId];
+        console.log(`Adding ${channelId} to selection`);
+        const result = [...newSelection, channelId];
+        console.log('New selection will be:', result);
+        return result;
       }
     });
+    
+    // Debug: Let's see current state right after update
+    setTimeout(() => {
+      console.log('Selection after update:', selectedChannelIds);
+    }, 0);
   };
 
   // Save selected channels to backend
@@ -146,8 +172,11 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({ integrationId
         isClosable: true,
       });
       
-      // Refresh selected channels from backend
+      // Refresh selected channels from backend, but don't update our local state
+      // This updates the context state only, without triggering our initialization effect
       await fetchSelectedChannels(integrationId);
+      
+      // Our selection is already in sync with the backend, so we don't need to re-initialize
     } else if (channelSelectionError) {
       toast({
         title: 'Error saving selection',
