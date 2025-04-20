@@ -40,6 +40,7 @@ import {
   IntegrationsPage,
   IntegrationDetailPage,
   IntegrationConnectPage,
+  TeamChannelSelectorPage,
 } from './pages/integration'
 
 // Profile Pages
