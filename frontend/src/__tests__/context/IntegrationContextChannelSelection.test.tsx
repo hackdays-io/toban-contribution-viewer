@@ -2,6 +2,7 @@ import React from 'react';
 import { render, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { IntegrationProvider } from '../../context/IntegrationContext';
+import IntegrationContext from '../../context/IntegrationContext';
 import useIntegration from '../../context/useIntegration';
 import integrationService, { ResourceType } from '../../lib/integrationService';
 

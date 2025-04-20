@@ -3,7 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { ChakraProvider } from '@chakra-ui/react';
 import TeamChannelSelector from '../../../components/integration/TeamChannelSelector';
-import { IntegrationContext } from '../../../context/IntegrationContext';
+import IntegrationContext from '../../../context/IntegrationContext';
 import { ResourceType } from '../../../lib/integrationService';
 
 // Mock the useIntegration hook functionality through context

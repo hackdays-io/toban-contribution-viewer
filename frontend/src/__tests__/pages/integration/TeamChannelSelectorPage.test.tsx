@@ -4,7 +4,7 @@ import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { ChakraProvider } from '@chakra-ui/react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import TeamChannelSelectorPage from '../../../pages/integration/TeamChannelSelectorPage';
-import { IntegrationContext } from '../../../context/IntegrationContext';
+import IntegrationContext from '../../../context/IntegrationContext';
 import { IntegrationType, IntegrationStatus } from '../../../lib/integrationService';
 
 // Mocking react-router-dom's useParams hook
