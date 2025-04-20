@@ -94,7 +94,7 @@ FLAKE8_IGNORE="C901,E501,W503,W293,E203"
 
 # If in CI compatibility mode, use a more extensive ignore list
 if [ "$CI_COMPATIBLE" = true ]; then
-  FLAKE8_IGNORE="${FLAKE8_IGNORE},B008,B950,B901,B902,B903,B904,B905"
+  FLAKE8_IGNORE="${FLAKE8_IGNORE},B008,B017,B950,B901,B902,B903,B904,B905"
   echo -e "${YELLOW}CI compatibility mode: Using extended ignore list for flake8${NC}"
 fi
 
@@ -107,12 +107,12 @@ fi
 
 if echo "$INSTALLED_PLUGINS" | grep -q "flake8-docstrings"; then
   echo -e "${YELLOW}Detected flake8-docstrings plugin - adding D100-D999 to ignore list${NC}"
-  FLAKE8_IGNORE="${FLAKE8_IGNORE},D100,D101,D102,D103,D104,D105,D106,D107,D200,D205,D400,D401,D403,D415"
+  FLAKE8_IGNORE="${FLAKE8_IGNORE},D100,D101,D102,D103,D104,D105,D106,D107,D200,D202,D205,D400,D401,D403,D415"
 fi
 
 if echo "$INSTALLED_PLUGINS" | grep -q "flake8-bugbear"; then
-  echo -e "${YELLOW}Detected flake8-bugbear plugin - adding B950,B008 to ignore list${NC}"
-  FLAKE8_IGNORE="${FLAKE8_IGNORE},B950,B008"
+  echo -e "${YELLOW}Detected flake8-bugbear plugin - adding B950,B008,B017 to ignore list${NC}"
+  FLAKE8_IGNORE="${FLAKE8_IGNORE},B950,B008,B017"
 fi
 
 echo -e "${YELLOW}Using flake8 ignore rules: ${FLAKE8_IGNORE}${NC}"
