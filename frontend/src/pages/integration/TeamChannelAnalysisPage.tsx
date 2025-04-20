@@ -101,10 +101,13 @@ const TeamChannelAnalysisPage: React.FC = () => {
   // Fetch integration and channel info
   useEffect(() => {
     if (integrationId && channelId) {
-      fetchIntegrationAndChannel()
+      // Important: Don't try to fetch again if we already have a channel
+      if (!channel) {
+        fetchIntegrationAndChannel()
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [integrationId, channelId])
+  }, [integrationId, channelId, currentIntegration])
 
   /**
    * Fetch integration and channel information.
@@ -120,10 +123,20 @@ const TeamChannelAnalysisPage: React.FC = () => {
       
       console.log('Fetching integration:', integrationId)
       console.log('API URL from env:', env.apiUrl)
-      await fetchIntegration(integrationId)
       
+      // Skip fetching integration if we already have it
       if (!currentIntegration) {
-        throw new Error('Failed to load integration data')
+        console.log('Current integration not available, fetching it')
+        await fetchIntegration(integrationId)
+      } else {
+        console.log('Using existing integration:', currentIntegration.id)
+      }
+      
+      // Double-check we have the integration
+      if (!currentIntegration) {
+        console.error('Integration not available after fetch attempt')
+        // Don't throw here, just return and let the useEffect try again
+        return
       }
 
       // Once we have the integration, fetch channel data
