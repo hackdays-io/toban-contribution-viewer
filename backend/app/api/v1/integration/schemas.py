@@ -188,6 +188,13 @@ class ResourceAccessCreate(ResourceAccessBase):
     """Schema for creating a new resource access grant."""
 
 
+class ChannelSelectionRequest(BaseModel):
+    """Schema for selecting channels for analysis."""
+
+    channel_ids: List[str]
+    for_analysis: bool = True
+
+
 # Schemas for API responses
 class TeamInfo(BaseModel):
     """Schema for team information in responses."""

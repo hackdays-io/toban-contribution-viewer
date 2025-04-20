@@ -464,6 +464,7 @@ class ChannelService:
         workspace_id: str,
         channel_ids: List[str],
         install_bot: bool = True,
+        for_analysis: bool = True,
     ) -> Dict[str, Any]:
         """
         Select channels for analysis and optionally install the bot in channels where it's not already a member.
@@ -473,6 +474,7 @@ class ChannelService:
             workspace_id: UUID of the workspace
             channel_ids: List of channel UUIDs to select for analysis
             install_bot: Whether to attempt to install the bot in selected channels where it's not already a member
+            for_analysis: Whether to mark channels for analysis (True) or remove them from analysis (False)
 
         Returns:
             Dictionary with status information
@@ -499,14 +501,17 @@ class ChannelService:
             if install_bot:
                 api_client = SlackApiClient(workspace.access_token)
 
-            # First, unselect all channels
-            await db.execute(
-                update(SlackChannel)
-                .where(SlackChannel.workspace_id == workspace_id)
-                .values(is_selected_for_analysis=False)
-            )
+            # Only unselect all channels if we are setting for_analysis=True
+            # This is for backward compatibility with old behavior
+            if for_analysis:
+                # First, unselect all channels
+                await db.execute(
+                    update(SlackChannel)
+                    .where(SlackChannel.workspace_id == workspace_id)
+                    .values(is_selected_for_analysis=False)
+                )
 
-            # Then select the specified channels
+            # Then update the specified channels based on for_analysis flag
             if channel_ids:
                 await db.execute(
                     update(SlackChannel)
@@ -514,7 +519,7 @@ class ChannelService:
                         SlackChannel.workspace_id == workspace_id,
                         SlackChannel.id.in_(channel_ids),
                     )
-                    .values(is_selected_for_analysis=True)
+                    .values(is_selected_for_analysis=for_analysis)
                 )
 
             # Get selected channels

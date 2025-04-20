@@ -5,7 +5,7 @@ API endpoints for integration management.
 import logging
 import uuid
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
 from fastapi.encoders import jsonable_encoder
@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.api.v1.integration.schemas import (
+    ChannelSelectionRequest,
     IntegrationCreate,
     IntegrationResponse,
     IntegrationShareCreate,
@@ -40,6 +41,7 @@ from app.models.integration import (
 )
 from app.services.integration.base import IntegrationService
 from app.services.integration.slack import SlackIntegrationService
+from app.services.slack.channels import ChannelService
 from app.services.team.permissions import has_team_permission
 
 logger = logging.getLogger(__name__)
@@ -874,3 +876,82 @@ async def grant_resource_access(
     # Get the created access with relationships
     # This would need to be expanded in a real implementation
     return access_result
+
+
+@router.post("/{integration_id}/resources/channel-selection")
+async def select_channels_for_integration(
+    integration_id: uuid.UUID,
+    selection: ChannelSelectionRequest,
+    db: AsyncSession = Depends(get_async_db),
+    current_user: Dict = Depends(get_current_user),
+) -> Dict[str, Any]:
+    """
+    Select or deselect channels for analysis.
+
+    Args:
+        integration_id: UUID of the integration
+        selection: Channel selection request with channel_ids and for_analysis flag
+        db: Database session
+        current_user: Current authenticated user
+
+    Returns:
+        Dictionary with selection results
+    """
+    try:
+        # Get the integration
+        integration = await IntegrationService.get_integration(
+            db=db,
+            integration_id=integration_id,
+            user_id=current_user["id"],
+        )
+
+        if not integration:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Integration not found",
+            )
+
+        # Check if this is a Slack integration
+        if integration.service_type != IntegrationType.SLACK:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="This operation is only supported for Slack integrations",
+            )
+
+        # Get the workspace ID from the integration metadata
+        metadata = integration.integration_metadata or {}
+        workspace_id = metadata.get("slack_id")
+
+        if not workspace_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Integration has no associated Slack workspace",
+            )
+
+        # Call the channel selection service
+        result = await ChannelService.select_channels_for_analysis(
+            db=db,
+            workspace_id=workspace_id,
+            channel_ids=selection.channel_ids,
+            install_bot=True,  # Default to installing bot
+            for_analysis=selection.for_analysis,  # Use the frontend's flag
+        )
+
+        # Commit the changes
+        await db.commit()
+
+        return {
+            "status": "success",
+            "message": f"Channels {'selected for' if selection.for_analysis else 'removed from'} analysis",
+            "integration_id": str(integration_id),
+            "workspace_id": workspace_id,
+            "result": result,
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error selecting channels: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An error occurred while selecting channels for analysis",
+        )
