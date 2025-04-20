@@ -36,6 +36,7 @@ from app.models.integration import (
     Integration,
     IntegrationCredential,
     IntegrationType,
+    ResourceType,
     ServiceResource,
     ShareLevel,
 )
