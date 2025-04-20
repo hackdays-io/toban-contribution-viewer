@@ -900,6 +900,9 @@ export const IntegrationProvider: React.FC<{ children: React.ReactNode }> = ({
           return
         }
 
+        console.log('Fetched selected channels:', result)
+
+        // Update the context state with the selected channels
         setState((prev) => ({
           ...prev,
           selectedChannels: result,

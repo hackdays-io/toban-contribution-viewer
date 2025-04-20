@@ -90,22 +90,22 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
   // This is crucial - we don't want to reset our local selection state after each checkbox click
   const hasInitializedRef = React.useRef(false)
 
+  // Initialize selection when channels or selectedChannels change
   useEffect(() => {
-    // Only initialize if we haven't already or if channels have changed
-    if (
-      channels.length > 0 &&
-      (!hasInitializedRef.current ||
-        channels.length !== prevChannelsRef.current?.length)
-    ) {
+    if (channels.length > 0) {
+      // Check which channels are selected according to context
       const initialSelection = channels
         .filter((channel) => isChannelSelectedForAnalysis(channel.id))
         .map((channel) => channel.id)
 
+      console.log('Initial selection from context:', initialSelection)
+
+      // Update local state with this selection
       setSelectedChannelIds(initialSelection)
       hasInitializedRef.current = true
       prevChannelsRef.current = [...channels]
     }
-  }, [channels, isChannelSelectedForAnalysis]) // We need isChannelSelectedForAnalysis for filtering
+  }, [channels, isChannelSelectedForAnalysis, currentResources]) // Add currentResources to trigger re-init after fetch
 
   // We need this ref to track channels changes
   const prevChannelsRef = React.useRef<typeof channels>()
@@ -131,10 +131,17 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
     // Find channels to deselect (in context but not in local selection)
     const channelsToDeselect: string[] = []
 
+    // Debug the current state to understand what's happening
+    console.log('Current UI selection:', selectedChannelIds)
+
     // Determine which channels need to be selected or deselected
     channels.forEach((channel) => {
       const isSelected = selectedChannelIds.includes(channel.id)
       const wasSelected = isChannelSelectedForAnalysis(channel.id)
+
+      console.log(
+        `Channel ${channel.name}: UI selected=${isSelected}, Context selected=${wasSelected}`
+      )
 
       if (isSelected && !wasSelected) {
         channelsToSelect.push(channel.id)
