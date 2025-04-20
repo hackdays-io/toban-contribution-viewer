@@ -650,7 +650,10 @@ async def get_integration_resources(
                         # Set selection status based on whether the channel is in our list
                         external_id = resource.get("external_id")
                         is_selected = external_id in selected_channels
+                        
+                        # Add at both top level and in metadata for backward compatibility
                         resource["metadata"]["is_selected_for_analysis"] = is_selected
+                        resource["is_selected_for_analysis"] = is_selected
 
                         logger.info(
                             f"Channel {resource['name']} (id={external_id}): is_selected_for_analysis={is_selected}"

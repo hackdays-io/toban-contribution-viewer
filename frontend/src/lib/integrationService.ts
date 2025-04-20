@@ -100,6 +100,7 @@ export interface ServiceResource {
   last_synced_at?: string
   created_at: string
   updated_at: string
+  is_selected_for_analysis?: boolean // Added for direct selection status access
 }
 
 export interface IntegrationShare {
@@ -663,30 +664,63 @@ class IntegrationService {
     integrationId: string
   ): Promise<ServiceResource[] | ApiError> {
     try {
+      console.log(
+        '📊 Getting selected channels for integration:',
+        integrationId
+      )
+
       // Get all channels from the resources endpoint
       const resources = await this.getResources(integrationId, [
         ResourceType.SLACK_CHANNEL,
       ])
 
       if (this.isApiError(resources)) {
+        console.error('❌ Error getting resources:', resources)
         throw resources
       }
 
-      // Filter for channels with the is_selected_for_analysis flag
-      const selectedChannels = resources.filter(
-        (resource) =>
-          resource.resource_type === ResourceType.SLACK_CHANNEL &&
+      console.log(`📂 Got ${resources.length} channel resources`)
+
+      // Filter for channels with the is_selected_for_analysis flag in metadata
+      // Check both the metadata.is_selected_for_analysis field and the top-level field
+      // that might have been added by the backend
+      const selectedChannels = resources.filter((resource) => {
+        const metadataSelected =
           resource.metadata?.is_selected_for_analysis === true
+        const resourceSelected = resource.is_selected_for_analysis === true
+
+        // Debug log for each resource with selection status
+        if (metadataSelected || resourceSelected) {
+          console.log(`✓ Channel selected: ${resource.name} (${resource.id})`)
+          console.log(
+            `  - metadata.is_selected_for_analysis: ${metadataSelected}`
+          )
+          console.log(
+            `  - resource.is_selected_for_analysis: ${resourceSelected}`
+          )
+        }
+
+        return (
+          (metadataSelected || resourceSelected) &&
+          resource.resource_type === ResourceType.SLACK_CHANNEL
+        )
+      })
+
+      console.log(
+        `🎯 Found ${selectedChannels.length} channels selected for analysis`
       )
 
-      // Only log count of selected channels, not the whole objects
-      console.log(
-        `Found ${selectedChannels.length} channels selected for analysis`
-      )
+      // Log the IDs of selected channels for debugging
+      if (selectedChannels.length > 0) {
+        console.log('🔍 Selected channel details:')
+        selectedChannels.forEach((ch) => {
+          console.log(`  - ${ch.name} (${ch.id})`)
+        })
+      }
 
       return selectedChannels
     } catch (error) {
-      console.error('Error getting selected channels:', error)
+      console.error('❌ Error getting selected channels:', error)
       return this.handleError(error, 'Failed to get selected channels')
     }
   }

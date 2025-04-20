@@ -892,7 +892,7 @@ export const IntegrationProvider: React.FC<{ children: React.ReactNode }> = ({
       try {
         // First, refetch the resources to make sure we have the latest data
         // This is important because the selection state is part of the resource metadata
-        await fetchResources(integrationId, ['SLACK_CHANNEL'])
+        await fetchResources(integrationId, [ResourceType.SLACK_CHANNEL])
 
         // Now get the selected channels
         const result =
