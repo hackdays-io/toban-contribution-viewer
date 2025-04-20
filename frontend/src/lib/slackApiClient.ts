@@ -90,11 +90,16 @@ export interface SlackOAuthRequest {
   client_secret: string
 }
 
+// Import env config
+import env from '../config/env'
+
 // Slack API client class
 class SlackApiClient extends ApiClient {
   constructor() {
-    // Pass the slack path to the base class
-    super('/integrations/slack')
+    // Use the full API URL with the slack path
+    // The baseUrl should include the protocol, host, and API prefix
+    super(`${env.apiUrl}/slack`)
+    console.log('SlackApiClient initialized with base URL:', `${env.apiUrl}/slack`)
   }
 
   /**
@@ -213,10 +218,11 @@ class SlackApiClient extends ApiClient {
       ...options
     }
     
-    return this.post<SlackAnalysisResult>(
-      `${workspaceId}/channels/${channelId}/analyze`,
-      data
-    )
+    // Construct the path correctly - the baseUrl already includes '/slack'
+    const path = `/workspaces/${workspaceId}/channels/${channelId}/analyze`
+    console.log('Analyzing channel with URL:', `${this.baseUrl}${path}`)
+    
+    return this.post<SlackAnalysisResult>(path, data)
   }
 
   /**
