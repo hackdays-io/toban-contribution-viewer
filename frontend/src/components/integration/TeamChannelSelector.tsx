@@ -100,7 +100,7 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({ integrationId
       hasInitializedRef.current = true;
       prevChannelsRef.current = [...channels];
     }
-  }, [channels]); // Only depend on channels changing, NOT on isChannelSelectedForAnalysis
+  }, [channels, isChannelSelectedForAnalysis]); // We need isChannelSelectedForAnalysis for filtering
   
   // We need this ref to track channels changes
   const prevChannelsRef = React.useRef<typeof channels>();
