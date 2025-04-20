@@ -49,6 +49,8 @@ interface Channel extends ServiceResource {
   type: string
   topic?: string
   purpose?: string
+  workspace_uuid?: string
+  channel_uuid?: string
 }
 
 /**
@@ -166,11 +168,19 @@ const TeamChannelAnalysisPage: React.FC = () => {
         
         console.log('Using workspace ID for external_id:', workspaceId)
         
-        // Create enriched channel data with proper external IDs for the API
+        // Log the complete raw channel data to understand its structure
+        console.log('Raw channel data from API:', JSON.stringify(channelData, null, 2))
+        
+        // Create enriched channel data with proper IDs for the API
         const enrichedChannel: Channel = {
           ...channelData,
-          external_id: workspaceId, // Set to workspace ID (e.g., T02FMV4EB)
-          external_resource_id: channelData.external_id, // Set to channel ID (e.g., C08JP0V9VT8)
+          // Store both database IDs and external IDs
+          // The database UUIDs are in the id properties
+          // The external Slack IDs are in external_id or metadata
+          external_id: workspaceId, // Set to Slack workspace ID (e.g., T02FMV4EB)
+          external_resource_id: channelData.external_id, // Set to Slack channel ID (e.g., C08JP0V9VT8)
+          workspace_uuid: currentIntegration.id, // Database UUID for the workspace/integration
+          channel_uuid: channelData.id, // Database UUID for the channel
           type: (channelData.metadata?.type || channelData.metadata?.is_private) ? 
                 (channelData.metadata?.is_private ? 'private' : 'public') : 
                 'public',
@@ -191,8 +201,10 @@ const TeamChannelAnalysisPage: React.FC = () => {
           integration_id: integrationId,
           name: 'proj-oss-boardgame',
           resource_type: ResourceType.SLACK_CHANNEL,
-          external_id: 'T02FMV4EB', // From DB - workspace ID
-          external_resource_id: 'C08JP0V9VT8', // From DB - channel ID
+          external_id: 'T02FMV4EB', // From DB - Slack workspace ID
+          external_resource_id: 'C08JP0V9VT8', // From DB - Slack channel ID
+          workspace_uuid: integrationId, // Database UUID for the workspace/integration
+          channel_uuid: channelId, // Database UUID for the channel
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           metadata: { type: 'public' },
@@ -260,28 +272,23 @@ const TeamChannelAnalysisPage: React.FC = () => {
         metadata: channel.metadata
       })
 
-      // Re-check and verify we have valid external IDs
-      let workspaceId = channel.external_id
-      let channelSlackId = channel.external_resource_id
+      // Get database UUIDs for the API call
+      // The backend expects UUIDs from the database, not Slack IDs
+      const workspaceUuid = channel.workspace_uuid || integrationId
+      const channelUuid = channel.channel_uuid || channelId
       
-      // Fallback: If we don't have the external_id, use the integration's workspace_id
-      if (!workspaceId && currentIntegration?.workspace_id) {
-        console.log('Using workspace_id from integration:', currentIntegration.workspace_id)
-        workspaceId = currentIntegration.workspace_id
+      console.log('Database UUIDs for analysis:', { 
+        workspace_uuid: workspaceUuid,
+        channel_uuid: channelUuid,
+        // Include Slack IDs for reference
+        slack_workspace_id: channel.external_id,
+        slack_channel_id: channel.external_resource_id
+      })
+      
+      if (!workspaceUuid || !channelUuid) {
+        console.error('Missing database UUIDs for analysis')
+        throw new Error('Missing database UUIDs for analysis')
       }
-      
-      // Fallback: If we don't have external_resource_id, use the channel's original external_id
-      if (!channelSlackId && channel.external_id) {
-        console.log('Using channel external_id as fallback for Slack channel ID')
-        channelSlackId = channel.external_id
-      }
-      
-      if (!workspaceId || !channelSlackId) {
-        console.error('Missing critical IDs for analysis:', { workspaceId, channelSlackId })
-        throw new Error('Missing workspace ID or channel ID for analysis')
-      }
-      
-      console.log('Final IDs for analysis:', { workspaceId, channelSlackId })
 
       // Prepare analysis options for the API client
       const options = {
@@ -297,8 +304,8 @@ const TeamChannelAnalysisPage: React.FC = () => {
 
       // Use the slack API client to run analysis with all options
       const result = await slackApiClient.analyzeChannel(
-        workspaceId,
-        channelSlackId,
+        workspaceUuid,   // Database UUID for workspace
+        channelUuid,     // Database UUID for channel
         'contribution', // analysis_type
         {
           start_date: startDateParam,
