@@ -881,6 +881,8 @@ export const IntegrationProvider: React.FC<{ children: React.ReactNode }> = ({
     async (integrationId: string) => {
       if (!session || !integrationId) return
 
+      console.log('🔍 CONTEXT: Fetching selected channels')
+
       setState((prev) => ({
         ...prev,
         loadingChannelSelection: true,
@@ -888,10 +890,16 @@ export const IntegrationProvider: React.FC<{ children: React.ReactNode }> = ({
       }))
 
       try {
+        // First, refetch the resources to make sure we have the latest data
+        // This is important because the selection state is part of the resource metadata
+        await fetchResources(integrationId, ['SLACK_CHANNEL'])
+
+        // Now get the selected channels
         const result =
           await integrationService.getSelectedChannels(integrationId)
 
         if (integrationService.isApiError(result)) {
+          console.error('❌ CONTEXT: Error fetching selected channels', result)
           setState((prev) => ({
             ...prev,
             loadingChannelSelection: false,
@@ -900,7 +908,7 @@ export const IntegrationProvider: React.FC<{ children: React.ReactNode }> = ({
           return
         }
 
-        console.log('Fetched selected channels:', result)
+        console.log('✅ CONTEXT: Fetched selected channels:', result)
 
         // Update the context state with the selected channels
         setState((prev) => ({
@@ -909,6 +917,7 @@ export const IntegrationProvider: React.FC<{ children: React.ReactNode }> = ({
           loadingChannelSelection: false,
         }))
       } catch (error) {
+        console.error('❌ CONTEXT: Error fetching selected channels', error)
         setState((prev) => ({
           ...prev,
           loadingChannelSelection: false,
@@ -919,15 +928,20 @@ export const IntegrationProvider: React.FC<{ children: React.ReactNode }> = ({
         }))
       }
     },
-    [session]
+    [session, fetchResources]
   )
 
   /**
    * Select channels for analysis
+   *
+   * With our improved flow, this method will handle the complete selection in one call
+   * (instead of the previous select + deselect approach).
    */
   const selectChannelsForAnalysis = useCallback(
     async (integrationId: string, channelIds: string[]): Promise<boolean> => {
-      if (!session || !integrationId || !channelIds.length) return false
+      if (!session || !integrationId) return false
+
+      console.log('🔧 CONTEXT: Selecting channels for analysis', channelIds)
 
       setState((prev) => ({
         ...prev,
@@ -936,27 +950,57 @@ export const IntegrationProvider: React.FC<{ children: React.ReactNode }> = ({
       }))
 
       try {
-        const result = await integrationService.selectChannelsForAnalysis(
-          integrationId,
-          {
-            channel_ids: channelIds,
-            for_analysis: true,
-          }
-        )
+        // First, we'll unselect ALL channels by calling the API with an empty list
+        // and then select only the ones we want
 
-        if (integrationService.isApiError(result)) {
-          setState((prev) => ({
-            ...prev,
-            loadingChannelSelection: false,
-            channelSelectionError: result,
-          }))
-          return false
+        // Special case: if empty selection, just unselect all
+        if (channelIds.length === 0) {
+          console.log('🔧 CONTEXT: Empty selection - unselecting all channels')
+          const result = await integrationService.selectChannelsForAnalysis(
+            integrationId,
+            {
+              channel_ids: [],
+              for_analysis: true, // true here means replace entire selection
+            }
+          )
+
+          if (integrationService.isApiError(result)) {
+            setState((prev) => ({
+              ...prev,
+              loadingChannelSelection: false,
+              channelSelectionError: result,
+            }))
+            return false
+          }
+        } else {
+          // Normal case - select specific channels
+          console.log(`🔧 CONTEXT: Selecting ${channelIds.length} channels`)
+          const result = await integrationService.selectChannelsForAnalysis(
+            integrationId,
+            {
+              channel_ids: channelIds,
+              for_analysis: true,
+            }
+          )
+
+          if (integrationService.isApiError(result)) {
+            setState((prev) => ({
+              ...prev,
+              loadingChannelSelection: false,
+              channelSelectionError: result,
+            }))
+            return false
+          }
         }
 
-        // After successful selection, refresh the selected channels list
-        await fetchSelectedChannels(integrationId)
+        console.log('🔧 CONTEXT: Selection complete')
+        setState((prev) => ({
+          ...prev,
+          loadingChannelSelection: false,
+        }))
         return true
       } catch (error) {
+        console.error('🔧 CONTEXT: Error selecting channels', error)
         setState((prev) => ({
           ...prev,
           loadingChannelSelection: false,
@@ -968,7 +1012,7 @@ export const IntegrationProvider: React.FC<{ children: React.ReactNode }> = ({
         return false
       }
     },
-    [session, fetchSelectedChannels]
+    [session]
   )
 
   /**

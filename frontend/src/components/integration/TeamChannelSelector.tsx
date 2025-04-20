@@ -86,29 +86,45 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
     }
   }, [integrationId, fetchResources, fetchSelectedChannels])
 
-  // Initialize selected channels from context - BUT ONLY ONCE ON MOUNT OR WHEN CHANNELS CHANGE
-  // This is crucial - we don't want to reset our local selection state after each checkbox click
-  const hasInitializedRef = React.useRef(false)
+  // We'll use a simpler approach: load selection once on mount,
+  // then only update when explicitly intended (after saves or refreshes)
+  const [initialized, setInitialized] = useState(false)
 
-  // Initialize selection when channels or selectedChannels change
+  // Load initial selection only once when component mounts and channels are available
   useEffect(() => {
-    if (channels.length > 0) {
-      // Check which channels are selected according to context
-      const initialSelection = channels
+    if (!initialized && channels.length > 0 && !loadingResources) {
+      console.log('🔄 INITIALIZATION: Loading initial channel selection')
+
+      // Fetch selected channels from backend
+      fetchSelectedChannels(integrationId).then(() => {
+        console.log('✅ Initial fetch complete')
+        setInitialized(true)
+      })
+    }
+  }, [
+    initialized,
+    channels.length,
+    integrationId,
+    fetchSelectedChannels,
+    loadingResources,
+  ])
+
+  // When selectedChannels changes in context, update our local state
+  useEffect(() => {
+    if (initialized && channels.length > 0) {
+      console.log('🔄 SYNC: Updating selection from context state')
+
+      // Get IDs of selected channels from context
+      const contextSelection = channels
         .filter((channel) => isChannelSelectedForAnalysis(channel.id))
         .map((channel) => channel.id)
 
-      console.log('Initial selection from context:', initialSelection)
+      console.log('📋 Selected channel IDs:', contextSelection)
 
-      // Update local state with this selection
-      setSelectedChannelIds(initialSelection)
-      hasInitializedRef.current = true
-      prevChannelsRef.current = [...channels]
+      // Update our local state
+      setSelectedChannelIds(contextSelection)
     }
-  }, [channels, isChannelSelectedForAnalysis, currentResources]) // Add currentResources to trigger re-init after fetch
-
-  // We need this ref to track channels changes
-  const prevChannelsRef = React.useRef<typeof channels>()
+  }, [initialized, channels, isChannelSelectedForAnalysis])
 
   // Handle checkbox change
   const handleSelectChannel = (channelId: string) => {
@@ -126,70 +142,65 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
 
   // Save selected channels to backend
   const handleSaveSelection = async () => {
-    // Find channels to select (in local selection but not in context)
-    const channelsToSelect: string[] = []
-    // Find channels to deselect (in context but not in local selection)
-    const channelsToDeselect: string[] = []
+    console.log('💾 SAVE: Saving channel selection')
 
-    // Debug the current state to understand what's happening
-    console.log('Current UI selection:', selectedChannelIds)
-
-    // Determine which channels need to be selected or deselected
-    channels.forEach((channel) => {
-      const isSelected = selectedChannelIds.includes(channel.id)
-      const wasSelected = isChannelSelectedForAnalysis(channel.id)
-
-      console.log(
-        `Channel ${channel.name}: UI selected=${isSelected}, Context selected=${wasSelected}`
-      )
-
-      if (isSelected && !wasSelected) {
-        channelsToSelect.push(channel.id)
-      } else if (!isSelected && wasSelected) {
-        channelsToDeselect.push(channel.id)
-      }
-    })
-
-    // Perform API operations
-    let success = true
-
-    if (channelsToSelect.length > 0) {
-      success = await selectChannelsForAnalysis(integrationId, channelsToSelect)
-    }
-
-    if (success && channelsToDeselect.length > 0) {
-      success = await deselectChannelsForAnalysis(
-        integrationId,
-        channelsToDeselect
-      )
-    }
-
-    // Show success or error toast
-    if (success) {
-      toast({
-        title: 'Selection saved',
-        description: 'Your channel selection has been saved successfully.',
-        status: 'success',
-        duration: 5000,
-        isClosable: true,
+    // Instead of calculating diffs, we'll set entire selection at once
+    try {
+      // Show loading toast
+      const loadingToastId = toast({
+        title: 'Saving selection...',
+        status: 'loading',
+        duration: null,
+        isClosable: false,
       })
 
-      // Refresh selected channels from backend, but don't update our local state
-      // This updates the context state only, without triggering our initialization effect
-      await fetchSelectedChannels(integrationId)
+      // Simply select all channels in our current UI selection
+      const success = await selectChannelsForAnalysis(
+        integrationId,
+        selectedChannelIds
+      )
 
-      // Our selection is already in sync with the backend, so we don't need to re-initialize
-    } else if (channelSelectionError) {
+      // Close loading toast
+      toast.close(loadingToastId)
+
+      if (success) {
+        // Success feedback
+        toast({
+          title: 'Selection saved',
+          description: 'Your channel selection has been saved successfully.',
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        })
+
+        // Explicitly fetch the latest selection to update the context
+        await fetchSelectedChannels(integrationId)
+
+        console.log('✅ Save complete, fetched latest selection')
+      } else {
+        // Error feedback
+        toast({
+          title: 'Error saving selection',
+          description:
+            channelSelectionError?.message || 'Failed to save your selection.',
+          status: 'error',
+          duration: 5000,
+          isClosable: true,
+        })
+        clearChannelSelectionError()
+      }
+    } catch (error) {
+      console.error('❌ Error in handleSaveSelection:', error)
+
+      // Error feedback
       toast({
         title: 'Error saving selection',
         description:
-          channelSelectionError.message ||
-          'An error occurred while saving your selection.',
+          'An unexpected error occurred while saving your selection.',
         status: 'error',
         duration: 5000,
         isClosable: true,
       })
-      clearChannelSelectionError()
     }
   }
 
