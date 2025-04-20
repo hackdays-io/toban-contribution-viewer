@@ -14,6 +14,19 @@ export default defineConfig(({ mode }) => {
     VITE_ADDITIONAL_ALLOWED_HOSTS: env.VITE_ADDITIONAL_ALLOWED_HOSTS,
   });
   
+  // FUTURE ENHANCEMENT: If we need to extract specific domains to include instead of allowing all:
+  // 
+  // function extractHostname(url) {
+  //   try {
+  //     return new URL(url).hostname;
+  //   } catch {
+  //     return null;
+  //   }
+  // }
+  // 
+  // const ngrokHost = env.VITE_FRONTEND_URL ? extractHostname(env.VITE_FRONTEND_URL) : null;
+  // const allowedHostsList = ['localhost', '127.0.0.1', ngrokHost].filter(Boolean);
+
   // For development with ngrok, allow all hosts
   // This is a more permissive approach that will solve the immediate issue
   const allowedHosts = true; // Allow all hosts
@@ -30,7 +43,7 @@ export default defineConfig(({ mode }) => {
       clientPort: number;
     };
     cors: boolean;
-    allowedHosts: string[];
+    allowedHosts: string[] | true;
     proxy?: {
       [key: string]: {
         target: string;
@@ -52,8 +65,9 @@ export default defineConfig(({ mode }) => {
         clientPort: 5173
       },
       cors: true,
-      // Allow connections from these hosts
-      allowedHosts: typeof allowedHosts === 'boolean' ? ['localhost', '127.0.0.1'] : allowedHosts,
+      // When allowedHosts is true, keep it as true (allow all hosts)
+      // Otherwise, ensure we include both localhost and ngrok domains
+      allowedHosts,
       // Initialize proxy as empty object to satisfy TypeScript
       proxy: {} as ServerConfig['proxy']
     } as ServerConfig
@@ -74,6 +88,6 @@ export default defineConfig(({ mode }) => {
     console.log('Production mode: API proxy disabled');
   }
   
-  console.log('Allowed hosts:', allowedHosts);
+  console.log('Allowed hosts:', allowedHosts === true ? 'All hosts allowed' : allowedHosts);
   return config;
 })
