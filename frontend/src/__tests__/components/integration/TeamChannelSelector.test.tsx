@@ -1,5 +1,5 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { ChakraProvider } from '@chakra-ui/react';
 import TeamChannelSelector from '../../../components/integration/TeamChannelSelector';
 import IntegrationContext from '../../../context/IntegrationContext';
@@ -113,6 +113,12 @@ const mockIntegrationContext = {
 describe('TeamChannelSelector', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+  
+  afterEach(() => {
+    // Clean up any lingering timers or async operations
+    vi.clearAllTimers();
+    vi.restoreAllMocks();
   });
 
   const renderWithContext = () => {
