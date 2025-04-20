@@ -58,6 +58,23 @@
   postgresql://toban_admin:postgres@localhost:5432/tobancv
   ```
 
-## Do test before creating new pull requests
-- Run above test, lint, format, black, isort, flake8, mypy when you create new pull requests.
-- Also run those tests when you push changes to the branch which already sent a pull request
+## CI Checks
+- Always run CI checks using the CI-compatibility mode before pushing your code to GitHub:
+  ```bash
+  ./run-ci-checks.sh --ci-compatible --auto-fix
+  ```
+  This command will:
+  - Automatically fix common issues like formatting and linting
+  - Use the same configuration as GitHub Actions
+  - Skip checks that aren't run in GitHub CI (like mypy)
+  - Prevent CI failures in the GitHub workflow
+
+- Options for CI checks:
+  - `--all`: Run all checks regardless of which files changed
+  - `--auto-fix`: Automatically fix common issues
+  - `--ci-compatible`: Use the same configuration as GitHub Actions
+  - `--skip-mypy`: Skip mypy type checking (included in --ci-compatible)
+
+- Run these checks before:
+  - Creating new pull requests
+  - Pushing changes to branches with existing pull requests
