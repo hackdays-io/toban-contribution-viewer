@@ -183,13 +183,9 @@ class NotionIntegrationCreate(IntegrationCreate):
 class IntegrationShareCreate(IntegrationShareBase):
     """Schema for creating a new integration share."""
 
-    pass
-
 
 class ResourceAccessCreate(ResourceAccessBase):
     """Schema for creating a new resource access grant."""
-
-    pass
 
 
 # Schemas for API responses

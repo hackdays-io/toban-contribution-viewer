@@ -168,67 +168,99 @@ npm run test
 npm run test:watch
 ```
 
-### Code Quality and Pre-commit Hooks
+### Code Quality and CI Checks
 
-This project uses pre-commit hooks to ensure code quality. These hooks automatically run checks before each commit to catch issues early in the development process.
+This project uses local CI check scripts to ensure code quality. These scripts mirror the GitHub Actions workflows and help catch issues early in the development process.
 
-#### Setup Pre-commit Hooks
+> **Note**: We are transitioning away from pre-commit hooks to these CI check scripts. If you still have pre-commit hooks installed, you can remove them by running the `scripts/remove-pre-commit.sh` script.
 
-1. Install pre-commit:
+#### Available Scripts
+
+- **Root Script**: Run checks based on changes
+  ```bash
+  ./run-ci-checks.sh
+  ```
+
+- **Frontend-only Checks**:
+  ```bash
+  ./frontend/scripts/run-ci-checks.sh
+  ```
+
+- **Backend-only Checks**:
+  ```bash
+  ./backend/scripts/run-ci-checks.sh
+  ```
+
+- **Remove Pre-commit Hooks**:
+  ```bash
+  ./scripts/remove-pre-commit.sh
+  ```
+
+#### Using the Scripts
+
+The main script at the repository root (`run-ci-checks.sh`) automatically detects which files have changed and runs only the necessary checks. This helps save time by skipping unneeded checks.
+
+1. To run checks based on changed files:
    ```bash
-   pip install pre-commit
+   ./run-ci-checks.sh
    ```
 
-2. Install the git hooks:
+2. To run all checks regardless of changed files:
    ```bash
-   pre-commit install
+   ./run-ci-checks.sh --all
    ```
 
-#### Included Hooks
+3. To automatically fix common issues (formatting, linting, etc.):
+   ```bash
+   ./run-ci-checks.sh --auto-fix
+   ```
 
-The pre-commit configuration includes:
+4. To make checks match GitHub CI exactly:
+   ```bash
+   ./run-ci-checks.sh --ci-compatible
+   ```
+   
+   This ensures that the local checks use the same configuration as GitHub Actions, including:
+   - Same ignore rules for flake8
+   - Skipping mypy checks (not run in GitHub CI)
+   - Auto-detecting and handling plugin differences
+   
+   You can combine options:
+   ```bash
+   ./run-ci-checks.sh --all --auto-fix --ci-compatible
+   ```
 
-- **Python Hooks**:
-  - Black for code formatting
-  - isort for import sorting
+#### Included Checks
 
-- **TypeScript/Frontend Hooks**:
-  - TypeScript compiler for type checking
-  - ESLint for linting
-  - Prettier for code formatting
-  - Special checks for Vite configuration
+The CI check scripts include:
 
-- **General Hooks**:
-  - End of file fixer
-  - YAML and JSON syntax checking
-  - Large file prevention
-  - Merge conflict detection
+- **Frontend Checks**:
+  - Prettier formatting
+  - ESLint linting
+  - TypeScript type checking
+  - Build verification
+  - Unit tests with coverage
 
-#### Running Hooks Manually
+- **Backend Checks**:
+  - Black code formatting
+  - isort import sorting
+  - flake8 linting
+  - mypy type checking
+  - Unit tests with coverage
 
-You can run all pre-commit hooks manually on all files:
+#### Pre-Push Validation
+
+It's recommended to run these checks before pushing to the repository:
 
 ```bash
-pre-commit run --all-files
+# Run checks on changed files
+./run-ci-checks.sh
+
+# If all checks pass, push your changes
+git push
 ```
 
-Or run a specific hook:
-
-```bash
-pre-commit run black --all-files
-```
-
-#### Bypassing Hooks (Emergency Only)
-
-In rare cases, you may need to bypass the pre-commit hooks for emergency commits:
-
-```bash
-git commit --no-verify -m "Emergency commit message"
-```
-
-**Important**: Use this sparingly and only in genuine emergencies. Follow up with a proper fix as soon as possible.
-
-For more details about the pre-commit setup, see [PRE-COMMIT.md](PRE-COMMIT.md).
+This helps ensure your changes will pass CI checks on GitHub.
 
 ## Slack Integration
 

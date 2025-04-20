@@ -1,6 +1,13 @@
-# Pre-commit Hook Configuration
+# Pre-commit Hook Configuration (Legacy)
 
-This project uses pre-commit hooks to ensure code quality and consistency. These hooks run automatically before each commit to catch issues early.
+> **Important Update**: We are transitioning away from pre-commit hooks to CI check scripts. This document is kept for reference, but the recommended approach is now to use the CI check scripts described in [DEVELOPMENT.md](DEVELOPMENT.md).
+>
+> To remove pre-commit hooks and switch to CI check scripts, run:
+> ```bash
+> ./scripts/remove-pre-commit.sh
+> ```
+
+This project previously used pre-commit hooks to ensure code quality and consistency. These hooks ran automatically before each commit to catch issues early.
 
 ## Setup
 
@@ -46,6 +53,28 @@ git commit --no-verify -m "Your emergency commit message"
 ```
 
 ## Common Issues and Solutions
+
+### Using CI Check Scripts with Auto-Fix
+
+For a more streamlined approach to fixing common issues, you can use the CI check scripts with the `--auto-fix` option:
+
+```bash
+# Fix issues in both frontend and backend (only for changed files)
+./run-ci-checks.sh --auto-fix
+
+# Fix issues in frontend only
+./frontend/scripts/run-ci-checks.sh --auto-fix
+
+# Fix issues in backend only
+./backend/scripts/run-ci-checks.sh --auto-fix
+```
+
+This will automatically fix:
+- Formatting issues (Prettier for frontend, Black for backend)
+- Linting issues (ESLint for frontend, simple flake8 issues for backend)
+- Import sorting issues (isort for backend)
+
+For more complex issues that cannot be fixed automatically, you'll still need to resolve them manually.
 
 ### TypeScript Errors
 
