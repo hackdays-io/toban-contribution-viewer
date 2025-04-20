@@ -109,44 +109,41 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({ integrationId
     }
   }, [channels, isChannelSelectedForAnalysis]);
 
-  // A simple debounce function to prevent multiple rapid calls
-  const debounce = (fn: Function, delay: number) => {
-    let timeoutId: NodeJS.Timeout;
-    return (...args: any[]) => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => fn(...args), delay);
-    };
-  };
+  // Use standard array instead of Set for state to ensure proper React state updates
+  // Convert to array for easier debugging and state management
+  useEffect(() => {
+    console.log('Current selected channels array:', Array.from(selectedChannels));
+  }, [selectedChannels]);
   
-  // Debounced version of the select handler to prevent duplicate calls
-  const handleSelectChannelDebounced = debounce((channelId: string) => {
-    console.log('Handling select channel (debounced):', channelId);
+  // Direct, simplified checkbox handler
+  const handleSelectChannel = (channelId: string) => {
+    console.log('Handling select channel:', channelId);
     
-    // Use a callback to ensure we're working with the latest state
-    setSelectedChannels(prev => {
-      // Create a new Set to avoid mutation
-      const newSelection = new Set(prev);
+    setSelectedChannels(prevSelected => {
+      // Create copy of previous selected channels
+      const newSelected = new Set(prevSelected);
       
-      // Toggle the selection
-      if (newSelection.has(channelId)) {
-        console.log('Removing channel:', channelId);
-        newSelection.delete(channelId);
+      // Toggle selection
+      if (newSelected.has(channelId)) {
+        console.log('Removing channel from selection:', channelId);
+        newSelected.delete(channelId);
       } else {
-        console.log('Adding channel:', channelId);
-        newSelection.add(channelId);
+        console.log('Adding channel to selection:', channelId);
+        newSelected.add(channelId);
       }
       
-      // Return the updated selection immediately
-      const updatedSelection = new Set(newSelection);
-      console.log('Updated selection:', Array.from(updatedSelection));
-      return updatedSelection;
+      console.log('New selection:', Array.from(newSelected));
+      return newSelected;
     });
-  }, 100); // 100ms debounce
-  
-  // Handle checkbox change with debouncing
-  const handleSelectChannel = (channelId: string) => {
-    console.log('Handling select channel request:', channelId);
-    handleSelectChannelDebounced(channelId);
+    
+    // Force React to update with forceUpdate
+    const checkbox = document.getElementById(`checkbox-${channelId}`) as HTMLInputElement;
+    if (checkbox) {
+      // Manually trigger change if needed
+      console.log('Current checkbox checked state:', checkbox.checked);
+      // Toggle manually if needed in extreme cases
+      // checkbox.checked = !checkbox.checked;
+    }
   };
 
   // Save selected channels to backend
@@ -260,38 +257,42 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({ integrationId
           <Tbody>
             {filteredChannels.map((channel) => (
               <Tr 
-                key={channel.id} 
+                key={`row-${channel.id}`} 
                 onClick={(e) => {
-                  // Only handle row clicks on the row itself, not child elements
-                  if (e.target === e.currentTarget || 
-                      (e.target as HTMLElement).tagName === 'TD') {
-                    console.log('Row clicked, handling select for channel:', channel.id);
-                    handleSelectChannel(channel.id);
+                  // Check if click target is the checkbox cell or a child of it
+                  const target = e.target as HTMLElement;
+                  if (target.closest('[data-checkbox-cell="true"]')) {
+                    // Skip if clicked in checkbox cell
+                    return;
                   }
+                  
+                  console.log('Row clicked, toggling selection for:', channel.id);
+                  handleSelectChannel(channel.id);
                 }}
                 cursor="pointer"
                 _hover={{ bg: rowHoverBg }}
                 bg={selectedChannels.has(channel.id) ? 'blue.50' : undefined}
                 data-selected={selectedChannels.has(channel.id)}
               >
-                <Td onClick={(e) => {
-                    // Prevent click from reaching the row
-                    e.stopPropagation();
-                    e.preventDefault();
-                  }}>
-                  <Checkbox
-                    isChecked={selectedChannels.has(channel.id)}
-                    colorScheme="blue"
-                    id={`checkbox-${channel.id}`}
-                    onChange={(e) => {
-                      // Stop event propagation
+                <Td data-checkbox-cell="true">
+                  <Box 
+                    onClick={(e) => {
                       e.stopPropagation();
-                      // Only handle the checkbox click, not row click
+                      console.log('Checkbox cell clicked, toggling channel:', channel.id);
                       handleSelectChannel(channel.id);
                     }}
-                    // Add key to force re-render when selection changes
-                    key={`checkbox-${channel.id}-${selectedChannels.has(channel.id)}`}
-                  />
+                    cursor="pointer"
+                    p={1}
+                    data-checkbox-cell="true"
+                  >
+                    <Checkbox
+                      isChecked={selectedChannels.has(channel.id)}
+                      colorScheme="blue"
+                      id={`checkbox-${channel.id}`}
+                      // No onChange handler - handle clicks at the Box level instead
+                      // This prevents event bubbling issues
+                    />
+                  </Box>
                 </Td>
                 <Td fontWeight="medium">
                   <HStack>
