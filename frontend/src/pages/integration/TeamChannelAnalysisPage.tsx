@@ -160,10 +160,16 @@ const TeamChannelAnalysisPage: React.FC = () => {
             // We need to map these correctly for our Channel interface
             
             if (currentIntegration && channelData) {
+              const workspaceId = currentIntegration.workspace_id || 
+                                 currentIntegration.metadata?.slack_id || 
+                                 'T02FMV4EB' // Fallback from DB
+              
+              console.log('Using workspace ID for external_id:', workspaceId)
+              
               const enrichedChannel: Channel = {
                 ...channelData,
-                external_id: currentIntegration.metadata?.slack_id || currentIntegration.workspace_id, // Workspace ID
-                external_resource_id: channelData.external_id, // Channel ID
+                external_id: workspaceId, // Set to workspace ID (e.g., T02FMV4EB)
+                external_resource_id: channelData.external_id, // Set to channel ID (e.g., C08JP0V9VT8)
                 type: (channelData.metadata?.type || channelData.metadata?.is_private) ? 
                       (channelData.metadata?.is_private ? 'private' : 'public') : 
                       'public',
@@ -171,7 +177,10 @@ const TeamChannelAnalysisPage: React.FC = () => {
                 purpose: channelData.metadata?.purpose || ''
               }
               
-              console.log('Enriched channel data:', enrichedChannel)
+              console.log('Enriched channel data from direct fetch:', {
+                before: JSON.stringify(channelData, null, 2),
+                after: JSON.stringify(enrichedChannel, null, 2)
+              })
               setChannel(enrichedChannel)
               return
             }
@@ -196,11 +205,15 @@ const TeamChannelAnalysisPage: React.FC = () => {
         if (channelResource) {
           console.log('Found channel resource:', channelResource)
           
-          // Enrich channel data
+          // Enrich channel data - properly map external IDs
+          const workspaceId = currentIntegration?.workspace_id || currentIntegration?.metadata?.slack_id
+          console.log('Using workspace ID for external_id:', workspaceId)
+          
+          // Map external IDs correctly for Slack API
           const enrichedChannel: Channel = {
             ...channelResource,
-            external_id: currentIntegration?.workspace_id || '', // Workspace ID
-            external_resource_id: channelResource.external_id, // Channel ID
+            external_id: workspaceId, // Set to workspace ID (e.g., T02FMV4EB)
+            external_resource_id: channelResource.external_id, // Set to channel ID (e.g., C08JP0V9VT8)
             type: (channelResource.metadata?.type || channelResource.metadata?.is_private) ? 
                   (channelResource.metadata?.is_private ? 'private' : 'public') : 
                   'public',
@@ -208,7 +221,10 @@ const TeamChannelAnalysisPage: React.FC = () => {
             purpose: channelResource.metadata?.purpose || ''
           }
           
-          console.log('Enriched channel data from context:', enrichedChannel)
+          console.log('Enriched channel data from context:', {
+            before: JSON.stringify(channelResource, null, 2),
+            after: JSON.stringify(enrichedChannel, null, 2)
+          })
           setChannel(enrichedChannel)
         } else {
           console.error('Channel not found in resources:', {
@@ -270,6 +286,9 @@ const TeamChannelAnalysisPage: React.FC = () => {
     }
 
     try {
+      console.log('Starting analysis with channel state:', channel)
+      console.log('Current integration state:', currentIntegration)
+      
       setIsLoading(true)
       setAnalysis(null)
 
@@ -283,19 +302,43 @@ const TeamChannelAnalysisPage: React.FC = () => {
         throw new Error('Channel data is missing')
       }
 
+      // Log all channel properties in detail
       console.log('Channel data for analysis:', {
-        channel: channel,
+        channel: JSON.stringify(channel, null, 2),
+        id: channel.id,
+        name: channel.name,
+        type: channel.type,
         externalId: channel.external_id,
-        externalResourceId: channel.external_resource_id
+        externalResourceId: channel.external_resource_id,
+        metadata: channel.metadata
       })
 
-      if (!channel.external_id || !channel.external_resource_id) {
+      // Re-check and verify we have valid external IDs
+      let workspaceId = channel.external_id
+      let channelSlackId = channel.external_resource_id
+      
+      // Fallback: If we don't have the external_id, use the integration's workspace_id
+      if (!workspaceId && currentIntegration?.workspace_id) {
+        console.log('Using workspace_id from integration:', currentIntegration.workspace_id)
+        workspaceId = currentIntegration.workspace_id
+      }
+      
+      // Fallback: If we don't have external_resource_id, use the channel's original external_id
+      if (!channelSlackId && channel.external_id) {
+        console.log('Using channel external_id as fallback for Slack channel ID')
+        channelSlackId = channel.external_id
+      }
+      
+      if (!workspaceId || !channelSlackId) {
+        console.error('Missing critical IDs for analysis:', { workspaceId, channelSlackId })
         throw new Error('Missing workspace ID or channel ID for analysis')
       }
+      
+      console.log('Final IDs for analysis:', { workspaceId, channelSlackId })
 
       // Build the URL with all parameters - make sure we're using the correct API path
       const url = new URL(
-        `api/v1/slack/workspaces/${channel.external_id}/channels/${channel.external_resource_id}/analyze`,
+        `api/v1/slack/workspaces/${workspaceId}/channels/${channelSlackId}/analyze`,
         env.apiUrl
       )
       
