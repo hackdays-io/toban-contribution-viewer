@@ -200,6 +200,10 @@ class SlackApiClient extends ApiClient {
 
   /**
    * Run channel analysis
+   * @param workspaceId Database UUID for the workspace
+   * @param channelId Database UUID for the channel
+   * @param analysisType Type of analysis to run (e.g., 'contribution')
+   * @param options Optional parameters for the analysis
    */
   async analyzeChannel(
     workspaceId: string,
@@ -218,9 +222,8 @@ class SlackApiClient extends ApiClient {
       ...options
     }
     
-    // Construct the path correctly - the baseUrl already includes '/slack'
+    // Build path with workspaceId (database UUID) and channelId (database UUID)
     const path = `/workspaces/${workspaceId}/channels/${channelId}/analyze`
-    console.log('Analyzing channel with URL:', `${this.baseUrl}${path}`)
     
     return this.post<SlackAnalysisResult>(path, data)
   }

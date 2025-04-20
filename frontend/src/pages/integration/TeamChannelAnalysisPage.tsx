@@ -123,103 +123,50 @@ const TeamChannelAnalysisPage: React.FC = () => {
         throw new Error('Missing integration ID')
       }
       
-      console.log('Fetching integration:', integrationId)
-      console.log('API URL from env:', env.apiUrl)
-      
-      // Skip fetching integration if we already have it
+      // Fetch integration if needed
       if (!currentIntegration) {
-        console.log('Current integration not available, fetching it')
         await fetchIntegration(integrationId)
-      } else {
-        console.log('Using existing integration:', currentIntegration.id)
       }
       
-      // Double-check we have the integration
+      // We need the integration to proceed
       if (!currentIntegration) {
-        console.error('Integration not available after fetch attempt')
-        // Don't throw here, just return and let the useEffect try again
-        return
+        throw new Error('Failed to load integration data')
       }
 
-      // Once we have the integration, fetch channel data
+      // Now fetch channel data
       if (!channelId) {
         throw new Error('Missing channel ID')
       }
       
-      console.log('Fetching channel data for ID:', channelId)
+      // Get channel via the integration service
+      const channelData = await integrationService.getResource(integrationId, channelId)
       
-      try {
-        // Use integrationService directly - this method already fetches all resources and filters
-        console.log('Using integrationService to fetch resource directly')
-        const channelData = await integrationService.getResource(integrationId, channelId)
-        
-        // Check if the result is an API error
-        if (integrationService.isApiError(channelData)) {
-          console.error('Failed to fetch channel directly:', channelData.message)
-          throw new Error(channelData.message)
-        }
-        
-        console.log('Fetched channel directly:', channelData)
-        
-        // Get workspace ID from integration
-        const workspaceId = currentIntegration.workspace_id || 
-                           currentIntegration.metadata?.slack_id || 
-                           'T02FMV4EB' // Fallback from DB
-        
-        console.log('Using workspace ID for external_id:', workspaceId)
-        
-        // Log the complete raw channel data to understand its structure
-        console.log('Raw channel data from API:', JSON.stringify(channelData, null, 2))
-        
-        // Create enriched channel data with proper IDs for the API
-        const enrichedChannel: Channel = {
-          ...channelData,
-          // Store both database IDs and external IDs
-          // The database UUIDs are in the id properties
-          // The external Slack IDs are in external_id or metadata
-          external_id: workspaceId, // Set to Slack workspace ID (e.g., T02FMV4EB)
-          external_resource_id: channelData.external_id, // Set to Slack channel ID (e.g., C08JP0V9VT8)
-          workspace_uuid: currentIntegration.id, // Database UUID for the workspace/integration
-          channel_uuid: channelData.id, // Database UUID for the channel
-          type: (channelData.metadata?.type || channelData.metadata?.is_private) ? 
-                (channelData.metadata?.is_private ? 'private' : 'public') : 
-                'public',
-          topic: channelData.metadata?.topic || '',
-          purpose: channelData.metadata?.purpose || ''
-        }
-        
-        console.log('Using channel data:', enrichedChannel)
-        setChannel(enrichedChannel)
-        
-      } catch (error) {
-        console.error('Error fetching channel directly:', error)
-        
-        // As a last resort, use hardcoded values from the database
-        console.warn('Using hardcoded channel data as fallback')
-        const fallbackChannel: Channel = {
-          id: channelId,
-          integration_id: integrationId,
-          name: 'proj-oss-boardgame',
-          resource_type: ResourceType.SLACK_CHANNEL,
-          external_id: 'T02FMV4EB', // From DB - Slack workspace ID
-          external_resource_id: 'C08JP0V9VT8', // From DB - Slack channel ID
-          workspace_uuid: integrationId, // Database UUID for the workspace/integration
-          channel_uuid: channelId, // Database UUID for the channel
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          metadata: { type: 'public' },
-          type: 'public',
-          topic: '',
-          purpose: ''
-        }
-        
-        setChannel(fallbackChannel)
+      // Check if the result is an API error
+      if (integrationService.isApiError(channelData)) {
+        throw new Error(`Failed to fetch channel: ${channelData.message}`)
       }
+      
+      // Create enriched channel data with proper IDs for the API
+      const enrichedChannel: Channel = {
+        ...channelData,
+        // Store the database UUIDs for API calls
+        workspace_uuid: currentIntegration.id, // Database UUID for the workspace
+        channel_uuid: channelData.id,          // Database UUID for the channel
+        external_id: currentIntegration.workspace_id || '', // Slack workspace ID
+        external_resource_id: channelData.external_id,      // Slack channel ID
+        type: (channelData.metadata?.type || channelData.metadata?.is_private) ? 
+              (channelData.metadata?.is_private ? 'private' : 'public') : 
+              'public',
+        topic: channelData.metadata?.topic || '',
+        purpose: channelData.metadata?.purpose || ''
+      }
+      
+      setChannel(enrichedChannel)
     } catch (error) {
       console.error('Error fetching info:', error)
       toast({
         title: 'Error',
-        description: 'Failed to load channel information',
+        description: error instanceof Error ? error.message : 'Failed to load channel information',
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -245,9 +192,6 @@ const TeamChannelAnalysisPage: React.FC = () => {
     }
 
     try {
-      console.log('Starting analysis with channel state:', channel)
-      console.log('Current integration state:', currentIntegration)
-      
       setIsLoading(true)
       setAnalysis(null)
 
@@ -255,58 +199,16 @@ const TeamChannelAnalysisPage: React.FC = () => {
       const startDateParam = startDate ? new Date(startDate).toISOString() : ''
       const endDateParam = endDate ? new Date(endDate).toISOString() : ''
 
-      // Check if we have the required IDs
-      if (!channel) {
-        console.error('Channel object is null or undefined')
-        throw new Error('Channel data is missing')
+      // Verify we have channel data with UUIDs
+      if (!channel || !channel.workspace_uuid || !channel.channel_uuid) {
+        throw new Error('Channel data with database UUIDs is required')
       }
 
-      // Log all channel properties in detail
-      console.log('Channel data for analysis:', {
-        channel: JSON.stringify(channel, null, 2),
-        id: channel.id,
-        name: channel.name,
-        type: channel.type,
-        externalId: channel.external_id,
-        externalResourceId: channel.external_resource_id,
-        metadata: channel.metadata
-      })
-
-      // Get database UUIDs for the API call
-      // The backend expects UUIDs from the database, not Slack IDs
-      const workspaceUuid = channel.workspace_uuid || integrationId
-      const channelUuid = channel.channel_uuid || channelId
-      
-      console.log('Database UUIDs for analysis:', { 
-        workspace_uuid: workspaceUuid,
-        channel_uuid: channelUuid,
-        // Include Slack IDs for reference
-        slack_workspace_id: channel.external_id,
-        slack_channel_id: channel.external_resource_id
-      })
-      
-      if (!workspaceUuid || !channelUuid) {
-        console.error('Missing database UUIDs for analysis')
-        throw new Error('Missing database UUIDs for analysis')
-      }
-
-      // Prepare analysis options for the API client
-      const options = {
-        start_date: startDateParam,
-        end_date: endDateParam,
-        include_threads: includeThreads,
-        include_reactions: includeReactions,
-        // Add optional analysis type parameter for the API
-        analysis_type: 'contribution'
-      }
-
-      console.log('Preparing to run analysis with options:', options)
-
-      // Use the slack API client to run analysis with all options
+      // Use the slack API client to run analysis
       const result = await slackApiClient.analyzeChannel(
-        workspaceUuid,   // Database UUID for workspace
-        channelUuid,     // Database UUID for channel
-        'contribution', // analysis_type
+        channel.workspace_uuid,  // Database UUID for workspace
+        channel.channel_uuid,    // Database UUID for channel
+        'contribution',         // analysis_type
         {
           start_date: startDateParam,
           end_date: endDateParam,
