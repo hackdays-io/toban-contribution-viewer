@@ -39,7 +39,7 @@ import env from '../../config/env'
 import { SlackUserCacheProvider } from '../../components/slack/SlackUserContext'
 import MessageText from '../../components/slack/MessageText'
 import useIntegration from '../../context/useIntegration'
-import { IntegrationType, ServiceResource, ResourceType } from '../../lib/integrationService'
+import integrationService, { IntegrationType, ServiceResource, ResourceType } from '../../lib/integrationService'
 import slackApiClient, { SlackAnalysisResult } from '../../lib/slackApiClient'
 
 // Use the SlackAnalysisResult interface directly from slackApiClient.ts
@@ -126,21 +126,15 @@ const TeamChannelAnalysisPage: React.FC = () => {
         
         // Make a direct API call to get channel data since the context approach is failing
         try {
-          // Construct URL properly to avoid duplicated /api/v1/
-          // No leading slash, api/v1 will be added if needed by the API client
-          const path = `integrations/${integrationId}/resources/${channelId}`
-          const url = new URL(path, env.apiUrl) 
-          console.log('Fetching channel directly from:', url.toString())
+          console.log('Using integrationService to fetch resource directly')
           
-          const response = await fetch(url.toString(), {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          })
+          // Use the integrationService instead of direct fetch
+          const channelData = await integrationService.getResource(integrationId, channelId)
           
-          if (response.ok) {
-            const channelData = await response.json()
+          // Check if the result is an API error
+          if (integrationService.isApiError(channelData)) {
+            console.error('Failed to fetch channel directly:', channelData.message)
+          } else {
             console.log('Fetched channel directly:', channelData)
             
             // Based on DB structure, we know that:
@@ -173,8 +167,6 @@ const TeamChannelAnalysisPage: React.FC = () => {
               setChannel(enrichedChannel)
               return
             }
-          } else {
-            console.error('Failed to fetch channel directly:', await response.text())
           }
         } catch (directError) {
           console.error('Error fetching channel directly:', directError)

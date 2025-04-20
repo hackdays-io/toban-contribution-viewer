@@ -420,6 +420,37 @@ class IntegrationService {
   }
 
   /**
+   * Get a specific resource by ID
+   */
+  async getResource(
+    integrationId: string,
+    resourceId: string
+  ): Promise<ServiceResource | ApiError> {
+    try {
+      console.log(`[DEBUG] Fetching resource ${resourceId} for integration ${integrationId}`)
+      const headers = await this.getAuthHeaders()
+      const url = `${this.apiUrl}/${integrationId}/resources/${resourceId}`
+      
+      console.log(`[DEBUG] Resource URL: ${url}`)
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        headers,
+        credentials: 'include',
+      })
+
+      if (!response.ok) {
+        console.error(`[DEBUG] Error fetching resource: ${response.status} ${response.statusText}`)
+        throw response
+      }
+
+      return await response.json()
+    } catch (error) {
+      return this.handleError(error, 'Failed to fetch resource')
+    }
+  }
+
+  /**
    * Sync integration resources
    */
   async syncResources(
