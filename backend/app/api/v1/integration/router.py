@@ -39,7 +39,7 @@ from app.models.integration import (
     ServiceResource,
     ShareLevel,
 )
-from app.models.slack import SlackWorkspace
+from app.models.slack import SlackChannel, SlackWorkspace
 from app.services.integration.base import IntegrationService
 from app.services.integration.slack import SlackIntegrationService
 from app.services.slack.channels import ChannelService
@@ -531,10 +531,60 @@ async def get_integration_resources(
         resource_types=resource_type,
     )
 
-    # Convert SQLAlchemy model objects to Pydantic schema objects
+    # Convert SQLAlchemy model objects to Pydantic schema objects with basic info
     response_resources = [
         convert_resource_to_response(resource) for resource in resources
     ]
+
+    # If we have Slack channels, we need to add the selection status from SlackChannel table
+    if integration.service_type == IntegrationType.SLACK and any(
+        r.resource_type == ResourceType.SLACK_CHANNEL for r in resources
+    ):
+        # Get workspace ID from integration metadata
+        workspace_id = None
+        metadata: Dict[str, Any] = integration.integration_metadata or {}
+        slack_workspace_id = metadata.get("slack_id")
+
+        if slack_workspace_id:
+            # Find the workspace in the database to get its UUID
+            workspace_result = await db.execute(
+                select(SlackWorkspace).where(
+                    SlackWorkspace.slack_id == slack_workspace_id
+                )
+            )
+            workspace = workspace_result.scalars().first()
+
+            if workspace:
+                # Get all selected channels for this workspace
+                selected_channels_result = await db.execute(
+                    select(SlackChannel.slack_id).where(
+                        SlackChannel.workspace_id == workspace.id,
+                        SlackChannel.is_selected_for_analysis.is_(True),
+                    )
+                )
+                selected_channels = [
+                    row[0] for row in selected_channels_result.fetchall()
+                ]
+                logger.info(
+                    f"Found {len(selected_channels)} selected channels in workspace {workspace.id}"
+                )
+
+                # Update the response resources with selection status
+                for resource in response_resources:
+                    if resource["resource_type"] == ResourceType.SLACK_CHANNEL:
+                        # Ensure metadata dictionary exists
+                        if "metadata" not in resource or resource["metadata"] is None:
+                            resource["metadata"] = {}
+
+                        # Set selection status based on whether the channel is in our list
+                        external_id = resource.get("external_id")
+                        is_selected = external_id in selected_channels
+                        resource["metadata"]["is_selected_for_analysis"] = is_selected
+
+                        logger.info(
+                            f"Channel {resource['name']} (id={external_id}): is_selected_for_analysis={is_selected}"
+                        )
+
     return response_resources
 
 
