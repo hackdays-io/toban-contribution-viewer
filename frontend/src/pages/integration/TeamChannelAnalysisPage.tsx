@@ -143,7 +143,11 @@ const TeamChannelAnalysisPage: React.FC = () => {
         
         // Make a direct API call to get channel data since the context approach is failing
         try {
-          const response = await fetch(`${env.apiUrl}/api/v1/integrations/${integrationId}/resources/${channelId}`, {
+          // Construct URL properly to avoid duplicated /api/v1/
+          const url = new URL(`integrations/${integrationId}/resources/${channelId}`, env.apiUrl)
+          console.log('Fetching channel directly from:', url.toString())
+          
+          const response = await fetch(url.toString(), {
             method: 'GET',
             headers: {
               'Content-Type': 'application/json',
