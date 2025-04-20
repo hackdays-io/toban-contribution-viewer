@@ -676,7 +676,8 @@ class IntegrationService {
         resource.metadata?.is_selected_for_analysis === true
       )
       
-      console.log('Selected channels from resources:', selectedChannels);
+      // Only log count of selected channels, not the whole objects
+      console.log(`Found ${selectedChannels.length} channels selected for analysis`);
       
       return selectedChannels
     } catch (error) {

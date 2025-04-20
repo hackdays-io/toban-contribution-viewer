@@ -109,46 +109,49 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({ integrationId
     }
   }, [channels, isChannelSelectedForAnalysis]);
 
-  // Use standard array instead of Set for state to ensure proper React state updates
-  // Convert to array for easier debugging and state management
+  // Only log selection changes once when they actually change
+  const prevSelectionRef = useRef<string[]>([]);
   useEffect(() => {
-    console.log('Current selected channels array:', Array.from(selectedChannels));
+    // Convert sets to sorted string arrays for comparison
+    const currentSelection = Array.from(selectedChannels).sort();
+    const prevSelection = prevSelectionRef.current;
+    
+    // Only log if the selection actually changed
+    if (JSON.stringify(currentSelection) !== JSON.stringify(prevSelection)) {
+      console.log('Selection changed:', {
+        previous: prevSelection,
+        current: currentSelection,
+        added: currentSelection.filter(id => !prevSelection.includes(id)),
+        removed: prevSelection.filter(id => !currentSelection.includes(id))
+      });
+      
+      // Update the ref with current value
+      prevSelectionRef.current = currentSelection;
+    }
   }, [selectedChannels]);
   
   // Direct, simplified checkbox handler
   const handleSelectChannel = (channelId: string) => {
-    console.log('Handling select channel:', channelId);
-    
+    // Update selection state
     setSelectedChannels(prevSelected => {
       // Create copy of previous selected channels
       const newSelected = new Set(prevSelected);
       
       // Toggle selection
       if (newSelected.has(channelId)) {
-        console.log('Removing channel from selection:', channelId);
         newSelected.delete(channelId);
       } else {
-        console.log('Adding channel to selection:', channelId);
         newSelected.add(channelId);
       }
       
-      console.log('New selection:', Array.from(newSelected));
       return newSelected;
     });
-    
-    // Force React to update with forceUpdate
-    const checkbox = document.getElementById(`checkbox-${channelId}`) as HTMLInputElement;
-    if (checkbox) {
-      // Manually trigger change if needed
-      console.log('Current checkbox checked state:', checkbox.checked);
-      // Toggle manually if needed in extreme cases
-      // checkbox.checked = !checkbox.checked;
-    }
   };
 
   // Save selected channels to backend
   const handleSaveSelection = async () => {
-    console.log('Saving channel selection to backend...');
+    // Only log count of changes for simplicity
+    console.log('Saving channel selections...');
     
     // Find channels to select (in local selection but not in context)
     const channelsToSelect: string[] = [];
@@ -160,40 +163,31 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({ integrationId
       const isSelected = selectedChannels.has(channel.id);
       const wasSelected = isChannelSelectedForAnalysis(channel.id);
       
-      console.log(`Channel ${channel.name} (${channel.id}):`, { isSelected, wasSelected });
-      
       if (isSelected && !wasSelected) {
-        console.log(`Adding ${channel.name} to selection list`);
         channelsToSelect.push(channel.id);
       } else if (!isSelected && wasSelected) {
-        console.log(`Adding ${channel.name} to deselection list`);
         channelsToDeselect.push(channel.id);
       }
     });
     
-    console.log('Channels to select:', channelsToSelect);
-    console.log('Channels to deselect:', channelsToDeselect);
+    // Single summary log
+    console.log(`Updating selections: ${channelsToSelect.length} to select, ${channelsToDeselect.length} to deselect`);
     
     // Perform API operations
     let success = true;
     
     // First handle selections
     if (channelsToSelect.length > 0) {
-      console.log('Selecting channels:', channelsToSelect);
       success = await selectChannelsForAnalysis(integrationId, channelsToSelect);
-      console.log('Selection result:', success);
     }
     
     // Then handle deselections
     if (success && channelsToDeselect.length > 0) {
-      console.log('Deselecting channels:', channelsToDeselect);
       success = await deselectChannelsForAnalysis(integrationId, channelsToDeselect);
-      console.log('Deselection result:', success);
     }
     
     // Refresh selected channels from backend after saving
     if (success) {
-      console.log('Refreshing selected channels from backend...');
       await fetchSelectedChannels(integrationId);
     }
     
@@ -266,7 +260,7 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({ integrationId
                     return;
                   }
                   
-                  console.log('Row clicked, toggling selection for:', channel.id);
+                  // Toggle selection for this channel
                   handleSelectChannel(channel.id);
                 }}
                 cursor="pointer"
@@ -278,7 +272,6 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({ integrationId
                   <Box 
                     onClick={(e) => {
                       e.stopPropagation();
-                      console.log('Checkbox cell clicked, toggling channel:', channel.id);
                       handleSelectChannel(channel.id);
                     }}
                     cursor="pointer"
