@@ -14,17 +14,18 @@ export default defineConfig(({ mode }) => {
     VITE_ADDITIONAL_ALLOWED_HOSTS: env.VITE_ADDITIONAL_ALLOWED_HOSTS,
   });
   
-  // Extract hostnames from environment variables
-  const extractHostname = (url: string) => {
-    try {
-      return new URL(url).hostname;
-    } catch {
-      return null;
-    }
-  };
-
-  // Get ngrok hostname if available
-  const ngrokHost = env.VITE_FRONTEND_URL ? extractHostname(env.VITE_FRONTEND_URL) : null;
+  // FUTURE ENHANCEMENT: If we need to extract specific domains to include instead of allowing all:
+  // 
+  // function extractHostname(url) {
+  //   try {
+  //     return new URL(url).hostname;
+  //   } catch {
+  //     return null;
+  //   }
+  // }
+  // 
+  // const ngrokHost = env.VITE_FRONTEND_URL ? extractHostname(env.VITE_FRONTEND_URL) : null;
+  // const allowedHostsList = ['localhost', '127.0.0.1', ngrokHost].filter(Boolean);
 
   // For development with ngrok, allow all hosts
   // This is a more permissive approach that will solve the immediate issue
@@ -42,7 +43,7 @@ export default defineConfig(({ mode }) => {
       clientPort: number;
     };
     cors: boolean;
-    allowedHosts: string[] | boolean;
+    allowedHosts: string[] | true;
     proxy?: {
       [key: string]: {
         target: string;
