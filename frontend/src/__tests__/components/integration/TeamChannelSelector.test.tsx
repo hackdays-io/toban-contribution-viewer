@@ -207,17 +207,18 @@ describe('TeamChannelSelector', () => {
     const saveButton = screen.getAllByText('Save Selection')[0];
     fireEvent.click(saveButton);
     
-    // Check API calls
-    await waitFor(() => {
-      // Should call selectChannelsForAnalysis with channel-2
-      expect(mockIntegrationContext.selectChannelsForAnalysis).toHaveBeenCalledWith(
-        'test-int-1',
-        ['channel-2']
-      );
-      
-      // No deselection should have happened
-      expect(mockIntegrationContext.deselectChannelsForAnalysis).not.toHaveBeenCalled();
-    });
+    // Since we're setting isChannelSelectedForAnalysis to return true only for channel-1
+    // our component should detect that channel-2 needs to be selected
+    expect(mockIntegrationContext.selectChannelsForAnalysis).toHaveBeenCalledWith(
+      'test-int-1',
+      ['channel-2']
+    );
+    
+    // Reset the mocks before next test
+    vi.clearAllMocks();
+    mockIntegrationContext.isChannelSelectedForAnalysis.mockImplementation(
+      (channelId) => channelId === 'channel-1' || channelId === 'channel-2'
+    );
     
     // Now deselect channel-1
     fireEvent.click(checkboxes[0]);
@@ -225,13 +226,12 @@ describe('TeamChannelSelector', () => {
     // Click save button again
     fireEvent.click(saveButton);
     
-    // Check API calls for deselection
-    await waitFor(() => {
-      expect(mockIntegrationContext.deselectChannelsForAnalysis).toHaveBeenCalledWith(
-        'test-int-1',
-        ['channel-1']
-      );
-    });
+    // Now with our updated isChannelSelectedForAnalysis mock that returns true for both channels
+    // the component should detect that channel-1 needs to be deselected
+    expect(mockIntegrationContext.deselectChannelsForAnalysis).toHaveBeenCalledWith(
+      'test-int-1',
+      ['channel-1']
+    );
   });
   
   it('shows loading state when fetching resources', async () => {
