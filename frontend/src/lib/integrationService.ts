@@ -421,6 +421,8 @@ class IntegrationService {
 
   /**
    * Get a specific resource by ID
+   * Note: This method fetches all resources and filters for the specific one,
+   * as there's no direct API endpoint for fetching a single resource by ID.
    */
   async getResource(
     integrationId: string,
@@ -428,23 +430,26 @@ class IntegrationService {
   ): Promise<ServiceResource | ApiError> {
     try {
       console.log(`[DEBUG] Fetching resource ${resourceId} for integration ${integrationId}`)
-      const headers = await this.getAuthHeaders()
-      const url = `${this.apiUrl}/${integrationId}/resources/${resourceId}`
       
-      console.log(`[DEBUG] Resource URL: ${url}`)
+      // Fetch all resources and filter for the specific one
+      const resources = await this.getResources(integrationId)
       
-      const response = await fetch(url, {
-        method: 'GET',
-        headers,
-        credentials: 'include',
-      })
-
-      if (!response.ok) {
-        console.error(`[DEBUG] Error fetching resource: ${response.status} ${response.statusText}`)
-        throw response
+      // Check if we got an error from getResources
+      if (this.isApiError(resources)) {
+        console.error('[DEBUG] Error fetching resources:', resources.message)
+        throw new Error(`Failed to fetch resources: ${resources.message}`)
       }
-
-      return await response.json()
+      
+      // Filter for the specific resource
+      const resource = resources.find(res => res.id === resourceId)
+      
+      if (!resource) {
+        console.error(`[DEBUG] Resource ${resourceId} not found in resources`)
+        throw new Error(`Resource ${resourceId} not found`)
+      }
+      
+      console.log(`[DEBUG] Found resource:`, resource)
+      return resource
     } catch (error) {
       return this.handleError(error, 'Failed to fetch resource')
     }
