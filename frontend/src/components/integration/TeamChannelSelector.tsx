@@ -51,6 +51,10 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({ integrationId
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedChannels, setSelectedChannels] = useState<Set<string>>(new Set());
   
+  // Add a force update function
+  const [, forceUpdate] = useState({});
+  const forceRender = () => forceUpdate({});
+  
   // UI colors
   const tableBg = useColorModeValue('white', 'gray.800');
   const tableHeaderBg = useColorModeValue('gray.50', 'gray.700');
@@ -132,20 +136,30 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({ integrationId
   
   // Direct, simplified checkbox handler
   const handleSelectChannel = (channelId: string) => {
-    // Update selection state
+    // Force state update with explicit new Set creation
     setSelectedChannels(prevSelected => {
-      // Create copy of previous selected channels
-      const newSelected = new Set(prevSelected);
+      // Convert to array and back to ensure a completely new Set instance
+      const prevArray = Array.from(prevSelected);
+      const newSelected = new Set(prevArray);
       
       // Toggle selection
       if (newSelected.has(channelId)) {
         newSelected.delete(channelId);
+        console.log(`Removed ${channelId} from selection`);
       } else {
         newSelected.add(channelId);
+        console.log(`Added ${channelId} to selection`);
       }
       
+      // Return completely new Set instance to trigger re-render
       return newSelected;
     });
+
+    // Force React to register the change
+    setTimeout(() => {
+      // Force component to re-render
+      forceRender();
+    }, 10);
   };
 
   // Save selected channels to backend
@@ -269,23 +283,20 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({ integrationId
                 data-selected={selectedChannels.has(channel.id)}
               >
                 <Td data-checkbox-cell="true">
-                  <Box 
-                    onClick={(e) => {
+                  <Checkbox
+                    isChecked={selectedChannels.has(channel.id)}
+                    colorScheme="blue"
+                    id={`checkbox-${channel.id}`}
+                    onChange={(e) => {
                       e.stopPropagation();
                       handleSelectChannel(channel.id);
                     }}
-                    cursor="pointer"
-                    p={1}
+                    // Add key with selection state to force re-render
+                    key={`checkbox-${channel.id}-${selectedChannels.has(channel.id)}`}
+                    size="lg"
+                    p={2}
                     data-checkbox-cell="true"
-                  >
-                    <Checkbox
-                      isChecked={selectedChannels.has(channel.id)}
-                      colorScheme="blue"
-                      id={`checkbox-${channel.id}`}
-                      // No onChange handler - handle clicks at the Box level instead
-                      // This prevents event bubbling issues
-                    />
-                  </Box>
+                  />
                 </Td>
                 <Td fontWeight="medium">
                   <HStack>
