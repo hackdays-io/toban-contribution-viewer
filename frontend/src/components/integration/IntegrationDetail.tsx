@@ -38,6 +38,7 @@ import {
   FiShare2,
   FiLink,
   FiZap,
+  FiCheck,
   FiPlusCircle,
 } from 'react-icons/fi'
 import useIntegration from '../../context/useIntegration'
@@ -615,14 +616,27 @@ const IntegrationDetail: React.FC<IntegrationDetailProps> = ({
             <Box>
               <Flex justify="space-between" mb={4}>
                 <Heading size="md">Resources</Heading>
-                <Button
-                  leftIcon={<FiZap />}
-                  colorScheme="blue"
-                  onClick={handleSyncResources}
-                  isLoading={isSyncing}
-                >
-                  Sync Resources
-                </Button>
+                <HStack spacing={2}>
+                  {currentIntegration.service_type === 'slack' && currentResources.some(
+                    resource => resource.resource_type === ResourceType.SLACK_CHANNEL
+                  ) && (
+                    <Button
+                      leftIcon={<FiCheck />}
+                      colorScheme="teal"
+                      onClick={() => navigate(`/dashboard/integrations/${integrationId}/channels`)}
+                    >
+                      Select Channels
+                    </Button>
+                  )}
+                  <Button
+                    leftIcon={<FiZap />}
+                    colorScheme="blue"
+                    onClick={handleSyncResources}
+                    isLoading={isSyncing}
+                  >
+                    Sync Resources
+                  </Button>
+                </HStack>
               </Flex>
 
               {loadingResources ? (
@@ -634,10 +648,24 @@ const IntegrationDetail: React.FC<IntegrationDetailProps> = ({
                   {resourceError.message}
                 </Text>
               ) : (
-                <ResourceList
-                  resources={currentResources}
-                  integrationId={integrationId || ''}
-                />
+                <>
+                  {currentIntegration.service_type === 'slack' && (
+                    <Alert status="info" mb={4} borderRadius="md">
+                      <AlertIcon />
+                      <Box>
+                        <AlertTitle>Channel Selection Available</AlertTitle>
+                        <AlertDescription>
+                          You can now select specific channels for analysis. 
+                          Click the "Select Channels" button to get started.
+                        </AlertDescription>
+                      </Box>
+                    </Alert>
+                  )}
+                  <ResourceList
+                    resources={currentResources}
+                    integrationId={integrationId || ''}
+                  />
+                </>
               )}
             </Box>
           </TabPanel>

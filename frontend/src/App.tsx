@@ -255,6 +255,16 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="/dashboard/integrations/:integrationId/channels"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <TeamChannelSelectorPage />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
 
               {/* Profile routes */}
               <Route
