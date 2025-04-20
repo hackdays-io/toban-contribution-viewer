@@ -134,6 +134,7 @@ const TeamChannelAnalysisPage: React.FC = () => {
       // Fetch integration info
       if (integrationId) {
         console.log('Fetching integration:', integrationId)
+        console.log('API URL from env:', env.apiUrl)
         await fetchIntegration(integrationId)
       }
 
@@ -144,7 +145,9 @@ const TeamChannelAnalysisPage: React.FC = () => {
         // Make a direct API call to get channel data since the context approach is failing
         try {
           // Construct URL properly to avoid duplicated /api/v1/
-          const url = new URL(`integrations/${integrationId}/resources/${channelId}`, env.apiUrl)
+          // No leading slash, api/v1 will be added if needed by the API client
+          const path = `integrations/${integrationId}/resources/${channelId}`
+          const url = new URL(path, env.apiUrl) 
           console.log('Fetching channel directly from:', url.toString())
           
           const response = await fetch(url.toString(), {
@@ -341,10 +344,9 @@ const TeamChannelAnalysisPage: React.FC = () => {
       console.log('Final IDs for analysis:', { workspaceId, channelSlackId })
 
       // Build the URL with all parameters - make sure we're using the correct API path
-      const url = new URL(
-        `api/v1/slack/workspaces/${workspaceId}/channels/${channelSlackId}/analyze`,
-        env.apiUrl
-      )
+      // No leading slash to avoid URL issues
+      const path = `slack/workspaces/${workspaceId}/channels/${channelSlackId}/analyze`
+      const url = new URL(path, env.apiUrl)
       
       console.log('Analysis URL:', url.toString())
 
