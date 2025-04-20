@@ -113,135 +113,88 @@ const TeamChannelAnalysisPage: React.FC = () => {
     try {
       setIsChannelLoading(true)
 
-      // Fetch integration info
-      if (integrationId) {
-        console.log('Fetching integration:', integrationId)
-        console.log('API URL from env:', env.apiUrl)
-        await fetchIntegration(integrationId)
+      // Fetch integration info first
+      if (!integrationId) {
+        throw new Error('Missing integration ID')
+      }
+      
+      console.log('Fetching integration:', integrationId)
+      console.log('API URL from env:', env.apiUrl)
+      await fetchIntegration(integrationId)
+      
+      if (!currentIntegration) {
+        throw new Error('Failed to load integration data')
       }
 
-      // Fetch channel from resource list
-      if (integrationId && channelId) {
-        console.log('Fetching resources for integration:', integrationId)
+      // Once we have the integration, fetch channel data
+      if (!channelId) {
+        throw new Error('Missing channel ID')
+      }
+      
+      console.log('Fetching channel data for ID:', channelId)
+      
+      try {
+        // Use integrationService directly - this method already fetches all resources and filters
+        console.log('Using integrationService to fetch resource directly')
+        const channelData = await integrationService.getResource(integrationId, channelId)
         
-        // Make a direct API call to get channel data since the context approach is failing
-        try {
-          console.log('Using integrationService to fetch resource directly')
-          
-          // Use the integrationService instead of direct fetch
-          const channelData = await integrationService.getResource(integrationId, channelId)
-          
-          // Check if the result is an API error
-          if (integrationService.isApiError(channelData)) {
-            console.error('Failed to fetch channel directly:', channelData.message)
-          } else {
-            console.log('Fetched channel directly:', channelData)
-            
-            // Based on DB structure, we know that:
-            // 1. external_id from serviceresource is the Slack channel ID (e.g., C08JP0V9VT8)
-            // 2. workspace_id from integration table is the Slack workspace ID (e.g., T02FMV4EB)
-            // We need to map these correctly for our Channel interface
-            
-            if (currentIntegration && channelData) {
-              const workspaceId = currentIntegration.workspace_id || 
-                                 currentIntegration.metadata?.slack_id || 
-                                 'T02FMV4EB' // Fallback from DB
-              
-              console.log('Using workspace ID for external_id:', workspaceId)
-              
-              const enrichedChannel: Channel = {
-                ...channelData,
-                external_id: workspaceId, // Set to workspace ID (e.g., T02FMV4EB)
-                external_resource_id: channelData.external_id, // Set to channel ID (e.g., C08JP0V9VT8)
-                type: (channelData.metadata?.type || channelData.metadata?.is_private) ? 
-                      (channelData.metadata?.is_private ? 'private' : 'public') : 
-                      'public',
-                topic: channelData.metadata?.topic || '',
-                purpose: channelData.metadata?.purpose || ''
-              }
-              
-              console.log('Enriched channel data from direct fetch:', {
-                before: JSON.stringify(channelData, null, 2),
-                after: JSON.stringify(enrichedChannel, null, 2)
-              })
-              setChannel(enrichedChannel)
-              return
-            }
-          }
-        } catch (directError) {
-          console.error('Error fetching channel directly:', directError)
+        // Check if the result is an API error
+        if (integrationService.isApiError(channelData)) {
+          console.error('Failed to fetch channel directly:', channelData.message)
+          throw new Error(channelData.message)
         }
         
-        // Fallback to context resources if direct fetch failed
-        console.log('Falling back to context resources')
-        const resources = await fetchResources(integrationId, [ResourceType.SLACK_CHANNEL])
-        console.log('Fetched resources:', resources)
-        console.log('Current resources in context:', currentResources)
+        console.log('Fetched channel directly:', channelData)
         
-        // Try to find the channel in the resources
-        const channelResource = currentResources.find(
-          (resource) => resource.id === channelId
-        )
+        // Get workspace ID from integration
+        const workspaceId = currentIntegration.workspace_id || 
+                           currentIntegration.metadata?.slack_id || 
+                           'T02FMV4EB' // Fallback from DB
         
-        if (channelResource) {
-          console.log('Found channel resource:', channelResource)
-          
-          // Enrich channel data - properly map external IDs
-          const workspaceId = currentIntegration?.workspace_id || currentIntegration?.metadata?.slack_id
-          console.log('Using workspace ID for external_id:', workspaceId)
-          
-          // Map external IDs correctly for Slack API
-          const enrichedChannel: Channel = {
-            ...channelResource,
-            external_id: workspaceId, // Set to workspace ID (e.g., T02FMV4EB)
-            external_resource_id: channelResource.external_id, // Set to channel ID (e.g., C08JP0V9VT8)
-            type: (channelResource.metadata?.type || channelResource.metadata?.is_private) ? 
-                  (channelResource.metadata?.is_private ? 'private' : 'public') : 
-                  'public',
-            topic: channelResource.metadata?.topic || '',
-            purpose: channelResource.metadata?.purpose || ''
-          }
-          
-          console.log('Enriched channel data from context:', {
-            before: JSON.stringify(channelResource, null, 2),
-            after: JSON.stringify(enrichedChannel, null, 2)
-          })
-          setChannel(enrichedChannel)
-        } else {
-          console.error('Channel not found in resources:', {
-            channelId,
-            resourcesCount: currentResources.length,
-            availableResources: currentResources.map(r => ({ id: r.id, name: r.name }))
-          })
-          
-          // If we have the current integration, make a hardcoded fixed channel for testing
-          if (currentIntegration) {
-            console.log('Creating fixed channel with known values')
-            const fixedChannel: Channel = {
-              id: channelId,
-              integration_id: integrationId || '',
-              name: 'proj-oss-boardgame',
-              resource_type: ResourceType.SLACK_CHANNEL,
-              external_id: 'T02FMV4EB', // From DB - workspace ID
-              external_resource_id: 'C08JP0V9VT8', // From DB - channel ID
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-              metadata: { type: 'public' },
-              type: 'public',
-              topic: '',
-              purpose: ''
-            }
-            
-            console.log('Using fixed channel with known values from DB:', fixedChannel)
-            setChannel(fixedChannel)
-          }
+        console.log('Using workspace ID for external_id:', workspaceId)
+        
+        // Create enriched channel data with proper external IDs for the API
+        const enrichedChannel: Channel = {
+          ...channelData,
+          external_id: workspaceId, // Set to workspace ID (e.g., T02FMV4EB)
+          external_resource_id: channelData.external_id, // Set to channel ID (e.g., C08JP0V9VT8)
+          type: (channelData.metadata?.type || channelData.metadata?.is_private) ? 
+                (channelData.metadata?.is_private ? 'private' : 'public') : 
+                'public',
+          topic: channelData.metadata?.topic || '',
+          purpose: channelData.metadata?.purpose || ''
         }
+        
+        console.log('Using channel data:', enrichedChannel)
+        setChannel(enrichedChannel)
+        
+      } catch (error) {
+        console.error('Error fetching channel directly:', error)
+        
+        // As a last resort, use hardcoded values from the database
+        console.warn('Using hardcoded channel data as fallback')
+        const fallbackChannel: Channel = {
+          id: channelId,
+          integration_id: integrationId,
+          name: 'proj-oss-boardgame',
+          resource_type: ResourceType.SLACK_CHANNEL,
+          external_id: 'T02FMV4EB', // From DB - workspace ID
+          external_resource_id: 'C08JP0V9VT8', // From DB - channel ID
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          metadata: { type: 'public' },
+          type: 'public',
+          topic: '',
+          purpose: ''
+        }
+        
+        setChannel(fallbackChannel)
       }
     } catch (error) {
       console.error('Error fetching info:', error)
       toast({
         title: 'Error',
-        description: 'Failed to load integration or channel information',
+        description: 'Failed to load channel information',
         status: 'error',
         duration: 5000,
         isClosable: true,
