@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { ChakraProvider } from '@chakra-ui/react';
@@ -58,7 +57,19 @@ const mockIntegrationContext = {
       last_synced_at: '2023-01-01T00:00:00Z',
     },
   ],
-  selectedChannels: ['channel-1'],
+  selectedChannels: [
+    {
+      id: 'channel-1',
+      integration_id: 'test-int-1',
+      resource_type: ResourceType.SLACK_CHANNEL,
+      external_id: 'C12345',
+      name: 'general',
+      metadata: { is_private: false, num_members: 25, is_selected_for_analysis: true },
+      created_at: '2023-01-01T00:00:00Z',
+      updated_at: '2023-01-01T00:00:00Z',
+      last_synced_at: '2023-01-01T00:00:00Z',
+    }
+  ],
   loading: false,
   loadingResources: false,
   loadingChannelSelection: false,

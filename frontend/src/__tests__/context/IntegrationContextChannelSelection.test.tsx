@@ -88,7 +88,7 @@ describe('IntegrationContext Channel Selection Functions', () => {
     const mockAnalysisSuccess = {
       status: 'success',
       analysis_id: 'analysis-123',
-    };
+    } as { status: string; analysis_id: string };
     
     vi.mocked(integrationService.getSelectedChannels).mockResolvedValue(mockChannels);
     vi.mocked(integrationService.selectChannelsForAnalysis).mockResolvedValue(mockSuccess);
@@ -336,7 +336,11 @@ describe('IntegrationContext Channel Selection Functions', () => {
     
     // Verify the result
     expect(result).toBeDefined();
-    expect(result?.status).toBe('success');
-    expect(result?.analysis_id).toBe('analysis-123');
+    // Use type assertion to tell TypeScript about the expected structure
+    const typedResult = result as { status: string; analysis_id: string } | undefined;
+    if (typedResult) {
+      expect(typedResult.status).toBe('success');
+      expect(typedResult.analysis_id).toBe('analysis-123');
+    }
   });
 });

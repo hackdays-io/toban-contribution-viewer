@@ -243,7 +243,7 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({ integrationId
                 <Td fontWeight="medium">
                   <HStack>
                     <Text>{channel.name}</Text>
-                    {channel.metadata?.is_private && (
+                    {channel.metadata?.is_private === true && (
                       <Tag size="sm" colorScheme="purple" borderRadius="full">
                         <TagLabel>Private</TagLabel>
                       </Tag>
@@ -251,7 +251,9 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({ integrationId
                   </HStack>
                 </Td>
                 <Td>
-                  {channel.metadata?.num_members || 'Unknown'}
+                  {channel.metadata?.num_members !== undefined ? 
+                    String(channel.metadata.num_members) : 
+                    'Unknown'}
                 </Td>
                 <Td>
                   {channel.last_synced_at
