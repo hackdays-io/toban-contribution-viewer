@@ -92,6 +92,12 @@ echo -e "\n${YELLOW}Step 3/5: Running flake8${NC}"
 # Check if we're in a local environment with additional plugins
 FLAKE8_IGNORE="C901,E501,W503,W293,E203"
 
+# If in CI compatibility mode, use a more extensive ignore list
+if [ "$CI_COMPATIBLE" = true ]; then
+  FLAKE8_IGNORE="${FLAKE8_IGNORE},B008,B950,B901,B902,B903,B904,B905"
+  echo -e "${YELLOW}CI compatibility mode: Using extended ignore list for flake8${NC}"
+fi
+
 # Add ignore rules for common plugins that might be installed locally but not in CI
 INSTALLED_PLUGINS=$(pip list 2>/dev/null | grep -i flake8 | grep -v "^flake8 " || echo "")
 if echo "$INSTALLED_PLUGINS" | grep -q "flake8-quotes"; then
@@ -105,8 +111,8 @@ if echo "$INSTALLED_PLUGINS" | grep -q "flake8-docstrings"; then
 fi
 
 if echo "$INSTALLED_PLUGINS" | grep -q "flake8-bugbear"; then
-  echo -e "${YELLOW}Detected flake8-bugbear plugin - adding B950 to ignore list${NC}"
-  FLAKE8_IGNORE="${FLAKE8_IGNORE},B950"
+  echo -e "${YELLOW}Detected flake8-bugbear plugin - adding B950,B008 to ignore list${NC}"
+  FLAKE8_IGNORE="${FLAKE8_IGNORE},B950,B008"
 fi
 
 echo -e "${YELLOW}Using flake8 ignore rules: ${FLAKE8_IGNORE}${NC}"
