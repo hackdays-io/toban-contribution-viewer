@@ -5,6 +5,7 @@ Service for managing Slack channels.
 import asyncio
 import logging
 import time
+import uuid
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Set, Tuple
 
@@ -513,11 +514,35 @@ class ChannelService:
 
             # Then update the specified channels based on for_analysis flag
             if channel_ids:
+                # Log the channels we're trying to update
+                logger.info(f"Attempting to update channels with IDs: {channel_ids}")
+                logger.info(f"for_analysis={for_analysis}, workspace_id={workspace_id}")
+
+                # Convert string IDs to UUIDs if needed
+                uuid_channel_ids = []
+                for channel_id in channel_ids:
+                    try:
+                        # Try to convert to UUID if it's not already
+                        uuid_channel_id = uuid.UUID(channel_id)
+                        uuid_channel_ids.append(uuid_channel_id)
+                    except ValueError:
+                        logger.error(f"Invalid channel ID format: {channel_id}")
+
+                if not uuid_channel_ids:
+                    logger.warning("No valid channel IDs to update")
+                    return {
+                        "status": "warning",
+                        "message": "No valid channel IDs provided",
+                        "selected_count": 0,
+                        "selected_channels": [],
+                    }
+
+                # Execute the update with the UUID list
                 await db.execute(
                     update(SlackChannel)
                     .where(
                         SlackChannel.workspace_id == workspace_id,
-                        SlackChannel.id.in_(channel_ids),
+                        SlackChannel.id.in_(uuid_channel_ids),
                     )
                     .values(is_selected_for_analysis=for_analysis)
                 )
