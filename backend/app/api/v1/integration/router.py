@@ -4,7 +4,7 @@ API endpoints for integration management.
 
 import logging
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
@@ -31,7 +31,7 @@ from app.api.v1.integration.schemas import (
 )
 
 # Import the analysis response models from the Slack API
-from app.api.v1.slack.analysis import AnalysisResponse, AnalysisOptions, StoredAnalysisResponse
+from app.api.v1.slack.analysis import AnalysisOptions, AnalysisResponse, StoredAnalysisResponse
 from app.core.auth import get_current_user
 from app.db.session import get_async_db
 from app.models.integration import (
@@ -43,15 +43,18 @@ from app.models.integration import (
     ServiceResource,
     ShareLevel,
 )
-from app.models.slack import SlackChannel, SlackWorkspace, SlackChannelAnalysis
+from app.models.slack import SlackChannel, SlackChannelAnalysis, SlackWorkspace
 from app.services.integration.base import IntegrationService
 from app.services.integration.slack import SlackIntegrationService
-from app.services.slack.channels import ChannelService
-from app.services.team.permissions import has_team_permission
 from app.services.llm.analysis_store import AnalysisStoreService
 from app.services.llm.openrouter import OpenRouterService
-from app.services.slack.messages import get_channel_messages, get_channel_users, SlackMessageService
-from datetime import datetime, timedelta
+from app.services.slack.channels import ChannelService
+from app.services.slack.messages import (
+    SlackMessageService,
+    get_channel_messages,
+    get_channel_users,
+)
+from app.services.team.permissions import has_team_permission
 
 logger = logging.getLogger(__name__)
 

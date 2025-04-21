@@ -1095,7 +1095,7 @@ export const IntegrationProvider: React.FC<{ children: React.ReactNode }> = ({
       }))
 
       try {
-        const result = await integrationService.analyzeChannel(
+        const result = await integrationService.analyzeResource(
           integrationId,
           channelId,
           options
@@ -1115,7 +1115,11 @@ export const IntegrationProvider: React.FC<{ children: React.ReactNode }> = ({
           loadingChannelSelection: false,
         }))
 
-        return result
+        // Cast the result to the expected return type
+        return {
+          status: 'success',
+          analysis_id: (result as { analysis_id?: string }).analysis_id || 'unknown'
+        }
       } catch (error) {
         setState((prev) => ({
           ...prev,

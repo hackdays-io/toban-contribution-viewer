@@ -221,7 +221,7 @@ describe('IntegrationContext', () => {
       status: 'success',
       message: 'Channels selected for analysis',
     })
-    vi.mocked(integrationService.analyzeChannel).mockResolvedValue(
+    vi.mocked(integrationService.analyzeResource).mockResolvedValue(
       mockAnalysisResult
     )
 
@@ -706,7 +706,7 @@ describe('IntegrationContext', () => {
       })
 
       // Check that the service was called correctly
-      expect(integrationService.analyzeChannel).toHaveBeenCalledWith(
+      expect(integrationService.analyzeResource).toHaveBeenCalledWith(
         'test-int-1',
         'res-1',
         options
