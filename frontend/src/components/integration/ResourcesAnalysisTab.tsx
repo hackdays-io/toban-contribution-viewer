@@ -97,8 +97,15 @@ const ResourcesAnalysisTab: React.FC<ResourcesAnalysisTabProps> = ({
       const initialize = async () => {
         try {
           // Sequential loading to avoid race conditions
-          await fetchResources(integrationId);
+          // Explicitly request BOTH channels and users
+          await fetchResources(integrationId, [ResourceType.SLACK_CHANNEL, ResourceType.SLACK_USER]);
           await fetchSelectedChannels(integrationId);
+          
+          // Log resource counts for debugging
+          console.log('📊 RESOURCE COUNTS:');
+          console.log('🧑‍💻 SLACK_USERS:', currentResources.filter(r => r.resource_type === ResourceType.SLACK_USER).length);
+          console.log('📢 SLACK_CHANNELS:', currentResources.filter(r => r.resource_type === ResourceType.SLACK_CHANNEL).length);
+          console.log('💬 TOTAL RESOURCES:', currentResources.length);
         } catch (err) {
           console.error('❌ Error loading initial data:', err);
         }
@@ -164,6 +171,26 @@ const ResourcesAnalysisTab: React.FC<ResourcesAnalysisTabProps> = ({
   // Track selections initialization 
   const selectionsInitialized = React.useRef(false)
 
+  // Debug effect - runs whenever currentResources changes to log counts
+  useEffect(() => {
+    // Update counts when resources change
+    if (currentResources.length > 0) {
+      const users = currentResources.filter(r => r.resource_type === ResourceType.SLACK_USER);
+      const channels = currentResources.filter(r => r.resource_type === ResourceType.SLACK_CHANNEL);
+      
+      console.log('📊 LATEST RESOURCE COUNTS:');
+      console.log('🧑‍💻 SLACK_USERS:', users.length);
+      if (users.length === 0) {
+        console.log('⚠️ NO USERS FOUND - This is the issue!');
+      } else {
+        console.log('✓ Users found:', users.slice(0, 3).map(u => u.name).join(', ') + (users.length > 3 ? '...' : ''));
+      }
+      
+      console.log('📢 SLACK_CHANNELS:', channels.length);
+      console.log('💬 TOTAL RESOURCES:', currentResources.length);
+    }
+  }, [currentResources]);
+  
   // This effect ONLY sets up the selected channels after resources are loaded
   useEffect(() => {
     // Skip if we've already initialized selections or if there are no channels
@@ -315,19 +342,34 @@ const ResourcesAnalysisTab: React.FC<ResourcesAnalysisTabProps> = ({
     if (!integrationId) return
 
     setIsSyncing(true)
+    console.log('🔄 Starting resource sync with specific request for ALL resources');
+    
     try {
-      const success = await syncResources(integrationId)
+      // Call syncResources specifically requesting both channels AND users
+      const success = await syncResources(
+        integrationId, 
+        [ResourceType.SLACK_CHANNEL, ResourceType.SLACK_USER]
+      );
+      
+      console.log('✅ Sync completed, success:', success);
       
       if (success === true) {
+        // Check what was returned after sync
+        const userCount = currentResources.filter(r => r.resource_type === ResourceType.SLACK_USER).length;
+        console.log(`📊 After sync: Found ${userCount} users`);
+        
         toast({
           title: 'Resources synced successfully',
-          description: 'Channels and users have been updated',
+          description: `Updated ${currentResources.filter(r => 
+            r.resource_type === ResourceType.SLACK_CHANNEL).length} channels and ${userCount} users`,
           status: 'success',
           duration: 3000,
           isClosable: true,
         })
       } else {
         const errorMessage = 'Failed to sync resources'
+        console.error('❌ Sync failed with error:', errorMessage);
+        
         toast({
           title: 'Failed to sync resources',
           description: errorMessage,
@@ -337,6 +379,8 @@ const ResourcesAnalysisTab: React.FC<ResourcesAnalysisTabProps> = ({
         })
       }
     } catch (error) {
+      console.error('❌ Exception during sync:', error);
+      
       toast({
         title: 'Error syncing resources',
         description: error instanceof Error ? error.message : 'Unknown error',

@@ -250,7 +250,17 @@ const IntegrationDetail: React.FC<IntegrationDetailProps> = ({
 
   // Get resources by type
   const getResourcesByType = (type: ResourceType): number => {
-    return currentResources.filter((r) => r.resource_type === type).length
+    const count = currentResources.filter((r) => r.resource_type === type).length;
+    console.log(`🔢 Counting resources of type ${type}: Found ${count} resources`);
+    
+    // Log resources of each type for debugging
+    if (count === 0) {
+      console.log('⚠️ DEBUG: No resources found for type', type);
+      console.log('📋 All resource types found:', 
+        [...new Set(currentResources.map(r => r.resource_type))]);
+    }
+    
+    return count;
   }
 
   // Get the total number of resources
