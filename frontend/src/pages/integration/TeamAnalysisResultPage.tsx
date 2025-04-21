@@ -32,7 +32,7 @@ import env from '../../config/env'
 import MessageText from '../../components/slack/MessageText'
 import { SlackUserCacheProvider } from '../../components/slack/SlackUserContext'
 import useIntegration from '../../context/useIntegration'
-import { ServiceResource } from '../../lib/integrationService'
+import integrationService, { ServiceResource } from '../../lib/integrationService'
 
 interface AnalysisResponse {
   id: string
@@ -114,19 +114,21 @@ const TeamAnalysisResultPage: React.FC = () => {
         }
       }
 
-      // Fetch the specific analysis
-      const analysisResponse = await fetch(
-        `${env.apiUrl}/api/v1/integrations/${integrationId}/resources/${channelId}/analysis/${analysisId}`
-      )
-
-      if (!analysisResponse.ok) {
-        throw new Error(
-          `Error fetching analysis: ${analysisResponse.status} ${analysisResponse.statusText}`
-        )
+      // Fetch the specific analysis using the integration service
+      console.log(`Fetching analysis ${analysisId} for integration ${integrationId} and channel ${channelId}`);
+      const analysisResult = await integrationService.getResourceAnalysis(
+        integrationId || '',
+        channelId || '',
+        analysisId || ''
+      );
+      
+      // Check if the result is an API error
+      if (integrationService.isApiError(analysisResult)) {
+        throw new Error(`Error fetching analysis: ${analysisResult.message}`);
       }
-
-      const analysisData = await analysisResponse.json()
-      setAnalysis(analysisData)
+      
+      // Set the analysis data
+      setAnalysis(analysisResult);
     } catch (error) {
       console.error('Error fetching data:', error)
       toast({

@@ -32,7 +32,7 @@ export class ApiClient {
   protected async get<T>(
     path: string,
     params?: Record<string, string>
-  ): Promise<T> {
+  ): Promise<T | ApiError> {
     const url = new URL(`${this.baseUrl}${path}`)
 
     if (params) {
@@ -43,43 +43,89 @@ export class ApiClient {
       })
     }
 
-    const response = await fetch(url.toString(), {
-      method: 'GET',
-      credentials: 'include',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-    })
+    try {
+      const response = await fetch(url.toString(), {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+      })
 
-    if (!response.ok) {
-      throw new Error(`API Error: ${response.status} ${response.statusText}`)
+      // If the response is not OK, return an ApiError instead of throwing
+      if (!response.ok) {
+        let errorDetail: string;
+        try {
+          // Try to parse error details from response
+          const errorJson = await response.json();
+          errorDetail = errorJson.detail || errorJson.message || response.statusText;
+        } catch {
+          // If can't parse JSON, use status text
+          errorDetail = response.statusText;
+        }
+        
+        return {
+          status: response.status,
+          message: `API Error: ${response.status} ${response.statusText}`,
+          detail: errorDetail
+        } as ApiError;
+      }
+
+      return response.json()
+    } catch (error) {
+      // Network errors or other fetch exceptions
+      return {
+        status: 'NETWORK_ERROR',
+        message: `Network Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      } as ApiError;
     }
-
-    return response.json()
   }
 
   // Standard POST request
   protected async post<T>(
     path: string,
     data?: Record<string, unknown>
-  ): Promise<T> {
+  ): Promise<T | ApiError> {
     const url = `${this.baseUrl}${path}`
 
-    const response = await fetch(url, {
-      method: 'POST',
-      credentials: 'include',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: data ? JSON.stringify(data) : undefined,
-    })
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: data ? JSON.stringify(data) : undefined,
+      })
 
-    if (!response.ok) {
-      throw new Error(`API Error: ${response.status} ${response.statusText}`)
+      // If the response is not OK, return an ApiError instead of throwing
+      if (!response.ok) {
+        let errorDetail: string;
+        try {
+          // Try to parse error details from response
+          const errorJson = await response.json();
+          errorDetail = errorJson.detail || errorJson.message || response.statusText;
+        } catch {
+          // If can't parse JSON, use status text
+          errorDetail = response.statusText;
+        }
+        
+        return {
+          status: response.status,
+          message: `API Error: ${response.status} ${response.statusText}`,
+          detail: errorDetail
+        } as ApiError;
+      }
+
+      return response.json();
+    } catch (error) {
+      // Network errors or other fetch exceptions
+      return {
+        status: 'NETWORK_ERROR',
+        message: `Network Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      } as ApiError;
     }
-
-    return response.json()
   }
 }

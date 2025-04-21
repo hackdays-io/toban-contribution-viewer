@@ -95,18 +95,31 @@ import env from '../config/env'
 
 // Slack API client class
 class SlackApiClient extends ApiClient {
+  // Store the calculated base URL for logging
+  private apiBaseUrl: string;
+  
   constructor() {
     // Use the full API URL with the slack path
     // The baseUrl should include the protocol, host, and API prefix
-    super(`${env.apiUrl}/slack`)
-    console.log('SlackApiClient initialized with base URL:', `${env.apiUrl}/slack`)
+    const baseUrl = `${env.apiUrl}/slack`;
+    super(baseUrl)
+    
+    // Store the base URL for logging
+    this.apiBaseUrl = baseUrl;
+    
+    // Debug information about API URL construction
+    console.log('SlackApiClient debug info:');
+    console.log('- env.apiUrl:', env.apiUrl);
+    console.log('- Full base URL:', baseUrl);
+    console.log('- Example POST endpoint:', `${baseUrl}/workspaces/{workspace_id}/channels/{channel_id}/analyze`);
+    console.log('- API client will prepend "/" to any API paths.');
   }
 
   /**
    * Get all Slack workspaces for the current team
    */
   async getWorkspaces(teamId?: string): Promise<SlackWorkspace[] | ApiError> {
-    const endpoint = teamId ? `?team_id=${teamId}` : ''
+    const endpoint = teamId ? `workspaces?team_id=${teamId}` : 'workspaces'
     return this.get<SlackWorkspace[]>(endpoint)
   }
 
@@ -114,7 +127,7 @@ class SlackApiClient extends ApiClient {
    * Get a single Slack workspace
    */
   async getWorkspace(workspaceId: string): Promise<SlackWorkspace | ApiError> {
-    return this.get<SlackWorkspace>(`${workspaceId}`)
+    return this.get<SlackWorkspace>(`workspaces/${workspaceId}`)
   }
 
   /**
@@ -132,8 +145,7 @@ class SlackApiClient extends ApiClient {
       team_id: teamId,
     }
 
-    // Since we're already on the /integrations/slack path, we should use empty string
-    // to avoid creating a duplicate /slack in the URL
+    // Use empty string to hit the root /api/v1/slack endpoint
     return this.post<Record<string, unknown>>('', data)
   }
 
@@ -141,7 +153,7 @@ class SlackApiClient extends ApiClient {
    * Get all channels for a workspace
    */
   async getChannels(workspaceId: string): Promise<SlackChannel[] | ApiError> {
-    return this.get<SlackChannel[]>(`${workspaceId}/channels`)
+    return this.get<SlackChannel[]>(`workspaces/${workspaceId}/channels`)
   }
 
   /**
@@ -151,7 +163,7 @@ class SlackApiClient extends ApiClient {
     workspaceId: string,
     channelId: string
   ): Promise<SlackChannel | ApiError> {
-    return this.get<SlackChannel>(`${workspaceId}/channels/${channelId}`)
+    return this.get<SlackChannel>(`workspaces/${workspaceId}/channels/${channelId}`)
   }
 
   /**
@@ -164,7 +176,7 @@ class SlackApiClient extends ApiClient {
     offset: number = 0
   ): Promise<SlackMessage[] | ApiError> {
     return this.get<SlackMessage[]>(
-      `${workspaceId}/channels/${channelId}/messages?limit=${limit}&offset=${offset}`
+      `workspaces/${workspaceId}/channels/${channelId}/messages?limit=${limit}&offset=${offset}`
     )
   }
 
@@ -177,7 +189,7 @@ class SlackApiClient extends ApiClient {
     threadTs: string
   ): Promise<SlackMessage[] | ApiError> {
     return this.get<SlackMessage[]>(
-      `${workspaceId}/channels/${channelId}/threads/${threadTs}`
+      `workspaces/${workspaceId}/channels/${channelId}/threads/${threadTs}`
     )
   }
 
@@ -185,7 +197,7 @@ class SlackApiClient extends ApiClient {
    * Get all users for a workspace
    */
   async getUsers(workspaceId: string): Promise<SlackUser[] | ApiError> {
-    return this.get<SlackUser[]>(`${workspaceId}/users`)
+    return this.get<SlackUser[]>(`workspaces/${workspaceId}/users`)
   }
 
   /**
@@ -195,7 +207,7 @@ class SlackApiClient extends ApiClient {
     workspaceId: string,
     userId: string
   ): Promise<SlackUser | ApiError> {
-    return this.get<SlackUser>(`${workspaceId}/users/${userId}`)
+    return this.get<SlackUser>(`workspaces/${workspaceId}/users/${userId}`)
   }
 
   /**
@@ -223,7 +235,11 @@ class SlackApiClient extends ApiClient {
     }
     
     // Build path with workspaceId (database UUID) and channelId (database UUID)
+    // Make sure to use a leading slash so it builds the URL correctly
     const path = `/workspaces/${workspaceId}/channels/${channelId}/analyze`
+    
+    // Log the full URL that will be constructed
+    console.log(`Making API call to: ${this.apiBaseUrl}${path}`);
     
     return this.post<SlackAnalysisResult>(path, data)
   }
@@ -235,9 +251,10 @@ class SlackApiClient extends ApiClient {
     workspaceId: string,
     channelId: string
   ): Promise<SlackAnalysisResult[] | ApiError> {
-    return this.get<SlackAnalysisResult[]>(
-      `${workspaceId}/channels/${channelId}/analysis`
-    )
+    // Be consistent with leading slash
+    const path = `/workspaces/${workspaceId}/channels/${channelId}/analyses`;
+    console.log(`Getting analysis history from: ${this.apiBaseUrl}${path}`);
+    return this.get<SlackAnalysisResult[]>(path)
   }
 
   /**
@@ -246,7 +263,7 @@ class SlackApiClient extends ApiClient {
   async syncWorkspace(
     workspaceId: string
   ): Promise<Record<string, unknown> | ApiError> {
-    return this.post<Record<string, unknown>>(`${workspaceId}/sync`)
+    return this.post<Record<string, unknown>>(`workspaces/${workspaceId}/sync`)
   }
 }
 
