@@ -213,14 +213,14 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
       }
     })
   }
-  
+
   // Handle select all (filtered channels only)
   const handleSelectAll = () => {
-    const filteredIds = filteredChannels.map(channel => channel.id)
-    setSelectedChannelIds(prev => {
+    const filteredIds = filteredChannels.map((channel) => channel.id)
+    setSelectedChannelIds((prev) => {
       // Add all filtered channel IDs that aren't already in the selection
       const newSelection = [...prev]
-      filteredIds.forEach(id => {
+      filteredIds.forEach((id) => {
         if (!newSelection.includes(id)) {
           newSelection.push(id)
         }
@@ -228,12 +228,12 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
       return newSelection
     })
   }
-  
+
   // Handle deselect all (filtered channels only)
   const handleDeselectAll = () => {
-    const filteredIds = filteredChannels.map(channel => channel.id)
-    setSelectedChannelIds(prev => 
-      prev.filter(id => !filteredIds.includes(id))
+    const filteredIds = filteredChannels.map((channel) => channel.id)
+    setSelectedChannelIds((prev) =>
+      prev.filter((id) => !filteredIds.includes(id))
     )
   }
 
@@ -307,8 +307,8 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
   return (
     <Box>
       <Flex mb={3} justifyContent="space-between" alignItems="center">
-        <Heading size="md">All Channels</Heading>
-        
+        <Heading size="md">Channel Selection</Heading>
+
         <Button
           colorScheme="blue"
           leftIcon={<FiCheck />}
@@ -319,165 +319,11 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
           Save Selection
         </Button>
       </Flex>
-      
-      <Flex mb={4} justifyContent="space-between" alignItems="center">
-        <InputGroup maxW="400px">
-          <InputLeftElement pointerEvents="none">
-            <FiSearch color="gray.300" />
-          </InputLeftElement>
-          <Input
-            placeholder="Search channels..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </InputGroup>
-        
-        {selectedChannelIds.length > 0 && (
-          <Text color="blue.600" fontWeight="medium">
-            {selectedChannelIds.length} channel{selectedChannelIds.length !== 1 ? 's' : ''} selected
-          </Text>
-        )}
-      </Flex>
-
-      <Box overflowX="auto">
-        <Flex mb={2} justifyContent="flex-end">
-          <HStack spacing={2}>
-            <Button 
-              size="xs" 
-              onClick={handleSelectAll}
-              variant="outline"
-              colorScheme="blue"
-              isDisabled={filteredChannels.length === 0}
-            >
-              Select All
-            </Button>
-            <Button 
-              size="xs"
-              onClick={handleDeselectAll}
-              variant="outline"
-              colorScheme="red"
-              isDisabled={filteredChannels.length === 0 || !filteredChannels.some(c => selectedChannelIds.includes(c.id))}
-            >
-              Deselect All
-            </Button>
-          </HStack>
-        </Flex>
-        
-        <Table
-          variant="simple"
-          bg={tableBg}
-          borderRadius="lg"
-          overflow="hidden"
-        >
-          <Thead bg={tableHeaderBg}>
-            <Tr>
-              <Th width="50px">Select</Th>
-              <Th>Channel Name</Th>
-              <Th>Member Count</Th>
-              <Th>Last Synced</Th>
-              <Th>Actions</Th>
-            </Tr>
-          </Thead>
-          <Tbody>
-            {filteredChannels.map((channel) => (
-              <Tr
-                key={channel.id}
-                _hover={{ bg: rowHoverBg }}
-                bg={
-                  selectedChannelIds.includes(channel.id)
-                    ? 'blue.50'
-                    : undefined
-                }
-              >
-                <Td width="50px">
-                  <Checkbox
-                    isChecked={selectedChannelIds.includes(channel.id)}
-                    onChange={() => handleSelectChannel(channel.id)}
-                    colorScheme="blue"
-                    size="lg"
-                  />
-                </Td>
-                <Td fontWeight="medium">
-                  <HStack>
-                    <Text>{channel.name}</Text>
-                    {channel.metadata?.is_private === true && (
-                      <Tag size="sm" colorScheme="purple" borderRadius="full">
-                        <TagLabel>Private</TagLabel>
-                      </Tag>
-                    )}
-                  </HStack>
-                </Td>
-                <Td>
-                  {channel.metadata?.num_members !== undefined
-                    ? String(channel.metadata.num_members)
-                    : 'Unknown'}
-                </Td>
-                <Td>
-                  {channel.last_synced_at
-                    ? new Date(channel.last_synced_at).toLocaleString()
-                    : 'Never'}
-                </Td>
-                <Td>
-                  <HStack spacing={1}>
-                    <Tooltip label="Analyze channel">
-                      <IconButton
-                        aria-label="Analyze channel"
-                        icon={<FiBarChart2 />}
-                        size="sm"
-                        variant="ghost"
-                        colorScheme="blue"
-                        onClick={() =>
-                          navigate(
-                            `/dashboard/integrations/${integrationId}/channels/${channel.id}/analyze`
-                          )
-                        }
-                      />
-                    </Tooltip>
-                    <Tooltip label="Analysis history">
-                      <IconButton
-                        aria-label="Analysis history"
-                        icon={<FiClock />}
-                        size="sm"
-                        variant="ghost"
-                        colorScheme="teal"
-                        onClick={() =>
-                          navigate(
-                            `/dashboard/integrations/${integrationId}/channels/${channel.id}/history`
-                          )
-                        }
-                      />
-                    </Tooltip>
-                    <Tooltip label="Channel settings">
-                      <IconButton
-                        aria-label="Channel settings"
-                        icon={<FiSettings />}
-                        size="sm"
-                        variant="ghost"
-                        title="Settings"
-                      />
-                    </Tooltip>
-                  </HStack>
-                </Td>
-              </Tr>
-            ))}
-            {filteredChannels.length === 0 && (
-              <Tr>
-                <Td colSpan={5} textAlign="center" py={4}>
-                  {loadingResources
-                    ? 'Loading channels...'
-                    : 'No channels found'}
-                </Td>
-              </Tr>
-            )}
-          </Tbody>
-        </Table>
-      </Box>
 
       {/* Selected Channels Panel */}
       <Collapse in={selectedChannelIds.length > 0} animateOpacity>
-        <Box 
-          mt={6} 
-          mb={4}
+        <Box
+          mb={6}
           borderWidth="1px"
           borderRadius="lg"
           p={4}
@@ -486,13 +332,21 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
           <Flex alignItems="center" mb={3} justifyContent="space-between">
             <HStack>
               <FiCheckCircle color="green" />
-              <Heading size="md">Selected Channels ({selectedChannelIds.length})</Heading>
+              <Heading size="md">
+                Selected Channels ({selectedChannelIds.length})
+              </Heading>
             </HStack>
-            <Badge colorScheme="green" fontSize="sm" px={2} py={1} borderRadius="full">
+            <Badge
+              colorScheme="green"
+              fontSize="sm"
+              px={2}
+              py={1}
+              borderRadius="full"
+            >
               {selectedChannelIds.length} selected
             </Badge>
           </Flex>
-          
+
           <InputGroup size="sm" mb={3} maxW="300px">
             <InputLeftElement pointerEvents="none">
               <FiSearch color="gray.300" />
@@ -504,7 +358,7 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
               size="sm"
             />
           </InputGroup>
-          
+
           <Box overflowX="auto" maxH="300px" overflowY="auto">
             <Table size="sm" variant="simple">
               <Thead bg={tableHeaderBg}>
@@ -517,31 +371,40 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
               <Tbody>
                 {(() => {
                   const filteredSelectedChannels = channels
-                    .filter(channel => selectedChannelIds.includes(channel.id))
-                    .filter(channel => 
-                      selectedSearchQuery === '' || 
-                      channel.name.toLowerCase().includes(selectedSearchQuery.toLowerCase())
-                    );
-                    
+                    .filter((channel) =>
+                      selectedChannelIds.includes(channel.id)
+                    )
+                    .filter(
+                      (channel) =>
+                        selectedSearchQuery === '' ||
+                        channel.name
+                          .toLowerCase()
+                          .includes(selectedSearchQuery.toLowerCase())
+                    )
+
                   if (filteredSelectedChannels.length === 0) {
                     return (
                       <Tr>
                         <Td colSpan={3} textAlign="center" py={4}>
-                          {selectedSearchQuery 
+                          {selectedSearchQuery
                             ? 'No selected channels match your filter'
                             : 'No channels selected'}
                         </Td>
                       </Tr>
-                    );
+                    )
                   }
-                  
-                  return filteredSelectedChannels.map(channel => (
+
+                  return filteredSelectedChannels.map((channel) => (
                     <Tr key={`selected-${channel.id}`}>
                       <Td fontWeight="medium">
                         <HStack>
                           <Text>{channel.name}</Text>
                           {channel.metadata?.is_private === true && (
-                            <Tag size="sm" colorScheme="purple" borderRadius="full">
+                            <Tag
+                              size="sm"
+                              colorScheme="purple"
+                              borderRadius="full"
+                            >
                               <TagLabel>Private</TagLabel>
                             </Tag>
                           )}
@@ -565,13 +428,174 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
                         </Tooltip>
                       </Td>
                     </Tr>
-                  ));
+                  ))
                 })()}
               </Tbody>
             </Table>
           </Box>
         </Box>
       </Collapse>
+
+      <Box mt={6}>
+        <Flex mb={3} justifyContent="space-between" alignItems="center">
+          <Heading size="md">All Channels</Heading>
+
+          {selectedChannelIds.length > 0 && (
+            <Text color="blue.600" fontWeight="medium">
+              {selectedChannelIds.length} channel
+              {selectedChannelIds.length !== 1 ? 's' : ''} selected
+            </Text>
+          )}
+        </Flex>
+
+        <Flex mb={4} justifyContent="space-between" alignItems="center">
+          <InputGroup maxW="400px">
+            <InputLeftElement pointerEvents="none">
+              <FiSearch color="gray.300" />
+            </InputLeftElement>
+            <Input
+              placeholder="Search channels..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </InputGroup>
+
+          <HStack spacing={2}>
+            <Button
+              size="xs"
+              onClick={handleSelectAll}
+              variant="outline"
+              colorScheme="blue"
+              isDisabled={filteredChannels.length === 0}
+            >
+              Select All
+            </Button>
+            <Button
+              size="xs"
+              onClick={handleDeselectAll}
+              variant="outline"
+              colorScheme="red"
+              isDisabled={
+                filteredChannels.length === 0 ||
+                !filteredChannels.some((c) => selectedChannelIds.includes(c.id))
+              }
+            >
+              Deselect All
+            </Button>
+          </HStack>
+        </Flex>
+
+        <Box overflowX="auto">
+          <Table
+            variant="simple"
+            bg={tableBg}
+            borderRadius="lg"
+            overflow="hidden"
+          >
+            <Thead bg={tableHeaderBg}>
+              <Tr>
+                <Th width="50px">Select</Th>
+                <Th>Channel Name</Th>
+                <Th>Member Count</Th>
+                <Th>Last Synced</Th>
+                <Th>Actions</Th>
+              </Tr>
+            </Thead>
+            <Tbody>
+              {filteredChannels.map((channel) => (
+                <Tr
+                  key={channel.id}
+                  _hover={{ bg: rowHoverBg }}
+                  bg={
+                    selectedChannelIds.includes(channel.id)
+                      ? 'blue.50'
+                      : undefined
+                  }
+                >
+                  <Td width="50px">
+                    <Checkbox
+                      isChecked={selectedChannelIds.includes(channel.id)}
+                      onChange={() => handleSelectChannel(channel.id)}
+                      colorScheme="blue"
+                      size="lg"
+                    />
+                  </Td>
+                  <Td fontWeight="medium">
+                    <HStack>
+                      <Text>{channel.name}</Text>
+                      {channel.metadata?.is_private === true && (
+                        <Tag size="sm" colorScheme="purple" borderRadius="full">
+                          <TagLabel>Private</TagLabel>
+                        </Tag>
+                      )}
+                    </HStack>
+                  </Td>
+                  <Td>
+                    {channel.metadata?.num_members !== undefined
+                      ? String(channel.metadata.num_members)
+                      : 'Unknown'}
+                  </Td>
+                  <Td>
+                    {channel.last_synced_at
+                      ? new Date(channel.last_synced_at).toLocaleString()
+                      : 'Never'}
+                  </Td>
+                  <Td>
+                    <HStack spacing={1}>
+                      <Tooltip label="Analyze channel">
+                        <IconButton
+                          aria-label="Analyze channel"
+                          icon={<FiBarChart2 />}
+                          size="sm"
+                          variant="ghost"
+                          colorScheme="blue"
+                          onClick={() =>
+                            navigate(
+                              `/dashboard/integrations/${integrationId}/channels/${channel.id}/analyze`
+                            )
+                          }
+                        />
+                      </Tooltip>
+                      <Tooltip label="Analysis history">
+                        <IconButton
+                          aria-label="Analysis history"
+                          icon={<FiClock />}
+                          size="sm"
+                          variant="ghost"
+                          colorScheme="teal"
+                          onClick={() =>
+                            navigate(
+                              `/dashboard/integrations/${integrationId}/channels/${channel.id}/history`
+                            )
+                          }
+                        />
+                      </Tooltip>
+                      <Tooltip label="Channel settings">
+                        <IconButton
+                          aria-label="Channel settings"
+                          icon={<FiSettings />}
+                          size="sm"
+                          variant="ghost"
+                          title="Settings"
+                        />
+                      </Tooltip>
+                    </HStack>
+                  </Td>
+                </Tr>
+              ))}
+              {filteredChannels.length === 0 && (
+                <Tr>
+                  <Td colSpan={5} textAlign="center" py={4}>
+                    {loadingResources
+                      ? 'Loading channels...'
+                      : 'No channels found'}
+                  </Td>
+                </Tr>
+              )}
+            </Tbody>
+          </Table>
+        </Box>
+      </Box>
 
       <Flex justifyContent="flex-end" mt={4}>
         <Button
