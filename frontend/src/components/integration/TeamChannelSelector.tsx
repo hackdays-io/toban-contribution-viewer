@@ -399,7 +399,7 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
           selectedSearchQuery === '' ||
           channel.name.toLowerCase().includes(selectedSearchQuery.toLowerCase())
       )
-    
+
     // Then apply the same sorting logic as the main channels table
     return [...filteredChannels].sort((a, b) => {
       // Helper function to safely get member count
@@ -552,8 +552,8 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
             <Table size="sm" variant="simple">
               <Thead bg={tableHeaderBg}>
                 <Tr>
-                  <Th 
-                    cursor="pointer" 
+                  <Th
+                    cursor="pointer"
                     onClick={() => handleColumnSort('name')}
                     _hover={{ color: 'blue.500' }}
                   >
@@ -562,8 +562,8 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
                       {getSortIcon('name')}
                     </HStack>
                   </Th>
-                  <Th 
-                    cursor="pointer" 
+                  <Th
+                    cursor="pointer"
                     onClick={() => handleColumnSort('members')}
                     _hover={{ color: 'blue.500' }}
                   >
@@ -612,7 +612,9 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
                       </Td>
                       <Td>
                         {channel.metadata?.member_count !== undefined
-                          ? Number(channel.metadata.member_count).toLocaleString()
+                          ? Number(
+                              channel.metadata.member_count
+                            ).toLocaleString()
                           : 'Unknown'}
                       </Td>
                       <Td>
@@ -898,8 +900,8 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
             <Thead bg={tableHeaderBg}>
               <Tr>
                 <Th width="50px">Select</Th>
-                <Th 
-                  cursor="pointer" 
+                <Th
+                  cursor="pointer"
                   onClick={() => handleColumnSort('name')}
                   _hover={{ color: 'blue.500' }}
                 >
@@ -908,8 +910,8 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
                     {getSortIcon('name')}
                   </HStack>
                 </Th>
-                <Th 
-                  cursor="pointer" 
+                <Th
+                  cursor="pointer"
                   onClick={() => handleColumnSort('members')}
                   _hover={{ color: 'blue.500' }}
                 >
@@ -918,8 +920,8 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
                     {getSortIcon('members')}
                   </HStack>
                 </Th>
-                <Th 
-                  cursor="pointer" 
+                <Th
+                  cursor="pointer"
                   onClick={() => handleColumnSort('lastSynced')}
                   _hover={{ color: 'blue.500' }}
                 >

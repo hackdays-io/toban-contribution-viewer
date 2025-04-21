@@ -403,7 +403,7 @@ describe('TeamChannelSelector', () => {
     await act(async () => {
       fireEvent.click(channelNameHeader)
     })
-    
+
     await act(async () => {
       fireEvent.click(channelNameHeader) // Click again to reverse sort order
     })
@@ -412,7 +412,7 @@ describe('TeamChannelSelector', () => {
     await act(async () => {
       fireEvent.click(memberCountHeader)
     })
-    
+
     await act(async () => {
       fireEvent.click(memberCountHeader) // Click again to reverse sort order
     })
@@ -421,12 +421,12 @@ describe('TeamChannelSelector', () => {
     await act(async () => {
       fireEvent.click(lastSyncedHeader)
     })
-    
+
     await act(async () => {
       fireEvent.click(lastSyncedHeader) // Click again to reverse sort order
     })
 
-    // Make sure we still have the expected channels 
+    // Make sure we still have the expected channels
     // Using getAllByText because the channel names appear multiple times
     expect(screen.getAllByText('general').length).toBeGreaterThan(0)
     expect(screen.getAllByText('random').length).toBeGreaterThan(0)
