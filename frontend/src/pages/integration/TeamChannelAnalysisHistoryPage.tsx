@@ -30,9 +30,10 @@ import {
   FiFileText,
 } from 'react-icons/fi'
 import { Link, useParams, useNavigate } from 'react-router-dom'
-import env from '../../config/env'
 import useIntegration from '../../context/useIntegration'
-import integrationService, { ServiceResource } from '../../lib/integrationService'
+import integrationService, {
+  ServiceResource,
+} from '../../lib/integrationService'
 
 interface AnalysisHistoryItem {
   id: string
@@ -106,12 +107,14 @@ const TeamChannelAnalysisHistoryPage: React.FC = () => {
         integrationId || '',
         channelId || ''
       )
-      
+
       // Check if the result is an API error
       if (integrationService.isApiError(analysesResult)) {
-        throw new Error(`Error fetching analysis history: ${analysesResult.message}`)
+        throw new Error(
+          `Error fetching analysis history: ${analysesResult.message}`
+        )
       }
-      
+
       // Set the analyses from the fetched result
       setAnalyses(analysesResult)
     } catch (error) {
