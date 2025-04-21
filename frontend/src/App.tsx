@@ -31,6 +31,7 @@ import {
   IntegrationsPage,
   IntegrationDetailPage,
   IntegrationConnectPage,
+  IntegrationSettingsPage,
   TeamChannelSelectorPage,
   TeamChannelAnalysisPage,
   TeamAnalysisResultPage,
@@ -156,7 +157,7 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <AppLayout>
-                      <IntegrationDetailPage />
+                      <IntegrationSettingsPage />
                     </AppLayout>
                   </ProtectedRoute>
                 }

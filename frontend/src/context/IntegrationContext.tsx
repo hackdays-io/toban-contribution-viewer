@@ -878,7 +878,7 @@ export const IntegrationProvider: React.FC<{ children: React.ReactNode }> = ({
    * Fetch selected channels for analysis
    */
   const fetchSelectedChannels = useCallback(
-    async (integrationId: string) => {
+    async (integrationId: string, skipResourceFetch = false) => {
       if (!session || !integrationId) return
 
       console.log('🔍 CONTEXT: Fetching selected channels')
@@ -890,9 +890,13 @@ export const IntegrationProvider: React.FC<{ children: React.ReactNode }> = ({
       }))
 
       try {
-        // First, refetch the resources to make sure we have the latest data
-        // This is important because the selection state is part of the resource metadata
-        await fetchResources(integrationId, [ResourceType.SLACK_CHANNEL])
+        // Only refetch resources if explicitly requested
+        // This prevents duplicate resource fetches since resources and selection
+        // are often needed together but fetched through separate calls
+        if (!skipResourceFetch) {
+          // Make sure we have the latest channel data
+          await fetchResources(integrationId, [ResourceType.SLACK_CHANNEL])
+        }
 
         // Now get the selected channels
         const result =

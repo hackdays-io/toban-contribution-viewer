@@ -1,3 +1,5 @@
 export { default as IntegrationList } from './IntegrationList'
 export { default as IntegrationDetail } from './IntegrationDetail'
 export { default as ReconnectIntegration } from './ReconnectIntegration'
+export { default as ResourcesAnalysisTab } from './ResourcesAnalysisTab' 
+export { default as TeamChannelSelector } from './TeamChannelSelector'

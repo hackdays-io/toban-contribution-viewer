@@ -84,121 +84,96 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
       )
     : channels
 
-  // Load resources and selected channels when component mounts
-  useEffect(() => {
-    if (integrationId) {
-      const loadData = async () => {
-        try {
-          await fetchResources(integrationId, [ResourceType.SLACK_CHANNEL])
-          await fetchSelectedChannels(integrationId)
-        } catch (err) {
-          console.error('Error loading channel data:', err)
-        }
-      }
-
-      loadData()
-    }
-  }, [integrationId, fetchResources, fetchSelectedChannels])
-
-  // Track if we've done initial load - use ref to avoid re-renders
+  // Track if we've done initial load and data fetching - use refs to avoid re-renders
   const didInitialLoadRef = React.useRef(false)
+  const didInitialFetchRef = React.useRef(false)
 
   // Track if a save is in progress
   const [isSaving, setIsSaving] = useState(false)
 
-  // Add an effect to fetch selected channels on mount
+  // Only load resources and selected channels once when component mounts
   useEffect(() => {
-    const fetchData = async () => {
-      if (!integrationId) return
+    if (!integrationId || didInitialFetchRef.current) return
 
-      console.log('🔄 INITIALIZATION: Fetching resources and selected channels')
+    // Mark as fetched immediately to prevent duplicate calls
+    didInitialFetchRef.current = true
 
+    console.log(
+      '🔄 INITIALIZATION: Fetching resources and selected channels (ONCE)'
+    )
+
+    const loadData = async () => {
       try {
-        // Reset the initialization flag to ensure we start fresh
+        // Reset the selection initialization flag
         didInitialLoadRef.current = false
 
-        // First fetch resources if they're not already loaded
-        if (channels.length === 0) {
-          await fetchResources(integrationId, [ResourceType.SLACK_CHANNEL])
-        }
+        // First fetch channels
+        await fetchResources(integrationId, [ResourceType.SLACK_CHANNEL])
 
-        // Then fetch selected channels
+        // Then fetch selected channels ONLY ONCE
         await fetchSelectedChannels(integrationId)
 
         console.log(
           '✅ INITIALIZATION: Fetched resources and selected channels'
         )
-      } catch (error) {
-        console.error('❌ Error fetching initial data:', error)
+      } catch (err) {
+        console.error('❌ Error loading channel data:', err)
+        // Reset fetch flag on error to allow retry
+        didInitialFetchRef.current = false
       }
     }
 
-    fetchData()
+    loadData()
+    // Only depend on stable references
+  }, [integrationId, fetchResources, fetchSelectedChannels])
 
-    // Include channels.length in dependencies to satisfy linter
-    // This is safe because the useEffect has internal guards to prevent infinite loops
-  }, [integrationId, fetchResources, fetchSelectedChannels, channels.length])
-
-  // Set up selection state when channels change - but only once after initial load
+  // Set up selection state when currentResources change - only once after resources are loaded
   useEffect(() => {
-    // Skip if no channels or if we've already initialized
-    if (channels.length === 0 || didInitialLoadRef.current) {
+    // Skip if we've already initialized selections
+    if (didInitialLoadRef.current) {
       return
     }
 
-    console.log('🔄 Initial selection check for', channels.length, 'channels')
+    // Only process if we have channels to work with
+    if (channels.length === 0) {
+      return
+    }
 
-    // First try using the direct property on the channel object
-    const directSelectedChannels = channels
-      .filter((channel) => channel.is_selected_for_analysis === true)
-      .map((channel) => channel.id)
+    // This will only run once after initial fetch completes
+    console.log(
+      '🔄 Setting up selection state for',
+      channels.length,
+      'channels (ONE TIME ONLY)'
+    )
 
-    // If that didn't work, use the metadata property
-    const metadataSelectedChannels = channels
-      .filter(
-        (channel) =>
-          !channel.is_selected_for_analysis &&
-          channel.metadata?.is_selected_for_analysis === true
-      )
-      .map((channel) => channel.id)
-
-    // Fallback to using the context method
-    const contextSelectedChannels = channels
+    // Process channels to find selected ones
+    const selectedIds = channels
       .filter((channel) => {
-        // Only check with the context method if we didn't already find it with the direct properties
-        const alreadyFound =
-          channel.is_selected_for_analysis === true ||
-          channel.metadata?.is_selected_for_analysis === true
+        // Check direct properties first
+        if (channel.is_selected_for_analysis === true) {
+          return true
+        }
 
-        if (alreadyFound) return false
+        // Then check metadata
+        if (channel.metadata?.is_selected_for_analysis === true) {
+          return true
+        }
 
+        // Finally check context method
         return isChannelSelectedForAnalysis(channel.id)
       })
       .map((channel) => channel.id)
 
-    // Combine all selected channels
-    const allSelectedChannelIds = [
-      ...directSelectedChannels,
-      ...metadataSelectedChannels,
-      ...contextSelectedChannels,
-    ]
+    console.log(`📋 Found ${selectedIds.length} selected channels`)
 
-    console.log('📋 Initial selected channels:', {
-      directMethod: directSelectedChannels.length,
-      metadataMethod: metadataSelectedChannels.length,
-      contextMethod: contextSelectedChannels.length,
-      total: allSelectedChannelIds.length,
-    })
+    // Set selected channel IDs
+    setSelectedChannelIds(selectedIds)
 
-    // Update the selected channel IDs once
-    console.log(
-      '✏️ Setting initial checkbox state with',
-      allSelectedChannelIds.length,
-      'channels'
-    )
-    setSelectedChannelIds(allSelectedChannelIds)
+    // Mark as initialized to prevent running again
     didInitialLoadRef.current = true
-  }, [channels, isChannelSelectedForAnalysis])
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [channels.length]) // Only depend on channels.length to detect when channels are available
 
   // Handle checkbox change
   const handleSelectChannel = (channelId: string) => {
@@ -307,7 +282,7 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
   return (
     <Box>
       <Flex mb={3} justifyContent="space-between" alignItems="center">
-        <Heading size="md">Channel Manager</Heading>
+        <Heading size="md">Channel Selection</Heading>
 
         <Button
           colorScheme="blue"

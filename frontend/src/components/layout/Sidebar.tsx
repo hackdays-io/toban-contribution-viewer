@@ -172,7 +172,7 @@ const Sidebar = ({ onClose, ...rest }: SidebarProps) => {
 
           <Divider my={3} />
 
-          {/* Integrations section */}
+          {/* Integrations & Analysis section */}
           <Box py={2} px={3}>
             <Text
               fontSize="xs"
@@ -190,23 +190,9 @@ const Sidebar = ({ onClose, ...rest }: SidebarProps) => {
               icon={FiBox}
               isActive={isActivePath('/dashboard/integrations')}
             >
-              All Integrations
+              Integrations
             </NavItem>
           </ListItem>
-
-          <Divider my={3} />
-
-          {/* Analytics section */}
-          <Box py={2} px={3}>
-            <Text
-              fontSize="xs"
-              fontWeight="bold"
-              textTransform="uppercase"
-              color="gray.500"
-            >
-              Analysis
-            </Text>
-          </Box>
 
           <ListItem>
             <NavItem
@@ -214,7 +200,7 @@ const Sidebar = ({ onClose, ...rest }: SidebarProps) => {
               icon={FiBarChart2}
               isActive={isActivePath('/dashboard/analytics')}
             >
-              Analytics
+              Analysis
             </NavItem>
           </ListItem>
 
