@@ -248,7 +248,7 @@ describe('TeamChannelSelector', () => {
     // This is a simplification, but it verifies the core functionality
   })
 
-  it('handles selecting and deselecting channels', async () => {
+  it('handles selecting channels', async () => {
     await act(async () => {
       renderWithContext()
     })
@@ -275,19 +275,31 @@ describe('TeamChannelSelector', () => {
     expect(
       mockIntegrationContext.selectChannelsForAnalysis
     ).toHaveBeenCalledWith('test-int-1', ['channel-1', 'channel-2'])
+  })
 
-    // Reset the mocks before next test
-    vi.clearAllMocks()
+  it('handles deselecting channels', async () => {
+    await act(async () => {
+      renderWithContext()
+    })
+
+    // Update the mock to say both channels are selected
     mockIntegrationContext.isChannelSelectedForAnalysis.mockImplementation(
       (channelId) => channelId === 'channel-1' || channelId === 'channel-2'
     )
+
+    // Select channel-2 (to match our mock behavior)
+    const checkboxes = screen.getAllByRole('checkbox')
+    await act(async () => {
+      fireEvent.click(checkboxes[1])
+    })
 
     // Now deselect channel-1
     await act(async () => {
       fireEvent.click(checkboxes[0])
     })
 
-    // Click save button again
+    // Click save button
+    const saveButton = screen.getAllByText('Save Selection')[0]
     await act(async () => {
       fireEvent.click(saveButton)
     })
