@@ -17,13 +17,13 @@ import {
   useColorModeValue,
   useToast,
 } from '@chakra-ui/react'
-import { 
-  FiArrowLeft, 
-  FiRefreshCw, 
-  FiZap, 
-  FiLink, 
+import {
+  FiArrowLeft,
+  FiRefreshCw,
+  FiZap,
+  FiLink,
   FiBarChart,
-  FiSettings 
+  FiSettings,
 } from 'react-icons/fi'
 import { IntegrationDetail } from '../../components/integration'
 import { PageTitle } from '../../components/layout'
@@ -61,7 +61,7 @@ const IntegrationDetailPage: React.FC = () => {
   const cardBg = useColorModeValue('white', 'gray.800')
   const cardBorder = useColorModeValue('gray.200', 'gray.700')
 
-  const [showDashboard, setShowDashboard] = useState(true)
+  const showDashboard = true // Default to dashboard view
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [isSyncing, setIsSyncing] = useState(false)
 
@@ -92,14 +92,17 @@ const IntegrationDetailPage: React.FC = () => {
     setIsRefreshing(true)
     try {
       await fetchIntegration(integrationId)
-      await fetchResources(integrationId, [ResourceType.SLACK_CHANNEL, ResourceType.SLACK_USER])
+      await fetchResources(integrationId, [
+        ResourceType.SLACK_CHANNEL,
+        ResourceType.SLACK_USER,
+      ])
       toast({
         title: 'Integration details refreshed',
         status: 'success',
         duration: 3000,
         isClosable: true,
       })
-    } catch (error) {
+    } catch {
       toast({
         title: 'Failed to refresh integration details',
         status: 'error',
@@ -117,11 +120,11 @@ const IntegrationDetailPage: React.FC = () => {
 
     setIsSyncing(true)
     try {
-      const success = await syncResources(
-        integrationId,
-        [ResourceType.SLACK_CHANNEL, ResourceType.SLACK_USER]
-      )
-      
+      const success = await syncResources(integrationId, [
+        ResourceType.SLACK_CHANNEL,
+        ResourceType.SLACK_USER,
+      ])
+
       if (success) {
         toast({
           title: 'Resources synced successfully',
@@ -172,10 +175,8 @@ const IntegrationDetailPage: React.FC = () => {
     navigate('/dashboard/integrations')
   }
 
-  // Toggle between dashboard and detail views
-  const toggleView = () => {
-    setShowDashboard(!showDashboard)
-  }
+  // Display is currently locked to dashboard view
+  // Future implementation may allow toggling between views
 
   // Render loading state
   if (loading && !isRefreshing) {
@@ -300,8 +301,7 @@ const IntegrationDetailPage: React.FC = () => {
             </CardHeader>
             <CardBody>
               <Text>
-                {currentIntegration.description ||
-                  'No description provided.'}
+                {currentIntegration.description || 'No description provided.'}
               </Text>
             </CardBody>
           </Card>
@@ -327,11 +327,10 @@ const IntegrationDetailPage: React.FC = () => {
                   <Flex align="center">
                     <Badge
                       colorScheme={
-                        currentIntegration.status ===
-                        IntegrationStatus.ACTIVE
+                        currentIntegration.status === IntegrationStatus.ACTIVE
                           ? 'green'
                           : currentIntegration.status ===
-                            IntegrationStatus.DISCONNECTED
+                              IntegrationStatus.DISCONNECTED
                             ? 'yellow'
                             : 'red'
                       }
@@ -347,7 +346,11 @@ const IntegrationDetailPage: React.FC = () => {
                           size="sm"
                           colorScheme="blue"
                           leftIcon={<FiLink />}
-                          onClick={() => navigate(`/dashboard/integrations/${integrationId}/settings`)}
+                          onClick={() =>
+                            navigate(
+                              `/dashboard/integrations/${integrationId}/settings`
+                            )
+                          }
                         >
                           Reconnect
                         </Button>
@@ -361,9 +364,7 @@ const IntegrationDetailPage: React.FC = () => {
 
                 <DetailPanel title="Created">
                   <Text>
-                    {new Date(
-                      currentIntegration.created_at
-                    ).toLocaleString()}
+                    {new Date(currentIntegration.created_at).toLocaleString()}
                   </Text>
                 </DetailPanel>
 
@@ -371,8 +372,8 @@ const IntegrationDetailPage: React.FC = () => {
                   <Text>
                     {currentIntegration.last_used_at
                       ? new Date(
-                        currentIntegration.last_used_at
-                      ).toLocaleString()
+                          currentIntegration.last_used_at
+                        ).toLocaleString()
                       : 'Never'}
                   </Text>
                 </DetailPanel>
@@ -423,10 +424,7 @@ const IntegrationDetailPage: React.FC = () => {
               ) : currentResources.length === 0 ? (
                 <Box textAlign="center" py={4}>
                   <Text mb={4}>No resources found.</Text>
-                  <Button
-                    colorScheme="blue"
-                    onClick={handleSyncResources}
-                  >
+                  <Button colorScheme="blue" onClick={handleSyncResources}>
                     Sync Resources
                   </Button>
                 </Box>
@@ -458,8 +456,10 @@ const IntegrationDetailPage: React.FC = () => {
                       <Button
                         leftIcon={<FiBarChart />}
                         colorScheme="purple"
-                        onClick={() => 
-                          navigate(`/dashboard/integrations/${integrationId}/channels`)
+                        onClick={() =>
+                          navigate(
+                            `/dashboard/integrations/${integrationId}/channels`
+                          )
                         }
                       >
                         Manage Channel Analysis
@@ -470,14 +470,16 @@ const IntegrationDetailPage: React.FC = () => {
               )}
             </CardBody>
           </Card>
-          
+
           {/* Settings link */}
           <Flex justify="end">
             <Button
               leftIcon={<FiSettings />}
               colorScheme="gray"
               variant="outline"
-              onClick={() => navigate(`/dashboard/integrations/${integrationId}/settings`)}
+              onClick={() =>
+                navigate(`/dashboard/integrations/${integrationId}/settings`)
+              }
             >
               Integration Settings
             </Button>

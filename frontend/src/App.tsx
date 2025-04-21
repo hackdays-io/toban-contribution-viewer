@@ -31,7 +31,6 @@ import {
   IntegrationsPage,
   IntegrationDetailPage,
   IntegrationConnectPage,
-  IntegrationOverviewPage,
   IntegrationSettingsPage,
   TeamChannelSelectorPage,
   TeamChannelAnalysisPage,
@@ -153,7 +152,7 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-                                          <Route
+              <Route
                 path="/dashboard/integrations/:integrationId/settings"
                 element={
                   <ProtectedRoute>

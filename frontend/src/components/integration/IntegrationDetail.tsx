@@ -2,7 +2,6 @@ import React, { useState } from 'react'
 import {
   Box,
   Heading,
-  VStack,
   HStack,
   Text,
   Flex,
@@ -33,10 +32,7 @@ import {
   FiShare2,
   FiLink,
   FiZap,
-  FiPlusCircle,
   FiBarChart,
-  FiCheckSquare,
-  FiInfo,
 } from 'react-icons/fi'
 import useIntegration from '../../context/useIntegration'
 import { IntegrationStatus, ResourceType } from '../../lib/integrationService'
@@ -61,9 +57,7 @@ const IntegrationDetail: React.FC<IntegrationDetailProps> = ({
     currentIntegration,
     currentResources,
     loading,
-    loadingResources,
     error,
-    resourceError,
     fetchIntegration,
     fetchResources,
     syncResources,
@@ -81,7 +75,10 @@ const IntegrationDetail: React.FC<IntegrationDetailProps> = ({
     setIsRefreshing(true)
     try {
       await fetchIntegration(integrationId)
-      await fetchResources(integrationId, [ResourceType.SLACK_CHANNEL, ResourceType.SLACK_USER])
+      await fetchResources(integrationId, [
+        ResourceType.SLACK_CHANNEL,
+        ResourceType.SLACK_USER,
+      ])
       toast({
         title: 'Integration details refreshed',
         status: 'success',
@@ -106,11 +103,11 @@ const IntegrationDetail: React.FC<IntegrationDetailProps> = ({
 
     setIsSyncing(true)
     try {
-      const success = await syncResources(
-        integrationId,
-        [ResourceType.SLACK_CHANNEL, ResourceType.SLACK_USER]
-      )
-      
+      const success = await syncResources(integrationId, [
+        ResourceType.SLACK_CHANNEL,
+        ResourceType.SLACK_USER,
+      ])
+
       if (success) {
         toast({
           title: 'Resources synced successfully',
@@ -272,9 +269,12 @@ const IntegrationDetail: React.FC<IntegrationDetailProps> = ({
           >
             {currentIntegration.status}
           </Badge>
-          
+
           <Text color="gray.500" fontSize="md">
-            Last updated: {new Date(currentIntegration.updated_at || currentIntegration.created_at).toLocaleString()}
+            Last updated:{' '}
+            {new Date(
+              currentIntegration.updated_at || currentIntegration.created_at
+            ).toLocaleString()}
           </Text>
         </HStack>
 
@@ -349,47 +349,55 @@ const IntegrationDetail: React.FC<IntegrationDetailProps> = ({
         {currentResources.length > 0 && (
           <Box mb={8}>
             <Flex gap={4} wrap="wrap">
-              {currentIntegration.service_type === 'slack' && getResourcesByType(ResourceType.SLACK_CHANNEL) > 0 && (
-                <Card 
-                  p={4} 
-                  borderRadius="lg" 
-                  bg={cardBg} 
-                  borderWidth="1px"
-                  borderColor={cardBorder}
-                  width={{ base: '100%', sm: '48%', md: '30%' }}
-                >
-                  <Text fontSize="sm" color="gray.500">Channels</Text>
-                  <Text fontSize="3xl" fontWeight="bold">
-                    {getResourcesByType(ResourceType.SLACK_CHANNEL)}
-                  </Text>
-                </Card>
-              )}
-              
-              {currentIntegration.service_type === 'slack' && getResourcesByType(ResourceType.SLACK_USER) > 0 && (
-                <Card 
-                  p={4} 
-                  borderRadius="lg" 
-                  bg={cardBg} 
-                  borderWidth="1px"
-                  borderColor={cardBorder}
-                  width={{ base: '100%', sm: '48%', md: '30%' }}
-                >
-                  <Text fontSize="sm" color="gray.500">Users</Text>
-                  <Text fontSize="3xl" fontWeight="bold">
-                    {getResourcesByType(ResourceType.SLACK_USER)}
-                  </Text>
-                </Card>
-              )}
-              
-              <Card 
-                p={4} 
-                borderRadius="lg" 
-                bg={cardBg} 
+              {currentIntegration.service_type === 'slack' &&
+                getResourcesByType(ResourceType.SLACK_CHANNEL) > 0 && (
+                  <Card
+                    p={4}
+                    borderRadius="lg"
+                    bg={cardBg}
+                    borderWidth="1px"
+                    borderColor={cardBorder}
+                    width={{ base: '100%', sm: '48%', md: '30%' }}
+                  >
+                    <Text fontSize="sm" color="gray.500">
+                      Channels
+                    </Text>
+                    <Text fontSize="3xl" fontWeight="bold">
+                      {getResourcesByType(ResourceType.SLACK_CHANNEL)}
+                    </Text>
+                  </Card>
+                )}
+
+              {currentIntegration.service_type === 'slack' &&
+                getResourcesByType(ResourceType.SLACK_USER) > 0 && (
+                  <Card
+                    p={4}
+                    borderRadius="lg"
+                    bg={cardBg}
+                    borderWidth="1px"
+                    borderColor={cardBorder}
+                    width={{ base: '100%', sm: '48%', md: '30%' }}
+                  >
+                    <Text fontSize="sm" color="gray.500">
+                      Users
+                    </Text>
+                    <Text fontSize="3xl" fontWeight="bold">
+                      {getResourcesByType(ResourceType.SLACK_USER)}
+                    </Text>
+                  </Card>
+                )}
+
+              <Card
+                p={4}
+                borderRadius="lg"
+                bg={cardBg}
                 borderWidth="1px"
                 borderColor={cardBorder}
                 width={{ base: '100%', sm: '48%', md: '30%' }}
               >
-                <Text fontSize="sm" color="gray.500">Total Resources</Text>
+                <Text fontSize="sm" color="gray.500">
+                  Total Resources
+                </Text>
                 <Text fontSize="3xl" fontWeight="bold">
                   {getTotalResources()}
                 </Text>
@@ -397,10 +405,12 @@ const IntegrationDetail: React.FC<IntegrationDetailProps> = ({
             </Flex>
           </Box>
         )}
-        
+
         {/* Main action cards */}
-        <Heading size="md" mb={4}>Integration Management</Heading>
-        
+        <Heading size="md" mb={4}>
+          Integration Management
+        </Heading>
+
         <Flex direction={{ base: 'column', md: 'row' }} gap={6} wrap="wrap">
           {/* Channel Selection Card - only for Slack */}
           {currentIntegration.service_type === 'slack' && (
@@ -411,24 +421,30 @@ const IntegrationDetail: React.FC<IntegrationDetailProps> = ({
               bg={cardBg}
               borderColor={cardBorder}
               flex="1"
-              minW={{ base: "100%", md: "48%" }}
+              minW={{ base: '100%', md: '48%' }}
               _hover={{ shadow: 'md', borderColor: 'purple.300' }}
               cursor="pointer"
-              onClick={() => navigate(`/dashboard/integrations/${integrationId}/channels`)}
+              onClick={() =>
+                navigate(`/dashboard/integrations/${integrationId}/channels`)
+              }
             >
               <CardHeader pb={0}>
                 <Flex align="center" gap={2}>
-                  <FiBarChart size="20px" color="var(--chakra-colors-purple-500)" />
+                  <FiBarChart
+                    size="20px"
+                    color="var(--chakra-colors-purple-500)"
+                  />
                   <Heading size="md">Channel Analysis</Heading>
                 </Flex>
               </CardHeader>
               <CardBody>
                 <Text fontSize="sm" color="gray.500" mb={3}>
-                  Select and analyze channels to understand team contribution patterns
+                  Select and analyze channels to understand team contribution
+                  patterns
                 </Text>
-                <Button 
-                  size="md" 
-                  colorScheme="purple" 
+                <Button
+                  size="md"
+                  colorScheme="purple"
                   width="full"
                   leftIcon={<FiBarChart />}
                 >
@@ -437,7 +453,7 @@ const IntegrationDetail: React.FC<IntegrationDetailProps> = ({
               </CardBody>
             </Card>
           )}
-          
+
           {/* Settings Card */}
           <Card
             borderWidth="1px"
@@ -446,10 +462,12 @@ const IntegrationDetail: React.FC<IntegrationDetailProps> = ({
             bg={cardBg}
             borderColor={cardBorder}
             flex="1"
-            minW={{ base: "100%", md: "48%" }}
+            minW={{ base: '100%', md: '48%' }}
             _hover={{ shadow: 'md', borderColor: 'gray.400' }}
             cursor="pointer"
-            onClick={() => navigate(`/dashboard/integrations/${integrationId}/settings`)}
+            onClick={() =>
+              navigate(`/dashboard/integrations/${integrationId}/settings`)
+            }
           >
             <CardHeader pb={0}>
               <Flex align="center" gap={2}>
@@ -459,11 +477,12 @@ const IntegrationDetail: React.FC<IntegrationDetailProps> = ({
             </CardHeader>
             <CardBody>
               <Text fontSize="sm" color="gray.500" mb={3}>
-                Configure integration properties, authentication, and manage connection
+                Configure integration properties, authentication, and manage
+                connection
               </Text>
-              <Button 
-                size="md" 
-                colorScheme="gray" 
+              <Button
+                size="md"
+                colorScheme="gray"
                 width="full"
                 leftIcon={<FiSettings />}
               >
@@ -472,17 +491,19 @@ const IntegrationDetail: React.FC<IntegrationDetailProps> = ({
             </CardBody>
           </Card>
         </Flex>
-        
+
         {/* Maintenance section */}
         <Box mt={8}>
-          <Heading size="md" mb={4}>Maintenance</Heading>
-          <Flex 
-            gap={4} 
-            wrap="wrap" 
-            p={4} 
-            borderWidth="1px" 
-            borderRadius="lg" 
-            borderStyle="dashed" 
+          <Heading size="md" mb={4}>
+            Maintenance
+          </Heading>
+          <Flex
+            gap={4}
+            wrap="wrap"
+            p={4}
+            borderWidth="1px"
+            borderRadius="lg"
+            borderStyle="dashed"
             borderColor={cardBorder}
           >
             <Button
@@ -494,7 +515,7 @@ const IntegrationDetail: React.FC<IntegrationDetailProps> = ({
             >
               Sync Resources
             </Button>
-            
+
             {needsReconnection && (
               <Button
                 leftIcon={<FiLink />}
@@ -507,7 +528,6 @@ const IntegrationDetail: React.FC<IntegrationDetailProps> = ({
             )}
           </Flex>
         </Box>
-        
       </Box>
 
       {/* Reconnection Modal */}
