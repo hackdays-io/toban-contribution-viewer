@@ -22,7 +22,13 @@ import {
   useToast,
   Tooltip,
 } from '@chakra-ui/react'
-import { FiSearch, FiSettings, FiCheck, FiBarChart2, FiClock } from 'react-icons/fi'
+import {
+  FiSearch,
+  FiSettings,
+  FiCheck,
+  FiBarChart2,
+  FiClock,
+} from 'react-icons/fi'
 import { useNavigate } from 'react-router-dom'
 import { ResourceType } from '../../lib/integrationService'
 import useIntegration from '../../context/useIntegration'

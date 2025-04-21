@@ -31,7 +31,9 @@ import { Link, useParams, useNavigate } from 'react-router-dom'
 import MessageText from '../../components/slack/MessageText'
 import { SlackUserCacheProvider } from '../../components/slack/SlackUserContext'
 import useIntegration from '../../context/useIntegration'
-import integrationService, { ServiceResource } from '../../lib/integrationService'
+import integrationService, {
+  ServiceResource,
+} from '../../lib/integrationService'
 
 interface AnalysisResponse {
   id: string
@@ -114,20 +116,23 @@ const TeamAnalysisResultPage: React.FC = () => {
       }
 
       // Fetch the specific analysis using the integration service
-      console.log(`Fetching analysis ${analysisId} for integration ${integrationId} and channel ${channelId}`);
+      console.log(
+        `Fetching analysis ${analysisId} for integration ${integrationId} and channel ${channelId}`
+      )
       const analysisResult = await integrationService.getResourceAnalysis(
         integrationId || '',
         channelId || '',
         analysisId || ''
-      );
-      
+      )
+
       // Check if the result is an API error
       if (integrationService.isApiError(analysisResult)) {
-        throw new Error(`Error fetching analysis: ${analysisResult.message}`);
+        throw new Error(`Error fetching analysis: ${analysisResult.message}`)
       }
-      
-      // Set the analysis data
-      setAnalysis(analysisResult);
+
+      // Set the analysis data, casting it to the expected type
+      // This is safe because we've verified it's not an ApiError above
+      setAnalysis(analysisResult as unknown as AnalysisResponse)
     } catch (error) {
       console.error('Error fetching data:', error)
       toast({
@@ -383,11 +388,15 @@ const TeamAnalysisResultPage: React.FC = () => {
                 <Text fontWeight="bold">{currentIntegration?.name}</Text>
                 <Text>&gt;</Text>
                 <Text>
-                  {channel?.name ? 
-                    (channel.name.startsWith('#') ? channel.name : `#${channel.name}`) : 
-                    (analysis?.channel_name ? 
-                      (analysis.channel_name.startsWith('#') ? analysis.channel_name : `#${analysis.channel_name}`) : 
-                      '#channel')}
+                  {channel?.name
+                    ? channel.name.startsWith('#')
+                      ? channel.name
+                      : `#${channel.name}`
+                    : analysis?.channel_name
+                      ? analysis.channel_name.startsWith('#')
+                        ? analysis.channel_name
+                        : `#${analysis.channel_name}`
+                      : '#channel'}
                 </Text>
                 <Badge
                   colorScheme={channel?.type === 'public' ? 'green' : 'orange'}

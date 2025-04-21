@@ -79,6 +79,7 @@ export interface Integration {
   metadata?: Record<string, unknown>
   last_used_at?: string
   updated?: boolean // Flag indicating if this was an update to an existing integration
+  workspace_id?: string // External service identifier (e.g., Slack workspace ID)
 
   owner_team: TeamInfo
   created_by: UserInfo
@@ -180,6 +181,7 @@ export interface AnalysisOptions {
   end_date?: string
   include_threads?: boolean
   include_reactions?: boolean
+  analysis_type?: string
 }
 
 // Error types
@@ -187,6 +189,7 @@ export interface ApiError {
   status: number
   message: string
   details?: unknown
+  detail?: string
 }
 
 /**
@@ -431,25 +434,27 @@ class IntegrationService {
     resourceId: string
   ): Promise<ServiceResource | ApiError> {
     try {
-      console.log(`[DEBUG] Fetching resource ${resourceId} for integration ${integrationId}`)
-      
+      console.log(
+        `[DEBUG] Fetching resource ${resourceId} for integration ${integrationId}`
+      )
+
       // Fetch all resources and filter for the specific one
       const resources = await this.getResources(integrationId)
-      
+
       // Check if we got an error from getResources
       if (this.isApiError(resources)) {
         console.error('[DEBUG] Error fetching resources:', resources.message)
         throw new Error(`Failed to fetch resources: ${resources.message}`)
       }
-      
+
       // Filter for the specific resource
-      const resource = resources.find(res => res.id === resourceId)
-      
+      const resource = resources.find((res) => res.id === resourceId)
+
       if (!resource) {
         console.error(`[DEBUG] Resource ${resourceId} not found in resources`)
         throw new Error(`Resource ${resourceId} not found`)
       }
-      
+
       console.log(`[DEBUG] Found resource:`, resource)
       return resource
     } catch (error) {
@@ -775,17 +780,19 @@ class IntegrationService {
     options?: AnalysisOptions
   ): Promise<Record<string, unknown> | ApiError> {
     try {
-      console.log(`[DEBUG] Analyzing resource ${resourceId} for integration ${integrationId}`)
-      
+      console.log(
+        `[DEBUG] Analyzing resource ${resourceId} for integration ${integrationId}`
+      )
+
       const headers = await this.getAuthHeaders()
-      const url = `${this.apiUrl}/${integrationId}/resources/${resourceId}/analyze`;
-      
+      const url = `${this.apiUrl}/${integrationId}/resources/${resourceId}/analyze`
+
       // Log the API URL being called
-      console.log(`[DEBUG] Analyzing resource with URL: ${url}`);
-      
+      console.log(`[DEBUG] Analyzing resource with URL: ${url}`)
+
       // Create request body with analysis options
-      const body = options || {};
-      
+      const body = options || {}
+
       // Make the API call
       const response = await fetch(url, {
         method: 'POST',
@@ -795,32 +802,32 @@ class IntegrationService {
         },
         credentials: 'include',
         body: JSON.stringify(body),
-      });
-      
+      })
+
       if (!response.ok) {
         // Try to extract more detailed error information
-        let errorDetail = "";
+        let errorDetail = ''
         try {
-          const errorText = await response.text();
-          const errorJson = JSON.parse(errorText);
-          errorDetail = errorJson.detail || errorText;
+          const errorText = await response.text()
+          const errorJson = JSON.parse(errorText)
+          errorDetail = errorJson.detail || errorText
         } catch {
-          errorDetail = response.statusText;
+          errorDetail = response.statusText
         }
-        
+
         return {
           status: response.status,
           message: `Analysis request failed: ${response.status} ${response.statusText}`,
-          detail: errorDetail
-        };
+          detail: errorDetail,
+        }
       }
-      
-      return await response.json();
+
+      return await response.json()
     } catch (error) {
-      return this.handleError(error, 'Failed to analyze resource');
+      return this.handleError(error, 'Failed to analyze resource')
     }
   }
-  
+
   /**
    * Get analysis history for a resource
    * @param integrationId Integration UUID
@@ -832,46 +839,46 @@ class IntegrationService {
   ): Promise<Record<string, unknown>[] | ApiError> {
     try {
       console.log(`[DEBUG] Getting analysis history for resource ${resourceId}`)
-      
+
       const headers = await this.getAuthHeaders()
-      const url = `${this.apiUrl}/${integrationId}/resources/${resourceId}/analyses`;
-      
-      console.log(`[DEBUG] Getting analysis history with URL: ${url}`);
-      
+      const url = `${this.apiUrl}/${integrationId}/resources/${resourceId}/analyses`
+
+      console.log(`[DEBUG] Getting analysis history with URL: ${url}`)
+
       // Make the API call
       const response = await fetch(url, {
         method: 'GET',
         headers: {
           ...headers,
-          'Accept': 'application/json',
+          Accept: 'application/json',
         },
         credentials: 'include',
-      });
-      
+      })
+
       if (!response.ok) {
         // Try to extract more detailed error information
-        let errorDetail = "";
+        let errorDetail = ''
         try {
-          const errorText = await response.text();
-          const errorJson = JSON.parse(errorText);
-          errorDetail = errorJson.detail || errorText;
+          const errorText = await response.text()
+          const errorJson = JSON.parse(errorText)
+          errorDetail = errorJson.detail || errorText
         } catch {
-          errorDetail = response.statusText;
+          errorDetail = response.statusText
         }
-        
+
         return {
           status: response.status,
           message: `Failed to retrieve analysis history: ${response.status} ${response.statusText}`,
-          detail: errorDetail
-        };
+          detail: errorDetail,
+        }
       }
-      
-      return await response.json();
+
+      return await response.json()
     } catch (error) {
-      return this.handleError(error, 'Failed to get resource analyses');
+      return this.handleError(error, 'Failed to get resource analyses')
     }
   }
-  
+
   /**
    * Get latest analysis for a resource
    * @param integrationId Integration UUID
@@ -883,46 +890,46 @@ class IntegrationService {
   ): Promise<Record<string, unknown> | ApiError> {
     try {
       console.log(`[DEBUG] Getting latest analysis for resource ${resourceId}`)
-      
+
       const headers = await this.getAuthHeaders()
-      const url = `${this.apiUrl}/${integrationId}/resources/${resourceId}/analyses/latest`;
-      
-      console.log(`[DEBUG] Getting latest analysis with URL: ${url}`);
-      
+      const url = `${this.apiUrl}/${integrationId}/resources/${resourceId}/analyses/latest`
+
+      console.log(`[DEBUG] Getting latest analysis with URL: ${url}`)
+
       // Make the API call
       const response = await fetch(url, {
         method: 'GET',
         headers: {
           ...headers,
-          'Accept': 'application/json',
+          Accept: 'application/json',
         },
         credentials: 'include',
-      });
-      
+      })
+
       if (!response.ok) {
         // Try to extract more detailed error information
-        let errorDetail = "";
+        let errorDetail = ''
         try {
-          const errorText = await response.text();
-          const errorJson = JSON.parse(errorText);
-          errorDetail = errorJson.detail || errorText;
+          const errorText = await response.text()
+          const errorJson = JSON.parse(errorText)
+          errorDetail = errorJson.detail || errorText
         } catch {
-          errorDetail = response.statusText;
+          errorDetail = response.statusText
         }
-        
+
         return {
           status: response.status,
           message: `Failed to retrieve latest analysis: ${response.status} ${response.statusText}`,
-          detail: errorDetail
-        };
+          detail: errorDetail,
+        }
       }
-      
-      return await response.json();
+
+      return await response.json()
     } catch (error) {
-      return this.handleError(error, 'Failed to get latest resource analysis');
+      return this.handleError(error, 'Failed to get latest resource analysis')
     }
   }
-  
+
   /**
    * Get a specific analysis for a resource
    * @param integrationId Integration UUID
@@ -935,44 +942,46 @@ class IntegrationService {
     analysisId: string
   ): Promise<Record<string, unknown> | ApiError> {
     try {
-      console.log(`[DEBUG] Getting analysis ${analysisId} for resource ${resourceId}`)
-      
+      console.log(
+        `[DEBUG] Getting analysis ${analysisId} for resource ${resourceId}`
+      )
+
       const headers = await this.getAuthHeaders()
-      const url = `${this.apiUrl}/${integrationId}/resources/${resourceId}/analysis/${analysisId}`;
-      
-      console.log(`[DEBUG] Getting analysis with URL: ${url}`);
-      
+      const url = `${this.apiUrl}/${integrationId}/resources/${resourceId}/analysis/${analysisId}`
+
+      console.log(`[DEBUG] Getting analysis with URL: ${url}`)
+
       // Make the API call
       const response = await fetch(url, {
         method: 'GET',
         headers: {
           ...headers,
-          'Accept': 'application/json',
+          Accept: 'application/json',
         },
         credentials: 'include',
-      });
-      
+      })
+
       if (!response.ok) {
         // Try to extract more detailed error information
-        let errorDetail = "";
+        let errorDetail = ''
         try {
-          const errorText = await response.text();
-          const errorJson = JSON.parse(errorText);
-          errorDetail = errorJson.detail || errorText;
+          const errorText = await response.text()
+          const errorJson = JSON.parse(errorText)
+          errorDetail = errorJson.detail || errorText
         } catch {
-          errorDetail = response.statusText;
+          errorDetail = response.statusText
         }
-        
+
         return {
           status: response.status,
           message: `Failed to retrieve analysis: ${response.status} ${response.statusText}`,
-          detail: errorDetail
-        };
+          detail: errorDetail,
+        }
       }
-      
-      return await response.json();
+
+      return await response.json()
     } catch (error) {
-      return this.handleError(error, 'Failed to get resource analysis');
+      return this.handleError(error, 'Failed to get resource analysis')
     }
   }
 

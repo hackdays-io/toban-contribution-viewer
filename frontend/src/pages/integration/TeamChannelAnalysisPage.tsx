@@ -39,7 +39,10 @@ import env from '../../config/env'
 import { SlackUserCacheProvider } from '../../components/slack/SlackUserContext'
 import MessageText from '../../components/slack/MessageText'
 import useIntegration from '../../context/useIntegration'
-import integrationService, { IntegrationType, ServiceResource } from '../../lib/integrationService'
+import integrationService, {
+  IntegrationType,
+  ServiceResource,
+} from '../../lib/integrationService'
 import { SlackAnalysisResult } from '../../lib/slackApiClient'
 
 // Use the SlackAnalysisResult interface directly from slackApiClient.ts
@@ -72,10 +75,7 @@ const TeamChannelAnalysisPage: React.FC = () => {
   const toast = useToast()
   const navigate = useNavigate()
 
-  const {
-    currentIntegration,
-    fetchIntegration,
-  } = useIntegration()
+  const { currentIntegration, fetchIntegration } = useIntegration()
 
   // Format date for display
   const formatDate = (dateString: string) => {
@@ -106,11 +106,14 @@ const TeamChannelAnalysisPage: React.FC = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [integrationId])
-  
+
   // Once integration is loaded, fetch channel info
   useEffect(() => {
     if (integrationId && channelId && currentIntegration) {
-      console.log('Integration loaded, fetching channel:', currentIntegration.id)
+      console.log(
+        'Integration loaded, fetching channel:',
+        currentIntegration.id
+      )
       // Only fetch if we don't already have the channel
       if (!channel) {
         fetchIntegrationAndChannel()
@@ -125,51 +128,63 @@ const TeamChannelAnalysisPage: React.FC = () => {
   const fetchIntegrationAndChannel = async () => {
     try {
       setIsChannelLoading(true)
-      
+
       // Verify we have the integration and channel IDs
       if (!currentIntegration) {
         console.log('Integration not loaded yet - skipping channel fetch')
         return // Just return and wait for the next render when integration is loaded
       }
-      
+
       if (!channelId) {
         console.error('Missing channel ID')
         return
       }
-      
-      console.log('Fetching channel data using integration:', currentIntegration.id)
-      
+
+      console.log(
+        'Fetching channel data using integration:',
+        currentIntegration.id
+      )
+
       // Get channel via the integration service
-      const channelData = await integrationService.getResource(integrationId || '', channelId)
-      
+      const channelData = await integrationService.getResource(
+        integrationId || '',
+        channelId
+      )
+
       // Check if the result is an API error
       if (integrationService.isApiError(channelData)) {
         throw new Error(`Failed to fetch channel: ${channelData.message}`)
       }
-      
+
       console.log('Channel data retrieved successfully:', channelData.name)
-      
+
       // Create enriched channel data with proper IDs for the API
       const enrichedChannel: Channel = {
         ...channelData,
         // Store the database UUIDs for API calls
         workspace_uuid: currentIntegration.id, // Database UUID for the workspace
-        channel_uuid: channelData.id,          // Database UUID for the channel
+        channel_uuid: channelData.id, // Database UUID for the channel
         external_id: currentIntegration.workspace_id || '', // Slack workspace ID
-        external_resource_id: channelData.external_id,      // Slack channel ID
-        type: (channelData.metadata?.type || channelData.metadata?.is_private) ? 
-              (channelData.metadata?.is_private ? 'private' : 'public') : 
-              'public',
-        topic: channelData.metadata?.topic || '',
-        purpose: channelData.metadata?.purpose || ''
+        external_resource_id: channelData.external_id, // Slack channel ID
+        type:
+          channelData.metadata?.type || channelData.metadata?.is_private
+            ? channelData.metadata?.is_private
+              ? 'private'
+              : 'public'
+            : 'public',
+        topic: typeof channelData.metadata?.topic === 'string' ? channelData.metadata.topic : '',
+        purpose: typeof channelData.metadata?.purpose === 'string' ? channelData.metadata.purpose : '',
       }
-      
+
       setChannel(enrichedChannel)
     } catch (error) {
       console.error('Error fetching channel:', error)
       toast({
         title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to load channel information',
+        description:
+          error instanceof Error
+            ? error.message
+            : 'Failed to load channel information',
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -208,153 +223,162 @@ const TeamChannelAnalysisPage: React.FC = () => {
       }
 
       // Log the actual request parameters we're going to use
-      console.log('Analyzing channel with parameters:');
-      console.log('- workspace_uuid:', channel.workspace_uuid);
-      console.log('- channel_uuid:', channel.channel_uuid);
-      console.log('- start_date:', startDateParam || 'undefined');
-      console.log('- end_date:', endDateParam || 'undefined');
-      
+      console.log('Analyzing channel with parameters:')
+      console.log('- workspace_uuid:', channel.workspace_uuid)
+      console.log('- channel_uuid:', channel.channel_uuid)
+      console.log('- start_date:', startDateParam || 'undefined')
+      console.log('- end_date:', endDateParam || 'undefined')
+
       // Log the actual request parameters we're going to use
-      console.log('Analyzing channel with parameters:');
-      console.log('- integrationId:', integrationId);
-      console.log('- channelId (resource UUID):', channelId);
-      console.log('- channel UUID from data:', channel?.id);
-      console.log('- start_date:', startDateParam || 'undefined');
-      console.log('- end_date:', endDateParam || 'undefined');
-      
+      console.log('Analyzing channel with parameters:')
+      console.log('- integrationId:', integrationId)
+      console.log('- channelId (resource UUID):', channelId)
+      console.log('- channel UUID from data:', channel?.id)
+      console.log('- start_date:', startDateParam || 'undefined')
+      console.log('- end_date:', endDateParam || 'undefined')
+
       // First - sync the Slack data to ensure we have the latest messages
       toast({
         title: 'Syncing channel data',
-        description: 'Fetching the latest messages from Slack before analysis...',
+        description:
+          'Fetching the latest messages from Slack before analysis...',
         status: 'info',
         duration: 5000,
         isClosable: true,
-      });
-      
+      })
+
       try {
         // Step 1: Sync general integration resources (channels, users, etc.)
-        console.log('Syncing general integration data first...');
+        console.log('Syncing general integration data first...')
         const syncResult = await integrationService.syncResources(
           integrationId || ''
-        );
-        
+        )
+
         // Step 2: Specifically sync messages for this channel
-        console.log(`Syncing messages specifically for channel ${channelId}...`);
-        const syncChannelEndpoint = `${env.apiUrl}/integrations/${integrationId}/resources/${channelId}/sync-messages`;
-        
+        console.log(`Syncing messages specifically for channel ${channelId}...`)
+        const syncChannelEndpoint = `${env.apiUrl}/integrations/${integrationId}/resources/${channelId}/sync-messages`
+
         // Calculate a reasonable date range (use the analysis date range if specified, or last 90 days)
-        const startDateParam = startDate ? new Date(startDate).toISOString() : new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
-        const endDateParam = endDate ? new Date(endDate).toISOString() : new Date().toISOString();
-        
+        const startDateParam = startDate
+          ? new Date(startDate).toISOString()
+          : new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString()
+        const endDateParam = endDate
+          ? new Date(endDate).toISOString()
+          : new Date().toISOString()
+
         // Build the request URL with query parameters
-        const url = new URL(syncChannelEndpoint);
-        url.searchParams.append('start_date', startDateParam);
-        url.searchParams.append('end_date', endDateParam);
-        url.searchParams.append('include_replies', includeThreads.toString());
-        
+        const url = new URL(syncChannelEndpoint)
+        url.searchParams.append('start_date', startDateParam)
+        url.searchParams.append('end_date', endDateParam)
+        url.searchParams.append('include_replies', includeThreads.toString())
+
         // Make the channel messages sync request
-        const headers = await integrationService.getAuthHeaders();
-        
-        let channelSyncResponse;
+        const headers = await integrationService.getAuthHeaders()
+
+        let channelSyncResponse
         try {
           channelSyncResponse = await fetch(url.toString(), {
             method: 'POST',
             headers,
             credentials: 'include',
-          });
+          })
         } catch (error) {
-          console.error('Fetch error in channel sync:', error);
-          throw error;
+          console.error('Fetch error in channel sync:', error)
+          throw error
         }
-        
+
         if (!channelSyncResponse.ok) {
           // Try to get more detailed error information
-          let errorDetail = '';
+          let errorDetail = ''
           try {
-            const responseText = await channelSyncResponse.text();
+            const responseText = await channelSyncResponse.text()
             try {
-              const errorData = JSON.parse(responseText);
-              errorDetail = errorData.detail || errorData.message || responseText;
+              const errorData = JSON.parse(responseText)
+              errorDetail =
+                errorData.detail || errorData.message || responseText
             } catch {
-              errorDetail = responseText || channelSyncResponse.statusText;
+              errorDetail = responseText || channelSyncResponse.statusText
             }
           } catch {
             // Ignore response reading errors
           }
-          
+
           toast({
             title: 'Channel Sync Warning',
             description: `Channel messages sync was not fully successful: ${errorDetail || channelSyncResponse.statusText}. Analysis may not include the latest messages.`,
             status: 'warning',
             duration: 7000,
             isClosable: true,
-          });
+          })
         } else {
-          const channelSyncResult = await channelSyncResponse.json();
-          console.log('Channel messages sync successful:', channelSyncResult);
-          
+          const channelSyncResult = await channelSyncResponse.json()
+          console.log('Channel messages sync successful:', channelSyncResult)
+
           // Extract sync statistics from the response
-          const syncStats = channelSyncResult.sync_results || {};
-          const newMessages = syncStats.new_message_count || 0;
-          const repliesCount = syncStats.replies_synced || 0;
-          
+          const syncStats = channelSyncResult.sync_results || {}
+          const newMessages = syncStats.new_message_count || 0
+          const repliesCount = syncStats.replies_synced || 0
+
           toast({
             title: 'Channel Sync Complete',
             description: `Synced ${newMessages} new messages and ${repliesCount} thread replies from Slack.`,
             status: 'success',
             duration: 3000,
             isClosable: true,
-          });
+          })
         }
-        
+
         // Check if general sync was successful
         if (integrationService.isApiError(syncResult)) {
-          console.warn('General sync warning:', syncResult.message);
+          console.warn('General sync warning:', syncResult.message)
           toast({
             title: 'General Sync Warning',
-            description: 'General resource sync was not fully successful, but channel messages were synced.',
+            description:
+              'General resource sync was not fully successful, but channel messages were synced.',
             status: 'warning',
             duration: 5000,
             isClosable: true,
-          });
+          })
         } else {
-          console.log('General sync successful:', syncResult);
+          console.log('General sync successful:', syncResult)
         }
       } catch (syncError) {
-        console.error('Error syncing data:', syncError);
+        console.error('Error syncing data:', syncError)
         toast({
           title: 'Sync Error',
-          description: syncError instanceof Error ? 
-            `Failed to sync channel data: ${syncError.message}. Analysis will use existing data.` :
-            'Failed to sync channel data. Analysis will use existing data.',
+          description:
+            syncError instanceof Error
+              ? `Failed to sync channel data: ${syncError.message}. Analysis will use existing data.`
+              : 'Failed to sync channel data. Analysis will use existing data.',
           status: 'warning',
           duration: 7000,
           isClosable: true,
-        });
+        })
       }
-      
+
       // Now, use integrationService to analyze the resource
       const result = await integrationService.analyzeResource(
-        integrationId || '',  // Integration UUID
-        channelId || '',      // Resource UUID (which should be the same as channel.id)
+        integrationId || '', // Integration UUID
+        channelId || '', // Resource UUID (which should be the same as channel.id)
         {
           analysis_type: 'contribution',
           start_date: startDateParam || undefined,
           end_date: endDateParam || undefined,
           include_threads: includeThreads,
-          include_reactions: includeReactions
+          include_reactions: includeReactions,
         }
       )
-      
+
       // Check if the result is an error
       if (integrationService.isApiError(result)) {
-        const errorMessage = `Analysis request failed: ${result.message}${result.detail ? `\nDetail: ${result.detail}` : ''}`;
-        console.error(errorMessage);
-        throw new Error(errorMessage);
+        const errorMessage = `Analysis request failed: ${result.message}${result.detail ? `\nDetail: ${result.detail}` : ''}`
+        console.error(errorMessage)
+        throw new Error(errorMessage)
       }
 
-      // Set the analysis result
-      setAnalysis(result)
+      // Set the analysis result, casting to the expected type
+      // This is safe because we've verified it's not an ApiError above
+      setAnalysis(result as unknown as SlackAnalysisResult)
 
       toast({
         title: 'Analysis Complete',
@@ -372,23 +396,21 @@ const TeamChannelAnalysisPage: React.FC = () => {
       }
     } catch (error) {
       console.error('Error during analysis:', error)
-      
+
       // Show a more detailed error message with actionable information
       toast({
         title: 'Analysis Failed',
-        description: 
-          error instanceof Error 
-            ? error.message 
-            : 'Failed to analyze channel',
+        description:
+          error instanceof Error ? error.message : 'Failed to analyze channel',
         status: 'error',
         duration: 10000,
         isClosable: true,
       })
-      
+
       // If needed, show details about implementation status
       toast({
         title: 'API Information',
-        description: 
+        description:
           'Using the newly implemented team-based channel analysis API endpoint. ' +
           'If you encounter issues, please report them.',
         status: 'info',
@@ -403,7 +425,9 @@ const TeamChannelAnalysisPage: React.FC = () => {
   /**
    * Format text with paragraphs and process Slack mentions.
    */
-  const formatText = (text: string) => {
+  const formatText = (text: string | undefined) => {
+    if (!text) return <Box>No data available</Box>;
+    
     return text.split('\n').map((paragraph, index) => (
       <Box key={index} mb={2}>
         {paragraph.trim() ? (
@@ -529,25 +553,25 @@ const TeamChannelAnalysisPage: React.FC = () => {
         <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={4} mb={6}>
           <Stat>
             <StatLabel>Messages</StatLabel>
-            <StatNumber>{analysis.stats.message_count}</StatNumber>
+            <StatNumber>{analysis.stats?.message_count || 0}</StatNumber>
             <StatHelpText>Total messages analyzed</StatHelpText>
           </Stat>
 
           <Stat>
             <StatLabel>Participants</StatLabel>
-            <StatNumber>{analysis.stats.participant_count}</StatNumber>
+            <StatNumber>{analysis.stats?.participant_count || 0}</StatNumber>
             <StatHelpText>Unique contributors</StatHelpText>
           </Stat>
 
           <Stat>
             <StatLabel>Threads</StatLabel>
-            <StatNumber>{analysis.stats.thread_count}</StatNumber>
+            <StatNumber>{analysis.stats?.thread_count || 0}</StatNumber>
             <StatHelpText>Conversation threads</StatHelpText>
           </Stat>
 
           <Stat>
             <StatLabel>Reactions</StatLabel>
-            <StatNumber>{analysis.stats.reaction_count}</StatNumber>
+            <StatNumber>{analysis.stats?.reaction_count || 0}</StatNumber>
             <StatHelpText>Total emoji reactions</StatHelpText>
           </Stat>
         </SimpleGrid>
@@ -588,8 +612,8 @@ const TeamChannelAnalysisPage: React.FC = () => {
               Analysis period:
             </Text>
             <Text fontSize="sm">
-              {formatDate(analysis.period.start)} to{' '}
-              {formatDate(analysis.period.end)}
+              {analysis.period?.start ? formatDate(analysis.period.start) : 'Unknown'} to{' '}
+              {analysis.period?.end ? formatDate(analysis.period.end) : 'Unknown'}
             </Text>
           </HStack>
 
@@ -597,7 +621,7 @@ const TeamChannelAnalysisPage: React.FC = () => {
             <Text fontWeight="bold" fontSize="sm">
               Model:
             </Text>
-            <Text fontSize="sm">{analysis.model_used}</Text>
+            <Text fontSize="sm">{analysis.model_used || 'Unknown'}</Text>
           </HStack>
 
           <HStack spacing={2}>
@@ -605,7 +629,7 @@ const TeamChannelAnalysisPage: React.FC = () => {
               Generated:
             </Text>
             <Text fontSize="sm">
-              {new Date(analysis.generated_at).toLocaleString()}
+              {analysis.generated_at ? new Date(analysis.generated_at).toLocaleString() : 'Unknown'}
             </Text>
           </HStack>
         </Box>

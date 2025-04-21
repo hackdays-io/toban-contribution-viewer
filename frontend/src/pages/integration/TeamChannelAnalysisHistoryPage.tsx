@@ -115,8 +115,9 @@ const TeamChannelAnalysisHistoryPage: React.FC = () => {
         )
       }
 
-      // Set the analyses from the fetched result
-      setAnalyses(analysesResult)
+      // Set the analyses from the fetched result, casting the result to the expected type
+      // This is safe because we're checking that the result is not an ApiError above
+      setAnalyses(analysesResult as unknown as AnalysisHistoryItem[])
     } catch (error) {
       console.error('Error fetching data:', error)
       toast({

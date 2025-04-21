@@ -55,21 +55,22 @@ export class ApiClient {
 
       // If the response is not OK, return an ApiError instead of throwing
       if (!response.ok) {
-        let errorDetail: string;
+        let errorDetail: string
         try {
           // Try to parse error details from response
-          const errorJson = await response.json();
-          errorDetail = errorJson.detail || errorJson.message || response.statusText;
+          const errorJson = await response.json()
+          errorDetail =
+            errorJson.detail || errorJson.message || response.statusText
         } catch {
           // If can't parse JSON, use status text
-          errorDetail = response.statusText;
+          errorDetail = response.statusText
         }
-        
+
         return {
           status: response.status,
           message: `API Error: ${response.status} ${response.statusText}`,
-          detail: errorDetail
-        } as ApiError;
+          detail: errorDetail,
+        } as ApiError
       }
 
       return response.json()
@@ -78,7 +79,7 @@ export class ApiClient {
       return {
         status: 'NETWORK_ERROR',
         message: `Network Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      } as ApiError;
+      } as ApiError
     }
   }
 
@@ -102,30 +103,31 @@ export class ApiClient {
 
       // If the response is not OK, return an ApiError instead of throwing
       if (!response.ok) {
-        let errorDetail: string;
+        let errorDetail: string
         try {
           // Try to parse error details from response
-          const errorJson = await response.json();
-          errorDetail = errorJson.detail || errorJson.message || response.statusText;
+          const errorJson = await response.json()
+          errorDetail =
+            errorJson.detail || errorJson.message || response.statusText
         } catch {
           // If can't parse JSON, use status text
-          errorDetail = response.statusText;
+          errorDetail = response.statusText
         }
-        
+
         return {
           status: response.status,
           message: `API Error: ${response.status} ${response.statusText}`,
-          detail: errorDetail
-        } as ApiError;
+          detail: errorDetail,
+        } as ApiError
       }
 
-      return response.json();
+      return response.json()
     } catch (error) {
       // Network errors or other fetch exceptions
       return {
         status: 'NETWORK_ERROR',
         message: `Network Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      } as ApiError;
+      } as ApiError
     }
   }
 }

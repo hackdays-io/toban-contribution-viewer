@@ -96,23 +96,26 @@ import env from '../config/env'
 // Slack API client class
 class SlackApiClient extends ApiClient {
   // Store the calculated base URL for logging
-  private apiBaseUrl: string;
-  
+  private apiBaseUrl: string
+
   constructor() {
     // Use the full API URL with the slack path
     // The baseUrl should include the protocol, host, and API prefix
-    const baseUrl = `${env.apiUrl}/slack`;
+    const baseUrl = `${env.apiUrl}/slack`
     super(baseUrl)
-    
+
     // Store the base URL for logging
-    this.apiBaseUrl = baseUrl;
-    
+    this.apiBaseUrl = baseUrl
+
     // Debug information about API URL construction
-    console.log('SlackApiClient debug info:');
-    console.log('- env.apiUrl:', env.apiUrl);
-    console.log('- Full base URL:', baseUrl);
-    console.log('- Example POST endpoint:', `${baseUrl}/workspaces/{workspace_id}/channels/{channel_id}/analyze`);
-    console.log('- API client will prepend "/" to any API paths.');
+    console.log('SlackApiClient debug info:')
+    console.log('- env.apiUrl:', env.apiUrl)
+    console.log('- Full base URL:', baseUrl)
+    console.log(
+      '- Example POST endpoint:',
+      `${baseUrl}/workspaces/{workspace_id}/channels/{channel_id}/analyze`
+    )
+    console.log('- API client will prepend "/" to any API paths.')
   }
 
   /**
@@ -163,7 +166,9 @@ class SlackApiClient extends ApiClient {
     workspaceId: string,
     channelId: string
   ): Promise<SlackChannel | ApiError> {
-    return this.get<SlackChannel>(`workspaces/${workspaceId}/channels/${channelId}`)
+    return this.get<SlackChannel>(
+      `workspaces/${workspaceId}/channels/${channelId}`
+    )
   }
 
   /**
@@ -222,25 +227,25 @@ class SlackApiClient extends ApiClient {
     channelId: string,
     analysisType: string,
     options?: {
-      start_date?: string;
-      end_date?: string;
-      include_threads?: boolean;
-      include_reactions?: boolean;
-      model?: string;
+      start_date?: string
+      end_date?: string
+      include_threads?: boolean
+      include_reactions?: boolean
+      model?: string
     }
   ): Promise<SlackAnalysisResult | ApiError> {
     const data = {
       analysis_type: analysisType,
-      ...options
+      ...options,
     }
-    
+
     // Build path with workspaceId (database UUID) and channelId (database UUID)
     // Make sure to use a leading slash so it builds the URL correctly
     const path = `/workspaces/${workspaceId}/channels/${channelId}/analyze`
-    
+
     // Log the full URL that will be constructed
-    console.log(`Making API call to: ${this.apiBaseUrl}${path}`);
-    
+    console.log(`Making API call to: ${this.apiBaseUrl}${path}`)
+
     return this.post<SlackAnalysisResult>(path, data)
   }
 
@@ -252,8 +257,8 @@ class SlackApiClient extends ApiClient {
     channelId: string
   ): Promise<SlackAnalysisResult[] | ApiError> {
     // Be consistent with leading slash
-    const path = `/workspaces/${workspaceId}/channels/${channelId}/analyses`;
-    console.log(`Getting analysis history from: ${this.apiBaseUrl}${path}`);
+    const path = `/workspaces/${workspaceId}/channels/${channelId}/analyses`
+    console.log(`Getting analysis history from: ${this.apiBaseUrl}${path}`)
     return this.get<SlackAnalysisResult[]>(path)
   }
 
