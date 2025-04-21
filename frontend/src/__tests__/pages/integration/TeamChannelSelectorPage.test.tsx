@@ -1,6 +1,38 @@
 import { render, screen } from '@testing-library/react'
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { ChakraProvider } from '@chakra-ui/react'
+
+// Mock framer-motion and Chakra UI's Collapse to avoid animation issues
+vi.mock('framer-motion', () => ({
+  motion: {
+    div: ({ children, ...props }: { children: React.ReactNode; [key: string]: unknown }) => (
+      <div data-testid="motion-div" {...props}>
+        {children}
+      </div>
+    ),
+  },
+  AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}))
+
+// Mock Chakra UI's Collapse component
+vi.mock('@chakra-ui/react', async () => {
+  const originalModule = await vi.importActual('@chakra-ui/react')
+  return {
+    ...originalModule,
+    Collapse: ({ 
+      children, 
+      in: isOpen 
+    }: { 
+      children: React.ReactNode; 
+      in: boolean; 
+      [key: string]: unknown 
+    }) => (
+      <div data-testid="collapse" style={{ display: isOpen ? 'block' : 'none' }}>
+        {children}
+      </div>
+    ),
+  }
+})
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import TeamChannelSelectorPage from '../../../pages/integration/TeamChannelSelectorPage'
 import IntegrationContext from '../../../context/IntegrationContext'

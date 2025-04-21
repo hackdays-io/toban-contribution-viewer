@@ -21,6 +21,9 @@ import {
   Flex,
   useToast,
   Tooltip,
+  Heading,
+  Collapse,
+  Badge,
 } from '@chakra-ui/react'
 import {
   FiSearch,
@@ -28,6 +31,8 @@ import {
   FiCheck,
   FiBarChart2,
   FiClock,
+  FiTrash2,
+  FiCheckCircle,
 } from 'react-icons/fi'
 import { useNavigate } from 'react-router-dom'
 import { ResourceType } from '../../lib/integrationService'
@@ -60,6 +65,7 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
   // Local state
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedChannelIds, setSelectedChannelIds] = useState<string[]>([])
+  const [selectedSearchQuery, setSelectedSearchQuery] = useState('')
 
   // UI colors
   const tableBg = useColorModeValue('white', 'gray.800')
@@ -207,6 +213,29 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
       }
     })
   }
+  
+  // Handle select all (filtered channels only)
+  const handleSelectAll = () => {
+    const filteredIds = filteredChannels.map(channel => channel.id)
+    setSelectedChannelIds(prev => {
+      // Add all filtered channel IDs that aren't already in the selection
+      const newSelection = [...prev]
+      filteredIds.forEach(id => {
+        if (!newSelection.includes(id)) {
+          newSelection.push(id)
+        }
+      })
+      return newSelection
+    })
+  }
+  
+  // Handle deselect all (filtered channels only)
+  const handleDeselectAll = () => {
+    const filteredIds = filteredChannels.map(channel => channel.id)
+    setSelectedChannelIds(prev => 
+      prev.filter(id => !filteredIds.includes(id))
+    )
+  }
 
   // Save selected channels to backend
   const handleSaveSelection = async () => {
@@ -277,6 +306,20 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
 
   return (
     <Box>
+      <Flex mb={3} justifyContent="space-between" alignItems="center">
+        <Heading size="md">All Channels</Heading>
+        
+        <Button
+          colorScheme="blue"
+          leftIcon={<FiCheck />}
+          onClick={handleSaveSelection}
+          isLoading={isSaving || loadingChannelSelection}
+          isDisabled={loadingResources}
+        >
+          Save Selection
+        </Button>
+      </Flex>
+      
       <Flex mb={4} justifyContent="space-between" alignItems="center">
         <InputGroup maxW="400px">
           <InputLeftElement pointerEvents="none">
@@ -288,19 +331,38 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </InputGroup>
-
-        <Button
-          colorScheme="blue"
-          leftIcon={<FiCheck />}
-          onClick={handleSaveSelection}
-          isLoading={isSaving || loadingChannelSelection}
-          isDisabled={loadingResources}
-        >
-          Save Selection
-        </Button>
+        
+        {selectedChannelIds.length > 0 && (
+          <Text color="blue.600" fontWeight="medium">
+            {selectedChannelIds.length} channel{selectedChannelIds.length !== 1 ? 's' : ''} selected
+          </Text>
+        )}
       </Flex>
 
       <Box overflowX="auto">
+        <Flex mb={2} justifyContent="flex-end">
+          <HStack spacing={2}>
+            <Button 
+              size="xs" 
+              onClick={handleSelectAll}
+              variant="outline"
+              colorScheme="blue"
+              isDisabled={filteredChannels.length === 0}
+            >
+              Select All
+            </Button>
+            <Button 
+              size="xs"
+              onClick={handleDeselectAll}
+              variant="outline"
+              colorScheme="red"
+              isDisabled={filteredChannels.length === 0 || !filteredChannels.some(c => selectedChannelIds.includes(c.id))}
+            >
+              Deselect All
+            </Button>
+          </HStack>
+        </Flex>
+        
         <Table
           variant="simple"
           bg={tableBg}
@@ -410,6 +472,106 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
           </Tbody>
         </Table>
       </Box>
+
+      {/* Selected Channels Panel */}
+      <Collapse in={selectedChannelIds.length > 0} animateOpacity>
+        <Box 
+          mt={6} 
+          mb={4}
+          borderWidth="1px"
+          borderRadius="lg"
+          p={4}
+          bg={useColorModeValue('white', 'gray.800')}
+        >
+          <Flex alignItems="center" mb={3} justifyContent="space-between">
+            <HStack>
+              <FiCheckCircle color="green" />
+              <Heading size="md">Selected Channels ({selectedChannelIds.length})</Heading>
+            </HStack>
+            <Badge colorScheme="green" fontSize="sm" px={2} py={1} borderRadius="full">
+              {selectedChannelIds.length} selected
+            </Badge>
+          </Flex>
+          
+          <InputGroup size="sm" mb={3} maxW="300px">
+            <InputLeftElement pointerEvents="none">
+              <FiSearch color="gray.300" />
+            </InputLeftElement>
+            <Input
+              placeholder="Filter selected channels..."
+              value={selectedSearchQuery}
+              onChange={(e) => setSelectedSearchQuery(e.target.value)}
+              size="sm"
+            />
+          </InputGroup>
+          
+          <Box overflowX="auto" maxH="300px" overflowY="auto">
+            <Table size="sm" variant="simple">
+              <Thead bg={tableHeaderBg}>
+                <Tr>
+                  <Th>Channel</Th>
+                  <Th>Members</Th>
+                  <Th width="100px">Actions</Th>
+                </Tr>
+              </Thead>
+              <Tbody>
+                {(() => {
+                  const filteredSelectedChannels = channels
+                    .filter(channel => selectedChannelIds.includes(channel.id))
+                    .filter(channel => 
+                      selectedSearchQuery === '' || 
+                      channel.name.toLowerCase().includes(selectedSearchQuery.toLowerCase())
+                    );
+                    
+                  if (filteredSelectedChannels.length === 0) {
+                    return (
+                      <Tr>
+                        <Td colSpan={3} textAlign="center" py={4}>
+                          {selectedSearchQuery 
+                            ? 'No selected channels match your filter'
+                            : 'No channels selected'}
+                        </Td>
+                      </Tr>
+                    );
+                  }
+                  
+                  return filteredSelectedChannels.map(channel => (
+                    <Tr key={`selected-${channel.id}`}>
+                      <Td fontWeight="medium">
+                        <HStack>
+                          <Text>{channel.name}</Text>
+                          {channel.metadata?.is_private === true && (
+                            <Tag size="sm" colorScheme="purple" borderRadius="full">
+                              <TagLabel>Private</TagLabel>
+                            </Tag>
+                          )}
+                        </HStack>
+                      </Td>
+                      <Td>
+                        {channel.metadata?.num_members !== undefined
+                          ? String(channel.metadata.num_members)
+                          : 'Unknown'}
+                      </Td>
+                      <Td>
+                        <Tooltip label="Remove from selection">
+                          <IconButton
+                            aria-label="Remove from selection"
+                            icon={<FiTrash2 />}
+                            size="sm"
+                            variant="ghost"
+                            colorScheme="red"
+                            onClick={() => handleSelectChannel(channel.id)}
+                          />
+                        </Tooltip>
+                      </Td>
+                    </Tr>
+                  ));
+                })()}
+              </Tbody>
+            </Table>
+          </Box>
+        </Box>
+      </Collapse>
 
       <Flex justifyContent="flex-end" mt={4}>
         <Button
