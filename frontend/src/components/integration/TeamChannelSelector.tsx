@@ -20,8 +20,16 @@ import {
   Button,
   Flex,
   useToast,
+  Tooltip,
 } from '@chakra-ui/react'
-import { FiSearch, FiSettings, FiCheck, FiBarChart2 } from 'react-icons/fi'
+import {
+  FiSearch,
+  FiSettings,
+  FiCheck,
+  FiBarChart2,
+  FiClock,
+} from 'react-icons/fi'
+import { useNavigate } from 'react-router-dom'
 import { ResourceType } from '../../lib/integrationService'
 import useIntegration from '../../context/useIntegration'
 
@@ -36,6 +44,7 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
   integrationId,
 }) => {
   const toast = useToast()
+  const navigate = useNavigate()
   const {
     currentResources,
     loadingResources,
@@ -348,20 +357,43 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
                 </Td>
                 <Td>
                   <HStack spacing={1}>
-                    <IconButton
-                      aria-label="Analyze channel"
-                      icon={<FiBarChart2 />}
-                      size="sm"
-                      variant="ghost"
-                      title="View analysis"
-                    />
-                    <IconButton
-                      aria-label="Channel settings"
-                      icon={<FiSettings />}
-                      size="sm"
-                      variant="ghost"
-                      title="Settings"
-                    />
+                    <Tooltip label="Analyze channel">
+                      <IconButton
+                        aria-label="Analyze channel"
+                        icon={<FiBarChart2 />}
+                        size="sm"
+                        variant="ghost"
+                        colorScheme="blue"
+                        onClick={() =>
+                          navigate(
+                            `/dashboard/integrations/${integrationId}/channels/${channel.id}/analyze`
+                          )
+                        }
+                      />
+                    </Tooltip>
+                    <Tooltip label="Analysis history">
+                      <IconButton
+                        aria-label="Analysis history"
+                        icon={<FiClock />}
+                        size="sm"
+                        variant="ghost"
+                        colorScheme="teal"
+                        onClick={() =>
+                          navigate(
+                            `/dashboard/integrations/${integrationId}/channels/${channel.id}/history`
+                          )
+                        }
+                      />
+                    </Tooltip>
+                    <Tooltip label="Channel settings">
+                      <IconButton
+                        aria-label="Channel settings"
+                        icon={<FiSettings />}
+                        size="sm"
+                        variant="ghost"
+                        title="Settings"
+                      />
+                    </Tooltip>
                   </HStack>
                 </Td>
               </Tr>

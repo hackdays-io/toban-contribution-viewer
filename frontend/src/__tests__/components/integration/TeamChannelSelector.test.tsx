@@ -5,6 +5,12 @@ import TeamChannelSelector from '../../../components/integration/TeamChannelSele
 import IntegrationContext from '../../../context/IntegrationContext'
 import { ResourceType } from '../../../lib/integrationService'
 
+// Mock React Router
+vi.mock('react-router-dom', () => ({
+  useNavigate: () => vi.fn(),
+  Link: ({ children }: { children: React.ReactNode }) => children,
+}))
+
 // Mock the useIntegration hook functionality through context
 const mockIntegrationContext = {
   // State

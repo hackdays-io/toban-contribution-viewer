@@ -275,7 +275,9 @@ async def test_select_channels_for_analysis_without_bot_install(
     assert "bot_installation" not in result
 
     # Verify the db operations
-    assert mock_db_session.execute.call_count == 5  # Including all_channels query for debugging
+    assert (
+        mock_db_session.execute.call_count == 5
+    )  # Including all_channels query for debugging
     assert mock_db_session.commit.called
 
 
@@ -371,5 +373,7 @@ async def test_select_channels_for_analysis_with_bot_install(
         mock_client.join_channel.assert_called_once_with(channel_without_bot.slack_id)
 
         # Verify the db operations
-        assert mock_db_session.execute.call_count == 5  # Including all_channels query for debugging
+        assert (
+            mock_db_session.execute.call_count == 5
+        )  # Including all_channels query for debugging
         assert mock_db_session.commit.called

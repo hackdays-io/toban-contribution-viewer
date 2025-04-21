@@ -41,6 +41,9 @@ import {
   IntegrationDetailPage,
   IntegrationConnectPage,
   TeamChannelSelectorPage,
+  TeamChannelAnalysisPage,
+  TeamAnalysisResultPage,
+  TeamChannelAnalysisHistoryPage,
 } from './pages/integration'
 
 // Profile Pages
@@ -262,6 +265,36 @@ function App() {
                   <ProtectedRoute>
                     <AppLayout>
                       <TeamChannelSelectorPage />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard/integrations/:integrationId/channels/:channelId/analyze"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <TeamChannelAnalysisPage />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard/integrations/:integrationId/channels/:channelId/analysis/:analysisId"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <TeamAnalysisResultPage />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard/integrations/:integrationId/channels/:channelId/history"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <TeamChannelAnalysisHistoryPage />
                     </AppLayout>
                   </ProtectedRoute>
                 }
