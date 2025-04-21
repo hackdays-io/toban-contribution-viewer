@@ -1118,7 +1118,8 @@ export const IntegrationProvider: React.FC<{ children: React.ReactNode }> = ({
         // Cast the result to the expected return type
         return {
           status: 'success',
-          analysis_id: (result as { analysis_id?: string }).analysis_id || 'unknown'
+          analysis_id:
+            (result as { analysis_id?: string }).analysis_id || 'unknown',
         }
       } catch (error) {
         setState((prev) => ({

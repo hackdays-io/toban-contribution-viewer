@@ -37,6 +37,7 @@ vi.mock('../../lib/integrationService', () => ({
     getSelectedChannels: vi.fn(),
     selectChannelsForAnalysis: vi.fn(),
     analyzeChannel: vi.fn(),
+    analyzeResource: vi.fn(),
   },
   IntegrationType: {
     SLACK: 'slack',

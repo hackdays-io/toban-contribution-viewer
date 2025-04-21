@@ -31,7 +31,10 @@ from app.api.v1.integration.schemas import (
 )
 
 # Import the analysis response models from the Slack API
-from app.api.v1.slack.analysis import AnalysisOptions, AnalysisResponse, StoredAnalysisResponse
+from app.api.v1.slack.analysis import (
+    AnalysisResponse,
+    StoredAnalysisResponse,
+)
 from app.core.auth import get_current_user
 from app.db.session import get_async_db
 from app.models.integration import (
@@ -48,6 +51,7 @@ from app.services.integration.base import IntegrationService
 from app.services.integration.slack import SlackIntegrationService
 from app.services.llm.analysis_store import AnalysisStoreService
 from app.services.llm.openrouter import OpenRouterService
+from app.services.slack.api import SlackApiError
 from app.services.slack.channels import ChannelService
 from app.services.slack.messages import (
     SlackMessageService,
@@ -804,7 +808,9 @@ async def sync_integration_resources(
         )
 
 
-@router.post("/{integration_id}/resources/{resource_id}/sync-messages", response_model=Dict)
+@router.post(
+    "/{integration_id}/resources/{resource_id}/sync-messages", response_model=Dict
+)
 async def sync_resource_messages(
     integration_id: uuid.UUID,
     resource_id: uuid.UUID,
@@ -822,10 +828,10 @@ async def sync_resource_messages(
 ):
     """
     Sync messages for a specific channel resource associated with an integration.
-    
+
     This endpoint is specifically designed for syncing Slack channel messages before running analysis.
     It ensures the most up-to-date messages are available in the database.
-    
+
     Args:
         integration_id: UUID of the integration
         resource_id: UUID of the resource (channel)
@@ -834,7 +840,7 @@ async def sync_resource_messages(
         include_replies: Whether to include thread replies
         db: Database session
         current_user: Current authenticated user
-        
+
     Returns:
         Status message with sync statistics
     """
@@ -844,74 +850,72 @@ async def sync_resource_messages(
             end_date = datetime.utcnow()
         if not start_date:
             start_date = end_date - timedelta(days=30)
-        
+
         # Get the integration
         integration = await IntegrationService.get_integration(
             db=db,
             integration_id=integration_id,
             user_id=current_user["id"],
         )
-        
+
         if not integration:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Integration not found",
             )
-            
+
         # Verify this is a Slack integration
         if integration.service_type != IntegrationType.SLACK:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="This operation is only supported for Slack integrations",
             )
-        
+
         # Get the resource
         resource_stmt = await db.execute(
             select(ServiceResource).where(
                 ServiceResource.id == resource_id,
                 ServiceResource.integration_id == integration_id,
-                ServiceResource.resource_type == ResourceType.SLACK_CHANNEL
+                ServiceResource.resource_type == ResourceType.SLACK_CHANNEL,
             )
         )
         resource = resource_stmt.scalar_one_or_none()
-        
+
         if not resource:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Resource not found or not a Slack channel",
             )
-            
+
         # Get the Slack workspace ID from the integration metadata
         metadata = integration.integration_metadata or {}
         slack_workspace_id = metadata.get("slack_id")
-        
+
         if not slack_workspace_id:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Integration has no associated Slack workspace",
             )
-            
+
         # Get the workspace from the database
         workspace_result = await db.execute(
             select(SlackWorkspace).where(SlackWorkspace.slack_id == slack_workspace_id)
         )
         workspace = workspace_result.scalars().first()
-        
+
         if not workspace:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Slack workspace not found",
             )
-            
+
         # Get the channel from the database
         # First, try to get the SlackChannel record
         channel_result = await db.execute(
-            select(SlackChannel).where(
-                SlackChannel.id == resource_id
-            )
+            select(SlackChannel).where(SlackChannel.id == resource_id)
         )
         channel = channel_result.scalars().first()
-        
+
         # If no SlackChannel record exists, try to create one from the resource
         if not channel:
             # Create a new SlackChannel record from the ServiceResource
@@ -921,20 +925,42 @@ async def sync_resource_messages(
                 workspace_id=workspace.id,
                 slack_id=resource.external_id,
                 name=resource.name.lstrip("#"),  # Remove # prefix if present
-                type=resource.resource_metadata.get("type", "public") if resource.resource_metadata else "public",
+                type=(
+                    resource.resource_metadata.get("type", "public")
+                    if resource.resource_metadata
+                    else "public"
+                ),
                 is_selected_for_analysis=True,  # Mark as selected since we're analyzing it
                 is_supported=True,
-                purpose=resource.resource_metadata.get("purpose", "") if resource.resource_metadata else "",
-                topic=resource.resource_metadata.get("topic", "") if resource.resource_metadata else "",
-                member_count=resource.resource_metadata.get("member_count", 0) if resource.resource_metadata else 0,
-                is_archived=resource.resource_metadata.get("is_archived", False) if resource.resource_metadata else False,
+                purpose=(
+                    resource.resource_metadata.get("purpose", "")
+                    if resource.resource_metadata
+                    else ""
+                ),
+                topic=(
+                    resource.resource_metadata.get("topic", "")
+                    if resource.resource_metadata
+                    else ""
+                ),
+                member_count=(
+                    resource.resource_metadata.get("member_count", 0)
+                    if resource.resource_metadata
+                    else 0
+                ),
+                is_archived=(
+                    resource.resource_metadata.get("is_archived", False)
+                    if resource.resource_metadata
+                    else False
+                ),
                 last_sync_at=datetime.utcnow(),
             )
             db.add(channel)
             await db.commit()
             await db.refresh(channel)
-            logger.info(f"Created new SlackChannel record: {channel.id} - {channel.name}")
-        
+            logger.info(
+                f"Created new SlackChannel record: {channel.id} - {channel.name}"
+            )
+
         # Sync channel messages using the SlackMessageService
         sync_results = await SlackMessageService.sync_channel_messages(
             db=db,
@@ -945,17 +971,17 @@ async def sync_resource_messages(
             include_replies=include_replies,
             sync_threads=include_replies,  # Sync thread replies if requested
         )
-        
+
         # Update the channel's last_sync_at
         channel.last_sync_at = datetime.utcnow()
         await db.commit()
-        
+
         return {
             "status": "success",
             "message": "Channel messages synced successfully",
             "sync_results": sync_results,
         }
-        
+
     except HTTPException:
         # Re-raise HTTP exceptions
         raise
@@ -968,7 +994,7 @@ async def sync_resource_messages(
         logger.error(f"Error syncing channel messages: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error syncing channel messages: {str(e)}"
+            detail=f"Error syncing channel messages: {str(e)}",
         )
 
 
@@ -1325,7 +1351,7 @@ async def select_channels_for_integration(
 @router.post(
     "/{integration_id}/resources/{resource_id}/sync-messages",
     summary="Sync messages for a specific channel via team integration before analysis",
-    description="Syncs messages for a Slack channel associated with a team integration to ensure the latest messages are available for analysis."
+    description="Syncs messages for a Slack channel associated with a team integration to ensure the latest messages are available for analysis.",
 )
 async def sync_integration_resource_messages(
     integration_id: uuid.UUID,
@@ -1350,19 +1376,21 @@ async def sync_integration_resource_messages(
 ):
     """
     Sync messages for a Slack channel to ensure data is up-to-date for analysis.
-    
+
     This endpoint:
     1. Validates that the resource is a Slack channel associated with the integration
     2. Initiates message synchronization for the channel
     3. Returns synchronization statistics
     """
     # Log basic request information
-    logger.info(f"Received sync-messages request: integration_id={integration_id}, resource_id={resource_id}")
-    
+    logger.info(
+        f"Received sync-messages request: integration_id={integration_id}, resource_id={resource_id}"
+    )
+
     # Initialize variables outside the try block for error handling
     workspace = None
     channel = None
-    
+
     try:
         # Get the integration
         integration = await IntegrationService.get_integration(
@@ -1370,67 +1398,65 @@ async def sync_integration_resource_messages(
             integration_id=integration_id,
             user_id=current_user["id"],
         )
-        
+
         if not integration:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Integration not found",
             )
-            
+
         # Verify this is a Slack integration
         if integration.service_type != IntegrationType.SLACK:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="This operation is only supported for Slack integrations",
             )
-        
+
         # Get the resource
         resource_stmt = await db.execute(
             select(ServiceResource).where(
                 ServiceResource.id == resource_id,
                 ServiceResource.integration_id == integration_id,
-                ServiceResource.resource_type == ResourceType.SLACK_CHANNEL
+                ServiceResource.resource_type == ResourceType.SLACK_CHANNEL,
             )
         )
         resource = resource_stmt.scalar_one_or_none()
-        
+
         if not resource:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Resource not found or not a Slack channel",
             )
-            
+
         # Get the Slack workspace ID from the integration metadata
         metadata = integration.integration_metadata or {}
         slack_workspace_id = metadata.get("slack_id")
-        
+
         if not slack_workspace_id:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Integration has no associated Slack workspace",
             )
-            
+
         # Get the workspace from the database
         workspace_result = await db.execute(
             select(SlackWorkspace).where(SlackWorkspace.slack_id == slack_workspace_id)
         )
         workspace = workspace_result.scalars().first()
-        
+
         if not workspace:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Slack workspace not found",
             )
-            
+
         # Get the channel from the database
         # First, try to get the SlackChannel record
         channel_result = await db.execute(
-            select(SlackChannel).where(
-                SlackChannel.id == resource_id
-            )
+            select(SlackChannel).where(SlackChannel.id == resource_id)
         )
         channel = channel_result.scalars().first()
-        
+
         # If no direct SlackChannel record, try to create one from the resource
         if not channel:
             # Create a SlackChannel record from the resource
@@ -1439,42 +1465,66 @@ async def sync_integration_resource_messages(
                 workspace_id=workspace.id,
                 slack_id=resource.external_id,
                 name=resource.name.lstrip("#"),  # Remove # prefix if present
-                type=resource.resource_metadata.get("type", "public") if resource.resource_metadata else "public",
+                type=(
+                    resource.resource_metadata.get("type", "public")
+                    if resource.resource_metadata
+                    else "public"
+                ),
                 is_selected_for_analysis=True,  # Assume selected since we're analyzing it
                 is_supported=True,
-                purpose=resource.resource_metadata.get("purpose", "") if resource.resource_metadata else "",
-                topic=resource.resource_metadata.get("topic", "") if resource.resource_metadata else "",
-                member_count=resource.resource_metadata.get("member_count", 0) if resource.resource_metadata else 0,
-                is_archived=resource.resource_metadata.get("is_archived", False) if resource.resource_metadata else False,
+                purpose=(
+                    resource.resource_metadata.get("purpose", "")
+                    if resource.resource_metadata
+                    else ""
+                ),
+                topic=(
+                    resource.resource_metadata.get("topic", "")
+                    if resource.resource_metadata
+                    else ""
+                ),
+                member_count=(
+                    resource.resource_metadata.get("member_count", 0)
+                    if resource.resource_metadata
+                    else 0
+                ),
+                is_archived=(
+                    resource.resource_metadata.get("is_archived", False)
+                    if resource.resource_metadata
+                    else False
+                ),
                 last_sync_at=resource.last_synced_at,
             )
             db.add(channel)
             await db.commit()
-            
+
         # Default to last 30 days if dates not provided
         if not end_date:
             end_date = datetime.utcnow()
         if not start_date:
             start_date = end_date - timedelta(days=30)
-        
+
         # Log basic operation
-        logger.info(f"Syncing messages for channel {channel.name} ({channel.slack_id}) in workspace {workspace.name}")
-        
+        logger.info(
+            f"Syncing messages for channel {channel.name} ({channel.slack_id}) in workspace {workspace.name}"
+        )
+
         # Use SlackMessageService to sync messages
         sync_results = await SlackMessageService.sync_channel_messages(
-            db=db, 
+            db=db,
             workspace_id=str(workspace.id),
             channel_id=str(channel.id),
             start_date=start_date,
             end_date=end_date,
             include_replies=include_replies,
             sync_threads=sync_threads,
-            thread_days=thread_days
+            thread_days=thread_days,
         )
-        
+
         # Log results summary
-        logger.info(f"Sync completed: {sync_results.get('new_message_count', 0)} messages and {sync_results.get('replies_synced', 0)} thread replies synced")
-        
+        logger.info(
+            f"Sync completed: {sync_results.get('new_message_count', 0)} messages and {sync_results.get('replies_synced', 0)} thread replies synced"
+        )
+
         # Return sync results
         return {
             "status": "success",
@@ -1483,12 +1533,12 @@ async def sync_integration_resource_messages(
             "workspace_id": str(workspace.id),
             "channel_id": str(channel.id),
         }
-        
+
     except SlackApiError as e:
         logger.error(f"Slack API error: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
-            detail=f"Error from Slack API: {str(e)}"
+            detail=f"Error from Slack API: {str(e)}",
         )
     except HTTPException as http_ex:
         # Re-raise HTTP exceptions
@@ -1497,8 +1547,7 @@ async def sync_integration_resource_messages(
     except ValueError as val_err:
         logger.error(f"ValueError in sync-messages: {val_err}")
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(val_err)
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(val_err)
         )
     except Exception as e:
         logger.error(f"Unexpected error syncing messages: {str(e)}", exc_info=True)
@@ -1507,7 +1556,11 @@ async def sync_integration_resource_messages(
             error_context = {
                 "workspace_id": str(workspace.id) if workspace else "unknown",
                 "channel_id": str(channel.id) if channel else "unknown",
-                "slack_channel_id": channel.slack_id if channel and hasattr(channel, 'slack_id') else "unknown",
+                "slack_channel_id": (
+                    channel.slack_id
+                    if channel and hasattr(channel, "slack_id")
+                    else "unknown"
+                ),
                 "error_type": type(e).__name__,
                 "error_message": str(e),
             }
@@ -1517,11 +1570,12 @@ async def sync_integration_resource_messages(
                 "error_type": type(e).__name__,
                 "error_message": str(e),
             }
-            
+
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error syncing messages: {str(e)}. Context: {error_context}"
+            detail=f"Error syncing messages: {str(e)}. Context: {error_context}",
         )
+
 
 @router.post(
     "/{integration_id}/resources/{resource_id}/analyze",
@@ -1552,14 +1606,14 @@ async def analyze_integration_resource(
 ):
     """
     Analyze messages in a Slack channel using LLM to provide insights.
-    
+
     This endpoint:
     1. Validates that the resource is a Slack channel associated with the integration
     2. Retrieves messages for the specified channel and date range
     3. Processes messages into a format suitable for LLM analysis
     4. Sends data to OpenRouter LLM API for analysis
     5. Returns structured insights about communication patterns
-    
+
     The analysis includes:
     - Channel summary (purpose, activity patterns)
     - Topic analysis (main discussion topics)
@@ -1571,10 +1625,10 @@ async def analyze_integration_resource(
         end_date = datetime.utcnow()
     if not start_date:
         start_date = end_date - timedelta(days=30)
-    
+
     # Create an instance of the OpenRouter service
     llm_service = OpenRouterService()
-    
+
     try:
         # Get the integration
         integration = await IntegrationService.get_integration(
@@ -1582,67 +1636,65 @@ async def analyze_integration_resource(
             integration_id=integration_id,
             user_id=current_user["id"],
         )
-        
+
         if not integration:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Integration not found",
             )
-            
+
         # Verify this is a Slack integration
         if integration.service_type != IntegrationType.SLACK:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="This operation is only supported for Slack integrations",
             )
-        
+
         # Get the resource
         resource_stmt = await db.execute(
             select(ServiceResource).where(
                 ServiceResource.id == resource_id,
                 ServiceResource.integration_id == integration_id,
-                ServiceResource.resource_type == ResourceType.SLACK_CHANNEL
+                ServiceResource.resource_type == ResourceType.SLACK_CHANNEL,
             )
         )
         resource = resource_stmt.scalar_one_or_none()
-        
+
         if not resource:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Resource not found or not a Slack channel",
             )
-            
+
         # Get the Slack workspace ID from the integration metadata
         metadata = integration.integration_metadata or {}
         slack_workspace_id = metadata.get("slack_id")
-        
+
         if not slack_workspace_id:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Integration has no associated Slack workspace",
             )
-            
+
         # Get the workspace from the database
         workspace_result = await db.execute(
             select(SlackWorkspace).where(SlackWorkspace.slack_id == slack_workspace_id)
         )
         workspace = workspace_result.scalars().first()
-        
+
         if not workspace:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Slack workspace not found",
             )
-            
+
         # Get the channel from the database
         # First, try to get the SlackChannel record
         channel_result = await db.execute(
-            select(SlackChannel).where(
-                SlackChannel.id == resource_id
-            )
+            select(SlackChannel).where(SlackChannel.id == resource_id)
         )
         channel = channel_result.scalars().first()
-        
+
         # If no direct SlackChannel record, try to create one from the resource
         if not channel:
             # Create a SlackChannel record from the resource
@@ -1651,31 +1703,51 @@ async def analyze_integration_resource(
                 workspace_id=workspace.id,
                 slack_id=resource.external_id,
                 name=resource.name.lstrip("#"),  # Remove # prefix if present
-                type=resource.resource_metadata.get("type", "public") if resource.resource_metadata else "public",
+                type=(
+                    resource.resource_metadata.get("type", "public")
+                    if resource.resource_metadata
+                    else "public"
+                ),
                 is_selected_for_analysis=True,  # Assume selected since we're analyzing it
                 is_supported=True,
-                purpose=resource.resource_metadata.get("purpose", "") if resource.resource_metadata else "",
-                topic=resource.resource_metadata.get("topic", "") if resource.resource_metadata else "",
-                member_count=resource.resource_metadata.get("member_count", 0) if resource.resource_metadata else 0,
-                is_archived=resource.resource_metadata.get("is_archived", False) if resource.resource_metadata else False,
+                purpose=(
+                    resource.resource_metadata.get("purpose", "")
+                    if resource.resource_metadata
+                    else ""
+                ),
+                topic=(
+                    resource.resource_metadata.get("topic", "")
+                    if resource.resource_metadata
+                    else ""
+                ),
+                member_count=(
+                    resource.resource_metadata.get("member_count", 0)
+                    if resource.resource_metadata
+                    else 0
+                ),
+                is_archived=(
+                    resource.resource_metadata.get("is_archived", False)
+                    if resource.resource_metadata
+                    else False
+                ),
                 last_sync_at=resource.last_synced_at,
             )
             db.add(channel)
             await db.commit()
-            
+
         # Get messages for the channel within the date range
         messages = await get_channel_messages(
             db,
             str(workspace.id),  # Use workspace UUID from database
-            str(channel.id),    # Use channel UUID from database
+            str(channel.id),  # Use channel UUID from database
             start_date=start_date,
             end_date=end_date,
             include_replies=include_threads,
         )
-        
+
         # Get user data for the channel
         users = await get_channel_users(db, str(workspace.id), str(channel.id))
-        
+
         # Process messages and add user data
         processed_messages = []
         user_dict = {user.slack_id: user for user in users}
@@ -1683,21 +1755,21 @@ async def analyze_integration_resource(
         thread_count = 0
         reaction_count = 0
         participant_set = set()
-        
+
         for msg in messages:
             message_count += 1
             if msg.user_id:
                 participant_set.add(msg.user_id)
-            
+
             if msg.is_thread_parent:
                 thread_count += 1
-                
+
             if msg.reaction_count:
                 reaction_count += msg.reaction_count
-                
+
             user = user_dict.get(msg.user_id) if msg.user_id else None
             user_name = user.display_name or user.name if user else "Unknown User"
-            
+
             processed_messages.append(
                 {
                     "id": msg.id,
@@ -1712,7 +1784,7 @@ async def analyze_integration_resource(
                     "reaction_count": msg.reaction_count,
                 }
             )
-            
+
         # Prepare data for LLM analysis
         messages_data = {
             "message_count": message_count,
@@ -1721,7 +1793,7 @@ async def analyze_integration_resource(
             "reaction_count": reaction_count,
             "messages": processed_messages,
         }
-        
+
         # Call the LLM service to analyze the data
         analysis_results = await llm_service.analyze_channel_messages(
             channel_name=channel.name,
@@ -1730,7 +1802,7 @@ async def analyze_integration_resource(
             end_date=end_date,
             model=model,
         )
-        
+
         # Store analysis results in the database
         stats = {
             "message_count": message_count,
@@ -1738,7 +1810,7 @@ async def analyze_integration_resource(
             "thread_count": thread_count,
             "reaction_count": reaction_count,
         }
-        
+
         try:
             await AnalysisStoreService.store_channel_analysis(
                 db=db,
@@ -1754,7 +1826,7 @@ async def analyze_integration_resource(
         except Exception as e:
             logger.error(f"Error storing analysis results: {str(e)}")
             # We'll continue with the API response even if storage fails
-            
+
         # Build the response
         response = AnalysisResponse(
             analysis_id=f"analysis_{channel.id}_{int(datetime.utcnow().timestamp())}",
@@ -1769,9 +1841,9 @@ async def analyze_integration_resource(
             model_used=analysis_results.get("model_used", ""),
             generated_at=datetime.utcnow(),
         )
-        
+
         return response
-        
+
     except HTTPException:
         # Re-raise HTTP exceptions
         raise
@@ -1783,7 +1855,7 @@ async def analyze_integration_resource(
         logger.error(f"Error analyzing channel: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error analyzing channel: {str(e)}"
+            detail=f"Error analyzing channel: {str(e)}",
         )
 
 
@@ -1815,44 +1887,42 @@ async def get_integration_resource_analyses(
             integration_id=integration_id,
             user_id=current_user["id"],
         )
-        
+
         if not integration:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Integration not found",
             )
-            
+
         # Verify this is a Slack integration
         if integration.service_type != IntegrationType.SLACK:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="This operation is only supported for Slack integrations",
             )
-        
+
         # Get the resource
         resource_stmt = await db.execute(
             select(ServiceResource).where(
                 ServiceResource.id == resource_id,
                 ServiceResource.integration_id == integration_id,
-                ServiceResource.resource_type == ResourceType.SLACK_CHANNEL
+                ServiceResource.resource_type == ResourceType.SLACK_CHANNEL,
             )
         )
         resource = resource_stmt.scalar_one_or_none()
-        
+
         if not resource:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Resource not found or not a Slack channel",
             )
-            
+
         # Get the channel to ensure it exists and get the channel name
         channel_result = await db.execute(
-            select(SlackChannel).where(
-                SlackChannel.id == resource_id
-            )
+            select(SlackChannel).where(SlackChannel.id == resource_id)
         )
         channel = channel_result.scalars().first()
-        
+
         if not channel:
             # Try using the resource data directly
             raise HTTPException(
@@ -1897,7 +1967,7 @@ async def get_integration_resource_analyses(
         logger.error(f"Error retrieving stored analyses: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error retrieving stored analyses: {str(e)}"
+            detail=f"Error retrieving stored analyses: {str(e)}",
         )
 
 
@@ -1925,44 +1995,42 @@ async def get_latest_integration_resource_analysis(
             integration_id=integration_id,
             user_id=current_user["id"],
         )
-        
+
         if not integration:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Integration not found",
             )
-            
+
         # Verify this is a Slack integration
         if integration.service_type != IntegrationType.SLACK:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="This operation is only supported for Slack integrations",
             )
-        
+
         # Get the resource
         resource_stmt = await db.execute(
             select(ServiceResource).where(
                 ServiceResource.id == resource_id,
                 ServiceResource.integration_id == integration_id,
-                ServiceResource.resource_type == ResourceType.SLACK_CHANNEL
+                ServiceResource.resource_type == ResourceType.SLACK_CHANNEL,
             )
         )
         resource = resource_stmt.scalar_one_or_none()
-        
+
         if not resource:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Resource not found or not a Slack channel",
             )
-            
+
         # Get the channel to ensure it exists and get the channel name
         channel_result = await db.execute(
-            select(SlackChannel).where(
-                SlackChannel.id == resource_id
-            )
+            select(SlackChannel).where(SlackChannel.id == resource_id)
         )
         channel = channel_result.scalars().first()
-        
+
         if not channel:
             # Try using the resource data directly
             raise HTTPException(
@@ -2005,7 +2073,7 @@ async def get_latest_integration_resource_analysis(
         logger.error(f"Error retrieving latest analysis: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error retrieving latest analysis: {str(e)}"
+            detail=f"Error retrieving latest analysis: {str(e)}",
         )
 
 
@@ -2034,44 +2102,42 @@ async def get_integration_resource_analysis(
             integration_id=integration_id,
             user_id=current_user["id"],
         )
-        
+
         if not integration:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Integration not found",
             )
-            
+
         # Verify this is a Slack integration
         if integration.service_type != IntegrationType.SLACK:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="This operation is only supported for Slack integrations",
             )
-        
+
         # Get the resource
         resource_stmt = await db.execute(
             select(ServiceResource).where(
                 ServiceResource.id == resource_id,
                 ServiceResource.integration_id == integration_id,
-                ServiceResource.resource_type == ResourceType.SLACK_CHANNEL
+                ServiceResource.resource_type == ResourceType.SLACK_CHANNEL,
             )
         )
         resource = resource_stmt.scalar_one_or_none()
-        
+
         if not resource:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Resource not found or not a Slack channel",
             )
-            
+
         # Get the channel to ensure it exists
         channel_result = await db.execute(
-            select(SlackChannel).where(
-                SlackChannel.id == resource_id
-            )
+            select(SlackChannel).where(SlackChannel.id == resource_id)
         )
         channel = channel_result.scalars().first()
-        
+
         if not channel:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -2088,46 +2154,57 @@ async def get_integration_resource_analysis(
         except ValueError:
             # If the analysis_id is not a UUID, it might be in the format we generate
             # Try to lookup the analysis by composite key
-            parts = analysis_id.split('_')
-            if len(parts) >= 3 and parts[0] == 'analysis':
+            parts = analysis_id.split("_")
+            if len(parts) >= 3 and parts[0] == "analysis":
                 # Try to extract timestamp
                 timestamp_str = parts[-1]
                 try:
                     # Convert timestamp to datetime
                     timestamp = int(timestamp_str)
-                    analysis_date = datetime.fromtimestamp(timestamp)
-                    
+
                     # Find the analysis closest to this timestamp
-                    stmt = select(
-                        SlackChannelAnalysis
-                    ).where(
-                        SlackChannelAnalysis.channel_id == channel.id
-                    ).order_by(
-                        func.abs(func.extract('epoch', SlackChannelAnalysis.generated_at) - timestamp)
-                    ).limit(1)
-                    
+                    stmt = (
+                        select(SlackChannelAnalysis)
+                        .where(SlackChannelAnalysis.channel_id == channel.id)
+                        .order_by(
+                            func.abs(
+                                func.extract("epoch", SlackChannelAnalysis.generated_at)
+                                - timestamp
+                            )
+                        )
+                        .limit(1)
+                    )
+
                     result = await db.execute(stmt)
                     analysis = result.scalar_one_or_none()
-                    
+
                     if analysis:
                         real_analysis_id = str(analysis.id)
                         logger.info(f"Found analysis by timestamp: {real_analysis_id}")
                     else:
-                        logger.warning(f"No analysis found near timestamp {timestamp_str}")
+                        logger.warning(
+                            f"No analysis found near timestamp {timestamp_str}"
+                        )
                 except (ValueError, TypeError):
-                    logger.warning(f"Could not parse timestamp from analysis_id: {analysis_id}")
-            
+                    logger.warning(
+                        f"Could not parse timestamp from analysis_id: {analysis_id}"
+                    )
+
             if not real_analysis_id:
                 # As fallback, try to get the latest analysis
-                logger.info(f"Using fallback to get latest analysis for channel {channel.id}")
+                logger.info(
+                    f"Using fallback to get latest analysis for channel {channel.id}"
+                )
                 analysis = await AnalysisStoreService.get_latest_channel_analysis(
                     db=db,
                     channel_id=str(channel.id),
                 )
-                
+
                 if analysis:
                     real_analysis_id = str(analysis.id)
-                    logger.info(f"Using latest analysis as fallback: {real_analysis_id}")
+                    logger.info(
+                        f"Using latest analysis as fallback: {real_analysis_id}"
+                    )
 
         # If we couldn't extract an ID or find an analysis, return 404
         if not real_analysis_id:
@@ -2142,7 +2219,7 @@ async def get_integration_resource_analysis(
         )
         result = await db.execute(stmt)
         analysis = result.scalar_one_or_none()
-        
+
         if not analysis:
             # Try getting it directly by the ID that was passed
             stmt = select(SlackChannelAnalysis).where(
@@ -2150,7 +2227,7 @@ async def get_integration_resource_analysis(
             )
             result = await db.execute(stmt)
             analysis = result.scalar_one_or_none()
-            
+
             if not analysis:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
@@ -2183,5 +2260,5 @@ async def get_integration_resource_analysis(
         logger.error(f"Error retrieving analysis: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error retrieving analysis: {str(e)}"
+            detail=f"Error retrieving analysis: {str(e)}",
         )
