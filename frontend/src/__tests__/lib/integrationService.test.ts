@@ -26,10 +26,32 @@ vi.mock('../../lib/supabase', () => ({
 const mockFetch = vi.fn()
 global.fetch = mockFetch
 
+// Mock console.error to not actually log expected test errors
+const originalConsoleError = console.error
+console.error = (...args) => {
+  // Silence errors that include these expected strings
+  const errorMsg = args.join(' ')
+  if (
+    errorMsg.includes('Network error') ||
+    errorMsg.includes('Unknown error') ||
+    errorMsg.includes('API Error:')
+  ) {
+    return // Don't log expected test errors
+  }
+
+  // Otherwise use the original console.error
+  originalConsoleError(...args)
+}
+
 describe('Integration API Service', () => {
   const mockTeamId = '123e4567-e89b-12d3-a456-426614174000'
   const mockIntegrationId = '123e4567-e89b-12d3-a456-426614174001'
   const mockResourceId = '123e4567-e89b-12d3-a456-426614174002'
+
+  // Restore console.error at the end of all tests
+  afterAll(() => {
+    console.error = originalConsoleError
+  })
 
   const mockIntegration: Integration = {
     id: mockIntegrationId,
