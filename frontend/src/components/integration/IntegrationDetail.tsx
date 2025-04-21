@@ -35,7 +35,6 @@ import {
   FiZap,
   FiPlusCircle,
   FiBarChart,
-  FiList,
   FiCheckSquare,
   FiInfo,
 } from 'react-icons/fi'
@@ -257,33 +256,27 @@ const IntegrationDetail: React.FC<IntegrationDetailProps> = ({
         mb={6}
         gap={4}
       >
-        <VStack align="start" spacing={1}>
-          <Heading as="h1" size="lg">
-            {currentIntegration.name}
-          </Heading>
-          <HStack spacing={2}>
-            <Text color="gray.500">{currentIntegration.service_type}</Text>
-            <Text color="gray.500">•</Text>
-            <Text color="gray.500">
-              Owned by {currentIntegration.owner_team.name}
-            </Text>
-            <Badge
-              colorScheme={
-                currentIntegration.status === IntegrationStatus.ACTIVE
-                  ? 'green'
-                  : currentIntegration.status === IntegrationStatus.DISCONNECTED
-                    ? 'yellow'
-                    : 'red'
-              }
-              variant="subtle"
-              px={2}
-              py={1}
-              borderRadius="full"
-            >
-              {currentIntegration.status}
-            </Badge>
-          </HStack>
-        </VStack>
+        <HStack spacing={2}>
+          <Badge
+            colorScheme={
+              currentIntegration.status === IntegrationStatus.ACTIVE
+                ? 'green'
+                : currentIntegration.status === IntegrationStatus.DISCONNECTED
+                  ? 'yellow'
+                  : 'red'
+            }
+            variant="solid"
+            px={2}
+            py={1}
+            borderRadius="full"
+          >
+            {currentIntegration.status}
+          </Badge>
+          
+          <Text color="gray.500" fontSize="md">
+            Last updated: {new Date(currentIntegration.updated_at || currentIntegration.created_at).toLocaleString()}
+          </Text>
+        </HStack>
 
         <HStack spacing={4}>
           <Button
@@ -350,190 +343,11 @@ const IntegrationDetail: React.FC<IntegrationDetailProps> = ({
         </HStack>
       </Flex>
 
-      {/* Dashboard navigation cards */}
-      <Box mt={6}>
-        <Heading size="md" mb={4}>Integration Dashboard</Heading>
-        
-        <Flex direction={{ base: 'column', md: 'row' }} gap={4} wrap="wrap">
-          {/* Overview Card */}
-          <Card
-            borderWidth="1px"
-            borderRadius="lg"
-            overflow="hidden"
-            bg={cardBg}
-            borderColor={cardBorder}
-            flex="1"
-            minW={{ base: "100%", md: "200px" }}
-            _hover={{ shadow: 'md', borderColor: 'blue.300' }}
-            cursor="pointer"
-            onClick={() => navigate(`/dashboard/integrations/${integrationId}/overview`)}
-          >
-            <CardHeader pb={0}>
-              <Flex align="center" gap={2}>
-                <FiInfo size="20px" color="var(--chakra-colors-blue-500)" />
-                <Heading size="md">Overview</Heading>
-              </Flex>
-            </CardHeader>
-            <CardBody>
-              <Text fontSize="sm" color="gray.500" mb={3}>
-                View integration details, status, and resource summary
-              </Text>
-              <Button size="sm" colorScheme="blue" variant="outline" width="full">
-                View Details
-              </Button>
-            </CardBody>
-          </Card>
-          
-          {/* Resources Card */}
-          <Card
-            borderWidth="1px"
-            borderRadius="lg"
-            overflow="hidden"
-            bg={cardBg}
-            borderColor={cardBorder}
-            flex="1"
-            minW={{ base: "100%", md: "200px" }}
-            _hover={{ shadow: 'md', borderColor: 'blue.300' }}
-            cursor="pointer"
-            onClick={() => navigate(`/dashboard/integrations/${integrationId}/resources`)}
-          >
-            <CardHeader pb={0}>
-              <Flex align="center" gap={2}>
-                <FiList size="20px" color="var(--chakra-colors-teal-500)" />
-                <Heading size="md">Resources</Heading>
-                {currentResources.length > 0 && (
-                  <Badge colorScheme="teal" fontSize="sm" borderRadius="full">
-                    {getTotalResources()}
-                  </Badge>
-                )}
-              </Flex>
-            </CardHeader>
-            <CardBody>
-              <Text fontSize="sm" color="gray.500" mb={3}>
-                Manage and view all resources from this integration
-              </Text>
-              <Button size="sm" colorScheme="teal" variant="outline" width="full">
-                View Resources
-              </Button>
-            </CardBody>
-          </Card>
-          
-          {/* Channel Selection Card - only for Slack */}
-          {currentIntegration.service_type === 'slack' && (
-            <Card
-              borderWidth="1px"
-              borderRadius="lg"
-              overflow="hidden"
-              bg={cardBg}
-              borderColor={cardBorder}
-              flex="1"
-              minW={{ base: "100%", md: "200px" }}
-              _hover={{ shadow: 'md', borderColor: 'blue.300' }}
-              cursor="pointer"
-              onClick={() => navigate(`/dashboard/integrations/${integrationId}/channels`)}
-            >
-              <CardHeader pb={0}>
-                <Flex align="center" gap={2}>
-                  <FiBarChart size="20px" color="var(--chakra-colors-purple-500)" />
-                  <Heading size="md">Channel Analysis</Heading>
-                  {getResourcesByType(ResourceType.SLACK_CHANNEL) > 0 && (
-                    <Badge colorScheme="purple" fontSize="sm" borderRadius="full">
-                      {getResourcesByType(ResourceType.SLACK_CHANNEL)}
-                    </Badge>
-                  )}
-                </Flex>
-              </CardHeader>
-              <CardBody>
-                <Text fontSize="sm" color="gray.500" mb={3}>
-                  Select channels for contribution analysis
-                </Text>
-                <Button size="sm" colorScheme="purple" variant="outline" width="full">
-                  Manage Channels
-                </Button>
-              </CardBody>
-            </Card>
-          )}
-          
-          {/* Settings Card */}
-          <Card
-            borderWidth="1px"
-            borderRadius="lg"
-            overflow="hidden"
-            bg={cardBg}
-            borderColor={cardBorder}
-            flex="1"
-            minW={{ base: "100%", md: "200px" }}
-            _hover={{ shadow: 'md', borderColor: 'blue.300' }}
-            cursor="pointer"
-            onClick={() => navigate(`/dashboard/integrations/${integrationId}/settings`)}
-          >
-            <CardHeader pb={0}>
-              <Flex align="center" gap={2}>
-                <FiSettings size="20px" color="var(--chakra-colors-gray-500)" />
-                <Heading size="md">Settings</Heading>
-              </Flex>
-            </CardHeader>
-            <CardBody>
-              <Text fontSize="sm" color="gray.500" mb={3}>
-                Configure and manage integration settings
-              </Text>
-              <Button size="sm" colorScheme="gray" variant="outline" width="full">
-                Manage Settings
-              </Button>
-            </CardBody>
-          </Card>
-        </Flex>
-        
-        {/* Quick Actions */}
-        <Box mt={6}>
-          <Heading size="md" mb={4}>Quick Actions</Heading>
-          <Flex gap={4} wrap="wrap">
-            <Button
-              leftIcon={<FiZap />}
-              colorScheme="blue"
-              onClick={handleSyncResources}
-              isLoading={isSyncing}
-            >
-              Sync Resources
-            </Button>
-            
-            {currentIntegration.service_type === 'slack' && getResourcesByType(ResourceType.SLACK_CHANNEL) > 0 && (
-              <Button
-                leftIcon={<FiCheckSquare />}
-                colorScheme="purple"
-                onClick={() => navigate(`/dashboard/integrations/${integrationId}/channels`)}
-              >
-                Select Channels for Analysis
-              </Button>
-            )}
-            
-            {needsReconnection && (
-              <Button
-                leftIcon={<FiLink />}
-                colorScheme="red"
-                onClick={handleReconnect}
-              >
-                Reconnect Integration
-              </Button>
-            )}
-          </Flex>
-        </Box>
-        
-        {/* Resource Summary if resources are loaded */}
+      {/* Main content area */}
+      <Box>
+        {/* Resource summary statistics */}
         {currentResources.length > 0 && (
-          <Box mt={6}>
-            <Flex justify="space-between" align="center" mb={4}>
-              <Heading size="md">Resource Summary</Heading>
-              <Button
-                size="sm"
-                colorScheme="blue"
-                variant="outline"
-                onClick={() => navigate(`/dashboard/integrations/${integrationId}/resources`)}
-              >
-                View All
-              </Button>
-            </Flex>
-
+          <Box mb={8}>
             <Flex gap={4} wrap="wrap">
               {currentIntegration.service_type === 'slack' && getResourcesByType(ResourceType.SLACK_CHANNEL) > 0 && (
                 <Card 
@@ -542,7 +356,7 @@ const IntegrationDetail: React.FC<IntegrationDetailProps> = ({
                   bg={cardBg} 
                   borderWidth="1px"
                   borderColor={cardBorder}
-                  width={{ base: '100%', sm: '48%', md: '32%' }}
+                  width={{ base: '100%', sm: '48%', md: '30%' }}
                 >
                   <Text fontSize="sm" color="gray.500">Channels</Text>
                   <Text fontSize="3xl" fontWeight="bold">
@@ -558,7 +372,7 @@ const IntegrationDetail: React.FC<IntegrationDetailProps> = ({
                   bg={cardBg} 
                   borderWidth="1px"
                   borderColor={cardBorder}
-                  width={{ base: '100%', sm: '48%', md: '32%' }}
+                  width={{ base: '100%', sm: '48%', md: '30%' }}
                 >
                   <Text fontSize="sm" color="gray.500">Users</Text>
                   <Text fontSize="3xl" fontWeight="bold">
@@ -573,7 +387,7 @@ const IntegrationDetail: React.FC<IntegrationDetailProps> = ({
                 bg={cardBg} 
                 borderWidth="1px"
                 borderColor={cardBorder}
-                width={{ base: '100%', sm: '48%', md: '32%' }}
+                width={{ base: '100%', sm: '48%', md: '30%' }}
               >
                 <Text fontSize="sm" color="gray.500">Total Resources</Text>
                 <Text fontSize="3xl" fontWeight="bold">
@@ -583,6 +397,117 @@ const IntegrationDetail: React.FC<IntegrationDetailProps> = ({
             </Flex>
           </Box>
         )}
+        
+        {/* Main action cards */}
+        <Heading size="md" mb={4}>Integration Management</Heading>
+        
+        <Flex direction={{ base: 'column', md: 'row' }} gap={6} wrap="wrap">
+          {/* Channel Selection Card - only for Slack */}
+          {currentIntegration.service_type === 'slack' && (
+            <Card
+              borderWidth="1px"
+              borderRadius="lg"
+              overflow="hidden"
+              bg={cardBg}
+              borderColor={cardBorder}
+              flex="1"
+              minW={{ base: "100%", md: "48%" }}
+              _hover={{ shadow: 'md', borderColor: 'purple.300' }}
+              cursor="pointer"
+              onClick={() => navigate(`/dashboard/integrations/${integrationId}/channels`)}
+            >
+              <CardHeader pb={0}>
+                <Flex align="center" gap={2}>
+                  <FiBarChart size="20px" color="var(--chakra-colors-purple-500)" />
+                  <Heading size="md">Channel Analysis</Heading>
+                </Flex>
+              </CardHeader>
+              <CardBody>
+                <Text fontSize="sm" color="gray.500" mb={3}>
+                  Select and analyze channels to understand team contribution patterns
+                </Text>
+                <Button 
+                  size="md" 
+                  colorScheme="purple" 
+                  width="full"
+                  leftIcon={<FiBarChart />}
+                >
+                  Manage Channel Analysis
+                </Button>
+              </CardBody>
+            </Card>
+          )}
+          
+          {/* Settings Card */}
+          <Card
+            borderWidth="1px"
+            borderRadius="lg"
+            overflow="hidden"
+            bg={cardBg}
+            borderColor={cardBorder}
+            flex="1"
+            minW={{ base: "100%", md: "48%" }}
+            _hover={{ shadow: 'md', borderColor: 'gray.400' }}
+            cursor="pointer"
+            onClick={() => navigate(`/dashboard/integrations/${integrationId}/settings`)}
+          >
+            <CardHeader pb={0}>
+              <Flex align="center" gap={2}>
+                <FiSettings size="20px" color="var(--chakra-colors-gray-500)" />
+                <Heading size="md">Settings</Heading>
+              </Flex>
+            </CardHeader>
+            <CardBody>
+              <Text fontSize="sm" color="gray.500" mb={3}>
+                Configure integration properties, authentication, and manage connection
+              </Text>
+              <Button 
+                size="md" 
+                colorScheme="gray" 
+                width="full"
+                leftIcon={<FiSettings />}
+              >
+                Manage Settings
+              </Button>
+            </CardBody>
+          </Card>
+        </Flex>
+        
+        {/* Maintenance section */}
+        <Box mt={8}>
+          <Heading size="md" mb={4}>Maintenance</Heading>
+          <Flex 
+            gap={4} 
+            wrap="wrap" 
+            p={4} 
+            borderWidth="1px" 
+            borderRadius="lg" 
+            borderStyle="dashed" 
+            borderColor={cardBorder}
+          >
+            <Button
+              leftIcon={<FiZap />}
+              colorScheme="blue"
+              onClick={handleSyncResources}
+              isLoading={isSyncing}
+              flex="1"
+            >
+              Sync Resources
+            </Button>
+            
+            {needsReconnection && (
+              <Button
+                leftIcon={<FiLink />}
+                colorScheme="red"
+                onClick={handleReconnect}
+                flex="1"
+              >
+                Reconnect Integration
+              </Button>
+            )}
+          </Flex>
+        </Box>
+        
       </Box>
 
       {/* Reconnection Modal */}

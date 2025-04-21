@@ -1,8 +1,6 @@
 export { default as IntegrationsPage } from './IntegrationsPage'
 export { default as IntegrationDetailPage } from './IntegrationDetailPage'
 export { default as IntegrationConnectPage } from './IntegrationConnectPage'
-export { default as IntegrationOverviewPage } from './IntegrationOverviewPage'
-export { default as IntegrationResourcesPage } from './IntegrationResourcesPage'
 export { default as IntegrationSettingsPage } from './IntegrationSettingsPage'
 export { default as TeamChannelSelectorPage } from './TeamChannelSelectorPage'
 export { default as TeamChannelAnalysisPage } from './TeamChannelAnalysisPage'
