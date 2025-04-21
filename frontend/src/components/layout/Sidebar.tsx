@@ -199,7 +199,7 @@ const Sidebar = ({ onClose, ...rest }: SidebarProps) => {
 
           <ListItem>
             <NavItem
-              to="/dashboard/slack/workspaces"
+              to="/dashboard/integrations"
               icon={FiSlack}
               isActive={isActivePath('/dashboard/slack')}
             >
@@ -209,7 +209,7 @@ const Sidebar = ({ onClose, ...rest }: SidebarProps) => {
 
           <ListItem>
             <NavItem
-              to="/dashboard/github"
+              to="/dashboard/integrations"
               icon={FiGithub}
               isActive={isActivePath('/dashboard/github')}
             >

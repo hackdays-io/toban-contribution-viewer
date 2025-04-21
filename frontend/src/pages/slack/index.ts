@@ -1,7 +1,2 @@
-export { default as ConnectPage } from './ConnectPage'
+// Only keep OAuth callback for backward compatibility
 export { default as OAuthCallbackPage } from './OAuthCallbackPage'
-export { default as WorkspacesPage } from './WorkspacesPage'
-export { default as ChannelsPage } from './ChannelsPage'
-export { default as MessagesPage } from './MessagesPage'
-export { default as AnalyticsPage } from './AnalyticsPage'
-export { default as ChannelAnalysisPage } from './ChannelAnalysisPage'
