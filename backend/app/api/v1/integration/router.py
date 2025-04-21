@@ -668,8 +668,22 @@ async def get_integration_resources(
                         resource["metadata"]["is_selected_for_analysis"] = is_selected
                         resource["is_selected_for_analysis"] = is_selected
 
+                        # Get the channel record to check if the bot is in the channel
+                        channel_record_result = await db.execute(
+                            select(SlackChannel).where(
+                                SlackChannel.workspace_id == workspace.id,
+                                SlackChannel.slack_id == external_id
+                            )
+                        )
+                        channel_record = channel_record_result.scalars().first()
+                        has_bot = channel_record.has_bot if channel_record else False
+
+                        # Add has_bot at both top level and in metadata for consistency
+                        resource["metadata"]["has_bot"] = has_bot
+                        resource["has_bot"] = has_bot
+
                         logger.info(
-                            f"Channel {resource['name']} (id={external_id}): is_selected_for_analysis={is_selected}"
+                            f"Channel {resource['name']} (id={external_id}): is_selected_for_analysis={is_selected}, has_bot={has_bot}"
                         )
 
     return response_resources

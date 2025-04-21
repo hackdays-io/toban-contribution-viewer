@@ -391,14 +391,96 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
 
   // Get selected channels data
   const selectedChannelsData = useMemo(() => {
-    return channels
+    // First filter by selection and search term
+    const filteredChannels = channels
       .filter((channel) => selectedChannelIds.includes(channel.id))
       .filter(
         (channel) =>
           selectedSearchQuery === '' ||
           channel.name.toLowerCase().includes(selectedSearchQuery.toLowerCase())
       )
-  }, [channels, selectedChannelIds, selectedSearchQuery])
+    
+    // Then apply the same sorting logic as the main channels table
+    return [...filteredChannels].sort((a, b) => {
+      // Helper function to safely get member count
+      const getMemberCount = (channel: ServiceResource) => {
+        return channel.metadata?.member_count !== undefined
+          ? Number(channel.metadata.member_count)
+          : -1
+      }
+
+      // Helper function to safely get last synced date
+      const getLastSyncedTime = (channel: ServiceResource) => {
+        return channel.last_synced_at
+          ? new Date(channel.last_synced_at).getTime()
+          : 0
+      }
+
+      switch (sortOption) {
+        case SortOption.NAME_ASC:
+          return a.name.localeCompare(b.name)
+        case SortOption.NAME_DESC:
+          return b.name.localeCompare(a.name)
+        case SortOption.MEMBERS_ASC:
+          return getMemberCount(a) - getMemberCount(b)
+        case SortOption.MEMBERS_DESC:
+          return getMemberCount(b) - getMemberCount(a)
+        case SortOption.LAST_SYNCED_ASC:
+          return getLastSyncedTime(a) - getLastSyncedTime(b)
+        case SortOption.LAST_SYNCED_DESC:
+          return getLastSyncedTime(b) - getLastSyncedTime(a)
+        default:
+          return 0
+      }
+    })
+  }, [channels, selectedChannelIds, selectedSearchQuery, sortOption])
+
+  // Column sorting handler
+  const handleColumnSort = (column: 'name' | 'members' | 'lastSynced') => {
+    switch (column) {
+      case 'name':
+        setSortOption(
+          sortOption === SortOption.NAME_ASC
+            ? SortOption.NAME_DESC
+            : SortOption.NAME_ASC
+        )
+        break
+      case 'members':
+        setSortOption(
+          sortOption === SortOption.MEMBERS_ASC
+            ? SortOption.MEMBERS_DESC
+            : SortOption.MEMBERS_ASC
+        )
+        break
+      case 'lastSynced':
+        setSortOption(
+          sortOption === SortOption.LAST_SYNCED_ASC
+            ? SortOption.LAST_SYNCED_DESC
+            : SortOption.LAST_SYNCED_ASC
+        )
+        break
+    }
+  }
+
+  // Get sort direction icon for column
+  const getSortIcon = (column: 'name' | 'members' | 'lastSynced') => {
+    switch (column) {
+      case 'name':
+        if (sortOption === SortOption.NAME_ASC) return <FiArrowUp />
+        if (sortOption === SortOption.NAME_DESC) return <FiArrowDown />
+        return null
+      case 'members':
+        if (sortOption === SortOption.MEMBERS_ASC) return <FiArrowUp />
+        if (sortOption === SortOption.MEMBERS_DESC) return <FiArrowDown />
+        return null
+      case 'lastSynced':
+        if (sortOption === SortOption.LAST_SYNCED_ASC) return <FiArrowUp />
+        if (sortOption === SortOption.LAST_SYNCED_DESC) return <FiArrowDown />
+        return null
+      default:
+        return null
+    }
+  }
 
   // Pagination controls
   const handlePrevPage = () => {
@@ -470,8 +552,26 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
             <Table size="sm" variant="simple">
               <Thead bg={tableHeaderBg}>
                 <Tr>
-                  <Th>Channel</Th>
-                  <Th>Members</Th>
+                  <Th 
+                    cursor="pointer" 
+                    onClick={() => handleColumnSort('name')}
+                    _hover={{ color: 'blue.500' }}
+                  >
+                    <HStack spacing={1}>
+                      <Text>Channel</Text>
+                      {getSortIcon('name')}
+                    </HStack>
+                  </Th>
+                  <Th 
+                    cursor="pointer" 
+                    onClick={() => handleColumnSort('members')}
+                    _hover={{ color: 'blue.500' }}
+                  >
+                    <HStack spacing={1}>
+                      <Text>Members</Text>
+                      {getSortIcon('members')}
+                    </HStack>
+                  </Th>
                   <Th width="120px">Actions</Th>
                 </Tr>
               </Thead>
@@ -798,9 +898,36 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
             <Thead bg={tableHeaderBg}>
               <Tr>
                 <Th width="50px">Select</Th>
-                <Th>Channel Name</Th>
-                <Th>Member Count</Th>
-                <Th>Last Synced</Th>
+                <Th 
+                  cursor="pointer" 
+                  onClick={() => handleColumnSort('name')}
+                  _hover={{ color: 'blue.500' }}
+                >
+                  <HStack spacing={1}>
+                    <Text>Channel Name</Text>
+                    {getSortIcon('name')}
+                  </HStack>
+                </Th>
+                <Th 
+                  cursor="pointer" 
+                  onClick={() => handleColumnSort('members')}
+                  _hover={{ color: 'blue.500' }}
+                >
+                  <HStack spacing={1}>
+                    <Text>Member Count</Text>
+                    {getSortIcon('members')}
+                  </HStack>
+                </Th>
+                <Th 
+                  cursor="pointer" 
+                  onClick={() => handleColumnSort('lastSynced')}
+                  _hover={{ color: 'blue.500' }}
+                >
+                  <HStack spacing={1}>
+                    <Text>Last Synced</Text>
+                    {getSortIcon('lastSynced')}
+                  </HStack>
+                </Th>
               </Tr>
             </Thead>
             <Tbody>

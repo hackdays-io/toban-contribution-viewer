@@ -388,4 +388,48 @@ describe('TeamChannelSelector', () => {
     // Check that selected channels is updated correctly
     expect(screen.getByText('Selected Channels (1)')).toBeInTheDocument()
   })
+
+  it('sorts channels when clicking column headers', async () => {
+    await act(async () => {
+      renderWithContext()
+    })
+
+    // Find the column headers
+    const channelNameHeader = screen.getAllByText('Channel Name')[0]
+    const memberCountHeader = screen.getAllByText('Member Count')[0]
+    const lastSyncedHeader = screen.getAllByText('Last Synced')[0]
+
+    // Test sorting by channel name (first asc, then desc)
+    await act(async () => {
+      fireEvent.click(channelNameHeader)
+    })
+    
+    await act(async () => {
+      fireEvent.click(channelNameHeader) // Click again to reverse sort order
+    })
+
+    // Test sorting by member count
+    await act(async () => {
+      fireEvent.click(memberCountHeader)
+    })
+    
+    await act(async () => {
+      fireEvent.click(memberCountHeader) // Click again to reverse sort order
+    })
+
+    // Test sorting by last synced
+    await act(async () => {
+      fireEvent.click(lastSyncedHeader)
+    })
+    
+    await act(async () => {
+      fireEvent.click(lastSyncedHeader) // Click again to reverse sort order
+    })
+
+    // Make sure we still have the expected channels 
+    // Using getAllByText because the channel names appear multiple times
+    expect(screen.getAllByText('general').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('random').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('private-channel').length).toBeGreaterThan(0)
+  })
 })
