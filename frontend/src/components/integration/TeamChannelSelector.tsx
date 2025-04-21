@@ -307,7 +307,7 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
   return (
     <Box>
       <Flex mb={3} justifyContent="space-between" alignItems="center">
-        <Heading size="md">Channel Selection</Heading>
+        <Heading size="md">Channel Manager</Heading>
 
         <Button
           colorScheme="blue"
