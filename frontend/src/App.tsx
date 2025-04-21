@@ -31,6 +31,9 @@ import {
   IntegrationsPage,
   IntegrationDetailPage,
   IntegrationConnectPage,
+  IntegrationOverviewPage,
+  IntegrationResourcesPage,
+  IntegrationSettingsPage,
   TeamChannelSelectorPage,
   TeamChannelAnalysisPage,
   TeamAnalysisResultPage,
@@ -152,11 +155,31 @@ function App() {
                 }
               />
               <Route
+                path="/dashboard/integrations/:integrationId/overview"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <IntegrationOverviewPage />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard/integrations/:integrationId/resources"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <IntegrationResourcesPage />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="/dashboard/integrations/:integrationId/settings"
                 element={
                   <ProtectedRoute>
                     <AppLayout>
-                      <IntegrationDetailPage />
+                      <IntegrationSettingsPage />
                     </AppLayout>
                   </ProtectedRoute>
                 }
