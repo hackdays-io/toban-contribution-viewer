@@ -235,15 +235,9 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
     result = [...result].sort((a, b) => {
       // Helper function to safely get member count
       const getMemberCount = (channel: ServiceResource) => {
-        // First try with metadata.member_count (from database)
-        if (channel.metadata?.member_count !== undefined) {
-          return Number(channel.metadata.member_count)
-        }
-        // Then try with metadata.num_members (from UI expectations)
-        if (channel.metadata?.num_members !== undefined) {
-          return Number(channel.metadata.num_members)
-        }
-        return -1
+        return channel.metadata?.member_count !== undefined
+          ? Number(channel.metadata.member_count)
+          : -1
       }
 
       // Helper function to safely get last synced date
@@ -519,8 +513,6 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
                       <Td>
                         {channel.metadata?.member_count !== undefined
                           ? Number(channel.metadata.member_count).toLocaleString()
-                          : channel.metadata?.num_members !== undefined
-                          ? Number(channel.metadata.num_members).toLocaleString()
                           : 'Unknown'}
                       </Td>
                       <Td>
@@ -861,8 +853,6 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
                     <Td>
                       {channel.metadata?.member_count !== undefined
                         ? Number(channel.metadata.member_count).toLocaleString()
-                        : channel.metadata?.num_members !== undefined
-                        ? Number(channel.metadata.num_members).toLocaleString()
                         : 'Unknown'}
                     </Td>
                     <Td>
