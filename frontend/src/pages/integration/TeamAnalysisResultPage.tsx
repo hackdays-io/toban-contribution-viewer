@@ -383,11 +383,17 @@ const TeamAnalysisResultPage: React.FC = () => {
               <HStack mt={2} spacing={2}>
                 <Text fontWeight="bold">{currentIntegration?.name}</Text>
                 <Text>&gt;</Text>
-                <Text>#{channel?.name}</Text>
+                <Text>
+                  {channel?.name ? 
+                    (channel.name.startsWith('#') ? channel.name : `#${channel.name}`) : 
+                    (analysis?.channel_name ? 
+                      (analysis.channel_name.startsWith('#') ? analysis.channel_name : `#${analysis.channel_name}`) : 
+                      '#channel')}
+                </Text>
                 <Badge
                   colorScheme={channel?.type === 'public' ? 'green' : 'orange'}
                 >
-                  {channel?.type}
+                  {channel?.type || 'channel'}
                 </Badge>
               </HStack>
 
