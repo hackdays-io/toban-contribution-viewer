@@ -101,11 +101,7 @@ const ResourcesAnalysisTab: React.FC<ResourcesAnalysisTabProps> = ({
           await fetchResources(integrationId, [ResourceType.SLACK_CHANNEL, ResourceType.SLACK_USER]);
           await fetchSelectedChannels(integrationId);
           
-          // Log resource counts for debugging
-          console.log('📊 RESOURCE COUNTS:');
-          console.log('🧑‍💻 SLACK_USERS:', currentResources.filter(r => r.resource_type === ResourceType.SLACK_USER).length);
-          console.log('📢 SLACK_CHANNELS:', currentResources.filter(r => r.resource_type === ResourceType.SLACK_CHANNEL).length);
-          console.log('💬 TOTAL RESOURCES:', currentResources.length);
+          // Successfully initialized, don't need to log here
         } catch (err) {
           console.error('❌ Error loading initial data:', err);
         }
@@ -171,21 +167,18 @@ const ResourcesAnalysisTab: React.FC<ResourcesAnalysisTabProps> = ({
   // Track selections initialization 
   const selectionsInitialized = React.useRef(false)
 
-  // Debug effect - runs whenever currentResources changes to log counts
+  // Log resource counts once on first successful load only
+  const didLogResourcesRef = React.useRef(false);
   useEffect(() => {
-    // Update counts when resources change
-    if (currentResources.length > 0) {
+    // Only log once and only when we have data
+    if (currentResources.length > 0 && !didLogResourcesRef.current) {
+      didLogResourcesRef.current = true;
+      
       const users = currentResources.filter(r => r.resource_type === ResourceType.SLACK_USER);
       const channels = currentResources.filter(r => r.resource_type === ResourceType.SLACK_CHANNEL);
       
-      console.log('📊 LATEST RESOURCE COUNTS:');
+      console.log('📊 RESOURCES LOADED SUCCESSFULLY:');
       console.log('🧑‍💻 SLACK_USERS:', users.length);
-      if (users.length === 0) {
-        console.log('⚠️ NO USERS FOUND - This is the issue!');
-      } else {
-        console.log('✓ Users found:', users.slice(0, 3).map(u => u.name).join(', ') + (users.length > 3 ? '...' : ''));
-      }
-      
       console.log('📢 SLACK_CHANNELS:', channels.length);
       console.log('💬 TOTAL RESOURCES:', currentResources.length);
     }
@@ -342,7 +335,6 @@ const ResourcesAnalysisTab: React.FC<ResourcesAnalysisTabProps> = ({
     if (!integrationId) return
 
     setIsSyncing(true)
-    console.log('🔄 Starting resource sync with specific request for ALL resources');
     
     try {
       // Call syncResources specifically requesting both channels AND users
@@ -351,25 +343,20 @@ const ResourcesAnalysisTab: React.FC<ResourcesAnalysisTabProps> = ({
         [ResourceType.SLACK_CHANNEL, ResourceType.SLACK_USER]
       );
       
-      console.log('✅ Sync completed, success:', success);
-      
       if (success === true) {
-        // Check what was returned after sync
+        // Get updated counts for the toast message
         const userCount = currentResources.filter(r => r.resource_type === ResourceType.SLACK_USER).length;
-        console.log(`📊 After sync: Found ${userCount} users`);
+        const channelCount = currentResources.filter(r => r.resource_type === ResourceType.SLACK_CHANNEL).length;
         
         toast({
           title: 'Resources synced successfully',
-          description: `Updated ${currentResources.filter(r => 
-            r.resource_type === ResourceType.SLACK_CHANNEL).length} channels and ${userCount} users`,
+          description: `Updated ${channelCount} channels and ${userCount} users`,
           status: 'success',
           duration: 3000,
           isClosable: true,
         })
       } else {
-        const errorMessage = 'Failed to sync resources'
-        console.error('❌ Sync failed with error:', errorMessage);
-        
+        const errorMessage = 'Failed to sync resources';
         toast({
           title: 'Failed to sync resources',
           description: errorMessage,
@@ -379,8 +366,6 @@ const ResourcesAnalysisTab: React.FC<ResourcesAnalysisTabProps> = ({
         })
       }
     } catch (error) {
-      console.error('❌ Exception during sync:', error);
-      
       toast({
         title: 'Error syncing resources',
         description: error instanceof Error ? error.message : 'Unknown error',

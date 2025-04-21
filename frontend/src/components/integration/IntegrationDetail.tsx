@@ -99,12 +99,8 @@ const IntegrationDetail: React.FC<IntegrationDetailProps> = ({
   const [isSyncing, setIsSyncing] = useState(false)
   const [isReconnectModalOpen, setIsReconnectModalOpen] = useState(false)
 
-  // Initialize the integration data
-  useEffect(() => {
-    if (integrationId) {
-      selectIntegration(integrationId)
-    }
-  }, [integrationId, selectIntegration])
+  // Skip initialization since the parent component (IntegrationDetailPage) 
+  // already calls selectIntegration, which fetches resources
 
   // Handler for refreshing integration details
   const handleRefresh = async () => {
@@ -250,17 +246,8 @@ const IntegrationDetail: React.FC<IntegrationDetailProps> = ({
 
   // Get resources by type
   const getResourcesByType = (type: ResourceType): number => {
-    const count = currentResources.filter((r) => r.resource_type === type).length;
-    console.log(`🔢 Counting resources of type ${type}: Found ${count} resources`);
-    
-    // Log resources of each type for debugging
-    if (count === 0) {
-      console.log('⚠️ DEBUG: No resources found for type', type);
-      console.log('📋 All resource types found:', 
-        [...new Set(currentResources.map(r => r.resource_type))]);
-    }
-    
-    return count;
+    // Just return the count without logging (to avoid infinite renders)
+    return currentResources.filter((r) => r.resource_type === type).length;
   }
 
   // Get the total number of resources
