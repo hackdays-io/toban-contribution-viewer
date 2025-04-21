@@ -773,7 +773,7 @@ class IntegrationService {
     integrationId: string,
     resourceId: string,
     options?: AnalysisOptions
-  ): Promise<any | ApiError> {
+  ): Promise<Record<string, unknown> | ApiError> {
     try {
       console.log(`[DEBUG] Analyzing resource ${resourceId} for integration ${integrationId}`)
       
@@ -804,7 +804,7 @@ class IntegrationService {
           const errorText = await response.text();
           const errorJson = JSON.parse(errorText);
           errorDetail = errorJson.detail || errorText;
-        } catch (e) {
+        } catch {
           errorDetail = response.statusText;
         }
         
@@ -829,7 +829,7 @@ class IntegrationService {
   async getResourceAnalyses(
     integrationId: string,
     resourceId: string
-  ): Promise<any | ApiError> {
+  ): Promise<Record<string, unknown>[] | ApiError> {
     try {
       console.log(`[DEBUG] Getting analysis history for resource ${resourceId}`)
       
@@ -855,7 +855,7 @@ class IntegrationService {
           const errorText = await response.text();
           const errorJson = JSON.parse(errorText);
           errorDetail = errorJson.detail || errorText;
-        } catch (e) {
+        } catch {
           errorDetail = response.statusText;
         }
         
@@ -880,7 +880,7 @@ class IntegrationService {
   async getLatestResourceAnalysis(
     integrationId: string,
     resourceId: string
-  ): Promise<any | ApiError> {
+  ): Promise<Record<string, unknown> | ApiError> {
     try {
       console.log(`[DEBUG] Getting latest analysis for resource ${resourceId}`)
       
@@ -906,7 +906,7 @@ class IntegrationService {
           const errorText = await response.text();
           const errorJson = JSON.parse(errorText);
           errorDetail = errorJson.detail || errorText;
-        } catch (e) {
+        } catch {
           errorDetail = response.statusText;
         }
         
@@ -933,7 +933,7 @@ class IntegrationService {
     integrationId: string,
     resourceId: string,
     analysisId: string
-  ): Promise<any | ApiError> {
+  ): Promise<Record<string, unknown> | ApiError> {
     try {
       console.log(`[DEBUG] Getting analysis ${analysisId} for resource ${resourceId}`)
       
@@ -959,7 +959,7 @@ class IntegrationService {
           const errorText = await response.text();
           const errorJson = JSON.parse(errorText);
           errorDetail = errorJson.detail || errorText;
-        } catch (e) {
+        } catch {
           errorDetail = response.statusText;
         }
         

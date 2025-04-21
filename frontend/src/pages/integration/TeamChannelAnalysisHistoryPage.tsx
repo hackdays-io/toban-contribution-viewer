@@ -32,7 +32,7 @@ import {
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import env from '../../config/env'
 import useIntegration from '../../context/useIntegration'
-import { ServiceResource } from '../../lib/integrationService'
+import integrationService, { ServiceResource } from '../../lib/integrationService'
 
 interface AnalysisHistoryItem {
   id: string
@@ -101,19 +101,19 @@ const TeamChannelAnalysisHistoryPage: React.FC = () => {
         }
       }
 
-      // Fetch analysis history
-      const historyResponse = await fetch(
-        `${env.apiUrl}/api/v1/integrations/${integrationId}/resources/${channelId}/analyses`
+      // Fetch analysis history using integrationService
+      const analysesResult = await integrationService.getResourceAnalyses(
+        integrationId || '',
+        channelId || ''
       )
-
-      if (!historyResponse.ok) {
-        throw new Error(
-          `Error fetching analysis history: ${historyResponse.status} ${historyResponse.statusText}`
-        )
+      
+      // Check if the result is an API error
+      if (integrationService.isApiError(analysesResult)) {
+        throw new Error(`Error fetching analysis history: ${analysesResult.message}`)
       }
-
-      const historyData = await historyResponse.json()
-      setAnalyses(historyData)
+      
+      // Set the analyses from the fetched result
+      setAnalyses(analysesResult)
     } catch (error) {
       console.error('Error fetching data:', error)
       toast({

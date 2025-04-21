@@ -22,7 +22,7 @@ import {
   useToast,
   Tooltip,
 } from '@chakra-ui/react'
-import { FiSearch, FiSettings, FiCheck, FiBarChart2 } from 'react-icons/fi'
+import { FiSearch, FiSettings, FiCheck, FiBarChart2, FiClock } from 'react-icons/fi'
 import { useNavigate } from 'react-router-dom'
 import { ResourceType } from '../../lib/integrationService'
 import useIntegration from '../../context/useIntegration'
@@ -361,6 +361,20 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
                         onClick={() =>
                           navigate(
                             `/dashboard/integrations/${integrationId}/channels/${channel.id}/analyze`
+                          )
+                        }
+                      />
+                    </Tooltip>
+                    <Tooltip label="Analysis history">
+                      <IconButton
+                        aria-label="Analysis history"
+                        icon={<FiClock />}
+                        size="sm"
+                        variant="ghost"
+                        colorScheme="teal"
+                        onClick={() =>
+                          navigate(
+                            `/dashboard/integrations/${integrationId}/channels/${channel.id}/history`
                           )
                         }
                       />

@@ -39,7 +39,7 @@ import env from '../../config/env'
 import { SlackUserCacheProvider } from '../../components/slack/SlackUserContext'
 import MessageText from '../../components/slack/MessageText'
 import useIntegration from '../../context/useIntegration'
-import integrationService, { IntegrationType, ServiceResource, ResourceType } from '../../lib/integrationService'
+import integrationService, { IntegrationType, ServiceResource } from '../../lib/integrationService'
 import { SlackAnalysisResult } from '../../lib/slackApiClient'
 
 // Use the SlackAnalysisResult interface directly from slackApiClient.ts
@@ -73,10 +73,8 @@ const TeamChannelAnalysisPage: React.FC = () => {
   const navigate = useNavigate()
 
   const {
-    currentResources,
     currentIntegration,
     fetchIntegration,
-    fetchResources,
   } = useIntegration()
 
   // Format date for display
@@ -277,10 +275,10 @@ const TeamChannelAnalysisPage: React.FC = () => {
             try {
               const errorData = JSON.parse(responseText);
               errorDetail = errorData.detail || errorData.message || responseText;
-            } catch (jsonError) {
+            } catch {
               errorDetail = responseText || channelSyncResponse.statusText;
             }
-          } catch (e) {
+          } catch {
             // Ignore response reading errors
           }
           

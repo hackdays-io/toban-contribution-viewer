@@ -28,7 +28,6 @@ import {
 } from '@chakra-ui/react'
 import { FiChevronRight, FiArrowLeft, FiClock } from 'react-icons/fi'
 import { Link, useParams, useNavigate } from 'react-router-dom'
-import env from '../../config/env'
 import MessageText from '../../components/slack/MessageText'
 import { SlackUserCacheProvider } from '../../components/slack/SlackUserContext'
 import useIntegration from '../../context/useIntegration'
