@@ -54,6 +54,7 @@ interface Channel extends ServiceResource {
   purpose?: string
   workspace_uuid?: string
   channel_uuid?: string
+  external_resource_id?: string
 }
 
 /**
@@ -172,8 +173,14 @@ const TeamChannelAnalysisPage: React.FC = () => {
               ? 'private'
               : 'public'
             : 'public',
-        topic: typeof channelData.metadata?.topic === 'string' ? channelData.metadata.topic : '',
-        purpose: typeof channelData.metadata?.purpose === 'string' ? channelData.metadata.purpose : '',
+        topic:
+          typeof channelData.metadata?.topic === 'string'
+            ? channelData.metadata.topic
+            : '',
+        purpose:
+          typeof channelData.metadata?.purpose === 'string'
+            ? channelData.metadata.purpose
+            : '',
       }
 
       setChannel(enrichedChannel)
@@ -426,8 +433,8 @@ const TeamChannelAnalysisPage: React.FC = () => {
    * Format text with paragraphs and process Slack mentions.
    */
   const formatText = (text: string | undefined) => {
-    if (!text) return <Box>No data available</Box>;
-    
+    if (!text) return <Box>No data available</Box>
+
     return text.split('\n').map((paragraph, index) => (
       <Box key={index} mb={2}>
         {paragraph.trim() ? (
@@ -612,8 +619,13 @@ const TeamChannelAnalysisPage: React.FC = () => {
               Analysis period:
             </Text>
             <Text fontSize="sm">
-              {analysis.period?.start ? formatDate(analysis.period.start) : 'Unknown'} to{' '}
-              {analysis.period?.end ? formatDate(analysis.period.end) : 'Unknown'}
+              {analysis.period?.start
+                ? formatDate(analysis.period.start)
+                : 'Unknown'}{' '}
+              to{' '}
+              {analysis.period?.end
+                ? formatDate(analysis.period.end)
+                : 'Unknown'}
             </Text>
           </HStack>
 
@@ -629,7 +641,9 @@ const TeamChannelAnalysisPage: React.FC = () => {
               Generated:
             </Text>
             <Text fontSize="sm">
-              {analysis.generated_at ? new Date(analysis.generated_at).toLocaleString() : 'Unknown'}
+              {analysis.generated_at
+                ? new Date(analysis.generated_at).toLocaleString()
+                : 'Unknown'}
             </Text>
           </HStack>
         </Box>
