@@ -57,14 +57,14 @@ describe('Analytics', () => {
     expect(slackAnalyticsLinks.length).toBeGreaterThan(0)
   })
 
-  it('has a working link to Slack analytics', () => {
+  it('has a working link to Slack analytics through integrations', () => {
     render(<Analytics />, { wrapper: Wrapper })
 
     const slackAnalyticsLink = screen.getByText(/View Slack Analytics/i)
     expect(slackAnalyticsLink).toBeInTheDocument()
     expect(slackAnalyticsLink.closest('a')).toHaveAttribute(
       'href',
-      '/dashboard/analytics/slack'
+      '/dashboard/integrations'
     )
   })
 })

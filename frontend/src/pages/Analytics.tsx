@@ -72,9 +72,7 @@ const Analytics: React.FC = () => {
                     contributor insights from your Slack workspaces.
                   </Text>
                   <Divider my={3} />
-                  <Link to="/dashboard/analytics/slack">
-                    View Slack Analytics
-                  </Link>
+                  <Link to="/dashboard/integrations">View Slack Analytics</Link>
                 </CardBody>
               </Card>
 
@@ -161,7 +159,7 @@ const Analytics: React.FC = () => {
               <HStack spacing={4} wrap="wrap">
                 <Box
                   as={Link}
-                  to="/dashboard/analytics/slack/channels"
+                  to="/dashboard/integrations"
                   p={4}
                   borderWidth="1px"
                   borderRadius="md"

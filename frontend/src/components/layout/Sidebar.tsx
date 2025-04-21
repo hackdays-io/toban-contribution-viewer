@@ -18,9 +18,6 @@ import { Link, useLocation } from 'react-router-dom'
 import {
   FiHome,
   FiUsers,
-  FiSlack,
-  FiGithub,
-  FiFileText,
   FiBarChart2,
   FiSettings,
   FiExternalLink,
@@ -194,36 +191,6 @@ const Sidebar = ({ onClose, ...rest }: SidebarProps) => {
               isActive={isActivePath('/dashboard/integrations')}
             >
               All Integrations
-            </NavItem>
-          </ListItem>
-
-          <ListItem>
-            <NavItem
-              to="/dashboard/slack/workspaces"
-              icon={FiSlack}
-              isActive={isActivePath('/dashboard/slack')}
-            >
-              Slack
-            </NavItem>
-          </ListItem>
-
-          <ListItem>
-            <NavItem
-              to="/dashboard/github"
-              icon={FiGithub}
-              isActive={isActivePath('/dashboard/github')}
-            >
-              GitHub
-            </NavItem>
-          </ListItem>
-
-          <ListItem>
-            <NavItem
-              to="/dashboard/notion"
-              icon={FiFileText}
-              isActive={isActivePath('/dashboard/notion')}
-            >
-              Notion
             </NavItem>
           </ListItem>
 
