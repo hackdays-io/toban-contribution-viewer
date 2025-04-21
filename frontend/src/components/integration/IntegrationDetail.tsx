@@ -38,12 +38,11 @@ import {
   FiShare2,
   FiLink,
   FiZap,
-  FiCheck,
   FiPlusCircle,
 } from 'react-icons/fi'
 import useIntegration from '../../context/useIntegration'
 import { IntegrationStatus, ResourceType } from '../../lib/integrationService'
-import ResourceList from './ResourceList'
+import ResourcesAnalysisTab from './ResourcesAnalysisTab'
 import ReconnectIntegration from './ReconnectIntegration'
 
 /**
@@ -411,14 +410,14 @@ const IntegrationDetail: React.FC<IntegrationDetailProps> = ({
         variant="enclosed"
         colorScheme="blue"
         onChange={(index) => {
-          setActiveTab(['overview', 'resources', 'settings'][index])
+          setActiveTab(['overview', 'resources-analysis', 'settings'][index])
         }}
         defaultIndex={0}
       >
         <TabList>
           <Tab>Overview</Tab>
           <Tab>
-            Resources {getTotalResources() > 0 && `(${getTotalResources()})`}
+            Resources & Analysis {getTotalResources() > 0 && `(${getTotalResources()})`}
           </Tab>
           <Tab>Settings</Tab>
         </TabList>
@@ -611,40 +610,9 @@ const IntegrationDetail: React.FC<IntegrationDetailProps> = ({
             </VStack>
           </TabPanel>
 
-          {/* Resources tab */}
+          {/* Resources & Analysis tab */}
           <TabPanel>
             <Box>
-              <Flex justify="space-between" mb={4}>
-                <Heading size="md">Resources</Heading>
-                <HStack spacing={2}>
-                  {currentIntegration.service_type === 'slack' &&
-                    currentResources.some(
-                      (resource) =>
-                        resource.resource_type === ResourceType.SLACK_CHANNEL
-                    ) && (
-                      <Button
-                        leftIcon={<FiCheck />}
-                        colorScheme="teal"
-                        onClick={() =>
-                          navigate(
-                            `/dashboard/integrations/${integrationId}/channels`
-                          )
-                        }
-                      >
-                        Select Channels
-                      </Button>
-                    )}
-                  <Button
-                    leftIcon={<FiZap />}
-                    colorScheme="blue"
-                    onClick={handleSyncResources}
-                    isLoading={isSyncing}
-                  >
-                    Sync Resources
-                  </Button>
-                </HStack>
-              </Flex>
-
               {loadingResources ? (
                 <Flex justify="center" py={8}>
                   <Spinner size="xl" />
@@ -653,25 +621,20 @@ const IntegrationDetail: React.FC<IntegrationDetailProps> = ({
                 <Text color="red.500" mb={4}>
                   {resourceError.message}
                 </Text>
+              ) : currentResources.length === 0 ? (
+                <Box textAlign="center" py={8}>
+                  <Text mb={4}>No resources found.</Text>
+                  <Button
+                    leftIcon={<FiPlusCircle />}
+                    colorScheme="blue"
+                    onClick={handleSyncResources}
+                    isLoading={isSyncing}
+                  >
+                    Sync Resources
+                  </Button>
+                </Box>
               ) : (
-                <>
-                  {currentIntegration.service_type === 'slack' && (
-                    <Alert status="info" mb={4} borderRadius="md">
-                      <AlertIcon />
-                      <Box>
-                        <AlertTitle>Channel Selection Available</AlertTitle>
-                        <AlertDescription>
-                          You can now select specific channels for analysis.
-                          Click the "Select Channels" button to get started.
-                        </AlertDescription>
-                      </Box>
-                    </Alert>
-                  )}
-                  <ResourceList
-                    resources={currentResources}
-                    integrationId={integrationId || ''}
-                  />
-                </>
+                <ResourcesAnalysisTab integrationId={integrationId || ''} />
               )}
             </Box>
           </TabPanel>
