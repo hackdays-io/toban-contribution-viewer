@@ -3,8 +3,7 @@ SQLAlchemy models for cross-resource reports functionality.
 """
 
 import enum
-from typing import List, Optional
-from datetime import datetime
+from typing import List
 
 from sqlalchemy import (
     Column,
@@ -56,16 +55,18 @@ class CrossResourceReport(Base, BaseModel):
     """
 
     # Foreign key to team
-    team_id = Column(UUID(as_uuid=True), ForeignKey("team.id"), nullable=False, index=True)
+    team_id = Column(
+        UUID(as_uuid=True), ForeignKey("team.id"), nullable=False, index=True
+    )
 
     # Report metadata
     title = Column(String(255), nullable=False)
     description = Column(Text, nullable=True)
     status = Column(
-        Enum(ReportStatus, name="reportstatus"), 
-        default=ReportStatus.PENDING, 
-        nullable=False, 
-        index=True
+        Enum(ReportStatus, name="reportstatus"),
+        default=ReportStatus.PENDING,
+        nullable=False,
+        index=True,
     )
 
     # Date range for the report
@@ -81,18 +82,14 @@ class CrossResourceReport(Base, BaseModel):
     # Relationships
     team = relationship("Team", back_populates="cross_resource_reports")
     resource_analyses: Mapped[List["ResourceAnalysis"]] = relationship(
-        "ResourceAnalysis", 
-        back_populates="cross_resource_report", 
-        cascade="all, delete-orphan"
+        "ResourceAnalysis",
+        back_populates="cross_resource_report",
+        cascade="all, delete-orphan",
     )
 
     # Indexes
     __table_args__ = (
-        Index(
-            "ix_cross_resource_report_team_id_status",
-            team_id,
-            status
-        ),
+        Index("ix_cross_resource_report_team_id_status", team_id, status),
     )
 
 
@@ -103,35 +100,28 @@ class ResourceAnalysis(Base, BaseModel):
 
     # Foreign keys
     cross_resource_report_id = Column(
-        UUID(as_uuid=True), 
+        UUID(as_uuid=True),
         ForeignKey("crossresourcereport.id"),
-        nullable=False, 
-        index=True
+        nullable=False,
+        index=True,
     )
     integration_id = Column(
-        UUID(as_uuid=True), 
-        ForeignKey("integration.id"),
-        nullable=False, 
-        index=True
+        UUID(as_uuid=True), ForeignKey("integration.id"), nullable=False, index=True
     )
     resource_id = Column(UUID(as_uuid=True), nullable=False)
 
     # Resource metadata
     resource_type = Column(
-        Enum(ResourceType, name="resourcetype"), 
-        nullable=False, 
-        index=True
+        Enum(ResourceType, name="resourcetype"), nullable=False, index=True
     )
     analysis_type = Column(
-        Enum(AnalysisType, name="analysistype"), 
-        nullable=False, 
-        index=True
+        Enum(AnalysisType, name="analysistype"), nullable=False, index=True
     )
     status = Column(
-        Enum(ReportStatus, name="reportstatus"), 
-        default=ReportStatus.PENDING, 
-        nullable=False, 
-        index=True
+        Enum(ReportStatus, name="reportstatus"),
+        default=ReportStatus.PENDING,
+        nullable=False,
+        index=True,
     )
 
     # Analysis configuration and results
@@ -150,20 +140,14 @@ class ResourceAnalysis(Base, BaseModel):
 
     # Relationships
     cross_resource_report = relationship(
-        "CrossResourceReport", 
-        back_populates="resource_analyses"
+        "CrossResourceReport", back_populates="resource_analyses"
     )
     integration = relationship("Integration")
 
     # Indexes
     __table_args__ = (
         Index(
-            "ix_resource_analysis_report_id_status",
-            cross_resource_report_id,
-            status
+            "ix_resource_analysis_report_id_status", cross_resource_report_id, status
         ),
-        Index(
-            "ix_resource_analysis_resource_type",
-            resource_type
-        ),
+        Index("ix_resource_analysis_resource_type", resource_type),
     )

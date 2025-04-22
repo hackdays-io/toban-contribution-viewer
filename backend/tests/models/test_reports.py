@@ -2,22 +2,22 @@
 Tests for CrossResourceReport and ResourceAnalysis models.
 """
 
-import pytest
-from tests.conftest import team_test_mark
-from datetime import datetime, timedelta
 import uuid
+from datetime import datetime, timedelta
 
+import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.reports import (
-    CrossResourceReport,
-    ResourceAnalysis,
-    ReportStatus,
-    AnalysisType,
-    ResourceType as AnalysisResourceType,
-)
-from app.models.team import Team
 from app.models.integration import Integration, IntegrationType
+from app.models.reports import (
+    AnalysisType,
+    CrossResourceReport,
+    ReportStatus,
+    ResourceAnalysis,
+)
+from app.models.reports import ResourceType as AnalysisResourceType
+from app.models.team import Team
+from tests.conftest import team_test_mark
 
 
 @pytest.mark.asyncio
@@ -69,7 +69,7 @@ async def test_resource_analysis_create(db_session: AsyncSession):
         created_by_user_id="test-user",
     )
     db_session.add(team)
-    
+
     # Create a test integration
     integration = Integration(
         name="Test Integration",
@@ -78,7 +78,7 @@ async def test_resource_analysis_create(db_session: AsyncSession):
         external_id="T12345",
     )
     db_session.add(integration)
-    
+
     # Create a cross-resource report
     report = CrossResourceReport(
         team_id=team.id,
@@ -90,7 +90,7 @@ async def test_resource_analysis_create(db_session: AsyncSession):
     )
     db_session.add(report)
     await db_session.flush()
-    
+
     # Create a resource analysis
     resource_id = uuid.uuid4()
     analysis = ResourceAnalysis(
@@ -106,7 +106,7 @@ async def test_resource_analysis_create(db_session: AsyncSession):
     )
     db_session.add(analysis)
     await db_session.flush()
-    
+
     # Verify the analysis was created with expected values
     assert analysis.id is not None
     assert analysis.cross_resource_report_id == report.id
@@ -130,7 +130,7 @@ async def test_cross_resource_report_relationships(db_session: AsyncSession):
         created_by_user_id="test-user",
     )
     db_session.add(team)
-    
+
     # Create a test integration
     integration = Integration(
         name="Test Integration",
@@ -139,7 +139,7 @@ async def test_cross_resource_report_relationships(db_session: AsyncSession):
         external_id="T12345",
     )
     db_session.add(integration)
-    
+
     # Create a cross-resource report
     report = CrossResourceReport(
         team_id=team.id,
@@ -150,9 +150,9 @@ async def test_cross_resource_report_relationships(db_session: AsyncSession):
         date_range_end=datetime.utcnow(),
     )
     db_session.add(report)
-    
+
     # Create two resource analyses
-    for i in range(2):
+    for _ in range(2):
         analysis = ResourceAnalysis(
             cross_resource_report_id=report.id,
             integration_id=integration.id,
@@ -164,15 +164,15 @@ async def test_cross_resource_report_relationships(db_session: AsyncSession):
             period_end=datetime.utcnow(),
         )
         db_session.add(analysis)
-    
+
     await db_session.flush()
     await db_session.refresh(report)
-    
+
     # Verify relationships
     assert len(report.resource_analyses) == 2
     assert report.resource_analyses[0].cross_resource_report_id == report.id
     assert report.resource_analyses[1].cross_resource_report_id == report.id
-    
+
     # Verify team relationship
     assert report.team_id == team.id
     await db_session.refresh(team)
@@ -191,7 +191,7 @@ async def test_cascade_delete(db_session: AsyncSession):
         created_by_user_id="test-user",
     )
     db_session.add(team)
-    
+
     # Create a test integration
     integration = Integration(
         name="Test Integration",
@@ -200,7 +200,7 @@ async def test_cascade_delete(db_session: AsyncSession):
         external_id="T12345",
     )
     db_session.add(integration)
-    
+
     # Create a cross-resource report
     report = CrossResourceReport(
         team_id=team.id,
@@ -211,7 +211,7 @@ async def test_cascade_delete(db_session: AsyncSession):
         date_range_end=datetime.utcnow(),
     )
     db_session.add(report)
-    
+
     # Create a resource analysis
     analysis = ResourceAnalysis(
         cross_resource_report_id=report.id,
@@ -225,14 +225,14 @@ async def test_cascade_delete(db_session: AsyncSession):
     )
     db_session.add(analysis)
     await db_session.flush()
-    
+
     # Get the analysis ID for later verification
     analysis_id = analysis.id
-    
+
     # Now delete the report
     await db_session.delete(report)
     await db_session.flush()
-    
+
     # Verify the analysis was also deleted (or at least removed from the session)
     result = await db_session.execute(
         f"SELECT COUNT(*) FROM resourceanalysis WHERE id = '{analysis_id}'"

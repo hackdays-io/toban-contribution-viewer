@@ -3,11 +3,11 @@ SQLAlchemy models for cross-resource reports and resource analyses.
 """
 
 from app.models.reports.cross_resource_report import (
-    CrossResourceReport, 
-    ResourceAnalysis,
+    AnalysisType,
+    CrossResourceReport,
     ReportStatus,
+    ResourceAnalysis,
     ResourceType,
-    AnalysisType
 )
 
 __all__ = [
