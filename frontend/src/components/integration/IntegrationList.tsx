@@ -162,7 +162,7 @@ const IntegrationList: React.FC<IntegrationListProps> = ({ teamId }) => {
   }
 
   return (
-    <Box w="100%">
+    <Box>
       {/* Header with filters and actions */}
       <Flex
         justifyContent="space-between"
