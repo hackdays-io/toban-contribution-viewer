@@ -138,12 +138,15 @@ const SlackUserDisplay: React.FC<SlackUserDisplayProps> = ({
           setHasError(true)
           // Call onError callback if provided
           if (onError) onError(userId)
-        } else if (workspaceId) {
+        } else {
           // We need to implement the fetchFromSlack parameter here too
           // but it's a bit more complex since we need to pass it to the context
           // For now, we'll just assume the context handles it correctly
           setIsLoading(true)
+          
+          // Use the provided workspace ID or let the context use its default
           const fetchedUser = await context.fetchUser(userId, workspaceId)
+          
           if (fetchedUser) {
             setUser(fetchedUser)
           } else {

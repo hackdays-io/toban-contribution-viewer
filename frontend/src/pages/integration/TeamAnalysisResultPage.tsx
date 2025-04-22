@@ -119,6 +119,8 @@ const TeamAnalysisResultPage: React.FC = () => {
       console.log(
         `Fetching analysis ${analysisId} for integration ${integrationId} and channel ${channelId}`
       )
+      // Log the workspace ID to debug user display issues
+      console.log("Current integration workspace_id:", currentIntegration?.workspace_id)
       const analysisResult = await integrationService.getResourceAnalysis(
         integrationId || '',
         channelId || '',
@@ -185,7 +187,7 @@ const TeamAnalysisResultPage: React.FC = () => {
                       {paragraph.trim() ? (
                         <MessageText
                           text={paragraph}
-                          workspaceId={channel?.external_id || ''}
+                          workspaceId={currentIntegration?.workspace_id || ''}
                           resolveMentions={true}
                           fallbackToSimpleFormat={true}
                         />
@@ -229,7 +231,7 @@ const TeamAnalysisResultPage: React.FC = () => {
                     {paragraph.trim() ? (
                       <MessageText
                         text={paragraph}
-                        workspaceId={channel?.external_id || ''}
+                        workspaceId={currentIntegration?.workspace_id || ''}
                         resolveMentions={true}
                         fallbackToSimpleFormat={true}
                       />
@@ -256,7 +258,7 @@ const TeamAnalysisResultPage: React.FC = () => {
                       {paragraph.trim() ? (
                         <MessageText
                           text={paragraph}
-                          workspaceId={channel?.external_id || ''}
+                          workspaceId={currentIntegration?.workspace_id || ''}
                           resolveMentions={true}
                           fallbackToSimpleFormat={true}
                         />
@@ -281,7 +283,7 @@ const TeamAnalysisResultPage: React.FC = () => {
                     {paragraph.trim() ? (
                       <MessageText
                         text={paragraph}
-                        workspaceId={channel?.external_id || ''}
+                        workspaceId={currentIntegration?.workspace_id || ''}
                         resolveMentions={true}
                         fallbackToSimpleFormat={true}
                       />
@@ -299,7 +301,7 @@ const TeamAnalysisResultPage: React.FC = () => {
   }
 
   return (
-    <SlackUserCacheProvider workspaceId={channel?.external_id || ''}>
+    <SlackUserCacheProvider workspaceId={currentIntegration?.workspace_id || ''}>
       <Box p={4}>
         {/* Breadcrumb navigation */}
         <Breadcrumb

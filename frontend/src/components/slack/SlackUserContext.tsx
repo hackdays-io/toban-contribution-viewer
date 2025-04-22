@@ -34,7 +34,8 @@ export const UserCacheContext = createContext<UserCacheContextType | undefined>(
 export const SlackUserCacheProvider: React.FC<{
   children: React.ReactNode
   workspaceId: string
-}> = ({ children }) => {
+}> = ({ children, workspaceId }) => {
+  console.log("SlackUserCacheProvider initialized with workspace ID:", workspaceId);
   const [users, setUsers] = useState<Map<string, SlackUser>>(new Map())
   const [loading, setLoading] = useState<Set<string>>(new Set())
   const [errors, setErrors] = useState<Set<string>>(new Set())
@@ -42,9 +43,17 @@ export const SlackUserCacheProvider: React.FC<{
   // Function to fetch a user by ID
   const fetchUser = async (
     userId: string,
-    wsId: string
+    wsId?: string
   ): Promise<SlackUser | undefined> => {
-    if (!userId || !wsId) return undefined
+    // Use provided workspace ID or fall back to the provider's workspaceId
+    const targetWorkspaceId = wsId || workspaceId
+    
+    console.log(`fetchUser called for userId: ${userId}, wsId: ${wsId}, using targetWorkspaceId: ${targetWorkspaceId}`)
+    
+    if (!userId || !targetWorkspaceId) {
+      console.warn('Cannot fetch user: Missing userId or workspaceId')
+      return undefined
+    }
 
     // Already loading this user
     if (loading.has(userId)) return undefined
@@ -56,7 +65,7 @@ export const SlackUserCacheProvider: React.FC<{
     setLoading((prev) => new Set([...prev, userId]))
 
     try {
-      const url = `${env.apiUrl}/slack/workspaces/${wsId}/users?user_ids=${encodeURIComponent(userId)}`
+      const url = `${env.apiUrl}/slack/workspaces/${targetWorkspaceId}/users?user_ids=${encodeURIComponent(userId)}`
 
       const response = await fetch(url, {
         method: 'GET',
