@@ -4,16 +4,10 @@ Pydantic schemas for cross-resource reports API endpoints.
 
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional
 from uuid import UUID
 
 from pydantic import BaseModel, Field, validator
-
-from app.models.reports.cross_resource_report import (
-    AnalysisType,
-    ReportStatus,
-    ResourceType,
-)
 
 
 class ResourceTypeEnum(str, Enum):
