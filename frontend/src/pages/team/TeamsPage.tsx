@@ -69,7 +69,20 @@ const TeamsPage: React.FC = () => {
   const { teamContext, loading: authLoading } = React.useContext(AuthContext)
   const toast = useToast()
   const navigate = useNavigate()
-  const { isOpen, onOpen, onClose } = useDisclosure()
+  const { isOpen, onOpen: baseOnOpen, onClose: baseOnClose } = useDisclosure()
+
+  // Custom onOpen that ensures the slug is properly generated when the modal opens
+  const onOpen = () => {
+    // Reset form and then open modal
+    setFormData({ name: '', slug: '', description: '' })
+    baseOnOpen()
+  }
+  
+  // Custom onClose that ensures form is reset when modal is closed
+  const onClose = () => {
+    setFormData({ name: '', slug: '', description: '' })
+    baseOnClose()
+  }
 
   const [isLoading, setIsLoading] = useState(authLoading)
   const [teams, setTeams] = useState<Team[]>([])
@@ -136,39 +149,42 @@ const TeamsPage: React.FC = () => {
       .replace(/^-|-$/g, '')
   }
 
-  // Simplified input change handler without the complexities
+  // Standard input change handler - just update the form state
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target
     
-    if (name === 'name') {
-      // If updating the name field, generate a slug if the slug field is empty
-      if (!formData.slug) {
-        const slug = generateSlugFromName(value)
-        setFormData({
-          ...formData,
-          name: value,
-          slug: slug // Set both name and slug at once
-        })
-      } else {
-        // Just update the name
-        setFormData({
-          ...formData,
-          name: value
-        })
-      }
-    } else {
-      // For other fields (including slug), just update that field
-      setFormData({
-        ...formData,
-        [name]: value
-      })
+    // Simply update the form with the new value
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }))
+
+    // If name field was changed and slug is empty, update slug too (immediately)
+    if (name === 'name' && !formData.slug) {
+      const newSlug = generateSlugFromName(value);
+      setFormData(prev => ({
+        ...prev,
+        [name]: value,
+        slug: newSlug
+      }));
     }
 
     // Clear any previous error for this field
     if (formErrors[name as keyof CreateTeamForm]) {
       setFormErrors((prev) => ({ ...prev, [name]: undefined }))
+    }
+  }
+  
+  // Handle name input blur - generate slug if empty
+  const handleNameBlur = () => {
+    if (formData.name && !formData.slug) {
+      const newSlug = generateSlugFromName(formData.name);
+      setFormData(prev => ({
+        ...prev,
+        slug: newSlug
+      }));
     }
   }
 
@@ -229,8 +245,7 @@ const TeamsPage: React.FC = () => {
         isClosable: true,
       })
 
-      // Reset form and close modal
-      setFormData({ name: '', slug: '', description: '' })
+      // Close modal (it will reset the form)
       onClose()
 
       // Navigate to the new team
@@ -419,6 +434,16 @@ const TeamsPage: React.FC = () => {
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
+                  onBlur={handleNameBlur}
+                  onKeyUp={() => {
+                    if (formData.name && !formData.slug) {
+                      const newSlug = generateSlugFromName(formData.name);
+                      setFormData(prev => ({
+                        ...prev,
+                        slug: newSlug
+                      }));
+                    }
+                  }}
                   placeholder="Enter team name"
                 />
                 <FormErrorMessage>{formErrors.name}</FormErrorMessage>
@@ -426,12 +451,31 @@ const TeamsPage: React.FC = () => {
 
               <FormControl isInvalid={!!formErrors.slug} isRequired>
                 <FormLabel>Team Slug</FormLabel>
-                <Input
-                  name="slug"
-                  value={formData.slug}
-                  onChange={handleInputChange}
-                  placeholder="team-slug"
-                />
+                <InputGroup>
+                  <Input
+                    name="slug"
+                    value={formData.slug}
+                    onChange={handleInputChange}
+                    placeholder="team-slug"
+                  />
+                  <InputRightElement width="4.5rem">
+                    <Button
+                      h="1.75rem"
+                      size="sm"
+                      onClick={() => {
+                        if (formData.name) {
+                          const newSlug = generateSlugFromName(formData.name);
+                          setFormData(prev => ({
+                            ...prev,
+                            slug: newSlug
+                          }));
+                        }
+                      }}
+                    >
+                      Generate
+                    </Button>
+                  </InputRightElement>
+                </InputGroup>
                 <Text fontSize="sm" color="gray.500" mt={1}>
                   Used in URLs and identifiers
                 </Text>
