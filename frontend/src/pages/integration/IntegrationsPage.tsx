@@ -11,13 +11,17 @@ const IntegrationsPage: React.FC = () => {
   const { teamContext } = useAuth()
 
   return (
-    <Box>
+    <Box width="100%">
+      {' '}
+      {/* Ensure full width */}
       <PageTitle
         title="Integrations"
         description="Manage all your team's integrations"
+        width="100%" /* Full width for PageTitle */
       />
-
-      <Box mt={8}>
+      <Box mt={8} width="100%">
+        {' '}
+        {/* Full width for content */}
         <IntegrationList teamId={teamContext?.currentTeamId} />
       </Box>
     </Box>
