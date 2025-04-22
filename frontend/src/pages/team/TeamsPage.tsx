@@ -69,7 +69,13 @@ const TeamsPage: React.FC = () => {
   const { teamContext, loading: authLoading } = React.useContext(AuthContext)
   const toast = useToast()
   const navigate = useNavigate()
-  const { isOpen, onOpen, onClose } = useDisclosure()
+  const { isOpen, onOpen: originalOnOpen, onClose } = useDisclosure()
+  
+  // Custom onOpen function to reset slug manual flag
+  const onOpen = () => {
+    slugManuallySet.current = false;
+    originalOnOpen();
+  }
 
   const [isLoading, setIsLoading] = useState(authLoading)
   const [teams, setTeams] = useState<Team[]>([])
@@ -128,20 +134,43 @@ const TeamsPage: React.FC = () => {
     fetchTeams()
   }, [fetchTeams, teamContext])
 
+  // Function to generate a slug from a name
+  const generateSlugFromName = (name: string): string => {
+    return name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '')
+  }
+
+  // Update the slug whenever the name changes and the slug is empty
+  // Using a ref to track if we've manually updated the slug to prevent loops
+  const slugManuallySet = React.useRef(false)
+  
+  useEffect(() => {
+    // Only auto-generate slug if name exists and slug is empty and not manually set
+    if (formData.name && !formData.slug && !slugManuallySet.current) {
+      const slug = generateSlugFromName(formData.name)
+      setFormData((prev) => ({ ...prev, slug }))
+    }
+  }, [formData.name, formData.slug])
+
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target
 
-    // Auto-generate slug from name if the slug field hasn't been manually edited
-    if (name === 'name' && !formData.slug) {
-      const slug = value
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-|-$/g, '')
-      setFormData((prev) => ({ ...prev, name: value, slug }))
-    } else {
-      setFormData((prev) => ({ ...prev, [name]: value }))
+    // Track when slug is manually set
+    if (name === 'slug') {
+      slugManuallySet.current = true;
+    }
+
+    // Always update the form field that changed
+    setFormData((prev) => ({ ...prev, [name]: value }))
+
+    // If changing the name and slug is empty, auto-generate the slug
+    if (name === 'name' && !formData.slug && !slugManuallySet.current) {
+      const slug = generateSlugFromName(value)
+      setFormData((prev) => ({ ...prev, slug }))
     }
 
     // Clear any previous error for this field
@@ -209,6 +238,7 @@ const TeamsPage: React.FC = () => {
 
       // Reset form and close modal
       setFormData({ name: '', slug: '', description: '' })
+      slugManuallySet.current = false; // Reset the manual flag
       onClose()
 
       // Navigate to the new team
