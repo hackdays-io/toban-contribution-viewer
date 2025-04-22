@@ -180,7 +180,7 @@ const TeamsPage: React.FC = () => {
       } = await supabase.auth.getSession()
       const token = session?.access_token
 
-      const response = await fetch(`${env.apiUrl}/teams`, {
+      const response = await fetch(`${env.apiUrl}/v1/teams`, {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -305,7 +305,7 @@ const TeamsPage: React.FC = () => {
       } = await supabase.auth.getSession()
       const token = session?.access_token
 
-      const response = await fetch(`${env.apiUrl}/teams/${teamId}`, {
+      const response = await fetch(`${env.apiUrl}/v1/teams/${teamId}`, {
         method: 'DELETE',
         credentials: 'include',
         headers: {
