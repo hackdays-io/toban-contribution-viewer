@@ -21,7 +21,10 @@ import Dashboard from './pages/Dashboard'
 import Analytics from './pages/Analytics'
 
 // Legacy Slack OAuth Callback is still needed for backward compatibility
-import { OAuthCallbackPage as SlackOAuthCallbackPage } from './pages/slack'
+import {
+  OAuthCallbackPage as SlackOAuthCallbackPage,
+  ConnectPage as SlackConnectPage,
+} from './pages/slack'
 
 // Team Pages
 import { TeamsPage, TeamDetailPage, TeamMembersPage } from './pages/team'
@@ -71,6 +74,18 @@ function App() {
               <Route
                 path="/auth/slack/callback"
                 element={<SlackOAuthCallbackPage />}
+              />
+
+              {/* Slack connect route */}
+              <Route
+                path="/dashboard/slack/connect"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <SlackConnectPage />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
               />
 
               {/* Dashboard routes - all wrapped with AppLayout */}
