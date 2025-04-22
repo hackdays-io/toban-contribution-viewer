@@ -27,7 +27,10 @@ const SlackUserEnhancedText: React.FC<SlackUserEnhancedTextProps> = ({
     if (!text || !workspaceId) return []
 
     // Regular expressions for different user ID formats
+    // Match standalone user IDs (without @ prefix)
     const slackIdRegex = /\b(U[A-Z0-9]{8,})\b/g
+    // Match user IDs with @ prefix
+    const atSlackIdRegex = /@(U[A-Z0-9]{8,})\b/g
 
     // Process text paragraph by paragraph
     const paragraphs = text.split('\n')
@@ -37,9 +40,13 @@ const SlackUserEnhancedText: React.FC<SlackUserEnhancedTextProps> = ({
         return <Box key={`p-${pIndex}`} height="1em" />
       }
 
-      // First, replace any standalone Slack IDs with proper user display
-      // We do this by converting them to <@ID> format, which MessageText can handle
-      const enhancedText = paragraph.replace(slackIdRegex, (match) => {
+      // First, replace any user IDs with @ prefix already
+      let enhancedText = paragraph.replace(atSlackIdRegex, (_match, userId) => {
+        return `<@${userId}>`
+      })
+
+      // Then replace any standalone Slack IDs without the @ prefix
+      enhancedText = enhancedText.replace(slackIdRegex, (match) => {
         return `<@${match}>`
       })
 
