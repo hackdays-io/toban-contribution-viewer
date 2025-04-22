@@ -163,9 +163,13 @@ const MessageText: React.FC<MessageTextProps> = ({
             onError={() => handleUserError(userId)} // Handle errors
           />
           {/* Log that we're trying to display a user */}
-          {console.log(
-            `[MessageText] Attempting to display user ${userId} from workspace ${workspaceId}`
-          )}
+          {/* Log attempt to display user */}
+          {(() => {
+            console.log(
+              `[MessageText] Attempting to display user ${userId} from workspace ${workspaceId}`
+            )
+            return null
+          })()}
           {hasColon ? ':' : ''}
         </Box>
       )

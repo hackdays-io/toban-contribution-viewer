@@ -208,7 +208,9 @@ async def get_messages_by_date_range(
 @router.get("/workspaces/{workspace_id}/users")
 async def get_users(
     workspace_id: str,
-    user_ids: Optional[List[str]] = Query(None, alias="user_ids[]", description="List of user IDs to retrieve"),
+    user_ids: Optional[List[str]] = Query(
+        None, alias="user_ids[]", description="List of user IDs to retrieve"
+    ),
     fetch_from_slack: bool = Query(
         False, description="Whether to fetch users from Slack API if not found in DB"
     ),

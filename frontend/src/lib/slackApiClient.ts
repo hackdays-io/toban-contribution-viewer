@@ -31,6 +31,15 @@ export interface SlackChannel {
   num_members?: number
 }
 
+// For use in API calls where profile_image_url might not be present
+export interface BaseSlackUser {
+  id: string
+  slack_id?: string
+  name: string
+  display_name?: string | null
+  real_name?: string | null
+}
+
 export interface SlackUser {
   id: string
   workspace_id: string
@@ -101,20 +110,20 @@ class SlackApiClient extends ApiClient {
   constructor() {
     // Use the full API URL with the slack path
     // The baseUrl should include the protocol, host, and API prefix
-    
+
     // Add basic logging
-    console.log('SlackApiClient constructor - apiUrl value:', env.apiUrl);
-    
+    console.log('SlackApiClient constructor - apiUrl value:', env.apiUrl)
+
     // The env.apiUrl is '/api/v1' from docker-compose.yml
     // For direct API calls we need to make this a full URL or relative path
-    
+
     // Since apiUrl is a relative path ('/api/v1'), we'll use it directly
     // This will work with the browser's current origin
-    const baseUrl = `${env.apiUrl}/slack`;
-      
-    console.log(`SlackApiClient constructor - final baseUrl: ${baseUrl}`);
-    
-    super(baseUrl);
+    const baseUrl = `${env.apiUrl}/slack`
+
+    console.log(`SlackApiClient constructor - final baseUrl: ${baseUrl}`)
+
+    super(baseUrl)
 
     // Store the base URL for logging
     this.apiBaseUrl = baseUrl
@@ -226,7 +235,7 @@ class SlackApiClient extends ApiClient {
   ): Promise<SlackUser | ApiError> {
     return this.get<SlackUser>(`workspaces/${workspaceId}/users/${userId}`)
   }
-  
+
   /**
    * Get users by IDs
    * @param workspaceId Database UUID for the workspace
@@ -237,43 +246,43 @@ class SlackApiClient extends ApiClient {
     workspaceId: string,
     userIds: string[],
     fetchFromSlack: boolean = true
-  ): Promise<{users: any[]} | ApiError> {
+  ): Promise<{ users: BaseSlackUser[] } | ApiError> {
     if (!userIds || userIds.length === 0) {
       return { users: [] }
     }
-    
-    console.log('[SlackApiClient] getUsersByIds - Input params:', { 
-      workspaceId, 
-      userIds, 
-      fetchFromSlack 
-    });
-    
+
+    console.log('[SlackApiClient] getUsersByIds - Input params:', {
+      workspaceId,
+      userIds,
+      fetchFromSlack,
+    })
+
     try {
       // Directly use the path that will match the backend route
-      const path = `/workspaces/${workspaceId}/users`;
-      
+      const path = `/workspaces/${workspaceId}/users`
+
       // Create params object
       const params: Record<string, string> = {
-        'fetch_from_slack': fetchFromSlack.toString()
-      };
-      
+        fetch_from_slack: fetchFromSlack.toString(),
+      }
+
       // Add user_ids[] parameter
       // Add the same parameter multiple times for array values
-      userIds.forEach(id => {
+      userIds.forEach((id) => {
         // This correctly adds multiple entries with the same key
-        params['user_ids[]'] = id;
-      });
-      
-      console.log('[SlackApiClient] getUsersByIds - Using path:', path);
-      console.log('[SlackApiClient] getUsersByIds - Using params:', params);
-      
-      return this.get<{users: any[]}>(path, params);
+        params['user_ids[]'] = id
+      })
+
+      console.log('[SlackApiClient] getUsersByIds - Using path:', path)
+      console.log('[SlackApiClient] getUsersByIds - Using params:', params)
+
+      return this.get<{ users: BaseSlackUser[] }>(path, params)
     } catch (error) {
-      console.error('[SlackApiClient] getUsersByIds - Error:', error);
+      console.error('[SlackApiClient] getUsersByIds - Error:', error)
       return {
         status: 'CLIENT_ERROR',
-        message: `Error fetching users: ${error instanceof Error ? error.message : String(error)}`
-      };
+        message: `Error fetching users: ${error instanceof Error ? error.message : String(error)}`,
+      }
     }
   }
 

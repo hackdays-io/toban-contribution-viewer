@@ -7,27 +7,29 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 // Mock SlackApiClient
 vi.mock('../../../lib/slackApiClient', () => {
   const mockClient = {
-    getUsersByIds: vi.fn().mockImplementation((workspaceId, userIds, fetchFromSlack) => {
-      return Promise.resolve({
-        users: [
-          {
-            id: 'test-user-id',
-            slack_id: 'U12345678',
-            name: fetchFromSlack ? 'slackuser' : 'testuser',
-            display_name: fetchFromSlack ? 'Slack User' : 'Test User',
-            real_name: fetchFromSlack
-              ? 'Slack User Real Name'
-              : 'Test User Real Name',
-            profile_image_url: 'https://example.com/avatar.jpg',
-          },
-        ],
-      })
-    })
+    getUsersByIds: vi
+      .fn()
+      .mockImplementation((_workspaceId, _userIds, fetchFromSlack) => {
+        return Promise.resolve({
+          users: [
+            {
+              id: 'test-user-id',
+              slack_id: 'U12345678',
+              name: fetchFromSlack ? 'slackuser' : 'testuser',
+              display_name: fetchFromSlack ? 'Slack User' : 'Test User',
+              real_name: fetchFromSlack
+                ? 'Slack User Real Name'
+                : 'Test User Real Name',
+              profile_image_url: 'https://example.com/avatar.jpg',
+            },
+          ],
+        })
+      }),
   }
-  
+
   return {
     slackApiClient: mockClient,
-    default: mockClient
+    default: mockClient,
   }
 })
 

@@ -10,7 +10,6 @@ import {
   // SkeletonCircle, // Uncomment if needed
   useColorModeValue,
 } from '@chakra-ui/react'
-import env from '../../config/env'
 
 // Import the context types from separate file
 import { UserCacheContext, SlackUser } from './SlackUserContext'
@@ -104,7 +103,7 @@ const SlackUserDisplay: React.FC<SlackUserDisplayProps> = ({
         try {
           // Import the slackApiClient here to avoid circular dependencies
           const { slackApiClient } = await import('../../lib/slackApiClient')
-          
+
           console.log(
             `[SlackUserDisplay] Direct fetch - workspaceId: ${workspaceId}, userId: ${userId}`
           )
@@ -114,11 +113,11 @@ const SlackUserDisplay: React.FC<SlackUserDisplayProps> = ({
             [userId],
             true // fetchFromSlack=true
           )
-          
+
           // Check if the result is an ApiError using the correct property check
           if ('status' in result && 'message' in result) {
-            console.error('[SlackUserDisplay] API returned an error:', result);
-            throw new Error(`API Error: ${result.message || 'Unknown error'}`);
+            console.error('[SlackUserDisplay] API returned an error:', result)
+            throw new Error(`API Error: ${result.message || 'Unknown error'}`)
           }
 
           const data = result
@@ -128,7 +127,17 @@ const SlackUserDisplay: React.FC<SlackUserDisplayProps> = ({
             Array.isArray(data.users) &&
             data.users.length > 0
           ) {
-            setUser(data.users[0])
+            // Convert BaseSlackUser to SlackUser
+            const apiUser = data.users[0]
+            const userObject: SlackUser = {
+              id: apiUser.id,
+              slack_id: apiUser.slack_id || '',
+              name: apiUser.name,
+              display_name: apiUser.display_name || null,
+              real_name: apiUser.real_name || null,
+              profile_image_url: null, // Ensure this is present
+            }
+            setUser(userObject)
           } else {
             setHasError(true)
             // Call onError callback if provided

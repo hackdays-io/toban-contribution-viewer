@@ -31,8 +31,7 @@ export default defineConfig(({ mode }) => {
   // This is a more permissive approach that will solve the immediate issue
   const allowedHosts = true; // Allow all hosts
   
-  // Determine if we're in development mode
-  const isDev = mode === 'development';
+  // Mode is used for configuration
   
   // Define the server configuration type
   interface ServerConfig {

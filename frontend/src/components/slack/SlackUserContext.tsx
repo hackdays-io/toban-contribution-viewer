@@ -1,13 +1,9 @@
 import React, { useState, useContext, createContext } from 'react'
-import env from '../../config/env'
+import { BaseSlackUser } from '../../lib/slackApiClient'
 
-// Interface for Slack user data from API - duplicated from SlackUserDisplay for modularity
-export interface SlackUser {
-  id: string
+// Interface for Slack user data from API
+export interface SlackUser extends BaseSlackUser {
   slack_id: string
-  name: string
-  display_name: string | null
-  real_name: string | null
   profile_image_url: string | null
 }
 
@@ -72,7 +68,7 @@ export const SlackUserCacheProvider: React.FC<{
     try {
       // Import the slackApiClient here to avoid circular dependencies
       const { slackApiClient } = await import('../../lib/slackApiClient')
-      
+
       console.log(
         `[SlackUserContext] Fetching user data for userId: ${userId}, workspace: ${targetWorkspaceId}`
       )
@@ -82,17 +78,26 @@ export const SlackUserCacheProvider: React.FC<{
         [userId],
         true // fetchFromSlack = true
       )
-      
+
       // Check if the result is an ApiError
       if ('status' in result && 'message' in result) {
-        console.error('[SlackUserContext] API returned an error:', result);
-        throw new Error(`API Error: ${result.message || 'Unknown error'}`);
+        console.error('[SlackUserContext] API returned an error:', result)
+        throw new Error(`API Error: ${result.message || 'Unknown error'}`)
       }
-      
+
       const data = result
 
       if (data.users && Array.isArray(data.users) && data.users.length > 0) {
-        const user = data.users[0]
+        // Convert BaseSlackUser to SlackUser by ensuring slack_id and profile_image_url are present
+        const apiUser = data.users[0]
+        const user: SlackUser = {
+          id: apiUser.id,
+          slack_id: apiUser.slack_id || '',
+          name: apiUser.name,
+          display_name: apiUser.display_name || null,
+          real_name: apiUser.real_name || null,
+          profile_image_url: null, // Ensure this is present even if not provided by API
+        }
 
         // Update users map
         setUsers((prev) => {
@@ -108,7 +113,7 @@ export const SlackUserCacheProvider: React.FC<{
           return next
         })
 
-        return user
+        return user as SlackUser
       } else {
         // User not found, create placeholder
         const placeholderUser: SlackUser = {
