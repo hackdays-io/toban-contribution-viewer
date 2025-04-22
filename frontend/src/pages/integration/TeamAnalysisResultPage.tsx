@@ -28,8 +28,7 @@ import {
 } from '@chakra-ui/react'
 import { FiChevronRight, FiArrowLeft, FiClock } from 'react-icons/fi'
 import { Link, useParams, useNavigate } from 'react-router-dom'
-import MessageText from '../../components/slack/MessageText'
-import { SlackUserCacheProvider } from '../../components/slack/SlackUserContext'
+import { SlackUserEnhancedText, SlackUserCacheProvider } from '../../components/slack'
 import useIntegration from '../../context/useIntegration'
 import integrationService, {
   ServiceResource,
@@ -178,22 +177,11 @@ const TeamAnalysisResultPage: React.FC = () => {
                 Channel Summary
               </Heading>
               <Box>
-                {analysis.channel_summary
-                  .split('\n')
-                  .map((paragraph, index) => (
-                    <Box key={index} mb={2}>
-                      {paragraph.trim() ? (
-                        <MessageText
-                          text={paragraph}
-                          workspaceId={channel?.external_id || ''}
-                          resolveMentions={true}
-                          fallbackToSimpleFormat={true}
-                        />
-                      ) : (
-                        <Box height="1em" />
-                      )}
-                    </Box>
-                  ))}
+                <SlackUserEnhancedText
+                  text={analysis.channel_summary}
+                  workspaceId={currentIntegration?.workspace_id || ''}
+                  resolveMentions={true}
+                />
               </Box>
 
               <SimpleGrid columns={{ base: 2, md: 4 }} spacing={4} mt={6}>
@@ -224,20 +212,11 @@ const TeamAnalysisResultPage: React.FC = () => {
                 Topic Analysis
               </Heading>
               <Box>
-                {analysis.topic_analysis.split('\n').map((paragraph, index) => (
-                  <Box key={index} mb={2}>
-                    {paragraph.trim() ? (
-                      <MessageText
-                        text={paragraph}
-                        workspaceId={channel?.external_id || ''}
-                        resolveMentions={true}
-                        fallbackToSimpleFormat={true}
-                      />
-                    ) : (
-                      <Box height="1em" />
-                    )}
-                  </Box>
-                ))}
+                <SlackUserEnhancedText
+                  text={analysis.topic_analysis}
+                  workspaceId={currentIntegration?.workspace_id || ''}
+                  resolveMentions={true}
+                />
               </Box>
             </Box>
           </TabPanel>
@@ -249,22 +228,11 @@ const TeamAnalysisResultPage: React.FC = () => {
                 Contributor Insights
               </Heading>
               <Box>
-                {analysis.contributor_insights
-                  .split('\n')
-                  .map((paragraph, index) => (
-                    <Box key={index} mb={2}>
-                      {paragraph.trim() ? (
-                        <MessageText
-                          text={paragraph}
-                          workspaceId={channel?.external_id || ''}
-                          resolveMentions={true}
-                          fallbackToSimpleFormat={true}
-                        />
-                      ) : (
-                        <Box height="1em" />
-                      )}
-                    </Box>
-                  ))}
+                <SlackUserEnhancedText
+                  text={analysis.contributor_insights}
+                  workspaceId={currentIntegration?.workspace_id || ''}
+                  resolveMentions={true}
+                />
               </Box>
             </Box>
           </TabPanel>
@@ -276,20 +244,11 @@ const TeamAnalysisResultPage: React.FC = () => {
                 Key Highlights
               </Heading>
               <Box>
-                {analysis.key_highlights.split('\n').map((paragraph, index) => (
-                  <Box key={index} mb={2}>
-                    {paragraph.trim() ? (
-                      <MessageText
-                        text={paragraph}
-                        workspaceId={channel?.external_id || ''}
-                        resolveMentions={true}
-                        fallbackToSimpleFormat={true}
-                      />
-                    ) : (
-                      <Box height="1em" />
-                    )}
-                  </Box>
-                ))}
+                <SlackUserEnhancedText
+                  text={analysis.key_highlights}
+                  workspaceId={currentIntegration?.workspace_id || ''}
+                  resolveMentions={true}
+                />
               </Box>
             </Box>
           </TabPanel>
@@ -299,7 +258,7 @@ const TeamAnalysisResultPage: React.FC = () => {
   }
 
   return (
-    <SlackUserCacheProvider workspaceId={channel?.external_id || ''}>
+    <SlackUserCacheProvider workspaceId={currentIntegration?.workspace_id || ''}>
       <Box p={4}>
         {/* Breadcrumb navigation */}
         <Breadcrumb
