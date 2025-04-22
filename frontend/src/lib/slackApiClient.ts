@@ -101,8 +101,20 @@ class SlackApiClient extends ApiClient {
   constructor() {
     // Use the full API URL with the slack path
     // The baseUrl should include the protocol, host, and API prefix
-    const baseUrl = `${env.apiUrl}/slack`
-    super(baseUrl)
+    
+    // Add basic logging
+    console.log('SlackApiClient constructor - apiUrl value:', env.apiUrl);
+    
+    // The env.apiUrl is '/api/v1' from docker-compose.yml
+    // For direct API calls we need to make this a full URL or relative path
+    
+    // Since apiUrl is a relative path ('/api/v1'), we'll use it directly
+    // This will work with the browser's current origin
+    const baseUrl = `${env.apiUrl}/slack`;
+      
+    console.log(`SlackApiClient constructor - final baseUrl: ${baseUrl}`);
+    
+    super(baseUrl);
 
     // Store the base URL for logging
     this.apiBaseUrl = baseUrl
@@ -213,6 +225,56 @@ class SlackApiClient extends ApiClient {
     userId: string
   ): Promise<SlackUser | ApiError> {
     return this.get<SlackUser>(`workspaces/${workspaceId}/users/${userId}`)
+  }
+  
+  /**
+   * Get users by IDs
+   * @param workspaceId Database UUID for the workspace
+   * @param userIds Array of user IDs (Slack IDs or database UUIDs)
+   * @param fetchFromSlack Whether to fetch users from Slack API if not found in DB
+   */
+  async getUsersByIds(
+    workspaceId: string,
+    userIds: string[],
+    fetchFromSlack: boolean = true
+  ): Promise<{users: any[]} | ApiError> {
+    if (!userIds || userIds.length === 0) {
+      return { users: [] }
+    }
+    
+    console.log('[SlackApiClient] getUsersByIds - Input params:', { 
+      workspaceId, 
+      userIds, 
+      fetchFromSlack 
+    });
+    
+    try {
+      // Directly use the path that will match the backend route
+      const path = `/workspaces/${workspaceId}/users`;
+      
+      // Create params object
+      const params: Record<string, string> = {
+        'fetch_from_slack': fetchFromSlack.toString()
+      };
+      
+      // Add user_ids[] parameter
+      // Add the same parameter multiple times for array values
+      userIds.forEach(id => {
+        // This correctly adds multiple entries with the same key
+        params['user_ids[]'] = id;
+      });
+      
+      console.log('[SlackApiClient] getUsersByIds - Using path:', path);
+      console.log('[SlackApiClient] getUsersByIds - Using params:', params);
+      
+      return this.get<{users: any[]}>(path, params);
+    } catch (error) {
+      console.error('[SlackApiClient] getUsersByIds - Error:', error);
+      return {
+        status: 'CLIENT_ERROR',
+        message: `Error fetching users: ${error instanceof Error ? error.message : String(error)}`
+      };
+    }
   }
 
   /**

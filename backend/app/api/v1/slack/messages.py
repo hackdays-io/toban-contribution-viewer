@@ -208,7 +208,7 @@ async def get_messages_by_date_range(
 @router.get("/workspaces/{workspace_id}/users")
 async def get_users(
     workspace_id: str,
-    user_ids: List[str] = Query(..., description="List of user UUIDs to retrieve"),
+    user_ids: Optional[List[str]] = Query(None, alias="user_ids[]", description="List of user IDs to retrieve"),
     fetch_from_slack: bool = Query(
         False, description="Whether to fetch users from Slack API if not found in DB"
     ),
@@ -219,7 +219,7 @@ async def get_users(
 
     Args:
         workspace_id: UUID of the workspace
-        user_ids: List of user UUIDs to retrieve
+        user_ids: List of user IDs to retrieve (can be database UUIDs or Slack user IDs)
         fetch_from_slack: Whether to fetch users from Slack API if not found in DB
         db: Database session
 
@@ -231,14 +231,18 @@ async def get_users(
             f"Fetching user details for workspace {workspace_id}, user_ids: {user_ids}, fetch_from_slack: {fetch_from_slack}"
         )
 
+        # Import locally to avoid clash with unused import warning
+        from app.models.slack import SlackUser, SlackWorkspace
+
+        # If no user_ids provided, return an empty list
+        if not user_ids:
+            return {"users": []}
+
         # Strip out any empty strings or None values
         valid_user_ids = [user_id for user_id in user_ids if user_id]
 
         if not valid_user_ids:
             return {"users": []}
-
-        # Import locally to avoid clash with unused import warning
-        from app.models.slack import SlackUser, SlackWorkspace
 
         # Check for Slack IDs (starting with 'U' or 'W')
         slack_user_ids = []
