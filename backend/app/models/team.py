@@ -69,6 +69,10 @@ class Team(Base, BaseModel):
     resource_accesses = relationship(
         "ResourceAccess", back_populates="team", cascade="all, delete-orphan"
     )
+    # Cross-resource reports
+    cross_resource_reports = relationship(
+        "CrossResourceReport", back_populates="team", cascade="all, delete-orphan"
+    )
 
     # Uniqueness constraints
     __table_args__ = (Index("ix_team_slug_unique", "slug", unique=True),)
