@@ -118,6 +118,8 @@ const TeamAnalysisResultPage: React.FC = () => {
       console.log(
         `Fetching analysis ${analysisId} for integration ${integrationId} and channel ${channelId}`
       )
+      
+      console.log("Current integration workspace_id:", currentIntegration?.workspace_id)
       const analysisResult = await integrationService.getResourceAnalysis(
         integrationId || '',
         channelId || '',
@@ -132,6 +134,9 @@ const TeamAnalysisResultPage: React.FC = () => {
       // Set the analysis data, casting it to the expected type
       // This is safe because we've verified it's not an ApiError above
       setAnalysis(analysisResult as unknown as AnalysisResponse)
+      
+      // Log analysis data for debugging
+      console.log("Analysis contributor_insights:", (analysisResult as unknown as AnalysisResponse).contributor_insights)
     } catch (error) {
       console.error('Error fetching data:', error)
       toast({
@@ -180,7 +185,6 @@ const TeamAnalysisResultPage: React.FC = () => {
                 <SlackUserEnhancedText
                   text={analysis.channel_summary}
                   workspaceId={currentIntegration?.workspace_id || ''}
-                  resolveMentions={true}
                 />
               </Box>
 
@@ -215,7 +219,6 @@ const TeamAnalysisResultPage: React.FC = () => {
                 <SlackUserEnhancedText
                   text={analysis.topic_analysis}
                   workspaceId={currentIntegration?.workspace_id || ''}
-                  resolveMentions={true}
                 />
               </Box>
             </Box>
@@ -231,7 +234,6 @@ const TeamAnalysisResultPage: React.FC = () => {
                 <SlackUserEnhancedText
                   text={analysis.contributor_insights}
                   workspaceId={currentIntegration?.workspace_id || ''}
-                  resolveMentions={true}
                 />
               </Box>
             </Box>
@@ -247,7 +249,6 @@ const TeamAnalysisResultPage: React.FC = () => {
                 <SlackUserEnhancedText
                   text={analysis.key_highlights}
                   workspaceId={currentIntegration?.workspace_id || ''}
-                  resolveMentions={true}
                 />
               </Box>
             </Box>
