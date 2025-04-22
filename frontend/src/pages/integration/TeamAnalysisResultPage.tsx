@@ -180,7 +180,7 @@ const TeamAnalysisResultPage: React.FC = () => {
               <Box>
                 <SlackUserEnhancedText
                   text={analysis.channel_summary}
-                  workspaceId={channel?.external_id || ''}
+                  workspaceId={currentIntegration?.workspace_id || ''}
                   resolveMentions={true}
                 />
               </Box>
@@ -215,7 +215,7 @@ const TeamAnalysisResultPage: React.FC = () => {
               <Box>
                 <SlackUserEnhancedText
                   text={analysis.topic_analysis}
-                  workspaceId={channel?.external_id || ''}
+                  workspaceId={currentIntegration?.workspace_id || ''}
                   resolveMentions={true}
                 />
               </Box>
@@ -231,7 +231,7 @@ const TeamAnalysisResultPage: React.FC = () => {
               <Box>
                 <SlackUserEnhancedText
                   text={analysis.contributor_insights}
-                  workspaceId={channel?.external_id || ''}
+                  workspaceId={currentIntegration?.workspace_id || ''}
                   resolveMentions={true}
                 />
               </Box>
@@ -247,7 +247,7 @@ const TeamAnalysisResultPage: React.FC = () => {
               <Box>
                 <SlackUserEnhancedText
                   text={analysis.key_highlights}
-                  workspaceId={channel?.external_id || ''}
+                  workspaceId={currentIntegration?.workspace_id || ''}
                   resolveMentions={true}
                 />
               </Box>
@@ -259,7 +259,9 @@ const TeamAnalysisResultPage: React.FC = () => {
   }
 
   return (
-    <SlackUserCacheProvider workspaceId={channel?.external_id || ''}>
+    <SlackUserCacheProvider
+      workspaceId={currentIntegration?.workspace_id || ''}
+    >
       <Box p={4}>
         {/* Breadcrumb navigation */}
         <Breadcrumb
