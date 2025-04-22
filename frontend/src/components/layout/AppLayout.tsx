@@ -1,9 +1,5 @@
 import React, { ReactNode } from 'react';
-import {
-  Box,
-  useColorModeValue,
-  Container,
-} from '@chakra-ui/react';
+import { Box, useColorModeValue, Container } from '@chakra-ui/react';
 import TopNavigation from './TopNavigation';
 import Header from './Header';
 import Breadcrumb from './Breadcrumb';
@@ -28,15 +24,18 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
       {/* User profile and actions header */}
       <Header />
       
-      {/* Main content container - use full width container */}
-      <Container maxW="container.xl" pt={4} pb={8}>
+      {/* Main content container - use consistent width container */}
+      <Container maxW="container.xl" px={0} pt={4} pb={8}>
         {/* Breadcrumb navigation */}
-        <Breadcrumb />
+        <Box px={{ base: 4, md: 6 }}>
+          <Breadcrumb />
+        </Box>
         
         {/* Main content area */}
         <Box
           as="main"
-          p={{ base: 4, md: 6 }}
+          px={{ base: 4, md: 6 }}
+          py={{ base: 4, md: 6 }}
           bg={contentBgColor}
           borderRadius="lg"
           boxShadow="sm"

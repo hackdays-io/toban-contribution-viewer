@@ -163,8 +163,8 @@ const TopNavigation = () => {
       borderColor={borderColor}
       py={{ base: 1, md: 0 }}
     >
-      <Container maxW="container.xl">
-        <Flex alignItems="center" justifyContent="space-between">
+      <Container maxW="container.xl" px={0}>
+        <Flex alignItems="center" justifyContent="space-between" px={{ base: 4, md: 6 }}>
           {/* Left side with workspace selector */}
           <Flex align="center" h={14}>
             <WorkspaceMenu />

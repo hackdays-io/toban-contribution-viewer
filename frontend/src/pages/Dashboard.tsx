@@ -1,7 +1,6 @@
-import React from 'react'
+import React from 'react';
 import {
   Box,
-  Button,
   Heading,
   Text,
   SimpleGrid,
@@ -15,23 +14,24 @@ import {
   HStack,
   Divider,
   useColorModeValue,
-} from '@chakra-ui/react'
-import { Link } from 'react-router-dom'
-import { FiSlack, FiGithub, FiUsers, FiBarChart2 } from 'react-icons/fi'
-import { TeamContext } from '../components/team'
-import useAuth from '../context/useAuth'
+  Button,
+} from '@chakra-ui/react';
+import { Link } from 'react-router-dom';
+import { FiSlack, FiGithub, FiUsers, FiBarChart2 } from 'react-icons/fi';
+import { TeamContext } from '../components/team';
+import useAuth from '../context/useAuth';
 
 /**
  * Dashboard home page with overview and quick access to key features
  */
 const Dashboard: React.FC = () => {
-  const { teamContext } = useAuth()
-  const cardBg = useColorModeValue('white', 'gray.800')
+  const { teamContext } = useAuth();
+  const cardBg = useColorModeValue('white', 'gray.800');
 
   // Get current team name
   const currentTeam = teamContext.teams?.find(
     (team) => team.id === teamContext.currentTeamId
-  )
+  );
 
   return (
     <Box>
@@ -188,7 +188,7 @@ const Dashboard: React.FC = () => {
         </Card>
       </SimpleGrid>
     </Box>
-  )
-}
+  );
+};
 
-export default Dashboard
+export default Dashboard;
