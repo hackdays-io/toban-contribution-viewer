@@ -35,15 +35,33 @@ const MessageText: React.FC<MessageTextProps> = ({
   )
   if (!text) return null
 
-  // Regular expression to find Slack user mentions in the format <@U12345>
-  const mentionRegex = /<@([A-Z0-9]+)>/g
+  // Regular expression to find Slack user mentions in the format <@U12345>, <@U12345>:, or when the text already contains @U12345
+  // This handles multiple formats commonly found in analysis text
+  // Include underscore in the pattern to handle user IDs like ERROR_USER
+  const mentionRegex = /(?:<@|@)([A-Z0-9_]+)>?:?/g
 
   // Extract all unique user mentions from the text
   const userMentions: string[] = []
   let match
+
+  // Debug output to help diagnose issues with user mentions
+  console.log(
+    '[MessageText] Processing text:',
+    text.substring(0, 100) + (text.length > 100 ? '...' : '')
+  )
+  console.log('[MessageText] Using workspaceId:', workspaceId)
+
   while ((match = mentionRegex.exec(text)) !== null) {
     if (!userMentions.includes(match[1])) {
       userMentions.push(match[1])
+      console.log(
+        '[MessageText] Found user mention:',
+        match[1],
+        'at position',
+        match.index,
+        'original format:',
+        match[0]
+      )
     }
   }
 
@@ -53,8 +71,15 @@ const MessageText: React.FC<MessageTextProps> = ({
   // If we're not resolving mentions, just replace with @userId format
   if (!resolveMentions) {
     const formattedText = text
-      // Replace <@U12345> with @U12345
-      .replace(mentionRegex, '@$1')
+      // Replace all mention formats with @userId
+      .replace(mentionRegex, (match, userId) => {
+        // If it's already in @userId format, don't modify it
+        if (match.startsWith('@') && !match.includes('>')) {
+          return match
+        }
+        // Otherwise, format properly and preserve any trailing colon
+        return '@' + userId + (match.endsWith(':') ? ':' : '')
+      })
       // Replace newlines with <br /> elements
       .split('\n')
       .map((line, i) => (
@@ -92,6 +117,12 @@ const MessageText: React.FC<MessageTextProps> = ({
     // Get the user ID from the match
     const userId = match[1]
 
+    // Check if the match ended with a colon that we need to preserve
+    const hasColon = match[0].endsWith(':')
+
+    // Check if this was already in @userId format (not wrapped in <>)
+    const wasSimpleFormat = match[0].startsWith('@') && !match[0].includes('>')
+
     // Check if this user ID previously had an error
     if (errorUserIds.has(userId)) {
       // Just use simple formatting for this user ID
@@ -102,7 +133,10 @@ const MessageText: React.FC<MessageTextProps> = ({
           display="inline"
           color="blue.500"
         >
-          @{userId}
+          {/* Don't add @ prefix if it was already in @userId format */}
+          {!wasSimpleFormat ? '@' : ''}
+          {userId}
+          {hasColon ? ':' : ''}
         </Box>
       )
     } else {
@@ -116,17 +150,23 @@ const MessageText: React.FC<MessageTextProps> = ({
           verticalAlign="middle"
           color="blue.500"
         >
-          @
+          {/* Don't add @ prefix if it was already in @userId format */}
+          {!wasSimpleFormat && '@'}
           <SlackUserDisplay
             userId={userId}
             workspaceId={workspaceId}
             displayFormat="username"
-            fetchFromSlack={true}
+            fetchFromSlack={true} // Always try to fetch from Slack if user not in DB
             asComponent="span"
             fallback={userId} // Use the user ID as fallback if user data can't be fetched
             hideOnError={false} // Always show something, even on error
             onError={() => handleUserError(userId)} // Handle errors
           />
+          {/* Log that we're trying to display a user */}
+          {console.log(
+            `[MessageText] Attempting to display user ${userId} from workspace ${workspaceId}`
+          )}
+          {hasColon ? ':' : ''}
         </Box>
       )
     }
