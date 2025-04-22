@@ -66,6 +66,7 @@ class StoredAnalysisResponse(BaseModel):
     key_highlights: str
     model_used: str
     generated_at: datetime
+    workspace_id: Optional[str] = None
 
 
 @router.post(
@@ -300,6 +301,7 @@ async def get_channel_analyses(
                     key_highlights=analysis.key_highlights,
                     model_used=analysis.model_used,
                     generated_at=analysis.generated_at,
+                    workspace_id=workspace_id,
                 )
             )
 
@@ -363,6 +365,7 @@ async def get_latest_channel_analysis(
             key_highlights=analysis.key_highlights,
             model_used=analysis.model_used,
             generated_at=analysis.generated_at,
+            workspace_id=workspace_id,
         )
 
     except HTTPException:
