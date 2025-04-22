@@ -28,8 +28,8 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
       {/* User profile and actions header */}
       <Header />
       
-      {/* Main content container */}
-      <Container maxW="container.xl" px={{ base: 2, md: 4 }} pt={4} pb={8}>
+      {/* Main content container - use full width container */}
+      <Container maxW="container.xl" pt={4} pb={8}>
         {/* Breadcrumb navigation */}
         <Breadcrumb />
         
