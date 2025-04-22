@@ -30,3 +30,10 @@ from app.models.slack import (  # noqa: F401
     analysis_channels,
 )
 from app.models.team import Team, TeamMember, TeamMemberRole  # noqa: F401
+from app.models.reports import (  # noqa: F401
+    CrossResourceReport,
+    ResourceAnalysis,
+    ReportStatus,
+    ResourceType as AnalysisResourceType,  # Rename to avoid confusion with integration.ResourceType
+    AnalysisType,
+)
