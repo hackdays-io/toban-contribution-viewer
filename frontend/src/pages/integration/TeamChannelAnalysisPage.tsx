@@ -95,7 +95,7 @@ const TeamChannelAnalysisPage: React.FC = () => {
   // Set date range and options from location state or default values
   useEffect(() => {
     console.log('Location state changed:', location.state)
-    
+
     // Check if parameters were passed from CreateAnalysisPage
     if (location.state) {
       const {

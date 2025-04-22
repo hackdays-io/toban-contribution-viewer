@@ -6,7 +6,6 @@ import {
   CardBody,
   CardFooter,
   CardHeader,
-  Container,
   Divider,
   Flex,
   Grid,
@@ -36,7 +35,6 @@ import {
   FiUsers,
 } from 'react-icons/fi'
 import { Link, useNavigate } from 'react-router-dom'
-import { LAYOUT_CONSTANTS } from '../components/layout/AppLayout'
 
 /**
  * Main Analytics page component with improved accessibility.
@@ -127,7 +125,16 @@ const Analytics: React.FC = () => {
   ]
 
   // Render a feature card
-  const renderFeatureCard = (feature: any) => (
+  interface AnalyticsFeature {
+    title: string
+    description: string
+    icon: React.ComponentType
+    color: string
+    available: boolean
+    path: string
+  }
+
+  const renderFeatureCard = (feature: AnalyticsFeature) => (
     <Card
       key={feature.title}
       variant="outline"
