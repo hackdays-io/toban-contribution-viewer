@@ -18,8 +18,15 @@ import {
   InputGroup,
   InputRightElement,
   Divider,
+  Code,
+  useClipboard,
+  Accordion,
+  AccordionItem,
+  AccordionButton,
+  AccordionPanel,
+  AccordionIcon,
 } from '@chakra-ui/react'
-import { ViewIcon, ViewOffIcon } from '@chakra-ui/icons'
+import { ViewIcon, ViewOffIcon, CopyIcon, CheckIcon } from '@chakra-ui/icons'
 import env from '../../config/env'
 import useAuth from '../../context/useAuth'
 import { TeamSelector } from '../team'
@@ -39,6 +46,41 @@ const ConnectWorkspace: React.FC = () => {
   const [clientSecretError, setClientSecretError] = useState('')
   const [integrationNameError, setIntegrationNameError] = useState('')
   const { teamContext } = useAuth()
+
+  // Slack App Manifest in YAML format
+  const slackManifest = `display_information:
+  name: Toban Contribution Viewer
+  description: Track and analyze team contributions across Slack
+  background_color: "#4A154B"
+
+features:
+  bot_user:
+    display_name: Toban
+    always_online: false
+
+oauth_config:
+  redirect_urls:
+    - ${window.location.origin}/auth/slack/callback
+  scopes:
+    bot:
+      - channels:history
+      - channels:read
+      - groups:history
+      - groups:read
+      - team:read
+      - users:read
+      - users.profile:read
+      - reactions:read
+      - im:history
+      - mpim:history
+      - files:read
+
+settings:
+  org_deploy_enabled: false
+  socket_mode_enabled: false
+  token_rotation_enabled: false`
+
+  const { hasCopied, onCopy } = useClipboard(slackManifest)
 
   interface CorsDebugInfo {
     allowed_origins: string[]
@@ -326,19 +368,118 @@ const ConnectWorkspace: React.FC = () => {
           mb={4}
         />
 
-        <Text fontWeight="bold">We'll need the following permissions:</Text>
+        <Text fontWeight="bold">Required OAuth Scopes:</Text>
 
         <VStack align="flex-start" spacing={1} pl={4}>
-          <Text>• Access to public and private channels</Text>
-          <Text>• Access to message history</Text>
-          <Text>• View reactions to messages</Text>
-          <Text>• View basic user information</Text>
+          <Text>
+            • <code>channels:history</code> - Read messages in public channels
+          </Text>
+          <Text>
+            • <code>groups:history</code> - Read messages in private channels
+          </Text>
+          <Text>
+            • <code>channels:read</code> - View basic info about public channels
+          </Text>
+          <Text>
+            • <code>groups:read</code> - View basic info about private channels
+          </Text>
+          <Text>
+            • <code>users:read</code> - Access basic user information
+          </Text>
+          <Text>
+            • <code>users.profile:read</code> - Access user profile details
+          </Text>
+          <Text>
+            • <code>team:read</code> - View basic workspace information
+          </Text>
+          <Text>
+            • <code>reactions:read</code> - View emoji reactions (for
+            engagement)
+          </Text>
         </VStack>
 
-        <Text>
+        <Text mt={2}>Optional scopes for additional features:</Text>
+        <VStack align="flex-start" spacing={1} pl={4}>
+          <Text>
+            • <code>im:history</code> - Access direct messages (for 1:1
+            communication)
+          </Text>
+          <Text>
+            • <code>mpim:history</code> - Access group direct messages
+          </Text>
+          <Text>
+            • <code>files:read</code> - Access files (if tracking document
+            contributions)
+          </Text>
+        </VStack>
+
+        <Text mt={2}>
           We respect your privacy and will only collect the data necessary for
           contribution analysis.
         </Text>
+
+        <Accordion allowToggle width="100%" mt={4}>
+          <AccordionItem>
+            <h2>
+              <AccordionButton>
+                <Box as="span" flex="1" textAlign="left" fontWeight="bold">
+                  Slack App Manifest (Easy Setup)
+                </Box>
+                <AccordionIcon />
+              </AccordionButton>
+            </h2>
+            <AccordionPanel pb={4}>
+              <Text mb={2}>
+                Use this manifest to quickly create your Slack app with all
+                required scopes. Go to{' '}
+                <a
+                  href="https://api.slack.com/apps"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: 'blue', textDecoration: 'underline' }}
+                >
+                  api.slack.com/apps
+                </a>
+                , click "Create New App" and select "From an app manifest".
+              </Text>
+              <Box
+                position="relative"
+                bg="gray.50"
+                p={4}
+                borderRadius="md"
+                fontSize="sm"
+                mb={2}
+                maxHeight="300px"
+                overflow="auto"
+              >
+                <Box position="absolute" top={2} right={2} zIndex={1}>
+                  <Button
+                    size="sm"
+                    colorScheme={hasCopied ? 'green' : 'gray'}
+                    leftIcon={hasCopied ? <CheckIcon /> : <CopyIcon />}
+                    onClick={onCopy}
+                  >
+                    {hasCopied ? 'Copied!' : 'Copy'}
+                  </Button>
+                </Box>
+                <Code
+                  display="block"
+                  whiteSpace="pre"
+                  fontFamily="monospace"
+                  overflowX="auto"
+                  mt={4}
+                  ml={2}
+                >
+                  {slackManifest}
+                </Code>
+              </Box>
+              <Text fontSize="sm" color="gray.600">
+                After creating your app, you'll still need to install it to your
+                workspace and enter the Client ID and Client Secret below.
+              </Text>
+            </AccordionPanel>
+          </AccordionItem>
+        </Accordion>
 
         <Text fontWeight="bold" mt={4}>
           Integration Settings
@@ -370,6 +511,84 @@ const ConnectWorkspace: React.FC = () => {
         <Text fontSize="sm" color="gray.600">
           Enter your Slack application credentials to connect your workspace.
         </Text>
+
+        <Accordion allowToggle width="100%" my={2}>
+          <AccordionItem>
+            <h2>
+              <AccordionButton>
+                <Box as="span" flex="1" textAlign="left">
+                  Manual Setup Instructions
+                </Box>
+                <AccordionIcon />
+              </AccordionButton>
+            </h2>
+            <AccordionPanel pb={4}>
+              <VStack align="flex-start" spacing={2}>
+                <Text fontWeight="bold">Step 1: Create a Slack App</Text>
+                <Text>
+                  1. Go to{' '}
+                  <a
+                    href="https://api.slack.com/apps"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: 'blue', textDecoration: 'underline' }}
+                  >
+                    api.slack.com/apps
+                  </a>{' '}
+                  and click "Create New App"
+                </Text>
+                <Text>
+                  2. Choose "From scratch" or use the manifest option above
+                </Text>
+                <Text>
+                  3. Name your app "Toban Contribution Viewer" (or your
+                  preferred name)
+                </Text>
+                <Text>
+                  4. Select the workspace where you want to install the app
+                </Text>
+
+                <Text fontWeight="bold" mt={2}>
+                  Step 2: Configure OAuth Scopes
+                </Text>
+                <Text>1. In the left sidebar, click "OAuth & Permissions"</Text>
+                <Text>
+                  2. Scroll down to "Scopes" and add the Bot Token Scopes listed
+                  above
+                </Text>
+
+                <Text fontWeight="bold" mt={2}>
+                  Step 3: Set Redirect URLs
+                </Text>
+                <Text>
+                  1. Still in "OAuth & Permissions", scroll up to "Redirect
+                  URLs"
+                </Text>
+                <Text>
+                  2. Add: {window.location.origin}/auth/slack/callback
+                </Text>
+                <Text>3. Save the URLs</Text>
+
+                <Text fontWeight="bold" mt={2}>
+                  Step 4: Get Credentials
+                </Text>
+                <Text>1. Go to "Basic Information" in the left sidebar</Text>
+                <Text>
+                  2. Under "App Credentials", copy the Client ID and Client
+                  Secret
+                </Text>
+                <Text>3. Paste these values into the form below</Text>
+
+                <Text fontWeight="bold" mt={2}>
+                  Step 5: Install the App
+                </Text>
+                <Text>1. In the left sidebar, click "Install App"</Text>
+                <Text>2. Click "Install to Workspace"</Text>
+                <Text>3. Review the permissions and click "Allow"</Text>
+              </VStack>
+            </AccordionPanel>
+          </AccordionItem>
+        </Accordion>
 
         <VStack spacing={4} width="100%" align="flex-start">
           {/* Client ID Field */}
