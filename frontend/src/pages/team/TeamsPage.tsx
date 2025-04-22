@@ -107,7 +107,7 @@ const TeamsPage: React.FC = () => {
         return
       }
 
-      const response = await fetch(`${env.apiUrl}/teams`, {
+      const response = await fetch(`${env.apiUrl}/teams/`, {
         method: 'GET',
         credentials: 'include',
         headers: {
