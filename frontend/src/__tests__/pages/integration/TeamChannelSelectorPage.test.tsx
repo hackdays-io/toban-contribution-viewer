@@ -159,12 +159,15 @@ describe('TeamChannelSelectorPage', () => {
 
     // Should render breadcrumb navigation
     expect(screen.getByText('Integrations')).toBeInTheDocument()
-    
-    // The "Channel Selection" text is in a BreadcrumbLink component, but it doesn't 
+
+    // The "Channel Selection" text is in a BreadcrumbLink component, but it doesn't
     // have the 'link' role since it's using onClick instead of href
-    const channelSelectionInBreadcrumb = screen.getAllByText('Channel Selection')[0]
+    const channelSelectionInBreadcrumb =
+      screen.getAllByText('Channel Selection')[0]
     expect(channelSelectionInBreadcrumb).toBeInTheDocument()
-    expect(channelSelectionInBreadcrumb.closest('.chakra-breadcrumb__list-item')).toBeInTheDocument()
+    expect(
+      channelSelectionInBreadcrumb.closest('.chakra-breadcrumb__list-item')
+    ).toBeInTheDocument()
   })
 
   it('shows loading state when data is loading', async () => {

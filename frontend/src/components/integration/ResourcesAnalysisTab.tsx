@@ -79,47 +79,52 @@ const ResourcesAnalysisTab: React.FC<ResourcesAnalysisTabProps> = ({
     clearChannelSelectionError,
     fetchSelectedChannels,
     syncResources,
-  } = useIntegration();
+  } = useIntegration()
 
   // Now we can reference those functions in our layout effect
   React.useLayoutEffect(() => {
     // This runs only once per component lifecycle
-    console.log('🚀 STRICTLY ONE-TIME INITIALIZATION STARTING');
-    
+    console.log('🚀 STRICTLY ONE-TIME INITIALIZATION STARTING')
+
     // Only run data loading logic if we haven't already
     if (!globalInitializationTracker.has(integrationId)) {
-      console.log(`🔄 First time loading data for integration ${integrationId}`);
-      
+      console.log(`🔄 First time loading data for integration ${integrationId}`)
+
       // Mark this integration ID as initialized immediately
-      globalInitializationTracker.add(integrationId);
-      
+      globalInitializationTracker.add(integrationId)
+
       // Load the data once at the beginning
       const initialize = async () => {
         try {
           // Sequential loading to avoid race conditions
           // Explicitly request BOTH channels and users
-          await fetchResources(integrationId, [ResourceType.SLACK_CHANNEL, ResourceType.SLACK_USER]);
-          await fetchSelectedChannels(integrationId);
-          
+          await fetchResources(integrationId, [
+            ResourceType.SLACK_CHANNEL,
+            ResourceType.SLACK_USER,
+          ])
+          await fetchSelectedChannels(integrationId)
+
           // Successfully initialized, don't need to log here
         } catch (err) {
-          console.error('❌ Error loading initial data:', err);
+          console.error('❌ Error loading initial data:', err)
         }
-      };
-      
-      initialize();
+      }
+
+      initialize()
     } else {
-      console.log(`🔍 Integration ${integrationId} already initialized - SKIPPING`);
+      console.log(
+        `🔍 Integration ${integrationId} already initialized - SKIPPING`
+      )
     }
-    
+
     return () => {
       // This code runs when component unmounts
-      console.log(`🧹 Cleaning up initialization for ${integrationId}`);
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Deliberately empty - this runs ONCE per component instance
+      console.log(`🧹 Cleaning up initialization for ${integrationId}`)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // Deliberately empty - this runs ONCE per component instance
   // ===============================================================
-  
+
   const toast = useToast()
   const navigate = useNavigate()
 
@@ -129,7 +134,9 @@ const ResourcesAnalysisTab: React.FC<ResourcesAnalysisTabProps> = ({
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedChannelIds, setSelectedChannelIds] = useState<string[]>([])
   const [selectedSearchQuery, setSelectedSearchQuery] = useState('')
-  const [resourceTypeFilter, setResourceTypeFilter] = useState<ResourceType | 'all'>('all')
+  const [resourceTypeFilter, setResourceTypeFilter] = useState<
+    ResourceType | 'all'
+  >('all')
 
   // UI colors
   const tableBg = useColorModeValue('white', 'gray.800')
@@ -137,9 +144,12 @@ const ResourcesAnalysisTab: React.FC<ResourcesAnalysisTabProps> = ({
   const rowHoverBg = useColorModeValue('gray.50', 'gray.700')
 
   // Filter resources by type if filter is active
-  const filteredByTypeResources = resourceTypeFilter === 'all' 
-    ? currentResources 
-    : currentResources.filter(resource => resource.resource_type === resourceTypeFilter)
+  const filteredByTypeResources =
+    resourceTypeFilter === 'all'
+      ? currentResources
+      : currentResources.filter(
+          (resource) => resource.resource_type === resourceTypeFilter
+        )
 
   // Get channels (for selection functionality)
   const channels = currentResources.filter(
@@ -163,60 +173,70 @@ const ResourcesAnalysisTab: React.FC<ResourcesAnalysisTabProps> = ({
   // Track if a save is in progress
   const [isSaving, setIsSaving] = useState(false)
   const [isSyncing, setIsSyncing] = useState(false)
-  
-  // Track selections initialization 
+
+  // Track selections initialization
   const selectionsInitialized = React.useRef(false)
 
   // Log resource counts once on first successful load only
-  const didLogResourcesRef = React.useRef(false);
+  const didLogResourcesRef = React.useRef(false)
   useEffect(() => {
     // Only log once and only when we have data
     if (currentResources.length > 0 && !didLogResourcesRef.current) {
-      didLogResourcesRef.current = true;
-      
-      const users = currentResources.filter(r => r.resource_type === ResourceType.SLACK_USER);
-      const channels = currentResources.filter(r => r.resource_type === ResourceType.SLACK_CHANNEL);
-      
-      console.log('📊 RESOURCES LOADED SUCCESSFULLY:');
-      console.log('🧑‍💻 SLACK_USERS:', users.length);
-      console.log('📢 SLACK_CHANNELS:', channels.length);
-      console.log('💬 TOTAL RESOURCES:', currentResources.length);
+      didLogResourcesRef.current = true
+
+      const users = currentResources.filter(
+        (r) => r.resource_type === ResourceType.SLACK_USER
+      )
+      const channels = currentResources.filter(
+        (r) => r.resource_type === ResourceType.SLACK_CHANNEL
+      )
+
+      console.log('📊 RESOURCES LOADED SUCCESSFULLY:')
+      console.log('🧑‍💻 SLACK_USERS:', users.length)
+      console.log('📢 SLACK_CHANNELS:', channels.length)
+      console.log('💬 TOTAL RESOURCES:', currentResources.length)
     }
-  }, [currentResources]);
-  
+  }, [currentResources])
+
   // This effect ONLY sets up the selected channels after resources are loaded
   useEffect(() => {
     // Skip if we've already initialized selections or if there are no channels
     if (selectionsInitialized.current || currentResources.length === 0) {
-      return;
+      return
     }
-    
+
     // Only try to initialize selections if we have channel resources
     const availableChannels = currentResources.filter(
-      resource => resource.resource_type === ResourceType.SLACK_CHANNEL
-    );
-    
+      (resource) => resource.resource_type === ResourceType.SLACK_CHANNEL
+    )
+
     if (availableChannels.length === 0) {
-      return;
+      return
     }
-    
-    console.log('📋 Initializing selection state with', availableChannels.length, 'channels');
-    
+
+    console.log(
+      '📋 Initializing selection state with',
+      availableChannels.length,
+      'channels'
+    )
+
     // Find selected channels
     const selectedIds = availableChannels
-      .filter(channel => 
-        channel.is_selected_for_analysis === true || 
-        channel.metadata?.is_selected_for_analysis === true ||
-        isChannelSelectedForAnalysis(channel.id)
+      .filter(
+        (channel) =>
+          channel.is_selected_for_analysis === true ||
+          channel.metadata?.is_selected_for_analysis === true ||
+          isChannelSelectedForAnalysis(channel.id)
       )
-      .map(channel => channel.id);
-    
+      .map((channel) => channel.id)
+
     // Set selected channels once
-    setSelectedChannelIds(selectedIds);
-    console.log(`✅ Selection state initialized with ${selectedIds.length} selected channels`);
-    selectionsInitialized.current = true;
-    
-  }, [currentResources, isChannelSelectedForAnalysis]);
+    setSelectedChannelIds(selectedIds)
+    console.log(
+      `✅ Selection state initialized with ${selectedIds.length} selected channels`
+    )
+    selectionsInitialized.current = true
+  }, [currentResources, isChannelSelectedForAnalysis])
 
   // Handle checkbox change
   const handleSelectChannel = (channelId: string) => {
@@ -335,19 +355,23 @@ const ResourcesAnalysisTab: React.FC<ResourcesAnalysisTabProps> = ({
     if (!integrationId) return
 
     setIsSyncing(true)
-    
+
     try {
       // Call syncResources specifically requesting both channels AND users
-      const success = await syncResources(
-        integrationId, 
-        [ResourceType.SLACK_CHANNEL, ResourceType.SLACK_USER]
-      );
-      
+      const success = await syncResources(integrationId, [
+        ResourceType.SLACK_CHANNEL,
+        ResourceType.SLACK_USER,
+      ])
+
       if (success === true) {
         // Get updated counts for the toast message
-        const userCount = currentResources.filter(r => r.resource_type === ResourceType.SLACK_USER).length;
-        const channelCount = currentResources.filter(r => r.resource_type === ResourceType.SLACK_CHANNEL).length;
-        
+        const userCount = currentResources.filter(
+          (r) => r.resource_type === ResourceType.SLACK_USER
+        ).length
+        const channelCount = currentResources.filter(
+          (r) => r.resource_type === ResourceType.SLACK_CHANNEL
+        ).length
+
         toast({
           title: 'Resources synced successfully',
           description: `Updated ${channelCount} channels and ${userCount} users`,
@@ -356,7 +380,7 @@ const ResourcesAnalysisTab: React.FC<ResourcesAnalysisTabProps> = ({
           isClosable: true,
         })
       } else {
-        const errorMessage = 'Failed to sync resources';
+        const errorMessage = 'Failed to sync resources'
         toast({
           title: 'Failed to sync resources',
           description: errorMessage,
@@ -390,11 +414,11 @@ const ResourcesAnalysisTab: React.FC<ResourcesAnalysisTabProps> = ({
         <HStack>
           <Heading size="md">Resources & Analysis</Heading>
           {selectedChannelIds.length > 0 && (
-            <Badge 
+            <Badge
               colorScheme="green"
-              fontSize="sm" 
-              px={2} 
-              py={1} 
+              fontSize="sm"
+              px={2}
+              py={1}
               borderRadius="full"
             >
               {selectedChannelIds.length} selected
@@ -412,7 +436,7 @@ const ResourcesAnalysisTab: React.FC<ResourcesAnalysisTabProps> = ({
           >
             Sync
           </Button>
-          
+
           <Button
             colorScheme="blue"
             leftIcon={<FiCheck />}
@@ -425,10 +449,19 @@ const ResourcesAnalysisTab: React.FC<ResourcesAnalysisTabProps> = ({
         </HStack>
       </Flex>
 
-      <Tabs id="resourceTabs" variant="enclosed" colorScheme="blue" onChange={handleTabChange} mb={4}>
+      <Tabs
+        id="resourceTabs"
+        variant="enclosed"
+        colorScheme="blue"
+        onChange={handleTabChange}
+        mb={4}
+      >
         <TabList>
           <Tab>All Resources</Tab>
-          <Tab>Selected for Analysis {selectedChannelIds.length > 0 && `(${selectedChannelIds.length})`}</Tab>
+          <Tab>
+            Selected for Analysis{' '}
+            {selectedChannelIds.length > 0 && `(${selectedChannelIds.length})`}
+          </Tab>
         </TabList>
 
         <TabPanels>
@@ -448,15 +481,15 @@ const ResourcesAnalysisTab: React.FC<ResourcesAnalysisTabProps> = ({
 
               <HStack spacing={2}>
                 <Menu>
-                  <MenuButton 
-                    as={Button} 
+                  <MenuButton
+                    as={Button}
                     rightIcon={<FiChevronDown />}
                     leftIcon={<FiFilter />}
                     variant="outline"
                     size="sm"
                   >
-                    {resourceTypeFilter === 'all' 
-                      ? 'All Types' 
+                    {resourceTypeFilter === 'all'
+                      ? 'All Types'
                       : getReadableResourceType(resourceTypeFilter)}
                   </MenuButton>
                   <MenuList>
@@ -464,15 +497,35 @@ const ResourcesAnalysisTab: React.FC<ResourcesAnalysisTabProps> = ({
                       All Types
                     </MenuItem>
                     <Divider />
-                    <MenuItem 
-                      onClick={() => setResourceTypeFilter(ResourceType.SLACK_CHANNEL)}
-                      icon={<FiCheck visibility={resourceTypeFilter === ResourceType.SLACK_CHANNEL ? 'visible' : 'hidden'} />}
+                    <MenuItem
+                      onClick={() =>
+                        setResourceTypeFilter(ResourceType.SLACK_CHANNEL)
+                      }
+                      icon={
+                        <FiCheck
+                          visibility={
+                            resourceTypeFilter === ResourceType.SLACK_CHANNEL
+                              ? 'visible'
+                              : 'hidden'
+                          }
+                        />
+                      }
                     >
                       Slack Channels
                     </MenuItem>
-                    <MenuItem 
-                      onClick={() => setResourceTypeFilter(ResourceType.SLACK_USER)}
-                      icon={<FiCheck visibility={resourceTypeFilter === ResourceType.SLACK_USER ? 'visible' : 'hidden'} />}
+                    <MenuItem
+                      onClick={() =>
+                        setResourceTypeFilter(ResourceType.SLACK_USER)
+                      }
+                      icon={
+                        <FiCheck
+                          visibility={
+                            resourceTypeFilter === ResourceType.SLACK_USER
+                              ? 'visible'
+                              : 'hidden'
+                          }
+                        />
+                      }
                     >
                       Slack Users
                     </MenuItem>
@@ -495,7 +548,9 @@ const ResourcesAnalysisTab: React.FC<ResourcesAnalysisTabProps> = ({
                   colorScheme="red"
                   isDisabled={
                     filteredChannels.length === 0 ||
-                    !filteredChannels.some((c) => selectedChannelIds.includes(c.id))
+                    !filteredChannels.some((c) =>
+                      selectedChannelIds.includes(c.id)
+                    )
                   }
                 >
                   Deselect All
@@ -516,7 +571,11 @@ const ResourcesAnalysisTab: React.FC<ResourcesAnalysisTabProps> = ({
                     <Th width="50px">Select</Th>
                     <Th>Name</Th>
                     <Th>Type</Th>
-                    <Th>{resourceTypeFilter === ResourceType.SLACK_CHANNEL ? 'Members' : 'External ID'}</Th>
+                    <Th>
+                      {resourceTypeFilter === ResourceType.SLACK_CHANNEL
+                        ? 'Members'
+                        : 'External ID'}
+                    </Th>
                     <Th>Last Synced</Th>
                     <Th>Actions</Th>
                   </Tr>
@@ -527,14 +586,15 @@ const ResourcesAnalysisTab: React.FC<ResourcesAnalysisTabProps> = ({
                       key={resource.id}
                       _hover={{ bg: rowHoverBg }}
                       bg={
-                        resource.resource_type === ResourceType.SLACK_CHANNEL && 
+                        resource.resource_type === ResourceType.SLACK_CHANNEL &&
                         selectedChannelIds.includes(resource.id)
                           ? 'blue.50'
                           : undefined
                       }
                     >
                       <Td width="50px">
-                        {resource.resource_type === ResourceType.SLACK_CHANNEL ? (
+                        {resource.resource_type ===
+                        ResourceType.SLACK_CHANNEL ? (
                           <Checkbox
                             isChecked={selectedChannelIds.includes(resource.id)}
                             onChange={() => handleSelectChannel(resource.id)}
@@ -548,12 +608,17 @@ const ResourcesAnalysisTab: React.FC<ResourcesAnalysisTabProps> = ({
                       <Td fontWeight="medium">
                         <HStack>
                           <Text>{resource.name}</Text>
-                          {resource.resource_type === ResourceType.SLACK_CHANNEL && 
-                           resource.metadata?.is_private === true && (
-                            <Tag size="sm" colorScheme="purple" borderRadius="full">
-                              <TagLabel>Private</TagLabel>
-                            </Tag>
-                          )}
+                          {resource.resource_type ===
+                            ResourceType.SLACK_CHANNEL &&
+                            resource.metadata?.is_private === true && (
+                              <Tag
+                                size="sm"
+                                colorScheme="purple"
+                                borderRadius="full"
+                              >
+                                <TagLabel>Private</TagLabel>
+                              </Tag>
+                            )}
                         </HStack>
                       </Td>
                       <Td>
@@ -566,16 +631,18 @@ const ResourcesAnalysisTab: React.FC<ResourcesAnalysisTabProps> = ({
                         </Tag>
                       </Td>
                       <Td>
-                        {resource.resource_type === ResourceType.SLACK_CHANNEL
-                          ? resource.metadata?.num_members !== undefined
-                            ? String(resource.metadata.num_members)
-                            : 'Unknown'
-                          : (
-                            <Text fontSize="sm" isTruncated maxW="200px">
-                              {resource.external_id}
-                            </Text>
+                        {resource.resource_type ===
+                        ResourceType.SLACK_CHANNEL ? (
+                          resource.metadata?.num_members !== undefined ? (
+                            String(resource.metadata.num_members)
+                          ) : (
+                            'Unknown'
                           )
-                        }
+                        ) : (
+                          <Text fontSize="sm" isTruncated maxW="200px">
+                            {resource.external_id}
+                          </Text>
+                        )}
                       </Td>
                       <Td>
                         {resource.last_synced_at
@@ -584,7 +651,8 @@ const ResourcesAnalysisTab: React.FC<ResourcesAnalysisTabProps> = ({
                       </Td>
                       <Td>
                         <HStack spacing={1}>
-                          {resource.resource_type === ResourceType.SLACK_CHANNEL && (
+                          {resource.resource_type ===
+                            ResourceType.SLACK_CHANNEL && (
                             <>
                               <Tooltip label="Analyze channel">
                                 <IconButton
@@ -646,23 +714,26 @@ const ResourcesAnalysisTab: React.FC<ResourcesAnalysisTabProps> = ({
           {/* Selected Resources Tab */}
           <TabPanel p={0} pt={4}>
             {selectedChannelIds.length === 0 ? (
-              <Box 
-                borderWidth="1px" 
-                borderRadius="lg" 
-                p={6} 
+              <Box
+                borderWidth="1px"
+                borderRadius="lg"
+                p={6}
                 textAlign="center"
                 bg={tableBg}
               >
-                <Text mb={4}>No channels are currently selected for analysis.</Text>
                 <Text mb={4}>
-                  Select channels from the "All Resources" tab to enable analysis.
+                  No channels are currently selected for analysis.
                 </Text>
-                <Button 
+                <Text mb={4}>
+                  Select channels from the "All Resources" tab to enable
+                  analysis.
+                </Text>
+                <Button
                   onClick={() => {
-                    const tabsEl = document.getElementById('resourceTabs');
-                    const firstTab = tabsEl?.querySelector('.chakra-tabs__tab');
+                    const tabsEl = document.getElementById('resourceTabs')
+                    const firstTab = tabsEl?.querySelector('.chakra-tabs__tab')
                     if (firstTab) {
-                      (firstTab as HTMLElement).click();
+                      ;(firstTab as HTMLElement).click()
                     }
                   }}
                   colorScheme="blue"
@@ -671,12 +742,7 @@ const ResourcesAnalysisTab: React.FC<ResourcesAnalysisTabProps> = ({
                 </Button>
               </Box>
             ) : (
-              <Box 
-                borderWidth="1px" 
-                borderRadius="lg" 
-                p={4} 
-                bg={tableBg}
-              >
+              <Box borderWidth="1px" borderRadius="lg" p={4} bg={tableBg}>
                 <Flex alignItems="center" mb={3} justifyContent="space-between">
                   <HStack>
                     <FiCheckCircle color="green" />
@@ -757,7 +823,9 @@ const ResourcesAnalysisTab: React.FC<ResourcesAnalysisTabProps> = ({
                             </Td>
                             <Td>
                               {channel.last_synced_at
-                                ? new Date(channel.last_synced_at).toLocaleString()
+                                ? new Date(
+                                    channel.last_synced_at
+                                  ).toLocaleString()
                                 : 'Never'}
                             </Td>
                             <Td>
@@ -797,7 +865,9 @@ const ResourcesAnalysisTab: React.FC<ResourcesAnalysisTabProps> = ({
                                     size="sm"
                                     variant="ghost"
                                     colorScheme="red"
-                                    onClick={() => handleSelectChannel(channel.id)}
+                                    onClick={() =>
+                                      handleSelectChannel(channel.id)
+                                    }
                                   />
                                 </Tooltip>
                               </HStack>

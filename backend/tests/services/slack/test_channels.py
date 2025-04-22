@@ -51,7 +51,7 @@ def mock_channel():
         topic="Important stuff",
         member_count=10,
         is_archived=False,
-        is_bot_member=True,
+        has_bot=True,
         is_selected_for_analysis=False,
         is_supported=True,
         workspace_id=uuid.uuid4(),
@@ -308,7 +308,7 @@ async def test_select_channels_for_analysis_with_bot_install(
         topic="Testing stuff",
         member_count=5,
         is_archived=False,
-        is_bot_member=False,
+        has_bot=False,
         is_selected_for_analysis=True,
         is_supported=True,
         workspace_id=mock_workspace.id,
@@ -367,7 +367,7 @@ async def test_select_channels_for_analysis_with_bot_install(
         assert result["bot_installation"]["results"][0]["status"] == "success"
 
         # Verify the bot is now a member of the channel
-        assert channel_without_bot.is_bot_member is True
+        assert channel_without_bot.has_bot is True
 
         # Verify the API client was called
         mock_client.join_channel.assert_called_once_with(channel_without_bot.slack_id)

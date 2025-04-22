@@ -175,7 +175,8 @@ const IntegrationSettingsPage: React.FC = () => {
                     colorScheme={
                       currentIntegration.status === IntegrationStatus.ACTIVE
                         ? 'green'
-                        : currentIntegration.status === IntegrationStatus.DISCONNECTED
+                        : currentIntegration.status ===
+                            IntegrationStatus.DISCONNECTED
                           ? 'yellow'
                           : 'red'
                     }
@@ -199,13 +200,21 @@ const IntegrationSettingsPage: React.FC = () => {
 
                 <Flex justify="space-between" align="center">
                   <Text fontWeight="bold">Created At</Text>
-                  <Text>{new Date(currentIntegration.created_at).toLocaleDateString()}</Text>
+                  <Text>
+                    {new Date(
+                      currentIntegration.created_at
+                    ).toLocaleDateString()}
+                  </Text>
                 </Flex>
 
                 {currentIntegration.last_used_at && (
                   <Flex justify="space-between" align="center">
                     <Text fontWeight="bold">Last Used</Text>
-                    <Text>{new Date(currentIntegration.last_used_at).toLocaleDateString()}</Text>
+                    <Text>
+                      {new Date(
+                        currentIntegration.last_used_at
+                      ).toLocaleDateString()}
+                    </Text>
                   </Flex>
                 )}
               </VStack>
@@ -220,20 +229,23 @@ const IntegrationSettingsPage: React.FC = () => {
               overflow="hidden"
               bg={cardBg}
               borderColor="orange.200"
-              _dark={{ borderColor: "orange.700" }}
+              _dark={{ borderColor: 'orange.700' }}
             >
-              <CardHeader bg="orange.50" _dark={{ bg: "orange.900" }}>
-                <Heading size="md" color="orange.500">Reconnection Required</Heading>
+              <CardHeader bg="orange.50" _dark={{ bg: 'orange.900' }}>
+                <Heading size="md" color="orange.500">
+                  Reconnection Required
+                </Heading>
               </CardHeader>
               <CardBody>
                 <VStack align="stretch" spacing={4}>
                   <Text>
-                    This integration's authentication has {currentIntegration.status === IntegrationStatus.EXPIRED
+                    This integration's authentication has{' '}
+                    {currentIntegration.status === IntegrationStatus.EXPIRED
                       ? 'expired'
                       : currentIntegration.status === IntegrationStatus.REVOKED
                         ? 'been revoked'
-                        : 'an error'}.
-                    You need to reconnect to continue accessing data.
+                        : 'an error'}
+                    . You need to reconnect to continue accessing data.
                   </Text>
                   <Box>
                     <Button
@@ -256,10 +268,12 @@ const IntegrationSettingsPage: React.FC = () => {
             overflow="hidden"
             bg={cardBg}
             borderColor="red.200"
-            _dark={{ borderColor: "red.700" }}
+            _dark={{ borderColor: 'red.700' }}
           >
-            <CardHeader bg="red.50" _dark={{ bg: "red.900" }}>
-              <Heading size="md" color="red.500">Danger Zone</Heading>
+            <CardHeader bg="red.50" _dark={{ bg: 'red.900' }}>
+              <Heading size="md" color="red.500">
+                Danger Zone
+              </Heading>
             </CardHeader>
             <CardBody>
               <VStack align="stretch" spacing={4}>
@@ -268,8 +282,7 @@ const IntegrationSettingsPage: React.FC = () => {
                     Disconnect Integration
                   </Heading>
                   <Text mb={2}>
-                    Temporarily disable this integration without deleting
-                    it.
+                    Temporarily disable this integration without deleting it.
                   </Text>
                   <Button
                     colorScheme="orange"
@@ -291,8 +304,8 @@ const IntegrationSettingsPage: React.FC = () => {
                     Delete Integration
                   </Heading>
                   <Text mb={2}>
-                    Permanently delete this integration and all its data.
-                    This action cannot be undone.
+                    Permanently delete this integration and all its data. This
+                    action cannot be undone.
                   </Text>
                   <Button colorScheme="red" leftIcon={<FiTrash2 />}>
                     Delete Integration

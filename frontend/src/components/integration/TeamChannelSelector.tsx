@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import {
   Box,
   Table,
@@ -24,22 +24,53 @@ import {
   Heading,
   Collapse,
   Badge,
+  Select,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
+  MenuDivider,
+  VStack,
+  RadioGroup,
+  Radio,
+  Stack,
 } from '@chakra-ui/react'
 import {
   FiSearch,
-  FiSettings,
   FiCheck,
   FiBarChart2,
   FiClock,
   FiTrash2,
   FiCheckCircle,
+  FiFilter,
+  FiChevronDown,
+  FiArrowUp,
+  FiArrowDown,
 } from 'react-icons/fi'
 import { useNavigate } from 'react-router-dom'
-import { ResourceType } from '../../lib/integrationService'
+import { ResourceType, ServiceResource } from '../../lib/integrationService'
 import useIntegration from '../../context/useIntegration'
 
+// Type definitions
 interface TeamChannelSelectorProps {
   integrationId: string
+}
+
+// Channel type filter options
+enum ChannelType {
+  ALL = 'all',
+  PUBLIC = 'public',
+  PRIVATE = 'private',
+}
+
+// Sort options for channels
+enum SortOption {
+  NAME_ASC = 'name_asc',
+  NAME_DESC = 'name_desc',
+  MEMBERS_ASC = 'members_asc',
+  MEMBERS_DESC = 'members_desc',
+  LAST_SYNCED_ASC = 'last_synced_asc',
+  LAST_SYNCED_DESC = 'last_synced_desc',
 }
 
 /**
@@ -66,23 +97,19 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedChannelIds, setSelectedChannelIds] = useState<string[]>([])
   const [selectedSearchQuery, setSelectedSearchQuery] = useState('')
+  const [channelTypeFilter, setChannelTypeFilter] = useState<ChannelType>(
+    ChannelType.ALL
+  )
+  const [showArchived, setShowArchived] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
+  const [sortOption, setSortOption] = useState<SortOption>(SortOption.NAME_ASC)
 
   // UI colors
   const tableBg = useColorModeValue('white', 'gray.800')
   const tableHeaderBg = useColorModeValue('gray.50', 'gray.700')
   const rowHoverBg = useColorModeValue('gray.50', 'gray.700')
-
-  // Filter to only show Slack channels
-  const channels = currentResources.filter(
-    (resource) => resource.resource_type === ResourceType.SLACK_CHANNEL
-  )
-
-  // Apply search filter
-  const filteredChannels = searchQuery
-    ? channels.filter((channel) =>
-        channel.name.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : channels
+  const selectedBg = useColorModeValue('blue.50', 'blue.900')
 
   // Track if we've done initial load and data fetching - use refs to avoid re-renders
   const didInitialLoadRef = React.useRef(false)
@@ -90,6 +117,13 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
 
   // Track if a save is in progress
   const [isSaving, setIsSaving] = useState(false)
+
+  // Filter to only show Slack channels
+  const channels = useMemo(() => {
+    return currentResources.filter(
+      (resource) => resource.resource_type === ResourceType.SLACK_CHANNEL
+    )
+  }, [currentResources])
 
   // Only load resources and selected channels once when component mounts
   useEffect(() => {
@@ -175,6 +209,77 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [channels.length]) // Only depend on channels.length to detect when channels are available
 
+  // Apply all filters and sort options
+  const filteredAndSortedChannels = useMemo(() => {
+    // First, filter by archive status
+    let result = showArchived
+      ? channels
+      : channels.filter((channel) => !channel.metadata?.is_archived)
+
+    // Next, filter by channel type
+    if (channelTypeFilter !== ChannelType.ALL) {
+      result = result.filter((channel) => {
+        const isPrivate = channel.metadata?.is_private === true
+        return (channelTypeFilter === ChannelType.PRIVATE) === isPrivate
+      })
+    }
+
+    // Then apply search query
+    if (searchQuery) {
+      result = result.filter((channel) =>
+        channel.name.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    }
+
+    // Finally sort the filtered channels
+    result = [...result].sort((a, b) => {
+      // Helper function to safely get member count
+      const getMemberCount = (channel: ServiceResource) => {
+        return channel.metadata?.member_count !== undefined
+          ? Number(channel.metadata.member_count)
+          : -1
+      }
+
+      // Helper function to safely get last synced date
+      const getLastSyncedTime = (channel: ServiceResource) => {
+        return channel.last_synced_at
+          ? new Date(channel.last_synced_at).getTime()
+          : 0
+      }
+
+      switch (sortOption) {
+        case SortOption.NAME_ASC:
+          return a.name.localeCompare(b.name)
+        case SortOption.NAME_DESC:
+          return b.name.localeCompare(a.name)
+        case SortOption.MEMBERS_ASC:
+          return getMemberCount(a) - getMemberCount(b)
+        case SortOption.MEMBERS_DESC:
+          return getMemberCount(b) - getMemberCount(a)
+        case SortOption.LAST_SYNCED_ASC:
+          return getLastSyncedTime(a) - getLastSyncedTime(b)
+        case SortOption.LAST_SYNCED_DESC:
+          return getLastSyncedTime(b) - getLastSyncedTime(a)
+        default:
+          return 0
+      }
+    })
+
+    return result
+  }, [channels, searchQuery, channelTypeFilter, showArchived, sortOption])
+
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredAndSortedChannels.length / pageSize)
+  const paginatedChannels = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize
+    return filteredAndSortedChannels.slice(startIndex, startIndex + pageSize)
+  }, [filteredAndSortedChannels, currentPage, pageSize])
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchQuery, channelTypeFilter, showArchived, sortOption, pageSize])
+
   // Handle checkbox change
   const handleSelectChannel = (channelId: string) => {
     setSelectedChannelIds((prev) => {
@@ -191,7 +296,7 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
 
   // Handle select all (filtered channels only)
   const handleSelectAll = () => {
-    const filteredIds = filteredChannels.map((channel) => channel.id)
+    const filteredIds = paginatedChannels.map((channel) => channel.id)
     setSelectedChannelIds((prev) => {
       // Add all filtered channel IDs that aren't already in the selection
       const newSelection = [...prev]
@@ -206,7 +311,7 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
 
   // Handle deselect all (filtered channels only)
   const handleDeselectAll = () => {
-    const filteredIds = filteredChannels.map((channel) => channel.id)
+    const filteredIds = paginatedChannels.map((channel) => channel.id)
     setSelectedChannelIds((prev) =>
       prev.filter((id) => !filteredIds.includes(id))
     )
@@ -279,6 +384,113 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
     }
   }
 
+  // Check if bot is installed in a channel
+  const hasBotInstalled = (channel: ServiceResource) => {
+    return channel.metadata?.has_bot === true
+  }
+
+  // Get selected channels data
+  const selectedChannelsData = useMemo(() => {
+    // First filter by selection and search term
+    const filteredChannels = channels
+      .filter((channel) => selectedChannelIds.includes(channel.id))
+      .filter(
+        (channel) =>
+          selectedSearchQuery === '' ||
+          channel.name.toLowerCase().includes(selectedSearchQuery.toLowerCase())
+      )
+
+    // Then apply the same sorting logic as the main channels table
+    return [...filteredChannels].sort((a, b) => {
+      // Helper function to safely get member count
+      const getMemberCount = (channel: ServiceResource) => {
+        return channel.metadata?.member_count !== undefined
+          ? Number(channel.metadata.member_count)
+          : -1
+      }
+
+      // Helper function to safely get last synced date
+      const getLastSyncedTime = (channel: ServiceResource) => {
+        return channel.last_synced_at
+          ? new Date(channel.last_synced_at).getTime()
+          : 0
+      }
+
+      switch (sortOption) {
+        case SortOption.NAME_ASC:
+          return a.name.localeCompare(b.name)
+        case SortOption.NAME_DESC:
+          return b.name.localeCompare(a.name)
+        case SortOption.MEMBERS_ASC:
+          return getMemberCount(a) - getMemberCount(b)
+        case SortOption.MEMBERS_DESC:
+          return getMemberCount(b) - getMemberCount(a)
+        case SortOption.LAST_SYNCED_ASC:
+          return getLastSyncedTime(a) - getLastSyncedTime(b)
+        case SortOption.LAST_SYNCED_DESC:
+          return getLastSyncedTime(b) - getLastSyncedTime(a)
+        default:
+          return 0
+      }
+    })
+  }, [channels, selectedChannelIds, selectedSearchQuery, sortOption])
+
+  // Column sorting handler
+  const handleColumnSort = (column: 'name' | 'members' | 'lastSynced') => {
+    switch (column) {
+      case 'name':
+        setSortOption(
+          sortOption === SortOption.NAME_ASC
+            ? SortOption.NAME_DESC
+            : SortOption.NAME_ASC
+        )
+        break
+      case 'members':
+        setSortOption(
+          sortOption === SortOption.MEMBERS_ASC
+            ? SortOption.MEMBERS_DESC
+            : SortOption.MEMBERS_ASC
+        )
+        break
+      case 'lastSynced':
+        setSortOption(
+          sortOption === SortOption.LAST_SYNCED_ASC
+            ? SortOption.LAST_SYNCED_DESC
+            : SortOption.LAST_SYNCED_ASC
+        )
+        break
+    }
+  }
+
+  // Get sort direction icon for column
+  const getSortIcon = (column: 'name' | 'members' | 'lastSynced') => {
+    switch (column) {
+      case 'name':
+        if (sortOption === SortOption.NAME_ASC) return <FiArrowUp />
+        if (sortOption === SortOption.NAME_DESC) return <FiArrowDown />
+        return null
+      case 'members':
+        if (sortOption === SortOption.MEMBERS_ASC) return <FiArrowUp />
+        if (sortOption === SortOption.MEMBERS_DESC) return <FiArrowDown />
+        return null
+      case 'lastSynced':
+        if (sortOption === SortOption.LAST_SYNCED_ASC) return <FiArrowUp />
+        if (sortOption === SortOption.LAST_SYNCED_DESC) return <FiArrowDown />
+        return null
+      default:
+        return null
+    }
+  }
+
+  // Pagination controls
+  const handlePrevPage = () => {
+    setCurrentPage((prev) => Math.max(1, prev - 1))
+  }
+
+  const handleNextPage = () => {
+    setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+  }
+
   return (
     <Box>
       <Flex mb={3} justifyContent="space-between" alignItems="center">
@@ -322,54 +534,58 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
             </Badge>
           </Flex>
 
-          <InputGroup size="sm" mb={3} maxW="300px">
-            <InputLeftElement pointerEvents="none">
-              <FiSearch color="gray.300" />
-            </InputLeftElement>
-            <Input
-              placeholder="Filter selected channels..."
-              value={selectedSearchQuery}
-              onChange={(e) => setSelectedSearchQuery(e.target.value)}
-              size="sm"
-            />
-          </InputGroup>
+          <Flex mb={3} alignItems="center" wrap="wrap" gap={2}>
+            <InputGroup size="sm" maxW="300px">
+              <InputLeftElement pointerEvents="none">
+                <FiSearch color="gray.300" />
+              </InputLeftElement>
+              <Input
+                placeholder="Filter selected channels..."
+                value={selectedSearchQuery}
+                onChange={(e) => setSelectedSearchQuery(e.target.value)}
+                size="sm"
+              />
+            </InputGroup>
+          </Flex>
 
           <Box overflowX="auto" maxH="300px" overflowY="auto">
             <Table size="sm" variant="simple">
               <Thead bg={tableHeaderBg}>
                 <Tr>
-                  <Th>Channel</Th>
-                  <Th>Members</Th>
-                  <Th width="100px">Actions</Th>
+                  <Th
+                    cursor="pointer"
+                    onClick={() => handleColumnSort('name')}
+                    _hover={{ color: 'blue.500' }}
+                  >
+                    <HStack spacing={1}>
+                      <Text>Channel</Text>
+                      {getSortIcon('name')}
+                    </HStack>
+                  </Th>
+                  <Th
+                    cursor="pointer"
+                    onClick={() => handleColumnSort('members')}
+                    _hover={{ color: 'blue.500' }}
+                  >
+                    <HStack spacing={1}>
+                      <Text>Members</Text>
+                      {getSortIcon('members')}
+                    </HStack>
+                  </Th>
+                  <Th width="120px">Actions</Th>
                 </Tr>
               </Thead>
               <Tbody>
-                {(() => {
-                  const filteredSelectedChannels = channels
-                    .filter((channel) =>
-                      selectedChannelIds.includes(channel.id)
-                    )
-                    .filter(
-                      (channel) =>
-                        selectedSearchQuery === '' ||
-                        channel.name
-                          .toLowerCase()
-                          .includes(selectedSearchQuery.toLowerCase())
-                    )
-
-                  if (filteredSelectedChannels.length === 0) {
-                    return (
-                      <Tr>
-                        <Td colSpan={3} textAlign="center" py={4}>
-                          {selectedSearchQuery
-                            ? 'No selected channels match your filter'
-                            : 'No channels selected'}
-                        </Td>
-                      </Tr>
-                    )
-                  }
-
-                  return filteredSelectedChannels.map((channel) => (
+                {selectedChannelsData.length === 0 ? (
+                  <Tr>
+                    <Td colSpan={3} textAlign="center" py={4}>
+                      {selectedSearchQuery
+                        ? 'No selected channels match your filter'
+                        : 'No channels selected'}
+                    </Td>
+                  </Tr>
+                ) : (
+                  selectedChannelsData.map((channel) => (
                     <Tr key={`selected-${channel.id}`}>
                       <Td fontWeight="medium">
                         <HStack>
@@ -383,28 +599,73 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
                               <TagLabel>Private</TagLabel>
                             </Tag>
                           )}
+                          {channel.metadata?.is_archived === true && (
+                            <Tag
+                              size="sm"
+                              colorScheme="gray"
+                              borderRadius="full"
+                            >
+                              <TagLabel>Archived</TagLabel>
+                            </Tag>
+                          )}
                         </HStack>
                       </Td>
                       <Td>
-                        {channel.metadata?.num_members !== undefined
-                          ? String(channel.metadata.num_members)
+                        {channel.metadata?.member_count !== undefined
+                          ? Number(
+                              channel.metadata.member_count
+                            ).toLocaleString()
                           : 'Unknown'}
                       </Td>
                       <Td>
-                        <Tooltip label="Remove from selection">
-                          <IconButton
-                            aria-label="Remove from selection"
-                            icon={<FiTrash2 />}
-                            size="sm"
-                            variant="ghost"
-                            colorScheme="red"
-                            onClick={() => handleSelectChannel(channel.id)}
-                          />
-                        </Tooltip>
+                        <HStack spacing={1}>
+                          {hasBotInstalled(channel) && (
+                            <>
+                              <Tooltip label="Analyze channel">
+                                <IconButton
+                                  aria-label="Analyze channel"
+                                  icon={<FiBarChart2 />}
+                                  size="sm"
+                                  variant="ghost"
+                                  colorScheme="blue"
+                                  onClick={() =>
+                                    navigate(
+                                      `/dashboard/integrations/${integrationId}/channels/${channel.id}/analyze`
+                                    )
+                                  }
+                                />
+                              </Tooltip>
+                              <Tooltip label="Analysis history">
+                                <IconButton
+                                  aria-label="Analysis history"
+                                  icon={<FiClock />}
+                                  size="sm"
+                                  variant="ghost"
+                                  colorScheme="teal"
+                                  onClick={() =>
+                                    navigate(
+                                      `/dashboard/integrations/${integrationId}/channels/${channel.id}/history`
+                                    )
+                                  }
+                                />
+                              </Tooltip>
+                            </>
+                          )}
+                          <Tooltip label="Remove from selection">
+                            <IconButton
+                              aria-label="Remove from selection"
+                              icon={<FiTrash2 />}
+                              size="sm"
+                              variant="ghost"
+                              colorScheme="red"
+                              onClick={() => handleSelectChannel(channel.id)}
+                            />
+                          </Tooltip>
+                        </HStack>
                       </Td>
                     </Tr>
                   ))
-                })()}
+                )}
               </Tbody>
             </Table>
           </Box>
@@ -423,42 +684,211 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
           )}
         </Flex>
 
-        <Flex mb={4} justifyContent="space-between" alignItems="center">
-          <InputGroup maxW="400px">
-            <InputLeftElement pointerEvents="none">
-              <FiSearch color="gray.300" />
-            </InputLeftElement>
-            <Input
-              placeholder="Search channels..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </InputGroup>
+        <VStack spacing={4} align="stretch" mb={4}>
+          {/* Search and filter row */}
+          <Flex
+            justifyContent="space-between"
+            alignItems="center"
+            wrap="wrap"
+            gap={2}
+          >
+            <InputGroup maxW="400px">
+              <InputLeftElement pointerEvents="none">
+                <FiSearch color="gray.300" />
+              </InputLeftElement>
+              <Input
+                placeholder="Search channels..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </InputGroup>
 
-          <HStack spacing={2}>
-            <Button
-              size="xs"
-              onClick={handleSelectAll}
-              variant="outline"
-              colorScheme="blue"
-              isDisabled={filteredChannels.length === 0}
-            >
-              Select All
-            </Button>
-            <Button
-              size="xs"
-              onClick={handleDeselectAll}
-              variant="outline"
-              colorScheme="red"
-              isDisabled={
-                filteredChannels.length === 0 ||
-                !filteredChannels.some((c) => selectedChannelIds.includes(c.id))
-              }
-            >
-              Deselect All
-            </Button>
-          </HStack>
-        </Flex>
+            <HStack spacing={2}>
+              {/* Type Filter Menu */}
+              <Menu closeOnSelect={false}>
+                <MenuButton
+                  as={Button}
+                  rightIcon={<FiChevronDown />}
+                  leftIcon={<FiFilter />}
+                  size="sm"
+                >
+                  Filters
+                </MenuButton>
+                <MenuList p={2} minWidth="240px">
+                  <VStack align="start" spacing={3} width="100%">
+                    <Box width="100%">
+                      <Text fontWeight="medium" mb={2}>
+                        Channel Type
+                      </Text>
+                      <RadioGroup
+                        onChange={(value) =>
+                          setChannelTypeFilter(value as ChannelType)
+                        }
+                        value={channelTypeFilter}
+                      >
+                        <Stack direction="column">
+                          <Radio value={ChannelType.ALL}>All</Radio>
+                          <Radio value={ChannelType.PUBLIC}>Public</Radio>
+                          <Radio value={ChannelType.PRIVATE}>Private</Radio>
+                        </Stack>
+                      </RadioGroup>
+                    </Box>
+
+                    <Box width="100%">
+                      <Text fontWeight="medium" mb={2}>
+                        Show Archived
+                      </Text>
+                      <Checkbox
+                        isChecked={showArchived}
+                        onChange={(e) => setShowArchived(e.target.checked)}
+                      >
+                        Include archived channels
+                      </Checkbox>
+                    </Box>
+                  </VStack>
+                </MenuList>
+              </Menu>
+
+              {/* Sort Menu */}
+              <Menu>
+                <MenuButton as={Button} rightIcon={<FiChevronDown />} size="sm">
+                  Sort
+                </MenuButton>
+                <MenuList>
+                  <MenuItem
+                    onClick={() => setSortOption(SortOption.NAME_ASC)}
+                    icon={<FiArrowUp />}
+                    fontWeight={
+                      sortOption === SortOption.NAME_ASC ? 'bold' : 'normal'
+                    }
+                  >
+                    Name (A-Z)
+                  </MenuItem>
+                  <MenuItem
+                    onClick={() => setSortOption(SortOption.NAME_DESC)}
+                    icon={<FiArrowDown />}
+                    fontWeight={
+                      sortOption === SortOption.NAME_DESC ? 'bold' : 'normal'
+                    }
+                  >
+                    Name (Z-A)
+                  </MenuItem>
+                  <MenuDivider />
+                  <MenuItem
+                    onClick={() => setSortOption(SortOption.MEMBERS_ASC)}
+                    icon={<FiArrowUp />}
+                    fontWeight={
+                      sortOption === SortOption.MEMBERS_ASC ? 'bold' : 'normal'
+                    }
+                  >
+                    Members (Low to High)
+                  </MenuItem>
+                  <MenuItem
+                    onClick={() => setSortOption(SortOption.MEMBERS_DESC)}
+                    icon={<FiArrowDown />}
+                    fontWeight={
+                      sortOption === SortOption.MEMBERS_DESC ? 'bold' : 'normal'
+                    }
+                  >
+                    Members (High to Low)
+                  </MenuItem>
+                  <MenuDivider />
+                  <MenuItem
+                    onClick={() => setSortOption(SortOption.LAST_SYNCED_ASC)}
+                    icon={<FiArrowUp />}
+                    fontWeight={
+                      sortOption === SortOption.LAST_SYNCED_ASC
+                        ? 'bold'
+                        : 'normal'
+                    }
+                  >
+                    Last Synced (Oldest First)
+                  </MenuItem>
+                  <MenuItem
+                    onClick={() => setSortOption(SortOption.LAST_SYNCED_DESC)}
+                    icon={<FiArrowDown />}
+                    fontWeight={
+                      sortOption === SortOption.LAST_SYNCED_DESC
+                        ? 'bold'
+                        : 'normal'
+                    }
+                  >
+                    Last Synced (Newest First)
+                  </MenuItem>
+                </MenuList>
+              </Menu>
+
+              {/* Select/Deselect Buttons */}
+              <Button
+                size="xs"
+                onClick={handleSelectAll}
+                variant="outline"
+                colorScheme="blue"
+                isDisabled={paginatedChannels.length === 0}
+              >
+                Select All
+              </Button>
+              <Button
+                size="xs"
+                onClick={handleDeselectAll}
+                variant="outline"
+                colorScheme="red"
+                isDisabled={
+                  paginatedChannels.length === 0 ||
+                  !paginatedChannels.some((c) =>
+                    selectedChannelIds.includes(c.id)
+                  )
+                }
+              >
+                Deselect All
+              </Button>
+            </HStack>
+          </Flex>
+
+          {/* Applied filters indicators */}
+          {(channelTypeFilter !== ChannelType.ALL ||
+            showArchived ||
+            searchQuery) && (
+            <Flex wrap="wrap" gap={2} alignItems="center">
+              <Text fontSize="sm" color="gray.500">
+                Active filters:
+              </Text>
+
+              {channelTypeFilter !== ChannelType.ALL && (
+                <Tag size="sm" colorScheme="blue" borderRadius="full">
+                  <TagLabel>
+                    {channelTypeFilter === ChannelType.PRIVATE
+                      ? 'Private Channels'
+                      : 'Public Channels'}
+                  </TagLabel>
+                </Tag>
+              )}
+
+              {showArchived && (
+                <Tag size="sm" colorScheme="gray" borderRadius="full">
+                  <TagLabel>Including Archived</TagLabel>
+                </Tag>
+              )}
+
+              {searchQuery && (
+                <Tag size="sm" colorScheme="green" borderRadius="full">
+                  <TagLabel>Search: "{searchQuery}"</TagLabel>
+                </Tag>
+              )}
+
+              <Button
+                size="xs"
+                onClick={() => {
+                  setChannelTypeFilter(ChannelType.ALL)
+                  setShowArchived(false)
+                  setSearchQuery('')
+                }}
+              >
+                Clear Filters
+              </Button>
+            </Flex>
+          )}
+        </VStack>
 
         <Box overflowX="auto">
           <Table
@@ -470,106 +900,148 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
             <Thead bg={tableHeaderBg}>
               <Tr>
                 <Th width="50px">Select</Th>
-                <Th>Channel Name</Th>
-                <Th>Member Count</Th>
-                <Th>Last Synced</Th>
-                <Th>Actions</Th>
+                <Th
+                  cursor="pointer"
+                  onClick={() => handleColumnSort('name')}
+                  _hover={{ color: 'blue.500' }}
+                >
+                  <HStack spacing={1}>
+                    <Text>Channel Name</Text>
+                    {getSortIcon('name')}
+                  </HStack>
+                </Th>
+                <Th
+                  cursor="pointer"
+                  onClick={() => handleColumnSort('members')}
+                  _hover={{ color: 'blue.500' }}
+                >
+                  <HStack spacing={1}>
+                    <Text>Member Count</Text>
+                    {getSortIcon('members')}
+                  </HStack>
+                </Th>
+                <Th
+                  cursor="pointer"
+                  onClick={() => handleColumnSort('lastSynced')}
+                  _hover={{ color: 'blue.500' }}
+                >
+                  <HStack spacing={1}>
+                    <Text>Last Synced</Text>
+                    {getSortIcon('lastSynced')}
+                  </HStack>
+                </Th>
               </Tr>
             </Thead>
             <Tbody>
-              {filteredChannels.map((channel) => (
-                <Tr
-                  key={channel.id}
-                  _hover={{ bg: rowHoverBg }}
-                  bg={
-                    selectedChannelIds.includes(channel.id)
-                      ? 'blue.50'
-                      : undefined
-                  }
-                >
-                  <Td width="50px">
-                    <Checkbox
-                      isChecked={selectedChannelIds.includes(channel.id)}
-                      onChange={() => handleSelectChannel(channel.id)}
-                      colorScheme="blue"
-                      size="lg"
-                    />
-                  </Td>
-                  <Td fontWeight="medium">
-                    <HStack>
-                      <Text>{channel.name}</Text>
-                      {channel.metadata?.is_private === true && (
-                        <Tag size="sm" colorScheme="purple" borderRadius="full">
-                          <TagLabel>Private</TagLabel>
-                        </Tag>
-                      )}
-                    </HStack>
-                  </Td>
-                  <Td>
-                    {channel.metadata?.num_members !== undefined
-                      ? String(channel.metadata.num_members)
-                      : 'Unknown'}
-                  </Td>
-                  <Td>
-                    {channel.last_synced_at
-                      ? new Date(channel.last_synced_at).toLocaleString()
-                      : 'Never'}
-                  </Td>
-                  <Td>
-                    <HStack spacing={1}>
-                      <Tooltip label="Analyze channel">
-                        <IconButton
-                          aria-label="Analyze channel"
-                          icon={<FiBarChart2 />}
-                          size="sm"
-                          variant="ghost"
-                          colorScheme="blue"
-                          onClick={() =>
-                            navigate(
-                              `/dashboard/integrations/${integrationId}/channels/${channel.id}/analyze`
-                            )
-                          }
-                        />
-                      </Tooltip>
-                      <Tooltip label="Analysis history">
-                        <IconButton
-                          aria-label="Analysis history"
-                          icon={<FiClock />}
-                          size="sm"
-                          variant="ghost"
-                          colorScheme="teal"
-                          onClick={() =>
-                            navigate(
-                              `/dashboard/integrations/${integrationId}/channels/${channel.id}/history`
-                            )
-                          }
-                        />
-                      </Tooltip>
-                      <Tooltip label="Channel settings">
-                        <IconButton
-                          aria-label="Channel settings"
-                          icon={<FiSettings />}
-                          size="sm"
-                          variant="ghost"
-                          title="Settings"
-                        />
-                      </Tooltip>
-                    </HStack>
-                  </Td>
-                </Tr>
-              ))}
-              {filteredChannels.length === 0 && (
+              {paginatedChannels.length === 0 ? (
                 <Tr>
-                  <Td colSpan={5} textAlign="center" py={4}>
+                  <Td colSpan={4} textAlign="center" py={4}>
                     {loadingResources
                       ? 'Loading channels...'
-                      : 'No channels found'}
+                      : 'No channels found matching your filters'}
                   </Td>
                 </Tr>
+              ) : (
+                paginatedChannels.map((channel) => (
+                  <Tr
+                    key={channel.id}
+                    _hover={{ bg: rowHoverBg }}
+                    bg={
+                      selectedChannelIds.includes(channel.id)
+                        ? selectedBg
+                        : undefined
+                    }
+                  >
+                    <Td width="50px">
+                      <Checkbox
+                        isChecked={selectedChannelIds.includes(channel.id)}
+                        onChange={() => handleSelectChannel(channel.id)}
+                        colorScheme="blue"
+                        size="lg"
+                      />
+                    </Td>
+                    <Td fontWeight="medium">
+                      <HStack>
+                        <Text>{channel.name}</Text>
+                        {channel.metadata?.is_private === true && (
+                          <Tag
+                            size="sm"
+                            colorScheme="purple"
+                            borderRadius="full"
+                          >
+                            <TagLabel>Private</TagLabel>
+                          </Tag>
+                        )}
+                        {channel.metadata?.is_archived === true && (
+                          <Tag size="sm" colorScheme="gray" borderRadius="full">
+                            <TagLabel>Archived</TagLabel>
+                          </Tag>
+                        )}
+                      </HStack>
+                    </Td>
+                    <Td>
+                      {channel.metadata?.member_count !== undefined
+                        ? Number(channel.metadata.member_count).toLocaleString()
+                        : 'Unknown'}
+                    </Td>
+                    <Td>
+                      {channel.last_synced_at
+                        ? new Date(channel.last_synced_at).toLocaleString()
+                        : 'Never'}
+                    </Td>
+                  </Tr>
+                ))
               )}
             </Tbody>
           </Table>
         </Box>
+
+        {/* Pagination controls */}
+        {filteredAndSortedChannels.length > 0 && (
+          <Flex mt={4} justifyContent="space-between" alignItems="center">
+            <HStack>
+              <Text fontSize="sm">
+                Showing {(currentPage - 1) * pageSize + 1} to{' '}
+                {Math.min(
+                  currentPage * pageSize,
+                  filteredAndSortedChannels.length
+                )}{' '}
+                of {filteredAndSortedChannels.length} channels
+              </Text>
+              <Select
+                size="sm"
+                width="80px"
+                value={pageSize}
+                onChange={(e) => setPageSize(Number(e.target.value))}
+              >
+                <option value="5">5</option>
+                <option value="10">10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+              </Select>
+            </HStack>
+
+            <HStack>
+              <Button
+                size="sm"
+                onClick={handlePrevPage}
+                isDisabled={currentPage === 1}
+              >
+                Previous
+              </Button>
+              <Text fontSize="sm">
+                Page {currentPage} of {totalPages}
+              </Text>
+              <Button
+                size="sm"
+                onClick={handleNextPage}
+                isDisabled={currentPage === totalPages}
+              >
+                Next
+              </Button>
+            </HStack>
+          </Flex>
+        )}
       </Box>
 
       <Flex justifyContent="flex-end" mt={4}>

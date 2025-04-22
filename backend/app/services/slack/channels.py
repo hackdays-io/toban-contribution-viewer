@@ -125,7 +125,7 @@ class ChannelService:
 
         # Apply bot installation filter if requested
         if bot_installed_only:
-            query = query.where(SlackChannel.is_bot_member.is_(True))
+            query = query.where(SlackChannel.has_bot.is_(True))
             logger.info("Filtered to only include channels where bot is installed")
 
         # Apply analysis selection filter if requested
@@ -169,7 +169,7 @@ class ChannelService:
 
         # Apply bot installation filter if requested
         if bot_installed_only:
-            count_query = count_query.where(SlackChannel.is_bot_member.is_(True))
+            count_query = count_query.where(SlackChannel.has_bot.is_(True))
             logger.info(
                 "Filtered count query to only include channels where bot is installed"
             )
@@ -206,7 +206,7 @@ class ChannelService:
                 "topic": channel.topic,
                 "member_count": channel.member_count,
                 "is_archived": channel.is_archived,
-                "is_bot_member": channel.is_bot_member,
+                "has_bot": channel.has_bot,
                 "is_selected_for_analysis": channel.is_selected_for_analysis,
                 "is_supported": channel.is_supported,
                 "last_sync_at": channel.last_sync_at,
@@ -345,12 +345,10 @@ class ChannelService:
                     existing_channel = channel_result.scalars().first()
 
                     # Check if the bot is a member of this channel
-                    is_bot_member = channel_data.get("is_member", False)
-                    if not is_bot_member and channel_type in ["public", "private"]:
+                    has_bot = channel_data.get("is_member", False)
+                    if not has_bot and channel_type in ["public", "private"]:
                         try:
-                            is_bot_member = await api_client.check_bot_in_channel(
-                                channel_id
-                            )
+                            has_bot = await api_client.check_bot_in_channel(channel_id)
                         except Exception as e:
                             logger.warning(
                                 f"Error checking bot membership in {channel_id}: {str(e)}"
@@ -371,12 +369,12 @@ class ChannelService:
                         "member_count": channel_data.get("num_members", 0),
                         "is_archived": channel_data.get("is_archived", False),
                         "created_at_ts": created_ts,
-                        "is_bot_member": is_bot_member,
+                        "has_bot": has_bot,
                         "is_supported": True,  # By default, all channels are supported
                     }
 
                     # For new channels, set bot_joined_at if bot is a member
-                    if is_bot_member and not existing_channel:
+                    if has_bot and not existing_channel:
                         channel_values["bot_joined_at"] = datetime.utcnow()
 
                     if existing_channel:
@@ -385,7 +383,7 @@ class ChannelService:
                             setattr(existing_channel, key, value)
 
                         # Only update bot_joined_at if the bot was not a member before but is now
-                        if is_bot_member and not existing_channel.is_bot_member:
+                        if has_bot and not existing_channel.has_bot:
                             existing_channel.bot_joined_at = datetime.utcnow()
 
                         updated_count += 1
@@ -448,7 +446,7 @@ class ChannelService:
                 # Mark them as archived
                 for channel in missing_channels:
                     channel.is_archived = True
-                    channel.is_bot_member = False
+                    channel.has_bot = False
                     updated_count += 1
 
                 await db.commit()
@@ -590,7 +588,7 @@ class ChannelService:
             if install_bot and api_client and selected_channels:
                 for channel in selected_channels:
                     # Skip channels where bot is already a member or types that don't need installation (like DMs)
-                    if channel.is_bot_member or channel.type not in [
+                    if channel.has_bot or channel.type not in [
                         "public",
                         "private",
                     ]:
@@ -604,7 +602,7 @@ class ChannelService:
                         await api_client.join_channel(channel.slack_id)
 
                         # Update channel record
-                        channel.is_bot_member = True
+                        channel.has_bot = True
                         channel.bot_joined_at = datetime.utcnow()
 
                         bot_installation_results.append(
@@ -649,7 +647,7 @@ class ChannelService:
                         "id": str(channel.id),
                         "name": channel.name,
                         "type": channel.type,
-                        "is_bot_member": channel.is_bot_member,
+                        "has_bot": channel.has_bot,
                     }
                     for channel in selected_channels
                 ],
@@ -850,7 +848,7 @@ class ChannelService:
                     missing_count = 0
                     for channel in missing_channels:
                         channel.is_archived = True
-                        channel.is_bot_member = False
+                        channel.has_bot = False
                         missing_count += 1
 
                     if missing_count > 0:
@@ -978,12 +976,12 @@ class ChannelService:
             existing_channel = channel_result.scalars().first()
 
             # Check if the bot is a member of this channel
-            is_bot_member = channel_data.get("is_member", False)
+            has_bot = channel_data.get("is_member", False)
 
             # Only check bot membership for non-DM channels when needed
-            if not is_bot_member and channel_type in ["public", "private"]:
+            if not has_bot and channel_type in ["public", "private"]:
                 try:
-                    is_bot_member = await api_client.check_bot_in_channel(channel_id)
+                    has_bot = await api_client.check_bot_in_channel(channel_id)
                 except Exception as e:
                     logger.warning(
                         f"Error checking bot membership in {channel_id}: {str(e)}"
@@ -1004,13 +1002,13 @@ class ChannelService:
                 "member_count": channel_data.get("num_members", 0),
                 "is_archived": channel_data.get("is_archived", False),
                 "created_at_ts": created_ts,
-                "is_bot_member": is_bot_member,
+                "has_bot": has_bot,
                 "is_supported": True,  # By default, all channels are supported
                 "last_sync_at": datetime.utcnow(),
             }
 
             # For new channels, set bot_joined_at if bot is a member
-            if is_bot_member and not existing_channel:
+            if has_bot and not existing_channel:
                 channel_values["bot_joined_at"] = datetime.utcnow()
 
             if existing_channel:
@@ -1019,7 +1017,7 @@ class ChannelService:
                     setattr(existing_channel, key, value)
 
                 # Only update bot_joined_at if the bot was not a member before but is now
-                if is_bot_member and not existing_channel.is_bot_member:
+                if has_bot and not existing_channel.has_bot:
                     existing_channel.bot_joined_at = datetime.utcnow()
 
                 updated_count += 1
