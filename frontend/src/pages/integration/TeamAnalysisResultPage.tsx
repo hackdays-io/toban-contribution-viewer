@@ -29,6 +29,7 @@ import {
 import { FiChevronRight, FiArrowLeft, FiClock } from 'react-icons/fi'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import MessageText from '../../components/slack/MessageText'
+import SlackUserEnhancedText from '../../components/slack/SlackUserEnhancedText'
 import { SlackUserCacheProvider } from '../../components/slack/SlackUserContext'
 import useIntegration from '../../context/useIntegration'
 import integrationService, {
@@ -249,22 +250,11 @@ const TeamAnalysisResultPage: React.FC = () => {
                 Contributor Insights
               </Heading>
               <Box>
-                {analysis.contributor_insights
-                  .split('\n')
-                  .map((paragraph, index) => (
-                    <Box key={index} mb={2}>
-                      {paragraph.trim() ? (
-                        <MessageText
-                          text={paragraph}
-                          workspaceId={channel?.external_id || ''}
-                          resolveMentions={true}
-                          fallbackToSimpleFormat={true}
-                        />
-                      ) : (
-                        <Box height="1em" />
-                      )}
-                    </Box>
-                  ))}
+                <SlackUserEnhancedText
+                  text={analysis.contributor_insights}
+                  workspaceId={channel?.external_id || ''}
+                  resolveMentions={true}
+                />
               </Box>
             </Box>
           </TabPanel>
