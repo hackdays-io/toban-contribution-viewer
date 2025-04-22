@@ -187,7 +187,7 @@ const TeamAnalysisResultPage: React.FC = () => {
                       {paragraph.trim() ? (
                         <MessageText
                           text={paragraph}
-                          workspaceId={currentIntegration?.workspace_id || ''}
+                          workspaceId={workspaceId}
                           resolveMentions={true}
                           fallbackToSimpleFormat={true}
                         />
@@ -231,7 +231,7 @@ const TeamAnalysisResultPage: React.FC = () => {
                     {paragraph.trim() ? (
                       <MessageText
                         text={paragraph}
-                        workspaceId={currentIntegration?.workspace_id || ''}
+                        workspaceId={workspaceId}
                         resolveMentions={true}
                         fallbackToSimpleFormat={true}
                       />
@@ -258,7 +258,7 @@ const TeamAnalysisResultPage: React.FC = () => {
                       {paragraph.trim() ? (
                         <MessageText
                           text={paragraph}
-                          workspaceId={currentIntegration?.workspace_id || ''}
+                          workspaceId={workspaceId}
                           resolveMentions={true}
                           fallbackToSimpleFormat={true}
                         />
@@ -283,7 +283,7 @@ const TeamAnalysisResultPage: React.FC = () => {
                     {paragraph.trim() ? (
                       <MessageText
                         text={paragraph}
-                        workspaceId={currentIntegration?.workspace_id || ''}
+                        workspaceId={workspaceId}
                         resolveMentions={true}
                         fallbackToSimpleFormat={true}
                       />
@@ -300,8 +300,30 @@ const TeamAnalysisResultPage: React.FC = () => {
     )
   }
 
+  // Only render the slack user components when we have a valid workspace ID
+  const workspaceId = currentIntegration?.workspace_id;
+  console.log("TeamAnalysisResultPage render - workspaceId:", workspaceId);
+  
+  // Don't render slack components if no workspace ID is available
+  if (!workspaceId) {
+    console.log("No workspace ID available yet");
+    return (
+      <Box p={4}>
+        {/* Render the same content without the SlackUserCacheProvider */}
+        {/* Breadcrumb and other content would go here */}
+        {isLoading ? (
+          <Flex height="300px" justify="center" align="center">
+            <Spinner size="xl" color="purple.500" thickness="4px" />
+          </Flex>
+        ) : (
+          <Text>Loading integration data...</Text>
+        )}
+      </Box>
+    );
+  }
+  
   return (
-    <SlackUserCacheProvider workspaceId={currentIntegration?.workspace_id || ''}>
+    <SlackUserCacheProvider workspaceId={workspaceId}>
       <Box p={4}>
         {/* Breadcrumb navigation */}
         <Breadcrumb

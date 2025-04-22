@@ -77,6 +77,15 @@ const SlackUserDisplay: React.FC<SlackUserDisplayProps> = ({
       setIsLoading(false)
       return
     }
+    
+    // Extra safety check - if we don't have a workspaceId and no context,
+    // we can't fetch the user data
+    if (!workspaceId && !context) {
+      console.warn(`SlackUserDisplay: Cannot fetch user ${userId} - no workspaceId and no context`)
+      setHasError(true)
+      setIsLoading(false)
+      return
+    }
 
     const fetchUserData = async () => {
       // If not using context or context is not available
