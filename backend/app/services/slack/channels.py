@@ -348,9 +348,7 @@ class ChannelService:
                     has_bot = channel_data.get("is_member", False)
                     if not has_bot and channel_type in ["public", "private"]:
                         try:
-                            has_bot = await api_client.check_bot_in_channel(
-                                channel_id
-                            )
+                            has_bot = await api_client.check_bot_in_channel(channel_id)
                         except Exception as e:
                             logger.warning(
                                 f"Error checking bot membership in {channel_id}: {str(e)}"

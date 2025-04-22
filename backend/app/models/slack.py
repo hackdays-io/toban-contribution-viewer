@@ -112,7 +112,9 @@ class SlackChannel(Base, BaseModel):
     created_at_ts = Column(String(50), nullable=True)  # Slack timestamp
 
     # Bot status
-    has_bot = Column(Boolean, default=False, nullable=False)  # Renamed from is_bot_member for clarity
+    has_bot = Column(
+        Boolean, default=False, nullable=False
+    )  # Renamed from is_bot_member for clarity
     bot_joined_at = Column(DateTime, nullable=True)
 
     # Analysis flags

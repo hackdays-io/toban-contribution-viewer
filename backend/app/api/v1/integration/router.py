@@ -672,7 +672,7 @@ async def get_integration_resources(
                         channel_record_result = await db.execute(
                             select(SlackChannel).where(
                                 SlackChannel.workspace_id == workspace.id,
-                                SlackChannel.slack_id == external_id
+                                SlackChannel.slack_id == external_id,
                             )
                         )
                         channel_record = channel_record_result.scalars().first()

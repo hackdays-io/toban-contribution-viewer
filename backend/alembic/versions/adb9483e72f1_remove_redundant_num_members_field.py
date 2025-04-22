@@ -22,7 +22,7 @@ def upgrade() -> None:
     """
     Remove the redundant 'num_members' field from the slackchannel table.
     The 'member_count' field is already being used as the source of truth.
-    
+
     This migration is a no-op because the field was already removed or never existed.
     We're keeping this migration for documentation purposes and compatibility with
     other environments where the column might exist.
@@ -35,7 +35,7 @@ def downgrade() -> None:
     """
     Restore the redundant 'num_members' field in case of rollback.
     This will be NULL for all records after restoration.
-    
+
     Since the field doesn't exist in the current database, this is a no-op.
     """
     # No action needed for downgrade
