@@ -46,10 +46,20 @@ def convert_team_to_dict(team, include_members: bool = False) -> Dict:
         "team_size": team.team_size or 0,
     }
 
-    # Only include members if requested and available
-    if include_members and hasattr(team, "members") and team.members:
+    # Check if members are already loaded to avoid lazy loading
+    try:
+        members_loaded = (hasattr(team, "_sa_instance_state") and 
+                          hasattr(team._sa_instance_state, "attrs") and 
+                          hasattr(team._sa_instance_state.attrs, "members") and 
+                          (getattr(team._sa_instance_state.attrs.members, "loaded", False) or 
+                           team._sa_instance_state.attrs.members.loaded_value is not None))
+    except Exception as e:
+        logger.error(f"Error checking if members are loaded: {str(e)}")
+        members_loaded = False
+    
+    if include_members and members_loaded and hasattr(team, "members"):
         try:
-            # Explicitly load and convert members to avoid lazy loading issues
+            # Convert members to dicts to avoid further lazy loading
             member_list = []
             for member in team.members:
                 member_dict = {
@@ -70,7 +80,7 @@ def convert_team_to_dict(team, include_members: bool = False) -> Dict:
             logger.error(f"Error loading team members: {str(e)}")
             team_dict["members"] = []
     else:
-        team_dict["members"] = None
+        team_dict["members"] = []
 
     return team_dict
 

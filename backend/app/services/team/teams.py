@@ -91,7 +91,11 @@ class TeamService:
 
                 db.add(team_member)
                 await db.commit()
-                await db.refresh(team)
+                
+                # Explicitly load the team with its members to avoid lazy loading issues
+                query = select(Team).where(Team.id == team.id).options(selectinload(Team.members))
+                result = await db.execute(query)
+                team = result.scalars().first()
 
                 logger.info(
                     f"Auto-created team '{team.name}' (ID: {team.id}) for user {user_id}"
@@ -230,12 +234,16 @@ class TeamService:
 
             db.add(team_member)
             await db.commit()
-            await db.refresh(team)
+            
+            # Explicitly load the team with its members to avoid lazy loading issues
+            query = select(Team).where(Team.id == team.id).options(selectinload(Team.members))
+            result = await db.execute(query)
+            team_with_members = result.scalars().first()
 
             logger.info(
                 f"Created team '{team.name}' (ID: {team.id}) for user {user_id}"
             )
-            return team
+            return team_with_members
 
         except IntegrityError as e:
             logger.error(f"Integrity error creating team: {str(e)}")
