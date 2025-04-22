@@ -27,8 +27,6 @@ import {
   FormControl,
   FormLabel,
   Input,
-  InputGroup,
-  InputRightElement,
   Textarea,
   FormErrorMessage,
 } from '@chakra-ui/react'
@@ -100,31 +98,32 @@ const TeamsPage: React.FC = () => {
     try {
       setIsLoading(true)
 
-      // Instead of fetching directly, use the teams from the AuthContext
-      if (teamContext && teamContext.teams) {
-        console.log('Using teams from AuthContext:', teamContext.teams)
+      // Fetch teams directly from the API to get complete team details including description
+      const { data: { session } } = await supabase.auth.getSession()
+      const token = session?.access_token
 
-        // Format each team to match our expected Team interface
-        const formattedTeams = teamContext.teams.map((team) => ({
-          id: team.id,
-          name: team.name,
-          slug: team.slug,
-          description: '', // Context doesn't provide description
-          avatar_url: null, // Context doesn't provide avatar_url
-          team_size: 0, // Context doesn't provide team_size
-          is_personal: false, // Context doesn't provide is_personal flag
-          created_by_user_id: '', // Context doesn't provide created_by_user_id
-          created_by_email: null, // Context doesn't provide created_by_email
-          team_metadata: {}, // Context doesn't provide team_metadata
-        }))
-
-        setTeams(formattedTeams)
-      } else {
-        // If teamContext is not available, set empty array
+      if (!token) {
         setTeams([])
+        return
       }
+
+      const response = await fetch(`${env.apiUrl}/teams`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: token ? `Bearer ${token}` : '',
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch teams: ${response.status}`)
+      }
+
+      const teamsData = await response.json()
+      setTeams(teamsData)
     } catch (error) {
-      console.error('Error processing teams:', error)
+      console.error('Error fetching teams:', error)
       toast({
         title: 'Error loading teams',
         description:
@@ -133,6 +132,26 @@ const TeamsPage: React.FC = () => {
         duration: 5000,
         isClosable: true,
       })
+      
+      // Fallback to teams from context if API fails
+      if (teamContext && teamContext.teams) {
+        console.log('Falling back to teams from AuthContext:', teamContext.teams)
+        const formattedTeams = teamContext.teams.map((team) => ({
+          id: team.id,
+          name: team.name,
+          slug: team.slug,
+          description: '', // Context doesn't provide description
+          avatar_url: null,
+          team_size: 0,
+          is_personal: false,
+          created_by_user_id: '',
+          created_by_email: null,
+          team_metadata: {},
+        }))
+        setTeams(formattedTeams)
+      } else {
+        setTeams([])
+      }
     } finally {
       setIsLoading(false)
     }
@@ -151,42 +170,44 @@ const TeamsPage: React.FC = () => {
       .replace(/^-|-$/g, '')
   }
 
-  // Standard input change handler - just update the form state
+  // Input change handler with automatic slug generation
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target
     
-    // Simply update the form with the new value
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }))
-
-    // If name field was changed and slug is empty, update slug too (immediately)
-    if (name === 'name' && !formData.slug) {
-      const newSlug = generateSlugFromName(value);
+    if (name === 'name') {
+      // When name changes, automatically update the slug unless it's been manually edited
+      // This implements the incremental update as you type
+      const newSlug = generateSlugFromName(value)
+      
+      // Only update when we have a proper name to generate from
+      if (value.trim()) {
+        // Update both name and slug in a single operation to avoid batching issues
+        setFormData(prev => ({
+          ...prev,
+          name: value,
+          slug: newSlug
+        }))
+      } else {
+        // If name is empty, just update the name field
+        setFormData(prev => ({
+          ...prev,
+          name: value,
+          slug: '' // Also clear the slug if name is empty
+        }))
+      }
+    } else {
+      // For other fields (including slug), just update that field
       setFormData(prev => ({
         ...prev,
-        [name]: value,
-        slug: newSlug
-      }));
+        [name]: value
+      }))
     }
 
     // Clear any previous error for this field
     if (formErrors[name as keyof CreateTeamForm]) {
       setFormErrors((prev) => ({ ...prev, [name]: undefined }))
-    }
-  }
-  
-  // Handle name input blur - generate slug if empty
-  const handleNameBlur = () => {
-    if (formData.name && !formData.slug) {
-      const newSlug = generateSlugFromName(formData.name);
-      setFormData(prev => ({
-        ...prev,
-        slug: newSlug
-      }));
     }
   }
 
@@ -238,7 +259,10 @@ const TeamsPage: React.FC = () => {
       }
 
       const data = await response.json()
-      setTeams((prev) => [...prev, data])
+      
+      // Instead of just adding the new team to the existing list,
+      // fetch all teams to ensure descriptions are shown properly
+      await fetchTeams()
 
       toast({
         title: 'Team created successfully',
@@ -436,16 +460,6 @@ const TeamsPage: React.FC = () => {
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
-                  onBlur={handleNameBlur}
-                  onKeyUp={() => {
-                    if (formData.name && !formData.slug) {
-                      const newSlug = generateSlugFromName(formData.name);
-                      setFormData(prev => ({
-                        ...prev,
-                        slug: newSlug
-                      }));
-                    }
-                  }}
                   placeholder="Enter team name"
                 />
                 <FormErrorMessage>{formErrors.name}</FormErrorMessage>
@@ -453,31 +467,12 @@ const TeamsPage: React.FC = () => {
 
               <FormControl isInvalid={!!formErrors.slug} isRequired>
                 <FormLabel>Team Slug</FormLabel>
-                <InputGroup>
-                  <Input
-                    name="slug"
-                    value={formData.slug}
-                    onChange={handleInputChange}
-                    placeholder="team-slug"
-                  />
-                  <InputRightElement width="4.5rem">
-                    <Button
-                      h="1.75rem"
-                      size="sm"
-                      onClick={() => {
-                        if (formData.name) {
-                          const newSlug = generateSlugFromName(formData.name);
-                          setFormData(prev => ({
-                            ...prev,
-                            slug: newSlug
-                          }));
-                        }
-                      }}
-                    >
-                      Generate
-                    </Button>
-                  </InputRightElement>
-                </InputGroup>
+                <Input
+                  name="slug"
+                  value={formData.slug}
+                  onChange={handleInputChange}
+                  placeholder="team-slug"
+                />
                 <Text fontSize="sm" color="gray.500" mt={1}>
                   Used in URLs and identifiers
                 </Text>
