@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useCallback, useEffect } from 'react'
 import { Box } from '@chakra-ui/react'
 import MessageText from './MessageText'
 
@@ -11,40 +11,57 @@ interface SlackUserEnhancedTextProps {
 /**
  * Component that enhances text by:
  * 1. Using MessageText to handle standard Slack formatting and mentions
- * 2. Processing text paragraph by paragraph for better layout
+ * 2. Additionally scanning for standalone user IDs (not in <@...> format) and replacing them with SlackUserDisplay
  */
 const SlackUserEnhancedText: React.FC<SlackUserEnhancedTextProps> = ({
   text,
   workspaceId,
   resolveMentions = true,
 }) => {
-  if (!text || !workspaceId) return null
+  const [processedParagraphs, setProcessedParagraphs] = useState<
+    React.ReactNode[]
+  >([])
 
-  // Process text paragraph by paragraph
-  const paragraphs = text.split('\n')
+  // Function to process text and identify standalone user IDs
+  const processText = useCallback(() => {
+    if (!text || !workspaceId) return []
 
-  return (
-    <Box>
-      {paragraphs.map((paragraph, index) => {
-        if (!paragraph.trim()) {
-          return <Box key={`p-${index}`} height="1em" />
-        }
+    // Regular expressions for different user ID formats
+    const slackIdRegex = /\b(U[A-Z0-9]{8,})\b/g
 
-        // First, handle mentions with MessageText
-        // This handles the <@U12345> format
-        return (
-          <Box key={`p-${index}`} mb={2}>
-            <MessageText
-              text={paragraph}
-              workspaceId={workspaceId}
-              resolveMentions={resolveMentions}
-              fallbackToSimpleFormat={true}
-            />
-          </Box>
-        )
-      })}
-    </Box>
-  )
+    // Process text paragraph by paragraph
+    const paragraphs = text.split('\n')
+
+    return paragraphs.map((paragraph, pIndex) => {
+      if (!paragraph.trim()) {
+        return <Box key={`p-${pIndex}`} height="1em" />
+      }
+
+      // First, replace any standalone Slack IDs with proper user display
+      // We do this by converting them to <@ID> format, which MessageText can handle
+      const enhancedText = paragraph.replace(slackIdRegex, (match) => {
+        return `<@${match}>`
+      })
+
+      return (
+        <Box key={`p-${pIndex}`} mb={2}>
+          <MessageText
+            text={enhancedText}
+            workspaceId={workspaceId}
+            resolveMentions={resolveMentions}
+            fallbackToSimpleFormat={true}
+          />
+        </Box>
+      )
+    })
+  }, [text, workspaceId, resolveMentions])
+
+  // Process the text when inputs change
+  useEffect(() => {
+    setProcessedParagraphs(processText())
+  }, [processText])
+
+  return <Box>{processedParagraphs}</Box>
 }
 
 export default SlackUserEnhancedText
