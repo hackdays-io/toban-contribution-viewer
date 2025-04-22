@@ -34,7 +34,7 @@ import {
   AlertDescription,
 } from '@chakra-ui/react'
 import { FiChevronRight, FiArrowLeft, FiRefreshCw } from 'react-icons/fi'
-import { Link, useParams, useNavigate } from 'react-router-dom'
+import { Link, useParams, useNavigate, useLocation } from 'react-router-dom'
 import env from '../../config/env'
 import { SlackUserCacheProvider } from '../../components/slack/SlackUserContext'
 import MessageText from '../../components/slack/MessageText'
@@ -89,15 +89,57 @@ const TeamChannelAnalysisPage: React.FC = () => {
     return date.toISOString().split('T')[0]
   }
 
-  // Set default date range (last 30 days)
-  useEffect(() => {
-    const end = new Date()
-    const start = new Date()
-    start.setDate(start.getDate() - 30)
+  // Get analysis parameters from location state (if available from CreateAnalysisPage)
+  const location = useLocation()
 
-    setStartDate(formatDateForInput(start))
-    setEndDate(formatDateForInput(end))
-  }, [])
+  // Set date range and options from location state or default values
+  useEffect(() => {
+    console.log('Location state changed:', location.state)
+    
+    // Check if parameters were passed from CreateAnalysisPage
+    if (location.state) {
+      const {
+        startDate: startDateParam,
+        endDate: endDateParam,
+        includeThreads: includeThreadsParam,
+        includeReactions: includeReactionsParam,
+        _timestamp,
+      } = location.state
+
+      console.log('Applying parameters from location state:', {
+        startDate: startDateParam,
+        endDate: endDateParam,
+        includeThreads: includeThreadsParam,
+        includeReactions: includeReactionsParam,
+        _timestamp,
+      })
+
+      // Show toast to indicate parameters received
+      toast({
+        title: 'Analysis Parameters Received',
+        description: `Analyzing for period: ${new Date(startDateParam).toLocaleDateString()} - ${new Date(endDateParam).toLocaleDateString()}`,
+        status: 'info',
+        duration: 3000,
+        isClosable: true,
+      })
+
+      if (startDateParam) setStartDate(startDateParam)
+      if (endDateParam) setEndDate(endDateParam)
+      if (includeThreadsParam !== undefined)
+        setIncludeThreads(includeThreadsParam)
+      if (includeReactionsParam !== undefined)
+        setIncludeReactions(includeReactionsParam)
+    } else {
+      console.log('No location state, applying default date range')
+      // Default date range (last 30 days)
+      const end = new Date()
+      const start = new Date()
+      start.setDate(start.getDate() - 30)
+
+      setStartDate(formatDateForInput(start))
+      setEndDate(formatDateForInput(end))
+    }
+  }, [location.state, toast])
 
   // Fetch integration first to ensure it's loaded
   useEffect(() => {
@@ -235,14 +277,18 @@ const TeamChannelAnalysisPage: React.FC = () => {
       console.log('- channel_uuid:', channel.channel_uuid)
       console.log('- start_date:', startDateParam || 'undefined')
       console.log('- end_date:', endDateParam || 'undefined')
+      console.log('- includeThreads:', includeThreads)
+      console.log('- includeReactions:', includeReactions)
 
-      // Log the actual request parameters we're going to use
-      console.log('Analyzing channel with parameters:')
+      // Log the actual request parameters we're going to use for clarity
+      console.log('Analyzing channel with request parameters:')
       console.log('- integrationId:', integrationId)
       console.log('- channelId (resource UUID):', channelId)
       console.log('- channel UUID from data:', channel?.id)
       console.log('- start_date:', startDateParam || 'undefined')
       console.log('- end_date:', endDateParam || 'undefined')
+      console.log('- includeThreads:', includeThreads)
+      console.log('- includeReactions:', includeReactions)
 
       // First - sync the Slack data to ensure we have the latest messages
       toast({

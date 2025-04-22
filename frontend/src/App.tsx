@@ -36,6 +36,7 @@ import {
   TeamChannelAnalysisPage,
   TeamAnalysisResultPage,
   TeamChannelAnalysisHistoryPage,
+  CreateAnalysisPage,
 } from './pages/integration'
 
 // Profile Pages
@@ -129,7 +130,7 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-              
+
               {/* Legacy Analytics routes (for backward compatibility) */}
               <Route
                 path="/dashboard/analytics"
@@ -137,6 +138,18 @@ function App() {
                   <ProtectedRoute>
                     <AppLayout>
                       <Analytics />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Create Analysis page */}
+              <Route
+                path="/dashboard/analysis/create"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <CreateAnalysisPage />
                     </AppLayout>
                   </ProtectedRoute>
                 }
@@ -154,7 +167,7 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-              
+
               {/* Integrations routes (for backward compatibility) */}
               <Route
                 path="/dashboard/integrations"
