@@ -462,10 +462,10 @@ Backend environment variables are managed through:
 
 Required backend environment variables:
 - `DATABASE_URL`: PostgreSQL connection string
-- `SECRET_KEY`: Application secret key for security
 - `SUPABASE_URL`, `SUPABASE_KEY`, `SUPABASE_JWT_SECRET`: Supabase authentication settings
 - `OPENROUTER_API_KEY`: API key for LLM access via OpenRouter
 - `OPENROUTER_DEFAULT_MODEL`: Default LLM model to use (e.g., `anthropic/claude-3-opus:20240229`)
+- Note: `SECRET_KEY` is defined in the config but not currently used by the application
 - Note: Slack credentials are now entered directly in the UI and not required as environment variables
 
 ### Frontend Environment Variables

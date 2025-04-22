@@ -53,11 +53,11 @@ If you prefer to set up the resources manually instead of using CDK, follow thes
 3. **Configure Environment Variables:**
    Set the following environment variables in the Elastic Beanstalk environment:
    - `DATABASE_URL`: Your production PostgreSQL connection string
-   - `SECRET_KEY`: A secure random string for production
    - `SUPABASE_URL`: Your Supabase project URL
    - `SUPABASE_KEY`: Your Supabase service role key
    - `SUPABASE_JWT_SECRET`: Your Supabase JWT signing secret
    - `OPENAI_API_KEY`: Your OpenAI API key
+   - Note: `SECRET_KEY` is defined in the config but not currently used by the application
 
 4. **Set Up Database:**
    - Create an RDS PostgreSQL instance
