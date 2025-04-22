@@ -47,7 +47,8 @@ import {
   FiSlack,
   FiUsers,
 } from 'react-icons/fi'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
+import useAuth from '../../context/useAuth'
 import useIntegration from '../../context/useIntegration'
 import integrationService, {
   ServiceResource,
@@ -70,8 +71,8 @@ interface ChannelResource extends ServiceResource {
  * by selecting date range and channels to analyze.
  */
 const CreateAnalysisPage: React.FC = () => {
-  const navigate = useNavigate()
   const toast = useToast()
+  const { teamContext } = useAuth()
   const { integrations, fetchIntegrations } = useIntegration()
 
   // UI state
@@ -90,7 +91,7 @@ const CreateAnalysisPage: React.FC = () => {
   const [showAllChannels, setShowAllChannels] = useState(false)
   const [selectedChannels, setSelectedChannels] = useState<string[]>([])
   const [selectedChannel, setSelectedChannel] = useState<string>('')
-  const [selectedChannelData, setSelectedChannelData] = useState<ChannelResource | null>(null)
+  // Removed unused state
   const [analysis, setAnalysis] = useState<SlackAnalysisResult | null>(null)
   const [analysisCompleted, setAnalysisCompleted] = useState(false)
 
@@ -104,15 +105,8 @@ const CreateAnalysisPage: React.FC = () => {
   const bgHover = useColorModeValue('purple.50', 'purple.900')
   const borderColorHover = useColorModeValue('purple.300', 'purple.700')
   const selectedBg = useColorModeValue('purple.100', 'purple.800')
-  
-  // Pulsing animation for loading state
-  const pulseAnimation = `
-    @keyframes pulse {
-      0% { box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.4); }
-      70% { box-shadow: 0 0 0 10px rgba(124, 58, 237, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(124, 58, 237, 0); }
-    }
-  `
+
+  // Style colors for loading state
 
   // Set default date range (last 30 days)
   useEffect(() => {
@@ -126,8 +120,8 @@ const CreateAnalysisPage: React.FC = () => {
 
   // Load available integrations on page load
   useEffect(() => {
-    fetchIntegrations()
-  }, [fetchIntegrations])
+    void fetchIntegrations(teamContext?.currentTeamId || '')
+  }, [fetchIntegrations, teamContext?.currentTeamId])
 
   // Format date for input fields
   const formatDateForInput = (date: Date) => {
@@ -157,8 +151,7 @@ const CreateAnalysisPage: React.FC = () => {
 
       // Get selected resources from the API
       // Use getSelectedChannels which is the correct method name
-      const result =
-        await integrationService.getSelectedChannels(integrationId)
+      const result = await integrationService.getSelectedChannels(integrationId)
 
       if (integrationService.isApiError(result)) {
         console.warn('Failed to load selected channels:', result.message)
@@ -250,40 +243,44 @@ const CreateAnalysisPage: React.FC = () => {
   /**
    * Load the selected channel data
    */
-  const loadSelectedChannelData = useCallback(async (resourceId: string) => {
-    if (!selectedIntegration || !resourceId) return
+  const loadSelectedChannelData = useCallback(
+    async (resourceId: string) => {
+      if (!selectedIntegration || !resourceId) return
 
-    try {
-      console.log(`Loading channel data for ${resourceId}`)
-      
-      // Get the channel data
-      const channelData = await integrationService.getResource(
-        selectedIntegration,
-        resourceId
-      )
+      try {
+        console.log(`Loading channel data for ${resourceId}`)
 
-      if (integrationService.isApiError(channelData)) {
-        throw new Error(`Failed to fetch channel: ${channelData.message}`)
+        // Get the channel data
+        const channelData = await integrationService.getResource(
+          selectedIntegration,
+          resourceId
+        )
+
+        if (integrationService.isApiError(channelData)) {
+          throw new Error(`Failed to fetch channel: ${channelData.message}`)
+        }
+
+        console.log('Channel data retrieved:', channelData)
+
+        // Reset any previous analysis
+        setAnalysis(null)
+        setAnalysisCompleted(false)
+      } catch (error) {
+        console.error('Error fetching channel data:', error)
+        toast({
+          title: 'Error',
+          description:
+            error instanceof Error
+              ? error.message
+              : 'Failed to load channel data',
+          status: 'error',
+          duration: 5000,
+          isClosable: true,
+        })
       }
-
-      console.log('Channel data retrieved:', channelData)
-      setSelectedChannelData(channelData as ChannelResource)
-      
-      // Reset any previous analysis
-      setAnalysis(null)
-      setAnalysisCompleted(false)
-      
-    } catch (error) {
-      console.error('Error fetching channel data:', error)
-      toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to load channel data',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      })
-    }
-  }, [selectedIntegration, toast])
+    },
+    [selectedIntegration, toast]
+  )
 
   // When a channel is selected, load its data
   useEffect(() => {
@@ -318,7 +315,8 @@ const CreateAnalysisPage: React.FC = () => {
       // Show toast to indicate analysis is starting
       toast({
         title: 'Analysis Started',
-        description: 'Running channel analysis. This may take several minutes for large channels.',
+        description:
+          'Running channel analysis. This may take several minutes for large channels.',
         status: 'info',
         duration: 8000,
         isClosable: true,
@@ -331,14 +329,14 @@ const CreateAnalysisPage: React.FC = () => {
         startDate: startDateParam,
         endDate: endDateParam,
         includeThreads,
-        includeReactions
+        includeReactions,
       })
 
       // First - sync the channel data to ensure we have the latest messages
       try {
         // Step 1: Sync general integration resources
         console.log('Syncing general integration data first...')
-        const syncResult = await integrationService.syncResources(selectedIntegration)
+        await integrationService.syncResources(selectedIntegration)
 
         // Step 2: Specifically sync messages for this channel
         console.log(`Syncing messages for channel ${selectedChannel}...`)
@@ -346,8 +344,15 @@ const CreateAnalysisPage: React.FC = () => {
 
         // Build the request URL with query parameters
         const url = new URL(syncChannelEndpoint)
-        url.searchParams.append('start_date', startDateParam || new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString())
-        url.searchParams.append('end_date', endDateParam || new Date().toISOString())
+        url.searchParams.append(
+          'start_date',
+          startDateParam ||
+            new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString()
+        )
+        url.searchParams.append(
+          'end_date',
+          endDateParam || new Date().toISOString()
+        )
         url.searchParams.append('include_replies', includeThreads.toString())
 
         // Make the channel messages sync request
@@ -364,7 +369,8 @@ const CreateAnalysisPage: React.FC = () => {
             const responseText = await channelSyncResponse.text()
             try {
               const errorData = JSON.parse(responseText)
-              errorDetail = errorData.detail || errorData.message || responseText
+              errorDetail =
+                errorData.detail || errorData.message || responseText
             } catch {
               errorDetail = responseText || channelSyncResponse.statusText
             }
@@ -400,9 +406,10 @@ const CreateAnalysisPage: React.FC = () => {
         console.error('Error syncing data:', syncError)
         toast({
           title: 'Sync Warning',
-          description: syncError instanceof Error 
-            ? `Sync issue: ${syncError.message}. Analysis will use existing data.` 
-            : 'Failed to sync channel data. Analysis will use existing data.',
+          description:
+            syncError instanceof Error
+              ? `Sync issue: ${syncError.message}. Analysis will use existing data.`
+              : 'Failed to sync channel data. Analysis will use existing data.',
           status: 'warning',
           duration: 5000,
           isClosable: true,
@@ -447,18 +454,19 @@ const CreateAnalysisPage: React.FC = () => {
       if (result.analysis_id) {
         toast({
           title: 'Analysis Result Available',
-          description: 'You can view detailed results or navigate to the analysis result page.',
+          description:
+            'You can view detailed results or navigate to the analysis result page.',
           status: 'info',
           duration: 8000,
           isClosable: true,
         })
       }
-
     } catch (error) {
       console.error('Error during analysis:', error)
       toast({
         title: 'Analysis Failed',
-        description: error instanceof Error ? error.message : 'Failed to analyze channel',
+        description:
+          error instanceof Error ? error.message : 'Failed to analyze channel',
         status: 'error',
         duration: 10000,
         isClosable: true,
@@ -467,7 +475,7 @@ const CreateAnalysisPage: React.FC = () => {
       setIsAnalyzing(false)
     }
   }
-  
+
   // When an integration is selected, load its resources
   useEffect(() => {
     if (selectedIntegration) {
@@ -810,7 +818,9 @@ const CreateAnalysisPage: React.FC = () => {
                 rightIcon={<Icon as={isAnalyzing ? undefined : FiArrowRight} />}
                 colorScheme="purple"
                 onClick={runAnalysis}
-                isDisabled={!selectedIntegration || !selectedChannel || isAnalyzing}
+                isDisabled={
+                  !selectedIntegration || !selectedChannel || isAnalyzing
+                }
                 isLoading={isAnalyzing}
                 loadingText="Running Analysis..."
                 width="100%"
@@ -879,56 +889,75 @@ const CreateAnalysisPage: React.FC = () => {
         {/* Processing Indicator */}
         {isAnalyzing && (
           <GridItem colSpan={{ base: 1, lg: 2 }}>
-            <Card mb={6} bgColor="purple.50" boxShadow="lg" position="relative" 
+            <Card
+              mb={6}
+              bgColor="purple.50"
+              boxShadow="lg"
+              position="relative"
               sx={{
-                animation: "pulse 2s infinite",
-                "@keyframes pulse": {
-                  "0%": { boxShadow: "0 0 0 0px rgba(159, 122, 234, 0.7)" },
-                  "70%": { boxShadow: "0 0 0 15px rgba(159, 122, 234, 0)" },
-                  "100%": { boxShadow: "0 0 0 0px rgba(159, 122, 234, 0)" }
-                }
+                animation: 'pulse 2s infinite',
+                '@keyframes pulse': {
+                  '0%': { boxShadow: '0 0 0 0px rgba(159, 122, 234, 0.7)' },
+                  '70%': { boxShadow: '0 0 0 15px rgba(159, 122, 234, 0)' },
+                  '100%': { boxShadow: '0 0 0 0px rgba(159, 122, 234, 0)' },
+                },
               }}
             >
               <CardBody>
                 <Flex direction="column" align="center" justify="center" py={8}>
                   <Box position="relative" mb={4}>
-                    <Spinner 
-                      size="xl" 
-                      color="purple.500" 
-                      thickness="4px" 
-                      speed="0.8s" 
+                    <Spinner
+                      size="xl"
+                      color="purple.500"
+                      thickness="4px"
+                      speed="0.8s"
                     />
-                    <Box 
-                      position="absolute" 
-                      top="50%" 
-                      left="50%" 
-                      transform="translate(-50%, -50%)" 
-                      fontSize="sm" 
+                    <Box
+                      position="absolute"
+                      top="50%"
+                      left="50%"
+                      transform="translate(-50%, -50%)"
+                      fontSize="sm"
                       fontWeight="bold"
                       color="purple.600"
                     >
                       LLM
                     </Box>
                   </Box>
-                  
-                  <Heading size="md" mb={2} color="purple.700">Analyzing Channel Data</Heading>
+
+                  <Heading size="md" mb={2} color="purple.700">
+                    Analyzing Channel Data
+                  </Heading>
                   <Text textAlign="center" maxW="lg" mb={3}>
-                    Analysis is in progress. This process may take several minutes for large channels with many messages.
+                    Analysis is in progress. This process may take several
+                    minutes for large channels with many messages.
                   </Text>
-                  
-                  <Box p={3} bg="white" borderRadius="md" width="100%" maxW="lg">
-                    <Heading size="xs" mb={2} color="purple.600">Processing Steps:</Heading>
+
+                  <Box
+                    p={3}
+                    bg="white"
+                    borderRadius="md"
+                    width="100%"
+                    maxW="lg"
+                  >
+                    <Heading size="xs" mb={2} color="purple.600">
+                      Processing Steps:
+                    </Heading>
                     <HStack mb={1}>
                       <Icon as={FiMessageSquare} color="green.500" />
                       <Text fontSize="sm">Retrieving channel messages</Text>
                     </HStack>
                     <HStack mb={1}>
                       <Icon as={FiUsers} color="purple.500" />
-                      <Text fontSize="sm">Analyzing communication patterns</Text>
+                      <Text fontSize="sm">
+                        Analyzing communication patterns
+                      </Text>
                     </HStack>
                     <HStack>
                       <Icon as={FiBarChart2} color="blue.500" />
-                      <Text fontSize="sm">Generating insights and recommendations</Text>
+                      <Text fontSize="sm">
+                        Generating insights and recommendations
+                      </Text>
                     </HStack>
                   </Box>
                 </Flex>
@@ -940,22 +969,35 @@ const CreateAnalysisPage: React.FC = () => {
         {/* Analysis Results (only shown when analysis is complete) */}
         {analysisCompleted && analysis && (
           <GridItem colSpan={{ base: 1, lg: 2 }}>
-            <Card variant="elevated" mb={6} borderColor="green.300" borderWidth={2}>
+            <Card
+              variant="elevated"
+              mb={6}
+              borderColor="green.300"
+              borderWidth={2}
+            >
               <CardHeader>
                 <Heading size="lg">Analysis Results</Heading>
               </CardHeader>
               <CardBody>
                 {/* Analysis Stats */}
-                <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={4} mb={6}>
+                <SimpleGrid
+                  columns={{ base: 1, md: 2, lg: 4 }}
+                  spacing={4}
+                  mb={6}
+                >
                   <Stat>
                     <StatLabel>Messages</StatLabel>
-                    <StatNumber>{analysis.stats?.message_count || 0}</StatNumber>
+                    <StatNumber>
+                      {analysis.stats?.message_count || 0}
+                    </StatNumber>
                     <StatHelpText>Total messages analyzed</StatHelpText>
                   </Stat>
 
                   <Stat>
                     <StatLabel>Participants</StatLabel>
-                    <StatNumber>{analysis.stats?.participant_count || 0}</StatNumber>
+                    <StatNumber>
+                      {analysis.stats?.participant_count || 0}
+                    </StatNumber>
                     <StatHelpText>Unique contributors</StatHelpText>
                   </Stat>
 
@@ -967,7 +1009,9 @@ const CreateAnalysisPage: React.FC = () => {
 
                   <Stat>
                     <StatLabel>Reactions</StatLabel>
-                    <StatNumber>{analysis.stats?.reaction_count || 0}</StatNumber>
+                    <StatNumber>
+                      {analysis.stats?.reaction_count || 0}
+                    </StatNumber>
                     <StatHelpText>Total emoji reactions</StatHelpText>
                   </Stat>
                 </SimpleGrid>
@@ -981,11 +1025,13 @@ const CreateAnalysisPage: React.FC = () => {
                     <CardBody>
                       {analysis.channel_summary ? (
                         <Box>
-                          {analysis.channel_summary.split('\n').map((paragraph, index) => (
-                            <Box key={index} mb={2}>
-                              {paragraph || <Box height="1em" />}
-                            </Box>
-                          ))}
+                          {analysis.channel_summary
+                            .split('\n')
+                            .map((paragraph, index) => (
+                              <Box key={index} mb={2}>
+                                {paragraph || <Box height="1em" />}
+                              </Box>
+                            ))}
                         </Box>
                       ) : (
                         <Text color="gray.500">No summary available</Text>
@@ -1000,14 +1046,18 @@ const CreateAnalysisPage: React.FC = () => {
                     <CardBody>
                       {analysis.topic_analysis ? (
                         <Box>
-                          {analysis.topic_analysis.split('\n').map((paragraph, index) => (
-                            <Box key={index} mb={2}>
-                              {paragraph || <Box height="1em" />}
-                            </Box>
-                          ))}
+                          {analysis.topic_analysis
+                            .split('\n')
+                            .map((paragraph, index) => (
+                              <Box key={index} mb={2}>
+                                {paragraph || <Box height="1em" />}
+                              </Box>
+                            ))}
                         </Box>
                       ) : (
-                        <Text color="gray.500">No topic analysis available</Text>
+                        <Text color="gray.500">
+                          No topic analysis available
+                        </Text>
                       )}
                     </CardBody>
                   </Card>
@@ -1019,14 +1069,18 @@ const CreateAnalysisPage: React.FC = () => {
                     <CardBody>
                       {analysis.contributor_insights ? (
                         <Box>
-                          {analysis.contributor_insights.split('\n').map((paragraph, index) => (
-                            <Box key={index} mb={2}>
-                              {paragraph || <Box height="1em" />}
-                            </Box>
-                          ))}
+                          {analysis.contributor_insights
+                            .split('\n')
+                            .map((paragraph, index) => (
+                              <Box key={index} mb={2}>
+                                {paragraph || <Box height="1em" />}
+                              </Box>
+                            ))}
                         </Box>
                       ) : (
-                        <Text color="gray.500">No contributor insights available</Text>
+                        <Text color="gray.500">
+                          No contributor insights available
+                        </Text>
                       )}
                     </CardBody>
                   </Card>
@@ -1038,14 +1092,18 @@ const CreateAnalysisPage: React.FC = () => {
                     <CardBody>
                       {analysis.key_highlights ? (
                         <Box>
-                          {analysis.key_highlights.split('\n').map((paragraph, index) => (
-                            <Box key={index} mb={2}>
-                              {paragraph || <Box height="1em" />}
-                            </Box>
-                          ))}
+                          {analysis.key_highlights
+                            .split('\n')
+                            .map((paragraph, index) => (
+                              <Box key={index} mb={2}>
+                                {paragraph || <Box height="1em" />}
+                              </Box>
+                            ))}
                         </Box>
                       ) : (
-                        <Text color="gray.500">No key highlights available</Text>
+                        <Text color="gray.500">
+                          No key highlights available
+                        </Text>
                       )}
                     </CardBody>
                   </Card>
@@ -1072,7 +1130,9 @@ const CreateAnalysisPage: React.FC = () => {
                     <Text fontWeight="bold" fontSize="sm">
                       Model:
                     </Text>
-                    <Text fontSize="sm">{analysis.model_used || 'Unknown'}</Text>
+                    <Text fontSize="sm">
+                      {analysis.model_used || 'Unknown'}
+                    </Text>
                   </HStack>
 
                   <HStack spacing={2}>
