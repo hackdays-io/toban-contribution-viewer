@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo } from 'react'
 import {
   Box,
   Flex,
@@ -16,8 +16,8 @@ import {
   MenuDivider,
   Button,
   Container,
-} from '@chakra-ui/react';
-import { Link, useLocation } from 'react-router-dom';
+} from '@chakra-ui/react'
+import { Link, useLocation } from 'react-router-dom'
 import {
   FiHome,
   FiUsers,
@@ -26,16 +26,16 @@ import {
   FiChevronDown,
   FiPlus,
   FiHelpCircle,
-} from 'react-icons/fi';
-import useAuth from '../../context/useAuth';
+} from 'react-icons/fi'
+import useAuth from '../../context/useAuth'
 
 interface TabItemProps {
-  icon: React.ElementType;
-  to: string;
-  children: React.ReactNode;
-  isActive?: boolean;
-  badge?: string;
-  badgeColorScheme?: string;
+  icon: React.ElementType
+  to: string
+  children: React.ReactNode
+  isActive?: boolean
+  badge?: string
+  badgeColorScheme?: string
 }
 
 /**
@@ -43,8 +43,8 @@ interface TabItemProps {
  */
 const TabItem = React.memo(
   ({ icon, to, children, isActive, badge, badgeColorScheme }: TabItemProps) => {
-    const activeBorderColor = useColorModeValue('blue.500', 'blue.400');
-    const hoverBg = useColorModeValue('gray.100', 'gray.700');
+    const activeBorderColor = useColorModeValue('blue.500', 'blue.400')
+    const hoverBg = useColorModeValue('gray.100', 'gray.700')
 
     return (
       <Box
@@ -55,7 +55,9 @@ const TabItem = React.memo(
         transition="all 0.2s"
         fontWeight="medium"
         color={isActive ? 'blue.500' : undefined}
-        borderBottom={isActive ? `2px solid ${activeBorderColor}` : '2px solid transparent'}
+        borderBottom={
+          isActive ? `2px solid ${activeBorderColor}` : '2px solid transparent'
+        }
         _hover={{ bg: isActive ? 'transparent' : hoverBg }}
         role="group"
         display="flex"
@@ -66,9 +68,7 @@ const TabItem = React.memo(
       >
         <HStack spacing={2} justifyContent="center" width="full">
           <Icon as={icon} w={5} h={5} flexShrink={0} />
-          <Text>
-            {children}
-          </Text>
+          <Text>{children}</Text>
           {badge && (
             <Badge
               colorScheme={badgeColorScheme || 'green'}
@@ -82,23 +82,23 @@ const TabItem = React.memo(
           )}
         </HStack>
       </Box>
-    );
+    )
   }
-);
+)
 
 /**
  * Dropdown menu component for workspace selection
  */
 const WorkspaceMenu = () => {
-  const { teamContext } = useAuth();
-  const menuBg = useColorModeValue('white', 'gray.800');
-  
+  const { teamContext, switchTeam } = useAuth()
+  const menuBg = useColorModeValue('white', 'gray.800')
+
   // Get current team name
   const currentTeam = useMemo(() => {
     return teamContext.teams?.find(
       (team) => team.id === teamContext.currentTeamId
-    );
-  }, [teamContext.teams, teamContext.currentTeamId]);
+    )
+  }, [teamContext.teams, teamContext.currentTeamId])
 
   return (
     <Menu>
@@ -115,7 +115,7 @@ const WorkspaceMenu = () => {
         {teamContext.teams?.map((team) => (
           <MenuItem
             key={team.id}
-            onClick={() => teamContext.switchTeam(team.id)}
+            onClick={() => switchTeam(team.id)}
             fontWeight={
               team.id === teamContext.currentTeamId ? 'bold' : 'normal'
             }
@@ -129,35 +129,35 @@ const WorkspaceMenu = () => {
         </MenuItem>
       </MenuList>
     </Menu>
-  );
-};
+  )
+}
 
 /**
  * Top navigation component with tabs
  */
 const TopNavigation = () => {
-  const location = useLocation();
-  const bgColor = useColorModeValue('gray.100', 'gray.800');
-  const borderColor = useColorModeValue('gray.200', 'gray.700');
+  const location = useLocation()
+  const bgColor = useColorModeValue('gray.100', 'gray.800')
+  const borderColor = useColorModeValue('gray.200', 'gray.700')
 
   // Helper to check if a path is active
   const isActivePath = useMemo(() => {
     return (path: string) => {
       // For dashboard, only match exactly
       if (path === '/dashboard') {
-        return location.pathname === '/dashboard';
+        return location.pathname === '/dashboard'
       }
       // For other paths, check if the current path starts with the given path
-      return location.pathname.startsWith(path);
-    };
-  }, [location.pathname]);
+      return location.pathname.startsWith(path)
+    }
+  }, [location.pathname])
 
   return (
-    <Box 
-      bg={bgColor} 
-      boxShadow="sm" 
-      position="sticky" 
-      top={0} 
+    <Box
+      bg={bgColor}
+      boxShadow="sm"
+      position="sticky"
+      top={0}
       zIndex={10}
       borderBottom="1px"
       borderColor={borderColor}
@@ -169,7 +169,7 @@ const TopNavigation = () => {
           <Flex align="center" h={14}>
             <WorkspaceMenu />
           </Flex>
-          
+
           {/* Center with main navigation tabs */}
           <Flex
             as="nav"
@@ -180,21 +180,30 @@ const TopNavigation = () => {
             <TabItem
               icon={FiHome}
               to="/dashboard"
-              isActive={isActivePath('/dashboard') && !location.pathname.includes('/dashboard/')}
+              isActive={
+                isActivePath('/dashboard') &&
+                !location.pathname.includes('/dashboard/')
+              }
             >
               Dashboard
             </TabItem>
             <TabItem
               icon={FiDatabase}
               to="/dashboard/workspaces"
-              isActive={isActivePath('/dashboard/workspaces') || isActivePath('/dashboard/integrations')}
+              isActive={
+                isActivePath('/dashboard/workspaces') ||
+                isActivePath('/dashboard/integrations')
+              }
             >
               Workspaces
             </TabItem>
             <TabItem
               icon={FiBarChart2}
               to="/dashboard/analysis"
-              isActive={isActivePath('/dashboard/analysis') || isActivePath('/dashboard/analytics')}
+              isActive={
+                isActivePath('/dashboard/analysis') ||
+                isActivePath('/dashboard/analytics')
+              }
               badge="NEW"
             >
               Analysis
@@ -206,8 +215,8 @@ const TopNavigation = () => {
             >
               Team
             </TabItem>
-          </HStack>
-          
+          </Flex>
+
           {/* Right side with action buttons */}
           <HStack spacing={3}>
             <Tooltip label="Create New">
@@ -229,32 +238,42 @@ const TopNavigation = () => {
             </Tooltip>
           </HStack>
         </Flex>
-        
+
         {/* Mobile navigation (hidden on desktop) */}
-        <Box 
-          display={{ base: 'block', md: 'none' }} 
-          pb={2}
-          overflow="hidden"
-        >
-          <Flex justifyContent="space-between" overflowX="auto" py={1} width="full">
+        <Box display={{ base: 'block', md: 'none' }} pb={2} overflow="hidden">
+          <Flex
+            justifyContent="space-between"
+            overflowX="auto"
+            py={1}
+            width="full"
+          >
             <TabItem
               icon={FiHome}
               to="/dashboard"
-              isActive={isActivePath('/dashboard') && !location.pathname.includes('/dashboard/')}
+              isActive={
+                isActivePath('/dashboard') &&
+                !location.pathname.includes('/dashboard/')
+              }
             >
               Dashboard
             </TabItem>
             <TabItem
               icon={FiDatabase}
               to="/dashboard/workspaces"
-              isActive={isActivePath('/dashboard/workspaces') || isActivePath('/dashboard/integrations')}
+              isActive={
+                isActivePath('/dashboard/workspaces') ||
+                isActivePath('/dashboard/integrations')
+              }
             >
               Workspaces
             </TabItem>
             <TabItem
               icon={FiBarChart2}
               to="/dashboard/analysis"
-              isActive={isActivePath('/dashboard/analysis') || isActivePath('/dashboard/analytics')}
+              isActive={
+                isActivePath('/dashboard/analysis') ||
+                isActivePath('/dashboard/analytics')
+              }
             >
               Analysis
             </TabItem>
@@ -269,7 +288,7 @@ const TopNavigation = () => {
         </Box>
       </Container>
     </Box>
-  );
-};
+  )
+}
 
-export default React.memo(TopNavigation);
+export default React.memo(TopNavigation)

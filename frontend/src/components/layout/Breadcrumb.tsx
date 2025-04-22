@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo } from 'react'
 import {
   Breadcrumb as ChakraBreadcrumb,
   BreadcrumbItem,
@@ -8,157 +8,174 @@ import {
   HStack,
   Icon,
   Text,
-} from '@chakra-ui/react';
-import { Link, useLocation } from 'react-router-dom';
-import { FiChevronRight, FiHome } from 'react-icons/fi';
-import useAuth from '../../context/useAuth';
-import useIntegration from '../../context/useIntegration';
+} from '@chakra-ui/react'
+import { Link, useLocation } from 'react-router-dom'
+import { FiChevronRight, FiHome } from 'react-icons/fi'
+import { IconType } from 'react-icons'
+import useAuth from '../../context/useAuth'
+import useIntegration from '../../context/useIntegration'
+
+// Interface for breadcrumb items
+interface BreadcrumbItemData {
+  label: string
+  path: string
+  icon?: IconType
+}
 
 /**
  * Breadcrumb component for navigation context
  */
 const Breadcrumb = () => {
-  const location = useLocation();
-  const { teamContext } = useAuth();
-  const { integrations } = useIntegration();
-  const linkColor = useColorModeValue('blue.600', 'blue.300');
-  
+  const location = useLocation()
+  const { teamContext } = useAuth()
+  const { integrations } = useIntegration()
+  const linkColor = useColorModeValue('blue.600', 'blue.300')
+
   // Parse the current path into breadcrumb segments
   const breadcrumbs = useMemo(() => {
-    const paths = location.pathname.split('/').filter(Boolean);
-    
+    const paths = location.pathname.split('/').filter(Boolean)
+
     // Special handling for dashboard as the root
     if (paths[0] !== 'dashboard') {
-      return [];
+      return []
     }
-    
-    const breadcrumbItems = [
+
+    const breadcrumbItems: BreadcrumbItemData[] = [
       {
         label: 'Dashboard',
         path: '/dashboard',
         icon: FiHome,
-      }
-    ];
-    
+      },
+    ]
+
     // Skip the dashboard segment since we've already added it
-    let currentPath = '/dashboard';
-    
+    let currentPath = '/dashboard'
+
     for (let i = 1; i < paths.length; i++) {
-      const segment = paths[i];
-      currentPath += `/${segment}`;
-      
+      const segment = paths[i]
+      currentPath += `/${segment}`
+
       // Handle special cases for friendly naming
       switch (segment) {
         case 'integrations':
           breadcrumbItems.push({
             label: 'Workspaces',
             path: currentPath,
-          });
-          break;
-          
+          })
+          break
+
         case 'workspaces':
           breadcrumbItems.push({
             label: 'Workspaces',
             path: currentPath,
-          });
-          break;
-          
+          })
+          break
+
         case 'analytics':
         case 'analysis':
           breadcrumbItems.push({
             label: 'Analysis',
             path: currentPath,
-          });
-          break;
-          
+          })
+          break
+
         case 'teams':
           breadcrumbItems.push({
             label: 'Teams',
             path: currentPath,
-          });
-          break;
-          
+          })
+          break
+
         case 'profile':
           breadcrumbItems.push({
             label: 'Profile',
             path: currentPath,
-          });
-          break;
-          
+          })
+          break
+
         default:
           // Check if it's an integration ID and replace with integration name
-          if ((paths[i-1] === 'integrations' || paths[i-1] === 'workspaces') && integrations) {
-            const integration = integrations.find(int => int.id === segment);
+          if (
+            (paths[i - 1] === 'integrations' ||
+              paths[i - 1] === 'workspaces') &&
+            integrations
+          ) {
+            const integration = integrations.find((int) => int.id === segment)
             if (integration) {
               breadcrumbItems.push({
                 label: integration.name || 'Integration',
                 path: currentPath,
-              });
-              break;
+              })
+              break
             }
           }
-          
+
           // Check if it's a team ID and replace with team name
-          if (paths[i-1] === 'teams' && teamContext.teams) {
-            const team = teamContext.teams.find(t => t.id === segment);
+          if (paths[i - 1] === 'teams' && teamContext.teams) {
+            const team = teamContext.teams.find((t) => t.id === segment)
             if (team) {
               breadcrumbItems.push({
                 label: team.name,
                 path: currentPath,
-              });
-              break;
+              })
+              break
             }
           }
-          
+
           // Handle other cases like channels
-          if (paths[i-1] === 'channels') {
+          if (paths[i - 1] === 'channels') {
             breadcrumbItems.push({
               label: `Channel: ${segment}`,
               path: currentPath,
-            });
-            break;
+            })
+            break
           }
-          
+
           // Handle analysis results
-          if (paths[i-1] === 'analysis') {
+          if (paths[i - 1] === 'analysis') {
             breadcrumbItems.push({
               label: 'Results',
               path: currentPath,
-            });
-            break;
+            })
+            break
           }
-          
+
           // Default case for regular segments - capitalize first letter
           breadcrumbItems.push({
             label: segment.charAt(0).toUpperCase() + segment.slice(1),
             path: currentPath,
-          });
+          })
       }
     }
-    
-    return breadcrumbItems;
-  }, [location.pathname, integrations, teamContext.teams]);
-  
+
+    return breadcrumbItems
+  }, [location.pathname, integrations, teamContext.teams])
+
   // Don't show breadcrumbs for the dashboard (root)
   if (location.pathname === '/dashboard') {
-    return null;
+    return null
   }
-  
+
   return (
     <Box pb={2}>
-      <ChakraBreadcrumb 
+      <ChakraBreadcrumb
         separator={<Icon as={FiChevronRight} color="gray.500" />}
         spacing="8px"
         fontSize="sm"
         color="gray.600"
       >
         {breadcrumbs.map((crumb, index) => (
-          <BreadcrumbItem key={crumb.path} isCurrentPage={index === breadcrumbs.length - 1}>
-            <BreadcrumbLink 
-              as={Link} 
+          <BreadcrumbItem
+            key={crumb.path}
+            isCurrentPage={index === breadcrumbs.length - 1}
+          >
+            <BreadcrumbLink
+              as={Link}
               to={crumb.path}
               color={index === breadcrumbs.length - 1 ? 'inherit' : linkColor}
-              fontWeight={index === breadcrumbs.length - 1 ? 'medium' : 'normal'}
+              fontWeight={
+                index === breadcrumbs.length - 1 ? 'medium' : 'normal'
+              }
               _hover={{ textDecoration: 'none', color: 'blue.500' }}
             >
               <HStack spacing={1}>
@@ -170,7 +187,7 @@ const Breadcrumb = () => {
         ))}
       </ChakraBreadcrumb>
     </Box>
-  );
-};
+  )
+}
 
-export default React.memo(Breadcrumb);
+export default React.memo(Breadcrumb)
