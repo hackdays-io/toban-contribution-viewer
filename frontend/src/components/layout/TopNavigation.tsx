@@ -58,21 +58,24 @@ const TabItem = React.memo(
         borderBottom={isActive ? `2px solid ${activeBorderColor}` : '2px solid transparent'}
         _hover={{ bg: isActive ? 'transparent' : hoverBg }}
         role="group"
-        display="block"
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
         height="full"
+        width="140px" // Set consistent width for all menu items
       >
-        <HStack spacing={2} overflow="hidden">
-          <Icon as={icon} w={5} h={5} />
-          <Text overflow="hidden" textOverflow="ellipsis">
+        <HStack spacing={2} justifyContent="center" width="full">
+          <Icon as={icon} w={5} h={5} flexShrink={0} />
+          <Text>
             {children}
           </Text>
           {badge && (
             <Badge
-              ml="auto"
               colorScheme={badgeColorScheme || 'green'}
               borderRadius="full"
               px={2}
               fontSize="xs"
+              ml={1}
             >
               {badge}
             </Badge>
@@ -168,9 +171,8 @@ const TopNavigation = () => {
           </Flex>
           
           {/* Center with main navigation tabs */}
-          <HStack
+          <Flex
             as="nav"
-            spacing={1}
             display={{ base: 'none', md: 'flex' }}
             justifyContent="center"
             h={14}
@@ -232,8 +234,9 @@ const TopNavigation = () => {
         <Box 
           display={{ base: 'block', md: 'none' }} 
           pb={2}
+          overflow="hidden"
         >
-          <HStack spacing={1} overflowX="auto" py={1}>
+          <Flex justifyContent="space-between" overflowX="auto" py={1} width="full">
             <TabItem
               icon={FiHome}
               to="/dashboard"
@@ -262,7 +265,7 @@ const TopNavigation = () => {
             >
               Team
             </TabItem>
-          </HStack>
+          </Flex>
         </Box>
       </Container>
     </Box>
