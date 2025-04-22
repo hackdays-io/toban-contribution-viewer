@@ -5,6 +5,8 @@
 - Backend: `uvicorn app.main:app --reload` (development)
 
 ## Lint & Format Commands
+- `./run-ci-checks.sh` cover all tests.
+- `./run-ci-checks.sh --ci-compatible` will use same condition as the github CI settings.
 - Frontend: `npm run lint`, `npm run format`, `npm run format:check`, `npm run typecheck`
 - Backend: `black .`, `isort .`, `flake8`, `mypy .`
 
@@ -12,6 +14,9 @@
 - Frontend: `npm run test` (all tests), `npm run test:watch` (watch mode)
 - Backend: `pytest` (all tests), `pytest tests/test_file.py::test_function` (single test)
 - Coverage: `pytest --cov=app --cov-report=term-missing` (backend)
+
+## Development
+- For using python, use `source backend/venv/bin/activate`.
 
 ## Style Guidelines
 - Frontend (TypeScript/React):
