@@ -118,7 +118,19 @@ function App() {
 
               {/* Legacy Slack routes removed */}
 
-              {/* Analytics routes */}
+              {/* Analysis Hub routes */}
+              <Route
+                path="/dashboard/analysis"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <Analytics />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              
+              {/* Legacy Analytics routes (for backward compatibility) */}
               <Route
                 path="/dashboard/analytics"
                 element={
@@ -131,7 +143,19 @@ function App() {
               />
               {/* Legacy Slack analytics routes removed */}
 
-              {/* Integrations routes */}
+              {/* Workspaces routes (new UI) */}
+              <Route
+                path="/dashboard/workspaces"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <IntegrationsPage />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              
+              {/* Integrations routes (for backward compatibility) */}
               <Route
                 path="/dashboard/integrations"
                 element={
