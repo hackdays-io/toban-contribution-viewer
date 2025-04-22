@@ -51,6 +51,7 @@ interface AnalysisResponse {
   key_highlights: string
   model_used: string
   generated_at: string
+  workspace_id?: string // Added for Slack user display support
 }
 
 interface Channel extends ServiceResource {
@@ -119,11 +120,20 @@ const TeamAnalysisResultPage: React.FC = () => {
       console.log(
         `Fetching analysis ${analysisId} for integration ${integrationId} and channel ${channelId}`
       )
+      // Log the workspace ID to debug user display issues
+      console.log('Current integration:', currentIntegration)
+      console.log(
+        'Current integration workspace_id:',
+        currentIntegration?.workspace_id
+      )
       const analysisResult = await integrationService.getResourceAnalysis(
         integrationId || '',
         channelId || '',
         analysisId || ''
       )
+
+      // Log the analysis result to debug
+      console.log('Analysis result from API:', analysisResult)
 
       // Check if the result is an API error
       if (integrationService.isApiError(analysisResult)) {
@@ -185,9 +195,11 @@ const TeamAnalysisResultPage: React.FC = () => {
                       {paragraph.trim() ? (
                         <MessageText
                           text={paragraph}
-                          workspaceId={channel?.external_id || ''}
+                          workspaceId={
+                            analysis?.workspace_id || workspaceId || ''
+                          }
                           resolveMentions={true}
-                          fallbackToSimpleFormat={true}
+                          fallbackToSimpleFormat={false}
                         />
                       ) : (
                         <Box height="1em" />
@@ -229,9 +241,11 @@ const TeamAnalysisResultPage: React.FC = () => {
                     {paragraph.trim() ? (
                       <MessageText
                         text={paragraph}
-                        workspaceId={channel?.external_id || ''}
+                        workspaceId={
+                          analysis?.workspace_id || workspaceId || ''
+                        }
                         resolveMentions={true}
-                        fallbackToSimpleFormat={true}
+                        fallbackToSimpleFormat={false}
                       />
                     ) : (
                       <Box height="1em" />
@@ -256,7 +270,9 @@ const TeamAnalysisResultPage: React.FC = () => {
                       {paragraph.trim() ? (
                         <MessageText
                           text={paragraph}
-                          workspaceId={channel?.external_id || ''}
+                          workspaceId={
+                            analysis?.workspace_id || workspaceId || ''
+                          }
                           resolveMentions={true}
                           fallbackToSimpleFormat={true}
                         />
@@ -281,7 +297,9 @@ const TeamAnalysisResultPage: React.FC = () => {
                     {paragraph.trim() ? (
                       <MessageText
                         text={paragraph}
-                        workspaceId={channel?.external_id || ''}
+                        workspaceId={
+                          analysis?.workspace_id || workspaceId || ''
+                        }
                         resolveMentions={true}
                         fallbackToSimpleFormat={true}
                       />
@@ -298,8 +316,45 @@ const TeamAnalysisResultPage: React.FC = () => {
     )
   }
 
+  // Try to get the workspace ID from different sources - prefer the analysis response
+  // over the integration metadata, as it's more reliable (comes directly from the backend)
+  const workspaceId = analysis?.workspace_id || currentIntegration?.workspace_id
+  console.log(
+    'TeamAnalysisResultPage render - workspaceId:',
+    workspaceId,
+    'from analysis:',
+    analysis?.workspace_id
+  )
+
+  // Don't render slack components if no workspace ID is available
+  if (!workspaceId) {
+    console.log('No workspace ID available yet')
+    return (
+      <Box p={4}>
+        {/* Render the same content without the SlackUserCacheProvider */}
+        {/* Breadcrumb and other content would go here */}
+        {isLoading ? (
+          <Flex height="300px" justify="center" align="center">
+            <Spinner size="xl" color="purple.500" thickness="4px" />
+          </Flex>
+        ) : (
+          <Text>
+            Loading integration data... (No Slack workspace ID available)
+          </Text>
+        )}
+      </Box>
+    )
+  }
+
+  // Add extra debug logging when initializing the SlackUserCacheProvider
+  console.log(
+    `[TeamAnalysisResultPage] Initializing SlackUserCacheProvider with workspaceId: ${analysis?.workspace_id || workspaceId || 'MISSING'}, analysis.workspace_id: ${analysis?.workspace_id}, currentIntegration.workspace_id: ${currentIntegration?.workspace_id}`
+  )
+
   return (
-    <SlackUserCacheProvider workspaceId={channel?.external_id || ''}>
+    <SlackUserCacheProvider
+      workspaceId={analysis?.workspace_id || workspaceId || ''}
+    >
       <Box p={4}>
         {/* Breadcrumb navigation */}
         <Breadcrumb

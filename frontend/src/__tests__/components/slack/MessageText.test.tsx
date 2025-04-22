@@ -149,6 +149,7 @@ describe('MessageText', () => {
   })
 
   it('renders simple format for user mentions', () => {
+    // Now with an updated regex that handles underscores, we should match the full ERROR_USER
     render(
       <ChakraProvider>
         <MessageText
@@ -159,7 +160,7 @@ describe('MessageText', () => {
       </ChakraProvider>
     )
 
-    // The content is actually rendered as "Hello <@ERROR_USER>!" because the mocked component doesn't do the replacement
-    expect(screen.getByText('Hello <@ERROR_USER>!')).toBeInTheDocument()
+    // The updated regex should now match @ERROR_USER
+    expect(screen.getByText(/Hello @ERROR_USER!/)).toBeInTheDocument()
   })
 })

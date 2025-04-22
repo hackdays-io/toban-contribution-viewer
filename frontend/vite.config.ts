@@ -31,8 +31,7 @@ export default defineConfig(({ mode }) => {
   // This is a more permissive approach that will solve the immediate issue
   const allowedHosts = true; // Allow all hosts
   
-  // Determine if we're in development mode
-  const isDev = mode === 'development';
+  // Mode is used for configuration
   
   // Define the server configuration type
   interface ServerConfig {
@@ -73,20 +72,6 @@ export default defineConfig(({ mode }) => {
     } as ServerConfig
   };
   
-  // Only add proxy configuration in development mode
-  if (isDev) {
-    config.server.proxy = {
-      // Proxy all API requests to the backend
-      '/api': {
-        target: 'http://backend:8000',  // Use Docker service name
-        changeOrigin: true,
-        secure: false,
-      }
-    };
-    console.log('Development mode: API proxy enabled (target: http://backend:8000)');
-  } else {
-    console.log('Production mode: API proxy disabled');
-  }
   
   console.log('Allowed hosts:', allowedHosts === true ? 'All hosts allowed' : allowedHosts);
   return config;

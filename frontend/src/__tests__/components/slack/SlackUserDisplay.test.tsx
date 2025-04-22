@@ -4,30 +4,34 @@ import { ChakraProvider } from '@chakra-ui/react'
 import SlackUserDisplay from '../../../components/slack/SlackUserDisplay'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-// Mock fetch
-global.fetch = vi.fn().mockImplementation((url) => {
-  // Check if fetch_from_slack parameter is present
-  const fetchFromSlack = url.toString().includes('fetch_from_slack=true')
-
-  return Promise.resolve({
-    ok: true,
-    json: () =>
-      Promise.resolve({
-        users: [
-          {
-            id: 'test-user-id',
-            slack_id: 'U12345678',
-            name: fetchFromSlack ? 'slackuser' : 'testuser',
-            display_name: fetchFromSlack ? 'Slack User' : 'Test User',
-            real_name: fetchFromSlack
-              ? 'Slack User Real Name'
-              : 'Test User Real Name',
-            profile_image_url: 'https://example.com/avatar.jpg',
-          },
-        ],
+// Mock SlackApiClient
+vi.mock('../../../lib/slackApiClient', () => {
+  const mockClient = {
+    getUsersByIds: vi
+      .fn()
+      .mockImplementation((_workspaceId, _userIds, fetchFromSlack) => {
+        return Promise.resolve({
+          users: [
+            {
+              id: 'test-user-id',
+              slack_id: 'U12345678',
+              name: fetchFromSlack ? 'slackuser' : 'testuser',
+              display_name: fetchFromSlack ? 'Slack User' : 'Test User',
+              real_name: fetchFromSlack
+                ? 'Slack User Real Name'
+                : 'Test User Real Name',
+              profile_image_url: 'https://example.com/avatar.jpg',
+            },
+          ],
+        })
       }),
-  })
-}) as unknown as typeof global.fetch
+  }
+
+  return {
+    slackApiClient: mockClient,
+    default: mockClient,
+  }
+})
 
 describe('SlackUserDisplay', () => {
   beforeEach(() => {
@@ -170,6 +174,9 @@ describe('SlackUserDisplay', () => {
   })
 
   it('should include fetch_from_slack parameter when fetchFromSlack is true', async () => {
+    // Get the mocked slackApiClient
+    const { slackApiClient } = await import('../../../lib/slackApiClient')
+
     const { findByText } = render(
       <ChakraProvider>
         <SlackUserDisplay
@@ -184,10 +191,11 @@ describe('SlackUserDisplay', () => {
     const loadingElement = await findByText('Loading...')
     expect(loadingElement).toBeInTheDocument()
 
-    // Check that fetch was called with the right URL
-    expect(global.fetch).toHaveBeenCalledWith(
-      expect.stringContaining('fetch_from_slack=true'),
-      expect.any(Object)
+    // Check that slackApiClient.getUsersByIds was called with the right parameters
+    expect(slackApiClient.getUsersByIds).toHaveBeenCalledWith(
+      'test-workspace-id',
+      ['test-user-id'],
+      true // fetchFromSlack=true
     )
   })
 })

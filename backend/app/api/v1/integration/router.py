@@ -1931,6 +1931,28 @@ async def get_integration_resource_analyses(
                 detail="Resource not found or not a Slack channel",
             )
 
+        # Get the workspace ID from the integration metadata
+        metadata = integration.integration_metadata or {}
+        slack_workspace_id = metadata.get("slack_id")
+
+        if not slack_workspace_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Integration has no associated Slack workspace",
+            )
+
+        # Get the workspace from the database
+        workspace_result = await db.execute(
+            select(SlackWorkspace).where(SlackWorkspace.slack_id == slack_workspace_id)
+        )
+        workspace = workspace_result.scalars().first()
+
+        if not workspace:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Slack workspace not found",
+            )
+
         # Get the channel to ensure it exists and get the channel name
         channel_result = await db.execute(
             select(SlackChannel).where(SlackChannel.id == resource_id)
@@ -1969,6 +1991,9 @@ async def get_integration_resource_analyses(
                     key_highlights=analysis.key_highlights,
                     model_used=analysis.model_used,
                     generated_at=analysis.generated_at,
+                    workspace_id=str(
+                        workspace.slack_id
+                    ),  # Include workspace ID for user display
                 )
             )
 
@@ -2039,6 +2064,28 @@ async def get_latest_integration_resource_analysis(
                 detail="Resource not found or not a Slack channel",
             )
 
+        # Get the workspace ID from the integration metadata
+        metadata = integration.integration_metadata or {}
+        slack_workspace_id = metadata.get("slack_id")
+
+        if not slack_workspace_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Integration has no associated Slack workspace",
+            )
+
+        # Get the workspace from the database
+        workspace_result = await db.execute(
+            select(SlackWorkspace).where(SlackWorkspace.slack_id == slack_workspace_id)
+        )
+        workspace = workspace_result.scalars().first()
+
+        if not workspace:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Slack workspace not found",
+            )
+
         # Get the channel to ensure it exists and get the channel name
         channel_result = await db.execute(
             select(SlackChannel).where(SlackChannel.id == resource_id)
@@ -2078,6 +2125,9 @@ async def get_latest_integration_resource_analysis(
             key_highlights=analysis.key_highlights,
             model_used=analysis.model_used,
             generated_at=analysis.generated_at,
+            workspace_id=str(
+                workspace.id
+            ),  # Include database UUID as workspace_id for user display
         )
 
     except HTTPException:
@@ -2144,6 +2194,28 @@ async def get_integration_resource_analysis(
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Resource not found or not a Slack channel",
+            )
+
+        # Get the workspace ID from the integration metadata
+        metadata = integration.integration_metadata or {}
+        slack_workspace_id = metadata.get("slack_id")
+
+        if not slack_workspace_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Integration has no associated Slack workspace",
+            )
+
+        # Get the workspace from the database
+        workspace_result = await db.execute(
+            select(SlackWorkspace).where(SlackWorkspace.slack_id == slack_workspace_id)
+        )
+        workspace = workspace_result.scalars().first()
+
+        if not workspace:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Slack workspace not found",
             )
 
         # Get the channel to ensure it exists
@@ -2248,7 +2320,7 @@ async def get_integration_resource_analysis(
                     detail="Analysis not found",
                 )
 
-        # Return the analysis
+        # Return the analysis with the workspace_id included
         return StoredAnalysisResponse(
             id=str(analysis.id),
             channel_id=str(channel.id),
@@ -2265,6 +2337,9 @@ async def get_integration_resource_analysis(
             key_highlights=analysis.key_highlights,
             model_used=analysis.model_used,
             generated_at=analysis.generated_at,
+            workspace_id=str(
+                workspace.id
+            ),  # Include database UUID as workspace_id for user display
         )
 
     except HTTPException:

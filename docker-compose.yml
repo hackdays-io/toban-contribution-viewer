@@ -62,7 +62,7 @@ services:
     environment:
       # API URL for browser requests - use relative path in development for proxy
       # In production, this should be the full URL to the backend API
-      - VITE_API_URL=/api/v1
+      - VITE_API_URL=${VITE_API_URL:-http://localhost:8000/api/v1}
       # Set environment flag to indicate development mode
       - VITE_ENVIRONMENT=development
       # Frontend URL for redirects (use ngrok tunnel if available)
