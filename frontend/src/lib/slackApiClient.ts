@@ -90,6 +90,7 @@ export interface SlackAnalysisResult {
   contributor_insights?: string
   key_highlights?: string
   model_used?: string
+  json_mode?: boolean
 }
 
 export interface SlackOAuthRequest {
@@ -303,6 +304,7 @@ class SlackApiClient extends ApiClient {
       include_threads?: boolean
       include_reactions?: boolean
       model?: string
+      use_json_mode?: boolean
     }
   ): Promise<SlackAnalysisResult | ApiError> {
     const data = {

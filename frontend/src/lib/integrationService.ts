@@ -182,6 +182,7 @@ export interface AnalysisOptions {
   include_threads?: boolean
   include_reactions?: boolean
   analysis_type?: string
+  use_json_mode?: boolean
 }
 
 // Error types

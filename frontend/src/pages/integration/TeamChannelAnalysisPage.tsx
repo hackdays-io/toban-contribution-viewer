@@ -32,6 +32,7 @@ import {
   AlertIcon,
   AlertTitle,
   AlertDescription,
+  Tooltip,
 } from '@chakra-ui/react'
 import { FiChevronRight, FiArrowLeft, FiRefreshCw } from 'react-icons/fi'
 import { Link, useParams, useNavigate, useLocation } from 'react-router-dom'
@@ -73,6 +74,7 @@ const TeamChannelAnalysisPage: React.FC = () => {
   const [endDate, setEndDate] = useState<string>('')
   const [includeThreads, setIncludeThreads] = useState(true)
   const [includeReactions, setIncludeReactions] = useState(true)
+  const [useJsonMode, setUseJsonMode] = useState(true)
   const toast = useToast()
   const navigate = useNavigate()
 
@@ -103,6 +105,7 @@ const TeamChannelAnalysisPage: React.FC = () => {
         endDate: endDateParam,
         includeThreads: includeThreadsParam,
         includeReactions: includeReactionsParam,
+        useJsonMode: useJsonModeParam,
         _timestamp,
       } = location.state
 
@@ -111,6 +114,7 @@ const TeamChannelAnalysisPage: React.FC = () => {
         endDate: endDateParam,
         includeThreads: includeThreadsParam,
         includeReactions: includeReactionsParam,
+        useJsonMode: useJsonModeParam,
         _timestamp,
       })
 
@@ -129,6 +133,8 @@ const TeamChannelAnalysisPage: React.FC = () => {
         setIncludeThreads(includeThreadsParam)
       if (includeReactionsParam !== undefined)
         setIncludeReactions(includeReactionsParam)
+      if (useJsonModeParam !== undefined)
+        setUseJsonMode(useJsonModeParam)
     } else {
       console.log('No location state, applying default date range')
       // Default date range (last 30 days)
@@ -289,7 +295,8 @@ const TeamChannelAnalysisPage: React.FC = () => {
       console.log('- end_date:', endDateParam || 'undefined')
       console.log('- includeThreads:', includeThreads)
       console.log('- includeReactions:', includeReactions)
-
+      console.log('- useJsonMode:', useJsonMode)
+      
       // First - sync the Slack data to ensure we have the latest messages
       toast({
         title: 'Syncing channel data',
@@ -419,6 +426,7 @@ const TeamChannelAnalysisPage: React.FC = () => {
           end_date: endDateParam || undefined,
           include_threads: includeThreads,
           include_reactions: includeReactions,
+          use_json_mode: useJsonMode,
         }
       )
 
@@ -566,6 +574,25 @@ const TeamChannelAnalysisPage: React.FC = () => {
                 </FormLabel>
               </FormControl>
             </HStack>
+            
+            <FormControl display="flex" alignItems="center">
+              <Switch
+                id="use-json-mode"
+                isChecked={useJsonMode}
+                onChange={(e) => setUseJsonMode(e.target.checked)}
+                colorScheme="blue"
+                mr={2}
+              />
+              <Tooltip 
+                label="JSON mode requests structured data from the AI model, improving the reliability and consistency of analysis results."
+                placement="top"
+                hasArrow
+              >
+                <FormLabel htmlFor="use-json-mode" mb={0}>
+                  Use JSON Mode
+                </FormLabel>
+              </Tooltip>
+            </FormControl>
 
             <FormControl>
               <FormHelperText>
@@ -599,9 +626,16 @@ const TeamChannelAnalysisPage: React.FC = () => {
 
     return (
       <Box mt={8}>
-        <Heading as="h2" size="lg" mb={4}>
-          Analysis Results
-        </Heading>
+        <Flex justify="space-between" align="center" mb={4}>
+          <Heading as="h2" size="lg">
+            Analysis Results
+          </Heading>
+          {analysis.json_mode && (
+            <Badge colorScheme="blue" fontSize="sm" py={1} px={2} borderRadius="md">
+              JSON Mode
+            </Badge>
+          )}
+        </Flex>
 
         <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={4} mb={6}>
           <Stat>
