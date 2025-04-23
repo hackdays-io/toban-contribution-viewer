@@ -74,7 +74,8 @@ const TeamChannelAnalysisPage: React.FC = () => {
   const [endDate, setEndDate] = useState<string>('')
   const [includeThreads, setIncludeThreads] = useState(true)
   const [includeReactions, setIncludeReactions] = useState(true)
-  const [useJsonMode, setUseJsonMode] = useState(true)
+  // Always use JSON mode by default - no toggle needed
+  const useJsonMode = true
   const toast = useToast()
   const navigate = useNavigate()
 
@@ -133,8 +134,7 @@ const TeamChannelAnalysisPage: React.FC = () => {
         setIncludeThreads(includeThreadsParam)
       if (includeReactionsParam !== undefined)
         setIncludeReactions(includeReactionsParam)
-      if (useJsonModeParam !== undefined)
-        setUseJsonMode(useJsonModeParam)
+      // JSON mode is always enabled now, so we don't need to set it from params
     } else {
       console.log('No location state, applying default date range')
       // Default date range (last 30 days)
@@ -484,11 +484,51 @@ const TeamChannelAnalysisPage: React.FC = () => {
   }
 
   /**
+   * Extract and format content from the analysis result
+   * This function handles both direct properties and nested JSON strings
+   */
+  const extractAndFormatContent = (
+    analysis: AnalysisResponse, 
+    fieldName: keyof AnalysisResponse
+  ) => {
+    if (!analysis) return <Box>No analysis data available</Box>;
+    
+    // Check if the field exists directly on the analysis object
+    let content = analysis[fieldName];
+    
+    // If content doesn't exist, check if it might be in the result field
+    if (!content && analysis.result && typeof analysis.result === 'object') {
+      content = analysis.result[fieldName as string];
+    }
+    
+    // If we found a string content, format it
+    if (typeof content === 'string') {
+      return formatText(content);
+    }
+    
+    // Check if we have a raw result string that might be JSON
+    if (analysis.result && typeof analysis.result === 'string') {
+      try {
+        // Try to parse the result as JSON
+        const jsonResult = JSON.parse(analysis.result);
+        if (jsonResult[fieldName as string]) {
+          return formatText(jsonResult[fieldName as string]);
+        }
+      } catch (e) {
+        // Not valid JSON, ignore
+      }
+    }
+    
+    return <Box>No data available for {fieldName}</Box>;
+  }
+
+  /**
    * Format text with paragraphs and process Slack mentions.
    */
   const formatText = (text: string | undefined) => {
     if (!text) return <Box>No data available</Box>
 
+    // Process the text into paragraphs
     return text.split('\n').map((paragraph, index) => (
       <Box key={index} mb={2}>
         {paragraph.trim() ? (
@@ -575,24 +615,7 @@ const TeamChannelAnalysisPage: React.FC = () => {
               </FormControl>
             </HStack>
             
-            <FormControl display="flex" alignItems="center">
-              <Switch
-                id="use-json-mode"
-                isChecked={useJsonMode}
-                onChange={(e) => setUseJsonMode(e.target.checked)}
-                colorScheme="blue"
-                mr={2}
-              />
-              <Tooltip 
-                label="JSON mode requests structured data from the AI model, improving the reliability and consistency of analysis results."
-                placement="top"
-                hasArrow
-              >
-                <FormLabel htmlFor="use-json-mode" mb={0}>
-                  Use JSON Mode
-                </FormLabel>
-              </Tooltip>
-            </FormControl>
+            {/* JSON mode is now enabled by default and hidden from UI */}
 
             <FormControl>
               <FormHelperText>
@@ -630,11 +653,7 @@ const TeamChannelAnalysisPage: React.FC = () => {
           <Heading as="h2" size="lg">
             Analysis Results
           </Heading>
-          {analysis.json_mode && (
-            <Badge colorScheme="blue" fontSize="sm" py={1} px={2} borderRadius="md">
-              JSON Mode
-            </Badge>
-          )}
+          {/* JSON mode badge removed since JSON mode is now the default */}
         </Flex>
 
         <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={4} mb={6}>
@@ -668,28 +687,36 @@ const TeamChannelAnalysisPage: React.FC = () => {
             <CardHeader>
               <Heading size="md">Channel Summary</Heading>
             </CardHeader>
-            <CardBody>{formatText(analysis.channel_summary)}</CardBody>
+            <CardBody>
+              {extractAndFormatContent(analysis, 'channel_summary')}
+            </CardBody>
           </Card>
 
           <Card>
             <CardHeader>
               <Heading size="md">Topic Analysis</Heading>
             </CardHeader>
-            <CardBody>{formatText(analysis.topic_analysis)}</CardBody>
+            <CardBody>
+              {extractAndFormatContent(analysis, 'topic_analysis')}
+            </CardBody>
           </Card>
 
           <Card>
             <CardHeader>
               <Heading size="md">Contributor Insights</Heading>
             </CardHeader>
-            <CardBody>{formatText(analysis.contributor_insights)}</CardBody>
+            <CardBody>
+              {extractAndFormatContent(analysis, 'contributor_insights')}
+            </CardBody>
           </Card>
 
           <Card>
             <CardHeader>
               <Heading size="md">Key Highlights</Heading>
             </CardHeader>
-            <CardBody>{formatText(analysis.key_highlights)}</CardBody>
+            <CardBody>
+              {extractAndFormatContent(analysis, 'key_highlights')}
+            </CardBody>
           </Card>
         </SimpleGrid>
 
