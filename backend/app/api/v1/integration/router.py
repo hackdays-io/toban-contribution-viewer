@@ -1782,15 +1782,18 @@ async def analyze_integration_resource(
                 reaction_count += msg.reaction_count
 
             user = user_dict.get(msg.user_id) if msg.user_id else None
-            # Instead of using "Unknown User", we'll use the actual user_id if available,
-            # which will be used in _format_messages to create the <@USER_ID> format
+            
+            # Get the Slack user ID (not our database UUID) for proper <@USER_ID> format
+            slack_user_id = user.slack_id if user else None
+            # Use the user's display name as fallback only if we don't have the Slack ID
             user_name = user.display_name or user.name if user else "Participant"
 
             processed_messages.append(
                 {
                     "id": msg.id,
-                    "user_id": msg.user_id,  # This will be used to create <@USER_ID> format in _format_messages
-                    "user_name": user_name,  # Only used as fallback if user_id is not available
+                    "user_id": slack_user_id,  # This is the Slack user ID, not our UUID
+                    "db_user_id": msg.user_id,  # Keep our UUID for reference if needed
+                    "user_name": user_name,     # Only used as fallback if slack_user_id is not available
                     "text": msg.text,
                     "timestamp": msg.message_datetime.isoformat(),
                     "is_thread_parent": msg.is_thread_parent,
