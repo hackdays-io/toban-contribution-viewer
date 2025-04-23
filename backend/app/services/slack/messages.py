@@ -78,11 +78,15 @@ async def get_channel_messages(
     if start_date:
         if hasattr(start_date, "tzinfo") and start_date.tzinfo:
             start_date = start_date.replace(tzinfo=None)
+        # Log the start date when filtering is applied
+        logger.info(f"Filtering messages with start_date: {start_date}")
         query = query.where(SlackMessage.message_datetime >= start_date)
 
     if end_date:
         if hasattr(end_date, "tzinfo") and end_date.tzinfo:
             end_date = end_date.replace(tzinfo=None)
+        # Log the end date when filtering is applied
+        logger.info(f"Filtering messages with end_date: {end_date}")
         query = query.where(SlackMessage.message_datetime <= end_date)
 
     # Sort by datetime (oldest first for analysis)
@@ -256,7 +260,9 @@ class SlackMessageService:
                 naive_start_date = start_date.replace(tzinfo=None)
             else:
                 naive_start_date = start_date
-
+                
+            # Log the actual start date being applied
+            logger.info(f"SlackMessageService.get_channel_messages - Filtering with start_date: {naive_start_date}")
             query = query.where(SlackMessage.message_datetime >= naive_start_date)
 
         if end_date:
@@ -269,7 +275,9 @@ class SlackMessageService:
                 naive_end_date = end_date.replace(tzinfo=None)
             else:
                 naive_end_date = end_date
-
+                
+            # Log the actual end date being applied
+            logger.info(f"SlackMessageService.get_channel_messages - Filtering with end_date: {naive_end_date}")
             query = query.where(SlackMessage.message_datetime <= naive_end_date)
 
         # Apply pagination
@@ -432,9 +440,11 @@ class SlackMessageService:
         if start_date:
             # Convert datetime to Slack timestamp (seconds since epoch)
             params["oldest"] = str(start_date.timestamp())
+            logger.info(f"API fetch - Using start_date: {start_date}, converted to timestamp: {params['oldest']}")
         if end_date:
             # Convert datetime to Slack timestamp (seconds since epoch)
             params["latest"] = str(end_date.timestamp())
+            logger.info(f"API fetch - Using end_date: {end_date}, converted to timestamp: {params['latest']}")
 
         try:
             # Fetch messages from Slack API
