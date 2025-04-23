@@ -930,7 +930,7 @@ const CreateAnalysisPage: React.FC = () => {
       )}
         {/* Processing Indicator */}
         {isAnalyzing && (
-          <GridItem colSpan={{ base: 1, lg: 2 }}>
+          <Box maxWidth="800px" mx="auto">
             <Card
               mb={6}
               bgColor="purple.50"
@@ -1005,12 +1005,12 @@ const CreateAnalysisPage: React.FC = () => {
                 </Flex>
               </CardBody>
             </Card>
-          </GridItem>
+          </Box>
         )}
 
         {/* Analysis Results (only shown when analysis is complete) */}
         {analysisCompleted && analysis && (
-          <GridItem colSpan={{ base: 1, lg: 2 }}>
+          <Box maxWidth="800px" mx="auto">
             <Card
               variant="elevated"
               mb={6}
@@ -1204,9 +1204,8 @@ const CreateAnalysisPage: React.FC = () => {
                 )}
               </CardBody>
             </Card>
-          </GridItem>
+          </Box>
         )}
-      </Grid>
     </Box>
   )
 }
