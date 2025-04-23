@@ -161,6 +161,8 @@ const TeamAnalysisResultPage: React.FC = () => {
         throw new Error(`Error fetching analysis: ${analysisResult.message}`)
       }
 
+      // Validate successful load of analysis data
+
       // Set the analysis data, casting it to the expected type
       setAnalysis(analysisResult as unknown as AnalysisResponse)
     } catch (error) {
@@ -245,26 +247,608 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
 
   /**
    * Format text with message components to handle Slack formatting
+   * Enhanced to handle more JSON formats and provide better error recovery
+   * @deprecated This function is kept for reference but is no longer used directly
    */
-  const formatText = (text: string) => {
-    return text.split('\n').map((paragraph, index) => (
-      <Box key={index} mb={2}>
-        {paragraph.trim() ? (
-          <MessageText
-            text={paragraph}
-            workspaceId={analysis?.workspace_id || workspaceId || ''}
-            resolveMentions={true}
-            fallbackToSimpleFormat={true}
-          />
-        ) : (
-          <Box height="1em" />
-        )}
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const formatText = (text: string, sectionType?: string) => {
+    if (!text) return null;
+    
+    // SPECIAL CASE: If we're looking for a section OTHER than channel_summary,
+    // first check if the channel_summary might contain all sections as JSON
+    if (sectionType && sectionType !== 'channel_summary' && analysis?.channel_summary) {
+      
+      try {
+        // Check if channel_summary contains JSON
+        const summaryText = analysis.channel_summary;
+        
+        // First check for JSON in code blocks
+        if (summaryText.includes('```json') && summaryText.includes('```')) {
+          const codeBlockRegex = /```json\s*([\s\S]*?)\s*```/;
+          const match = summaryText.match(codeBlockRegex);
+          if (match && match[1]) {
+            try {
+              const parsed = JSON.parse(match[1].trim());
+              if (sectionType in parsed) {
+                return renderPlainText(parsed[sectionType as keyof typeof parsed] as string);
+              }
+            } catch (e) {
+              console.warn('Failed to parse channel_summary code block as JSON:', e);
+            }
+          }
+        }
+        
+        // Then check if the entire channel_summary is JSON
+        if (summaryText.trim().startsWith('{') && summaryText.trim().endsWith('}')) {
+          try {
+            const parsed = JSON.parse(summaryText);
+            if (sectionType in parsed) {
+              return renderPlainText(parsed[sectionType as keyof typeof parsed] as string);
+            }
+          } catch (e) {
+            console.warn('Failed to parse channel_summary as direct JSON:', e);
+          }
+        }
+      } catch (error) {
+        console.error('Error checking channel_summary for sections:', error);
+      }
+    }
+    
+    try {
+      // STRATEGY 1: Handle code blocks - exact pattern match from database JSON+code block format
+      if (text.includes('```json') && text.includes('```')) {
+        // Extract content between code block markers using more robust regex
+        const regex = /```json\s*([\s\S]*?)\s*```/g;
+        const matches = Array.from(text.matchAll(regex));
+        
+        for (const match of matches) {
+          if (match && match[1]) {
+            const jsonContent = match[1].trim();
+            try {
+              const parsed = JSON.parse(jsonContent);
+              
+              // If we have a specific section to render, extract it from the parsed JSON
+              if (sectionType && sectionType in parsed) {
+                return renderPlainText(parsed[sectionType as keyof typeof parsed] as string);
+              }
+              
+              return renderStructuredContent(parsed);
+            } catch (e) {
+              console.warn('Failed to parse code block content as JSON:', e);
+              // Continue to next match if available
+            }
+          }
+        }
+        // Fall through to next strategy if all matches failed
+      }
+      
+      // STRATEGY 2: Direct JSON parsing - for standard JSON objects
+      if (text.trim().startsWith('{') && text.trim().endsWith('}')) {
+        try {
+          const parsed = JSON.parse(text);
+          // If we have a specific section to render, extract it from the parsed JSON
+          if (sectionType && sectionType in parsed) {
+            return renderPlainText(parsed[sectionType as keyof typeof parsed] as string);
+          }
+          
+          return renderStructuredContent(parsed);
+        } catch (e) {
+          console.warn('Failed to parse as direct JSON:', e);
+          // Fall through to next strategy
+        }
+      }
+      
+      // STRATEGY 3: For JSON mixed with markdown or text
+      const jsonIndicators = ['"channel_summary":', '"topic_analysis":', '"contributor_insights":', '"key_highlights":'];
+      if (jsonIndicators.some(indicator => text.includes(indicator))) {
+        // Try to extract just the JSON part
+        const jsonExtractRegex = /(\{[\s\S]*\})/;
+        const jsonMatch = text.match(jsonExtractRegex);
+        
+        if (jsonMatch && jsonMatch[1]) {
+          try {
+            const extracted = jsonMatch[1].trim();
+            const parsed = JSON.parse(extracted);
+            // If we have a specific section to render, extract it from the parsed JSON
+            if (sectionType && sectionType in parsed) {
+              return renderPlainText(parsed[sectionType as keyof typeof parsed] as string);
+            }
+            
+            return renderStructuredContent(parsed);
+          } catch (e) {
+            console.warn('Failed to parse extracted JSON:', e);
+          }
+        }
+        
+        // Try more aggressive reconstruction if extraction failed
+        try {
+          // Extract just the content we need
+          const structuredContent: Record<string, string> = {};
+          
+          // Section extractors - using non-greedy pattern to avoid capturing too much
+          const extractSection = (key: string): string | null => {
+            const regex = new RegExp(`"${key}"\\s*:\\s*"([\\s\\S]*?)"(?:,|\\})`, 'i');
+            const match = text.match(regex);
+            return match && match[1] ? match[1] : null;
+          };
+          
+          // Try to extract each known section
+          const sections = ['channel_summary', 'topic_analysis', 'contributor_insights', 'key_highlights'];
+          let foundAnySection = false;
+          
+          for (const section of sections) {
+            const content = extractSection(section);
+            if (content !== null) {
+              structuredContent[section] = content;
+              foundAnySection = true;
+            }
+          }
+          
+          if (foundAnySection) {
+            console.log('Manual extraction created object with keys:', Object.keys(structuredContent));
+            
+            // If we have a specific section to render, and it was found, return just that section
+            if (sectionType && sectionType in structuredContent) {
+              console.log(`Found ${sectionType} in manually extracted content, rendering only that section`);
+              return renderPlainText(structuredContent[sectionType]);
+            }
+            
+            return renderStructuredContent(structuredContent);
+          }
+        } catch (e) {
+          console.warn('JSON section extraction failed:', e);
+        }
+      }
+      
+      // Special case: if sectionType is specified but we couldn't extract it from JSON,
+      // try to directly render the provided text
+      if (sectionType) {
+        return renderPlainText(text);
+      }
+      
+      // FALLBACK: If we couldn't parse as JSON, treat as regular text
+      return renderPlainText(text);
+      
+    } catch (error) {
+      console.error('Error in formatText:', error);
+      return renderPlainText(text);
+    }
+  };
+  
+  /**
+   * Extract content from the channel_summary field when it's in JSON format
+   * @deprecated This function is kept for reference but is no longer used directly
+   */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const extractChannelSummaryContent = (text: string): string => {
+    if (!text || text.trim().length === 0) {
+      return '';
+    }
+    
+    // If text starts with { and contains "channel_summary", it's probably a JSON object
+    if (text.trim().startsWith('{') && text.includes('"channel_summary"')) {
+      try {
+        // Try to parse it as JSON first
+        // eslint-disable-next-line no-control-regex
+        const cleanedText = text.replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
+        const jsonData = JSON.parse(cleanedText);
+        
+        // If it has a channel_summary field, return that
+        if (jsonData.channel_summary) {
+          return jsonData.channel_summary;
+        }
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      } catch (error) {
+        // Try regex extraction as fallback
+        const match = text.match(/"channel_summary"\s*:\s*"([^"]*)"/);
+        if (match && match[1]) {
+          return match[1].replace(/\\"/g, '"').replace(/\\n/g, '\n');
+        }
+      }
+    }
+    
+    // Otherwise return the original text
+    return text;
+  };
+  
+  /**
+   * Render plain text with proper formatting and support for markdown-like syntax
+   */
+  const renderPlainText = (text: string) => {
+    if (!text || text.trim().length === 0) {
+      return <Text color="gray.500">No content available</Text>;
+    }
+    
+    // Clean up text content if it has strange characters (common in JSON parsing errors)
+    let cleanedText = text;
+    
+    // Check if text is just "{}" or similar
+    if (/^\s*\{\s*\}\s*$/.test(cleanedText)) {
+      return <Text color="gray.500">No content available</Text>;
+    }
+    
+    // Fix escaped newlines in the text
+    cleanedText = cleanedText.replace(/\\n/g, '\n');
+    
+    // If text contains curly braces and quotes, it might be JSON-like structure
+    // Try to clean it up by removing quotes and braces
+    if (cleanedText.includes('{') && cleanedText.includes('}') && cleanedText.includes('"')) {
+      try {
+        // First try to extract just the text content if it's in a "field": "value" format
+        const contentMatch = cleanedText.match(/"[^"]+"\s*:\s*"([^"]*)"/);
+        if (contentMatch && contentMatch[1]) {
+          cleanedText = contentMatch[1].replace(/\\n/g, '\n');
+        } else {
+          // Remove all JSON syntax characters
+          cleanedText = cleanedText
+            .replace(/[{}"]/g, '')  // Remove braces and quotes
+            .replace(/[\w_]+\s*:/g, '')  // Remove field names
+            .replace(/,\s*/g, '\n')  // Replace commas with newlines
+            .trim();
+        }
+      } catch (e) {
+        console.warn('Error cleaning text content:', e);
+      }
+    }
+    
+    // First check if text might have markdown-style headers
+    const hasMarkdownHeaders = /^#+\s+.+$/m.test(cleanedText);
+    
+    return (
+      <Box className="formatted-text">
+        {cleanedText.split('\n').map((paragraph, index) => {
+          if (!paragraph.trim()) {
+            return <Box key={index} height="0.7em" />;
+          }
+          
+          // Special handling for markdown-like headers
+          if (hasMarkdownHeaders && /^(#+)\s+(.+)$/.test(paragraph)) {
+            const match = paragraph.match(/^(#+)\s+(.+)$/);
+            if (match) {
+              const level = match[1].length;
+              const headerText = match[2];
+              
+              // Don't render headers that match our tab names to avoid duplication
+              const isTabHeader = ['Summary', 'Topics', 'Contributors', 'Highlights']
+                .some(tab => headerText.toLowerCase().includes(tab.toLowerCase()));
+              
+              if (isTabHeader) {
+                return <Box key={index} height="0.5em" />; // Skip this header
+              }
+              
+              // Render other headers based on level
+              const size = level === 1 ? 'lg' : level === 2 ? 'md' : 'sm';
+              return (
+                <Heading as={`h${Math.min(level, 6)}`} size={size} mt={4} mb={2} key={index}>
+                  {headerText}
+                </Heading>
+              );
+            }
+          }
+          
+          // Handle bullet lists
+          if (paragraph.trim().startsWith('- ') || paragraph.trim().startsWith('* ')) {
+            return (
+              <Box key={index} mb={2} pl={4} display="flex">
+                <Box as="span" mr={2}>•</Box>
+                <Box flex="1">
+                  <MessageText
+                    text={paragraph.trim().substring(2)}
+                    workspaceId={analysis?.workspace_id || workspaceId || ''}
+                    resolveMentions={true}
+                    fallbackToSimpleFormat={true}
+                  />
+                </Box>
+              </Box>
+            );
+          }
+          
+          // Regular paragraph handling
+          return (
+            <Box key={index} mb={2}>
+              <MessageText
+                text={paragraph}
+                workspaceId={analysis?.workspace_id || workspaceId || ''}
+                resolveMentions={true}
+                fallbackToSimpleFormat={true}
+              />
+            </Box>
+          );
+        })}
       </Box>
-    ))
-  }
+    );
+  };
+  
+  /**
+   * Render structured content from parsed JSON or manually extracted object
+   */
+  const renderStructuredContent = (content: Record<string, unknown>) => {
+    // Extract the different sections that we know should exist
+    const {
+      channel_summary,
+      // The following sections are declared but not used directly in this function
+      // as they are already being passed into the formatText function in the TabPanels
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      topic_analysis,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      contributor_insights,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      key_highlights,
+      ...otherContent
+    } = content;
+    
+    // Function to render a single section with improved formatting
+    const renderSection = (text: string | undefined, skipHeading = false) => {
+      if (!text) return null;
+      
+      // Check if content has markdown-style headers
+      const hasMarkdownHeaders = /^#+\s+.+$/m.test(text);
+      
+      return (
+        <Box>
+          {!skipHeading && (
+            <Box borderBottom="1px solid" borderColor="gray.200" pb={2} mb={4}>
+              {/* Intentionally empty - let the tab panel header handle the section title */}
+            </Box>
+          )}
+          
+          {text.split('\n').map((para, pIdx) => {
+            // Special handling for markdown-like headers within content
+            if (hasMarkdownHeaders && /^(#+)\s+(.+)$/.test(para)) {
+              const match = para.match(/^(#+)\s+(.+)$/);
+              if (match) {
+                const level = match[1].length;
+                const headerText = match[2];
+                
+                // Skip headers that match our tab names to avoid duplication
+                const isTabHeader = ['Summary', 'Topics', 'Contributors', 'Highlights', 'Channel Summary', 'Topic Analysis', 'Contributor Insights', 'Key Highlights']
+                  .some(tab => headerText.toLowerCase().includes(tab.toLowerCase()));
+                
+                if (isTabHeader) {
+                  return <Box key={pIdx} height="0.5em" />; // Skip this header
+                }
+                
+                // Render other headers based on level
+                const size = level === 1 ? 'md' : 'sm';
+                return (
+                  <Heading as={`h${Math.min(level + 2, 6)}`} size={size} mt={4} mb={2} key={pIdx}>
+                    {headerText}
+                  </Heading>
+                );
+              }
+            }
+            
+            return (
+              <Box key={pIdx} mb={3}>
+                {para.trim() ? (
+                  <MessageText
+                    text={para}
+                    workspaceId={analysis?.workspace_id || workspaceId || ''}
+                    resolveMentions={true}
+                    fallbackToSimpleFormat={true}
+                  />
+                ) : (
+                  <Box height="0.7em" />
+                )}
+              </Box>
+            );
+          })}
+        </Box>
+      );
+    };
+    
+    // Render the main sections we expect in the JSON structure
+    return (
+      <Box>
+        {renderSection(channel_summary, true)}
+        
+        {/* Any other content we didn't specifically handle */}
+        {Object.entries(otherContent).map(([key, value]) => {
+          // Skip empty values and special keys we don't want to display
+          if (!value || ['id', 'channel_id', 'channel_name', 'model_used', 'generated_at'].includes(key)) {
+            return null;
+          }
+          
+          // Format key for display
+          const formattedKey = key
+            .replace(/_/g, ' ')
+            .split(' ')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+          
+          // Check if formattedKey matches any tab name and skip if it does
+          const matchesTabName = ['Summary', 'Topics', 'Contributors', 'Highlights']
+            .some(tab => formattedKey.toLowerCase().includes(tab.toLowerCase()));
+          
+          if (matchesTabName) {
+            return null; // Skip this section to avoid duplication
+          }
+          
+          return (
+            <Box key={key} mt={6} p={3} bg="gray.50" borderRadius="md">
+              <Heading as="h4" size="sm" mb={3} color="gray.700">
+                {formattedKey}
+              </Heading>
+              {typeof value === 'string' ? (
+                renderSection(value, true)
+              ) : (
+                <Box fontFamily="monospace" bg="white" p={3} borderRadius="md" whiteSpace="pre-wrap">
+                  {JSON.stringify(value, null, 2)}
+                </Box>
+              )}
+            </Box>
+          );
+        })}
+      </Box>
+    );
+  };
 
+  /**
+   * Extract all sections from channel summary if other fields are missing
+   * This is a special extraction function when the API returns only a channel_summary
+   * that contains all other sections embedded in it
+   */
+  const extractMissingFields = () => {
+    if (!analysis || !analysis.channel_summary) {
+      return analysis;
+    }
+    
+    // Always try to extract, even if the fields exist but are empty
+    const hasEmptyFields = 
+      (!analysis.topic_analysis || analysis.topic_analysis.trim() === '') ||
+      (!analysis.contributor_insights || analysis.contributor_insights.trim() === '') ||
+      (!analysis.key_highlights || analysis.key_highlights.trim() === '');
+    
+    if (!hasEmptyFields) {
+      return analysis;
+    }
+    const extracted = {...analysis};
+    const summary = analysis.channel_summary;
+    
+    // Try to extract JSON from the summary
+    let jsonContent = null;
+    
+    // First try to extract from code blocks
+    if (summary.includes('```json') && summary.includes('```')) {
+      const regex = /```json\s*([\s\S]*?)\s*```/;
+      const match = summary.match(regex);
+      
+      if (match && match[1]) {
+        try {
+          jsonContent = JSON.parse(match[1].trim());
+        } catch (e) {
+          console.warn("Failed to parse code block in summary as JSON", e);
+        }
+      }
+    }
+    
+    // Then try to parse the entire summary as JSON
+    if (!jsonContent && summary.trim().startsWith('{') && summary.trim().endsWith('}')) {
+      try {
+        // Try cleaning up the control characters first
+        // eslint-disable-next-line no-control-regex
+        const cleanedSummary = summary.replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
+        jsonContent = JSON.parse(cleanedSummary);
+      } catch (e) {
+        console.warn("Failed to parse entire summary as JSON", e);
+      }
+    }
+    
+    // Check if we found any JSON content
+    if (jsonContent) {
+      // Extract each missing section
+      if ((!extracted.topic_analysis || extracted.topic_analysis.trim() === '') && 'topic_analysis' in jsonContent) {
+        extracted.topic_analysis = jsonContent.topic_analysis;
+      }
+      
+      if ((!extracted.contributor_insights || extracted.contributor_insights.trim() === '') && 'contributor_insights' in jsonContent) {
+        extracted.contributor_insights = jsonContent.contributor_insights;
+      }
+      
+      if ((!extracted.key_highlights || extracted.key_highlights.trim() === '') && 'key_highlights' in jsonContent) {
+        extracted.key_highlights = jsonContent.key_highlights;
+      }
+    }
+    
+    // Try regex extraction as a fallback
+    
+    const extractSection = (key: string): string | null => {
+      // Use a more lenient regex to handle various JSON formats
+      // This handles both "key": "value" format and "key":"value" format
+      const regex = new RegExp(`"${key}"\\s*:\\s*"([\\s\\S]*?)"(?:,|\\})`, 'i');
+      const match = summary.match(regex);
+      
+      if (match && match[1]) {
+        // Clean up escaped quotes in the extracted text
+        return match[1].replace(/\\"/g, '"');
+      }
+      
+      // Try alternative regex without quotes around the value (e.g. "key": value)
+      const altRegex = new RegExp(`"${key}"\\s*:\\s*([^,"{}]+)(?:,|\\})`, 'i');
+      const altMatch = summary.match(altRegex);
+      
+      return altMatch && altMatch[1] ? altMatch[1].trim() : null;
+    };
+    
+    // Extract each missing section
+    if (!extracted.topic_analysis || extracted.topic_analysis.trim() === '') {
+      const content = extractSection('topic_analysis');
+      if (content) {
+        extracted.topic_analysis = content;
+      }
+    }
+    
+    if (!extracted.contributor_insights || extracted.contributor_insights.trim() === '') {
+      const content = extractSection('contributor_insights');
+      if (content) {
+        extracted.contributor_insights = content;
+      }
+    }
+    
+    if (!extracted.key_highlights || extracted.key_highlights.trim() === '') {
+      const content = extractSection('key_highlights');
+      if (content) {
+        extracted.key_highlights = content;
+      }
+    }
+    
+    
+    return extracted;
+  };
+  
   // Try to get the workspace ID from different sources
   const workspaceId = analysis?.workspace_id || currentIntegration?.workspace_id
+  
+  // Try to extract missing sections if needed
+  let enrichedAnalysis = analysis ? extractMissingFields() : null;
+  
+  // Directly extract content from channel_summary to appropriate tab fields
+  if (enrichedAnalysis) {
+    const fixedAnalysis = {...enrichedAnalysis};
+    
+    if (analysis && analysis.channel_summary) {
+      try {
+        // Try to parse the channel_summary as JSON
+        const parsedJson = JSON.parse(analysis.channel_summary);
+        
+        // Use the JSON values directly
+        fixedAnalysis.fixedChannelSummary = parsedJson.channel_summary || '';
+        fixedAnalysis.fixedTopicAnalysis = parsedJson.topic_analysis || '';
+        fixedAnalysis.fixedContributorInsights = parsedJson.contributor_insights || '';
+        fixedAnalysis.fixedKeyHighlights = parsedJson.key_highlights || '';
+        
+        enrichedAnalysis = fixedAnalysis;
+        return enrichedAnalysis;
+      } catch (e) {
+        console.warn("Failed to parse channel_summary as JSON:", e);
+      }
+    }
+    
+    // If the direct JSON parsing approach didn't work, fall back to regex
+    
+    // Define regex patterns for each section
+    const extractSectionContent = (content: string, sectionName: string): string => {
+      const regex = new RegExp(`"${sectionName}"\\s*:\\s*"([\\s\\S]*?)(?:"\\s*,|"\\s*})`, 'i');
+      const match = content.match(regex);
+      if (match && match[1]) {
+        return match[1].replace(/\\"/g, '"').replace(/\\n/g, '\n');
+      }
+      return '';
+    };
+    
+    // Apply to each section
+    if (analysis && analysis.channel_summary) {
+      const summaryContent = analysis.channel_summary;
+      
+      // Extract each section directly from the JSON string
+      fixedAnalysis.fixedChannelSummary = extractSectionContent(summaryContent, 'channel_summary');
+      fixedAnalysis.fixedTopicAnalysis = extractSectionContent(summaryContent, 'topic_analysis');
+      fixedAnalysis.fixedContributorInsights = extractSectionContent(summaryContent, 'contributor_insights');
+      fixedAnalysis.fixedKeyHighlights = extractSectionContent(summaryContent, 'key_highlights');
+    }
+    
+    enrichedAnalysis = fixedAnalysis;
+  }
 
   // Don't render slack components if no workspace ID is available
   if (!workspaceId && !isLoading) {
@@ -340,11 +924,62 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
         ? analysis.channel_name
         : `#${analysis.channel_name}`
       : '#channel'
+      
+  // EMERGENCY DIRECT FIX: Extract channel summary text from the raw channel_summary field
+  let fixedChannelSummary = '';
+  if (analysis?.channel_summary) {
+    // Try to find the channel_summary field inside the JSON
+    const match = analysis.channel_summary.match(/"channel_summary"\s*:\s*"([^"]*)"/);
+    if (match && match[1]) {
+      console.log("Extracted channel_summary directly");
+      fixedChannelSummary = match[1].replace(/\\"/g, '"').replace(/\\n/g, '\n');
+    } else {
+      // Just use the raw channel_summary
+      fixedChannelSummary = analysis.channel_summary;
+    }
+  }
+
+  // Add CSS style to better handle JSON content formatting
+  const customStyles = `
+    /* Hide duplicate headings in content */
+    .analysis-content h1, 
+    .analysis-content h2,
+    .analysis-content h3 {
+      display: none;
+    }
+    
+    /* Better format paragraph content */
+    .analysis-content p {
+      margin-bottom: 0.75rem;
+    }
+    
+    /* Enhance list formatting */
+    .analysis-content ul, 
+    .analysis-content ol {
+      margin-left: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    
+    /* Improve nested content rendering */
+    .formatted-text ul, 
+    .formatted-text ol {
+      margin-left: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    
+    /* Special formatting for user mentions in analysis text */
+    .analysis-content [class*="mention"] {
+      color: #6B46C1;
+      font-weight: 500;
+    }
+  `;
 
   return (
     <SlackUserCacheProvider
       workspaceId={analysis?.workspace_id || workspaceId || ''}
     >
+      {/* Apply custom CSS to hide duplicate headings */}
+      <style>{customStyles}</style>
       <Box width="100%">
         {/* Breadcrumb navigation */}
         <Breadcrumb
@@ -493,43 +1128,95 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
           </TabList>
 
           <TabPanels>
+            
             {/* Summary Tab */}
             <TabPanel px={{ base: 2, md: 4 }} py={4}>
-              <Card variant="outline" height="100%" bg={highlightBg}>
-                <CardHeader pb={0}>
-                  <Heading size="md">Channel Summary</Heading>
+              <Card variant="outline" height="100%" bg={highlightBg} boxShadow="sm">
+                <CardHeader pb={1}>
+                  <Heading size="md" color="purple.700">Channel Summary</Heading>
                 </CardHeader>
-                <CardBody>{formatText(analysis.channel_summary)}</CardBody>
+                <CardBody pt={2}>
+                  <Box className="analysis-content" sx={{
+                    // Hide duplicate markdown headers that match our tab title
+                    'h1:first-of-type:contains("Channel Summary"), h2:first-of-type:contains("Channel Summary"), h3:first-of-type:contains("Summary")': {
+                      display: 'none'
+                    }
+                  }}>
+                    {renderPlainText(enrichedAnalysis.fixedChannelSummary || fixedChannelSummary)}
+                  </Box>
+                </CardBody>
               </Card>
             </TabPanel>
 
             {/* Topics Tab */}
             <TabPanel px={{ base: 2, md: 4 }} py={4}>
-              <Card variant="outline" height="100%" bg={highlightBg}>
-                <CardHeader pb={0}>
-                  <Heading size="md">Topic Analysis</Heading>
+              <Card variant="outline" height="100%" bg={highlightBg} boxShadow="sm">
+                <CardHeader pb={1}>
+                  <Heading size="md" color="purple.700">Topic Analysis</Heading>
                 </CardHeader>
-                <CardBody>{formatText(analysis.topic_analysis)}</CardBody>
+                <CardBody pt={2}>
+                  {/* Check if we actually have topic_analysis data */}
+                  {(enrichedAnalysis?.fixedTopicAnalysis || enrichedAnalysis?.topic_analysis) ? (
+                    <Box className="analysis-content" sx={{
+                      // Hide duplicate markdown headers that match our tab title
+                      'h1:first-of-type:contains("Topic Analysis"), h2:first-of-type:contains("Topic Analysis"), h3:first-of-type:contains("Topics")': {
+                        display: 'none'
+                      }
+                    }}>
+                      {renderPlainText((enrichedAnalysis.fixedTopicAnalysis || enrichedAnalysis.topic_analysis).replace(/(\d+\.\s)/g, "\n$1"))}
+                    </Box>
+                  ) : (
+                    <Text fontSize="sm" color="gray.500">No topic analysis data available</Text>
+                  )}
+                </CardBody>
               </Card>
             </TabPanel>
 
             {/* Contributors Tab */}
             <TabPanel px={{ base: 2, md: 4 }} py={4}>
-              <Card variant="outline" height="100%" bg={highlightBg}>
-                <CardHeader pb={0}>
-                  <Heading size="md">Contributor Insights</Heading>
+              <Card variant="outline" height="100%" bg={highlightBg} boxShadow="sm">
+                <CardHeader pb={1}>
+                  <Heading size="md" color="purple.700">Contributor Insights</Heading>
                 </CardHeader>
-                <CardBody>{formatText(analysis.contributor_insights)}</CardBody>
+                <CardBody pt={2}>
+                  {/* Check if we actually have contributor_insights data */}
+                  {(enrichedAnalysis?.fixedContributorInsights || enrichedAnalysis?.contributor_insights) ? (
+                    <Box className="analysis-content" sx={{
+                      // Hide duplicate markdown headers that match our tab title
+                      'h1:first-of-type:contains("Contributor Insights"), h2:first-of-type:contains("Contributor"), h3:first-of-type:contains("Contributors")': {
+                        display: 'none'
+                      }
+                    }}>
+                      {renderPlainText((enrichedAnalysis.fixedContributorInsights || enrichedAnalysis.contributor_insights).replace(/(\d+\.\s)/g, "\n$1"))}
+                    </Box>
+                  ) : (
+                    <Text fontSize="sm" color="gray.500">No contributor insights data available</Text>
+                  )}
+                </CardBody>
               </Card>
             </TabPanel>
 
             {/* Highlights Tab */}
             <TabPanel px={{ base: 2, md: 4 }} py={4}>
-              <Card variant="outline" height="100%" bg={highlightBg}>
-                <CardHeader pb={0}>
-                  <Heading size="md">Key Highlights</Heading>
+              <Card variant="outline" height="100%" bg={highlightBg} boxShadow="sm">
+                <CardHeader pb={1}>
+                  <Heading size="md" color="purple.700">Key Highlights</Heading>
                 </CardHeader>
-                <CardBody>{formatText(analysis.key_highlights)}</CardBody>
+                <CardBody pt={2}>
+                  {/* Check if we actually have key_highlights data */}
+                  {(enrichedAnalysis?.fixedKeyHighlights || enrichedAnalysis?.key_highlights) ? (
+                    <Box className="analysis-content" sx={{
+                      // Hide duplicate markdown headers that match our tab title
+                      'h1:first-of-type:contains("Key Highlights"), h2:first-of-type:contains("Highlight"), h3:first-of-type:contains("Highlight")': {
+                        display: 'none'
+                      }
+                    }}>
+                      {renderPlainText((enrichedAnalysis.fixedKeyHighlights || enrichedAnalysis.key_highlights).replace(/(\d+\.\s)/g, "\n$1"))}
+                    </Box>
+                  ) : (
+                    <Text fontSize="sm" color="gray.500">No key highlights data available</Text>
+                  )}
+                </CardBody>
               </Card>
             </TabPanel>
           </TabPanels>
