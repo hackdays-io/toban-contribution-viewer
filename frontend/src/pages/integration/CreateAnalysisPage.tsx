@@ -348,10 +348,10 @@ const CreateAnalysisPage: React.FC = () => {
 
       // Show toast to indicate analysis is starting
       toast({
-        title: 'Analysis Started',
+        title: 'The report creation process successfully started',
         description:
-          'Running channel analysis. This may take several minutes for large channels.',
-        status: 'info',
+          'Analysis is now processing. This may take several minutes depending on channel size.',
+        status: 'success',
         duration: 8000,
         isClosable: true,
       })
@@ -428,13 +428,19 @@ const CreateAnalysisPage: React.FC = () => {
           const newMessages = syncStats.new_message_count || 0
           const repliesCount = syncStats.replies_synced || 0
 
-          toast({
-            title: 'Channel Sync Complete',
-            description: `Synced ${newMessages} new messages and ${repliesCount} thread replies from Slack.`,
-            status: 'success',
-            duration: 3000,
-            isClosable: true,
-          })
+          // Only show the sync message if there are actual messages synced
+          if (newMessages > 0 || repliesCount > 0) {
+            toast({
+              title: 'Channel Data Updated',
+              description: `Added ${newMessages} new messages and ${repliesCount} thread replies from Slack.`,
+              status: 'info',
+              duration: 3000,
+              isClosable: true,
+            })
+          }
+          
+          // Log sync results but don't show toast if nothing new was synced
+          console.log(`Sync complete: ${newMessages} messages, ${repliesCount} replies synced.`)
         }
       } catch (syncError) {
         console.error('Error syncing data:', syncError)
@@ -477,24 +483,15 @@ const CreateAnalysisPage: React.FC = () => {
       setAnalysisCompleted(true)
 
       toast({
-        title: 'Analysis Complete',
-        description: 'Channel analysis has been completed successfully',
+        title: 'Report Generated Successfully',
+        description: 'Your channel analysis report is now ready to view',
         status: 'success',
         duration: 5000,
         isClosable: true,
       })
 
-      // Optionally, if the user wants to view the result in the detailed page:
-      if (result.analysis_id) {
-        toast({
-          title: 'Analysis Result Available',
-          description:
-            'You can view detailed results or navigate to the analysis result page.',
-          status: 'info',
-          duration: 8000,
-          isClosable: true,
-        })
-      }
+      // We're already showing the results in the UI, so this second toast is redundant
+      // Remove the second toast to avoid notification overload
     } catch (error) {
       console.error('Error during analysis:', error)
       toast({
