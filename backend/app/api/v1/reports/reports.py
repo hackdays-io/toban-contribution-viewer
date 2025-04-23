@@ -723,6 +723,95 @@ async def get_resource_analysis(
     return analysis
 
 
+@router.get(
+    "/{team_id}/cross-resource-reports/{report_id}/resource-analyses/{analysis_id}/task-status",
+)
+async def get_resource_analysis_task_status(
+    team_id: UUID,
+    report_id: UUID,
+    analysis_id: UUID,
+    db: AsyncSession = Depends(get_async_db),
+    current_user: Dict = Depends(get_current_user),
+):
+    """
+    Get the status of a resource analysis task.
+
+    Args:
+        team_id: Team ID
+        report_id: Report ID
+        analysis_id: Analysis ID
+        db: Database session
+        current_user: Current authenticated user
+
+    Returns:
+        Task status information
+    """
+    logger.debug(
+        f"Getting task status for analysis {analysis_id}, report {report_id}, team {team_id}, user {current_user['id']}"
+    )
+
+    # Check if user has access to this team
+    has_access = await check_team_access(
+        team_id=team_id, user_id=current_user["id"], db=db
+    )
+
+    if not has_access:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You don't have access to this team",
+        )
+
+    # Verify the report exists and belongs to the team
+    report_result = await db.execute(
+        select(CrossResourceReport).where(
+            and_(
+                CrossResourceReport.id == report_id,
+                CrossResourceReport.team_id == team_id,
+            )
+        )
+    )
+    report = report_result.scalar_one_or_none()
+
+    if not report:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Report not found",
+        )
+
+    # Get the analysis
+    analysis_result = await db.execute(
+        select(ResourceAnalysis).where(
+            and_(
+                ResourceAnalysis.id == analysis_id,
+                ResourceAnalysis.cross_resource_report_id == report_id,
+            )
+        )
+    )
+    analysis = analysis_result.scalar_one_or_none()
+
+    if not analysis:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Resource analysis not found",
+        )
+
+    # Get the task status
+    from app.services.analysis.task_scheduler import ResourceAnalysisTaskScheduler
+
+    task_status = ResourceAnalysisTaskScheduler.get_task_status(analysis_id)
+
+    # Return the combined status
+    return {
+        "analysis_id": str(analysis_id),
+        "database_status": analysis.status,
+        "task_status": task_status,
+        "is_running": task_status == "RUNNING",
+        "last_updated": (
+            analysis.updated_at.isoformat() if analysis.updated_at else None
+        ),
+    }
+
+
 @router.post(
     "/{team_id}/cross-resource-reports/{report_id}/generate",
     response_model=ReportGenerationResponse,
@@ -839,8 +928,14 @@ async def generate_report(
 
     await db.commit()
 
-    # In a real implementation, you would trigger background tasks here
-    # For example:
-    # asyncio.create_task(process_report(db, report_id))
+    # Trigger background tasks
+    from app.services.analysis.task_scheduler import ResourceAnalysisTaskScheduler
+
+    scheduled_count = await ResourceAnalysisTaskScheduler.schedule_analyses_for_report(
+        report_id=report_id, db=db
+    )
+
+    # Update the response message
+    response.message += f" Scheduled {scheduled_count} analysis tasks."
 
     return response

@@ -91,9 +91,13 @@ class TeamService:
 
                 db.add(team_member)
                 await db.commit()
-                
+
                 # Explicitly load the team with its members to avoid lazy loading issues
-                query = select(Team).where(Team.id == team.id).options(selectinload(Team.members))
+                query = (
+                    select(Team)
+                    .where(Team.id == team.id)
+                    .options(selectinload(Team.members))
+                )
                 result = await db.execute(query)
                 team = result.scalars().first()
 
@@ -234,9 +238,13 @@ class TeamService:
 
             db.add(team_member)
             await db.commit()
-            
+
             # Explicitly load the team with its members to avoid lazy loading issues
-            query = select(Team).where(Team.id == team.id).options(selectinload(Team.members))
+            query = (
+                select(Team)
+                .where(Team.id == team.id)
+                .options(selectinload(Team.members))
+            )
             result = await db.execute(query)
             team_with_members = result.scalars().first()
 
