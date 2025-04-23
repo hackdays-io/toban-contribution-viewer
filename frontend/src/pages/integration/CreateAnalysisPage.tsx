@@ -10,6 +10,7 @@ import {
   CardFooter,
   CardHeader,
   Checkbox,
+  Circle,
   Divider,
   Flex,
   FormControl,
@@ -35,9 +36,11 @@ import {
   useColorModeValue,
   useToast,
   VStack,
+  Badge,
 } from '@chakra-ui/react'
 import {
   FiArrowRight,
+  FiArrowLeft,
   FiBarChart2,
   FiCalendar,
   FiChevronRight,
@@ -95,6 +98,10 @@ const CreateAnalysisPage: React.FC = () => {
   const [analysis, setAnalysis] = useState<SlackAnalysisResult | null>(null)
   const [analysisCompleted, setAnalysisCompleted] = useState(false)
 
+  // Multi-step form state
+  const [activeStep, setActiveStep] = useState(0)
+  const totalSteps = 3
+
   // Analysis parameters
   const [startDate, setStartDate] = useState<string>('')
   const [endDate, setEndDate] = useState<string>('')
@@ -105,6 +112,33 @@ const CreateAnalysisPage: React.FC = () => {
   const bgHover = useColorModeValue('purple.50', 'purple.900')
   const borderColorHover = useColorModeValue('purple.300', 'purple.700')
   const selectedBg = useColorModeValue('purple.100', 'purple.800')
+  
+  // Step navigation functions
+  const nextStep = () => {
+    if (activeStep < totalSteps - 1) {
+      setActiveStep(activeStep + 1);
+    }
+  };
+  
+  const prevStep = () => {
+    if (activeStep > 0) {
+      setActiveStep(activeStep - 1);
+    }
+  };
+  
+  // Validation functions for each step
+  const isStepValid = (step: number): boolean => {
+    switch (step) {
+      case 0: // Integration selection
+        return !!selectedIntegration;
+      case 1: // Channel selection
+        return !!selectedChannel;
+      case 2: // Analysis parameters
+        return !!startDate && !!endDate;
+      default:
+        return false;
+    }
+  };
 
   // Style colors for loading state
 
@@ -509,383 +543,391 @@ const CreateAnalysisPage: React.FC = () => {
         Create New Analysis
       </Heading>
 
-      <Grid templateColumns={{ base: '1fr', lg: '1fr 1fr' }} gap={6}>
-        {/* Step 1: Select integration and channel */}
-        <GridItem>
-          <Card mb={6} variant="outline">
-            <CardHeader pb={2}>
-              <Heading size="md">Step 1: Select Channel to Analyze</Heading>
-            </CardHeader>
-            <CardBody>
-              <Stack spacing={4}>
-                {/* Integration selector */}
-                <FormControl>
-                  <FormLabel>Workspace</FormLabel>
-                  <SimpleGrid columns={{ base: 1, sm: 2, md: 3 }} spacing={3}>
-                    {integrations.map((integration) => (
+      {/* Step indicator */}
+      <Flex mb={8} justify="center">
+        <HStack spacing={8} width={{ base: "100%", md: "80%" }}>
+          {Array.from({ length: totalSteps }).map((_, index) => (
+            <Flex 
+              key={index}
+              flex={1}
+              direction="column"
+              alignItems="center"
+              position="relative"
+            >
+              {/* Connector line */}
+              {index < totalSteps - 1 && (
+                <Box
+                  position="absolute"
+                  height="2px"
+                  bg={index < activeStep ? "purple.500" : "gray.200"}
+                  right="-50%"
+                  top="14px"
+                  width="100%"
+                  zIndex={1}
+                />
+              )}
+              
+              {/* Step circle */}
+              <Circle 
+                size="30px"
+                bg={index < activeStep ? "purple.500" : (index === activeStep ? "purple.200" : "gray.200")}
+                color={index < activeStep ? "white" : (index === activeStep ? "purple.600" : "gray.500")}
+                fontWeight="bold"
+                mb={2}
+                zIndex={2}
+              >
+                {index + 1}
+              </Circle>
+              
+              {/* Step label */}
+              <Text 
+                fontSize="sm" 
+                fontWeight="medium"
+                color={index <= activeStep ? "purple.600" : "gray.500"}
+              >
+                {index === 0 ? "Select Workspace" : index === 1 ? "Select Channel" : "Configure"}
+              </Text>
+            </Flex>
+          ))}
+        </HStack>
+      </Flex>
+
+      {/* Step 1: Select Workspace */}
+      {activeStep === 0 && (
+        <Card variant="outline" mb={6} maxWidth="800px" mx="auto">
+          <CardHeader pb={2}>
+            <Heading size="md">Step 1: Select Workspace</Heading>
+          </CardHeader>
+          <CardBody>
+            <VStack spacing={6} align="stretch">
+              <Text>
+                Choose the Slack workspace you'd like to analyze.
+              </Text>
+              
+              <SimpleGrid columns={{ base: 1, sm: 2, md: 3 }} spacing={4}>
+                {integrations.map((integration) => (
+                  <Box
+                    key={integration.id}
+                    p={4}
+                    borderWidth="1px"
+                    borderRadius="md"
+                    cursor="pointer"
+                    onClick={() => setSelectedIntegration(integration.id)}
+                    bg={
+                      selectedIntegration === integration.id
+                        ? selectedBg
+                        : 'transparent'
+                    }
+                    borderColor={
+                      selectedIntegration === integration.id
+                        ? borderColorHover
+                        : 'inherit'
+                    }
+                    _hover={{ bg: bgHover, borderColor: borderColorHover }}
+                    transition="all 0.2s"
+                  >
+                    <VStack spacing={3}>
+                      <Icon as={FiSlack} color="purple.500" boxSize={6} />
+                      <Text fontWeight="medium">{integration.name}</Text>
+                    </VStack>
+                  </Box>
+                ))}
+
+                {integrations.length === 0 && (
+                  <Box p={4} borderWidth="1px" borderRadius="md" gridColumn="span 3">
+                    <VStack>
+                      <Text>No integrations available</Text>
+                      <Button
+                        as={Link}
+                        to="/dashboard/integrations"
+                        size="sm"
+                        colorScheme="purple"
+                        mt={2}
+                      >
+                        Connect Workspace
+                      </Button>
+                    </VStack>
+                  </Box>
+                )}
+              </SimpleGrid>
+            </VStack>
+          </CardBody>
+          <Divider />
+          <CardFooter justifyContent="flex-end">
+            <Button
+              rightIcon={<Icon as={FiArrowRight} />}
+              colorScheme="purple"
+              onClick={nextStep}
+              isDisabled={!isStepValid(0)}
+            >
+              Continue
+            </Button>
+          </CardFooter>
+        </Card>
+      )}
+
+      {/* Step 2: Select Channel */}
+      {activeStep === 1 && (
+        <Card variant="outline" mb={6} maxWidth="800px" mx="auto">
+          <CardHeader pb={2}>
+            <Heading size="md">Step 2: Select Channel</Heading>
+          </CardHeader>
+          <CardBody>
+            <VStack spacing={6} align="stretch">
+              <Text>
+                Choose the Slack channel you'd like to analyze.
+              </Text>
+              
+              <FormControl>
+                <Flex justify="space-between" align="center" mb={4}>
+                  <InputGroup flex="1" mr={4}>
+                    <InputLeftElement>
+                      <Icon as={FiSearch} color="gray.400" />
+                    </InputLeftElement>
+                    <Input
+                      placeholder="Search channels..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                  </InputGroup>
+
+                  <FormControl
+                    display="flex"
+                    alignItems="center"
+                    width="auto"
+                  >
+                    <Switch
+                      id="show-all-channels"
+                      isChecked={showAllChannels}
+                      onChange={(e) => setShowAllChannels(e.target.checked)}
+                      colorScheme="purple"
+                      mr={2}
+                    />
+                    <FormLabel
+                      htmlFor="show-all-channels"
+                      mb={0}
+                      fontSize="sm"
+                    >
+                      Show All Channels
+                    </FormLabel>
+                  </FormControl>
+                </Flex>
+
+                <Box
+                  borderWidth="1px"
+                  borderRadius="md"
+                  maxHeight="300px"
+                  overflowY="auto"
+                >
+                  {isLoading ? (
+                    <Flex justify="center" align="center" py={8}>
+                      <Spinner size="md" color="purple.500" />
+                    </Flex>
+                  ) : filteredResources.length === 0 ? (
+                    <Box p={4} textAlign="center">
+                      <Text color="gray.500">No channels found</Text>
+                    </Box>
+                  ) : (
+                    filteredResources.map((resource) => (
                       <Box
-                        key={integration.id}
+                        key={resource.id}
                         p={3}
-                        borderWidth="1px"
-                        borderRadius="md"
+                        borderBottomWidth="1px"
                         cursor="pointer"
-                        onClick={() => setSelectedIntegration(integration.id)}
+                        onClick={() => setSelectedChannel(resource.id)}
                         bg={
-                          selectedIntegration === integration.id
+                          selectedChannel === resource.id
                             ? selectedBg
-                            : 'transparent'
+                            : selectedChannels.includes(resource.id)
+                              ? bgHover
+                              : 'transparent'
                         }
-                        borderColor={
-                          selectedIntegration === integration.id
-                            ? borderColorHover
-                            : 'inherit'
-                        }
-                        _hover={{ bg: bgHover, borderColor: borderColorHover }}
+                        _hover={{ bg: bgHover }}
                         transition="all 0.2s"
+                        position="relative"
                       >
                         <HStack>
-                          <Icon as={FiSlack} color="purple.500" />
-                          <Text fontWeight="medium">{integration.name}</Text>
+                          <Icon
+                            as={FiMessageSquare}
+                            color={
+                              resource.is_private ||
+                              (resource.metadata &&
+                                resource.metadata.is_private)
+                                ? 'orange.500'
+                                : 'green.500'
+                            }
+                          />
+                          <Text>#{resource.name}</Text>
+                          {selectedChannels.includes(resource.id) && (
+                            <Badge colorScheme="purple" ml="auto">
+                              Selected for analysis
+                            </Badge>
+                          )}
                         </HStack>
                       </Box>
-                    ))}
+                    ))
+                  )}
+                </Box>
+              </FormControl>
+            </VStack>
+          </CardBody>
+          <Divider />
+          <CardFooter justifyContent="space-between">
+            <Button
+              leftIcon={<Icon as={FiArrowLeft} />}
+              variant="outline"
+              onClick={prevStep}
+            >
+              Back
+            </Button>
+            <Button
+              rightIcon={<Icon as={FiArrowRight} />}
+              colorScheme="purple"
+              onClick={nextStep}
+              isDisabled={!isStepValid(1)}
+            >
+              Continue
+            </Button>
+          </CardFooter>
+        </Card>
+      )}
 
-                    {integrations.length === 0 && (
-                      <Box p={4} borderWidth="1px" borderRadius="md">
-                        <Text>No integrations available</Text>
-                        <Button
-                          as={Link}
-                          to="/dashboard/integrations"
-                          size="sm"
-                          colorScheme="purple"
-                          mt={2}
-                        >
-                          Connect Workspace
-                        </Button>
-                      </Box>
-                    )}
-                  </SimpleGrid>
-                </FormControl>
-
-                {/* Channel selector */}
-                {selectedIntegration && (
-                  <FormControl>
-                    <FormLabel>Channel</FormLabel>
-
-                    {/* Show selected channels for quick access - only if we're showing all channels */}
-                    {showAllChannels &&
-                      (isSelectedChannelsLoading ? (
-                        <Flex align="center" justify="center" p={4}>
-                          <Spinner size="sm" color="purple.500" mr={2} />
-                          <Text fontSize="sm">
-                            Loading selected channels...
-                          </Text>
-                        </Flex>
-                      ) : selectedChannels.length > 0 ? (
-                        <Box mb={4}>
-                          <Text
-                            fontSize="sm"
-                            fontWeight="medium"
-                            mb={2}
-                            color="purple.600"
-                          >
-                            Selected for Analysis (Quick Access)
-                          </Text>
-                          <SimpleGrid columns={{ base: 1, md: 2 }} spacing={2}>
-                            {resources
-                              .filter((resource) =>
-                                selectedChannels.includes(resource.id)
-                              )
-                              .map((resource) => (
-                                <Box
-                                  key={resource.id}
-                                  p={2}
-                                  borderWidth="1px"
-                                  borderRadius="md"
-                                  cursor="pointer"
-                                  onClick={() =>
-                                    setSelectedChannel(resource.id)
-                                  }
-                                  bg={
-                                    selectedChannel === resource.id
-                                      ? selectedBg
-                                      : 'transparent'
-                                  }
-                                  _hover={{ bg: bgHover }}
-                                  borderColor="purple.300"
-                                >
-                                  <HStack>
-                                    <Icon
-                                      as={FiMessageSquare}
-                                      color="purple.500"
-                                    />
-                                    <Text>#{resource.name}</Text>
-                                  </HStack>
-                                </Box>
-                              ))}
-                          </SimpleGrid>
-                        </Box>
-                      ) : null)}
-
-                    <Flex justify="space-between" align="center" mb={4}>
-                      <InputGroup flex="1" mr={4}>
-                        <InputLeftElement>
-                          <Icon as={FiSearch} color="gray.400" />
-                        </InputLeftElement>
-                        <Input
-                          placeholder="Search channels..."
-                          value={searchTerm}
-                          onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                      </InputGroup>
-
-                      <FormControl
-                        display="flex"
-                        alignItems="center"
-                        width="auto"
-                      >
-                        <Switch
-                          id="show-all-channels"
-                          isChecked={showAllChannels}
-                          onChange={(e) => setShowAllChannels(e.target.checked)}
-                          colorScheme="purple"
-                          mr={2}
-                        />
-                        <FormLabel
-                          htmlFor="show-all-channels"
-                          mb={0}
-                          fontSize="sm"
-                        >
-                          Show All Channels
-                        </FormLabel>
-                      </FormControl>
-                    </Flex>
-
-                    <Flex justify="space-between" align="center" mb={2}>
-                      <Text
-                        fontSize="sm"
-                        fontWeight="medium"
-                        color={showAllChannels ? 'gray.600' : 'purple.600'}
-                      >
-                        {showAllChannels
-                          ? 'All Channels'
-                          : selectedForAnalysisChannels.length > 0
-                            ? 'Channels Selected for Analysis'
-                            : 'All Channels'}
-                      </Text>
-                      <Text fontSize="xs" color="gray.500">
-                        {filteredResources.length} channel
-                        {filteredResources.length !== 1 ? 's' : ''} found
-                      </Text>
-                    </Flex>
-
-                    <Box
-                      borderWidth="1px"
-                      borderRadius="md"
-                      maxHeight="300px"
-                      overflowY="auto"
-                    >
-                      {isLoading ? (
-                        <Flex justify="center" align="center" py={8}>
-                          <Spinner size="md" color="purple.500" />
-                        </Flex>
-                      ) : filteredResources.length === 0 ? (
-                        <Box p={4} textAlign="center">
-                          <Text color="gray.500">No channels found</Text>
-                        </Box>
-                      ) : (
-                        filteredResources.map((resource) => (
-                          <Box
-                            key={resource.id}
-                            p={3}
-                            borderBottomWidth="1px"
-                            cursor="pointer"
-                            onClick={() => setSelectedChannel(resource.id)}
-                            bg={
-                              selectedChannel === resource.id
-                                ? selectedBg
-                                : selectedChannels.includes(resource.id)
-                                  ? bgHover
-                                  : 'transparent'
-                            }
-                            _hover={{ bg: bgHover }}
-                            transition="all 0.2s"
-                            position="relative"
-                          >
-                            <HStack>
-                              <Icon
-                                as={FiMessageSquare}
-                                color={
-                                  resource.is_private ||
-                                  (resource.metadata &&
-                                    resource.metadata.is_private)
-                                    ? 'orange.500'
-                                    : 'green.500'
-                                }
-                              />
-                              <Text>#{resource.name}</Text>
-                              {selectedChannels.includes(resource.id) && (
-                                <Text
-                                  fontSize="xs"
-                                  color="purple.500"
-                                  fontWeight="bold"
-                                >
-                                  (Selected for analysis)
-                                </Text>
-                              )}
-                            </HStack>
-                          </Box>
-                        ))
-                      )}
-                    </Box>
-                  </FormControl>
-                )}
-              </Stack>
-            </CardBody>
-          </Card>
-        </GridItem>
-
-        {/* Step 2: Set analysis parameters */}
-        <GridItem>
-          <Card mb={6} variant="outline">
-            <CardHeader pb={2}>
-              <Heading size="md">Step 2: Set Analysis Parameters</Heading>
-            </CardHeader>
-            <CardBody>
-              <VStack spacing={4} align="stretch">
-                <HStack spacing={4}>
-                  <FormControl>
-                    <FormLabel>Start Date</FormLabel>
-                    <InputGroup>
-                      <InputLeftElement>
-                        <Icon as={FiCalendar} color="gray.400" />
-                      </InputLeftElement>
-                      <Input
-                        type="date"
-                        value={startDate}
-                        onChange={(e) => setStartDate(e.target.value)}
-                      />
-                    </InputGroup>
-                  </FormControl>
-
-                  <FormControl>
-                    <FormLabel>End Date</FormLabel>
-                    <InputGroup>
-                      <InputLeftElement>
-                        <Icon as={FiCalendar} color="gray.400" />
-                      </InputLeftElement>
-                      <Input
-                        type="date"
-                        value={endDate}
-                        onChange={(e) => setEndDate(e.target.value)}
-                      />
-                    </InputGroup>
-                  </FormControl>
-                </HStack>
-
+      {/* Step 3: Analysis Parameters */}
+      {activeStep === 2 && (
+        <Card variant="outline" mb={6} maxWidth="800px" mx="auto">
+          <CardHeader pb={2}>
+            <Heading size="md">Step 3: Configure Analysis</Heading>
+          </CardHeader>
+          <CardBody>
+            <VStack spacing={6} align="stretch">
+              <Text>
+                Set your analysis parameters and options.
+              </Text>
+              
+              <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
                 <FormControl>
-                  <FormLabel>Analysis Options</FormLabel>
-                  <Stack>
-                    <Checkbox
-                      isChecked={includeThreads}
-                      onChange={(e) => setIncludeThreads(e.target.checked)}
-                      colorScheme="purple"
-                    >
-                      Include Thread Replies
-                    </Checkbox>
-
-                    <Checkbox
-                      isChecked={includeReactions}
-                      onChange={(e) => setIncludeReactions(e.target.checked)}
-                      colorScheme="purple"
-                    >
-                      Include Reactions
-                    </Checkbox>
-                  </Stack>
+                  <FormLabel>Start Date</FormLabel>
+                  <InputGroup>
+                    <InputLeftElement>
+                      <Icon as={FiCalendar} color="gray.400" />
+                    </InputLeftElement>
+                    <Input
+                      type="date"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                    />
+                  </InputGroup>
                 </FormControl>
 
                 <FormControl>
-                  <FormHelperText>
-                    Select a date range and options for analysis. A larger date
-                    range will take longer to analyze.
-                  </FormHelperText>
+                  <FormLabel>End Date</FormLabel>
+                  <InputGroup>
+                    <InputLeftElement>
+                      <Icon as={FiCalendar} color="gray.400" />
+                    </InputLeftElement>
+                    <Input
+                      type="date"
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                    />
+                  </InputGroup>
                 </FormControl>
-              </VStack>
-            </CardBody>
-            <Divider />
-            <CardFooter>
-              <Button
-                rightIcon={<Icon as={isAnalyzing ? undefined : FiArrowRight} />}
-                colorScheme="purple"
-                onClick={runAnalysis}
-                isDisabled={
-                  !selectedIntegration || !selectedChannel || isAnalyzing
-                }
-                isLoading={isAnalyzing}
-                loadingText="Running Analysis..."
-                width="100%"
-              >
-                Run Analysis
-              </Button>
-            </CardFooter>
-          </Card>
+              </SimpleGrid>
 
-          {/* Analysis information */}
-          <Card variant="outline">
-            <CardHeader pb={0}>
-              <HStack>
-                <Icon as={FiFileText} color="purple.500" />
-                <Heading size="md">Analysis Information</Heading>
-              </HStack>
-            </CardHeader>
-            <CardBody>
-              <VStack spacing={3} align="stretch">
-                <Text>
-                  The analysis will evaluate channel communication patterns and
-                  identify:
-                </Text>
+              <FormControl>
+                <FormLabel>Analysis Options</FormLabel>
+                <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4} mt={2}>
+                  <Checkbox
+                    isChecked={includeThreads}
+                    onChange={(e) => setIncludeThreads(e.target.checked)}
+                    colorScheme="purple"
+                  >
+                    Include Thread Replies
+                  </Checkbox>
+
+                  <Checkbox
+                    isChecked={includeReactions}
+                    onChange={(e) => setIncludeReactions(e.target.checked)}
+                    colorScheme="purple"
+                  >
+                    Include Reactions
+                  </Checkbox>
+                </SimpleGrid>
+              </FormControl>
+
+              <Box bg="purple.50" p={4} borderRadius="md">
+                <Heading size="sm" mb={3}>Analysis will include:</Heading>
                 <SimpleGrid columns={{ base: 1, sm: 2 }} spacing={4}>
-                  <Box p={3} borderWidth="1px" borderRadius="md">
-                    <Heading size="xs" mb={2}>
-                      Channel Summary
-                    </Heading>
-                    <Text fontSize="sm">
+                  <VStack align="start" spacing={2}>
+                    <HStack>
+                      <Icon as={FiFileText} color="purple.500" />
+                      <Text fontWeight="medium">Channel Summary</Text>
+                    </HStack>
+                    <Text fontSize="sm" pl={6}>
                       Overall activity patterns and main discussion topics
                     </Text>
-                  </Box>
-                  <Box p={3} borderWidth="1px" borderRadius="md">
-                    <Heading size="xs" mb={2}>
-                      Topic Analysis
-                    </Heading>
-                    <Text fontSize="sm">
+                  </VStack>
+                  
+                  <VStack align="start" spacing={2}>
+                    <HStack>
+                      <Icon as={FiBarChart2} color="purple.500" />
+                      <Text fontWeight="medium">Topic Analysis</Text>
+                    </HStack>
+                    <Text fontSize="sm" pl={6}>
                       Key topics and themes discussed in the channel
                     </Text>
-                  </Box>
-                  <Box p={3} borderWidth="1px" borderRadius="md">
-                    <Heading size="xs" mb={2}>
-                      Contributor Insights
-                    </Heading>
-                    <Text fontSize="sm">
+                  </VStack>
+                  
+                  <VStack align="start" spacing={2}>
+                    <HStack>
+                      <Icon as={FiUsers} color="purple.500" />
+                      <Text fontWeight="medium">Contributor Insights</Text>
+                    </HStack>
+                    <Text fontSize="sm" pl={6}>
                       Participation patterns and key contributors
                     </Text>
-                  </Box>
-                  <Box p={3} borderWidth="1px" borderRadius="md">
-                    <Heading size="xs" mb={2}>
-                      Key Highlights
-                    </Heading>
-                    <Text fontSize="sm">
+                  </VStack>
+                  
+                  <VStack align="start" spacing={2}>
+                    <HStack>
+                      <Icon as={FiMessageSquare} color="purple.500" />
+                      <Text fontWeight="medium">Key Highlights</Text>
+                    </HStack>
+                    <Text fontSize="sm" pl={6}>
                       Important discussions and significant threads
                     </Text>
-                  </Box>
+                  </VStack>
                 </SimpleGrid>
-                <Text fontSize="sm" color="gray.600">
-                  Analysis typically takes 1-2 minutes to complete depending on
-                  channel volume.
-                </Text>
-              </VStack>
-            </CardBody>
-          </Card>
-        </GridItem>
+              </Box>
+              
+              <Text fontSize="sm" color="gray.600">
+                Analysis typically takes 1-2 minutes to complete depending on
+                channel volume. We'll notify you when results are ready.
+              </Text>
+            </VStack>
+          </CardBody>
+          <Divider />
+          <CardFooter justifyContent="space-between">
+            <Button
+              leftIcon={<Icon as={FiArrowLeft} />}
+              variant="outline"
+              onClick={prevStep}
+            >
+              Back
+            </Button>
+            <Button
+              rightIcon={<Icon as={isAnalyzing ? undefined : FiArrowRight} />}
+              colorScheme="purple"
+              onClick={runAnalysis}
+              isDisabled={!isStepValid(2) || isAnalyzing}
+              isLoading={isAnalyzing}
+              loadingText="Running Analysis..."
+            >
+              Run Analysis
+            </Button>
+          </CardFooter>
+        </Card>
+      )}
         {/* Processing Indicator */}
         {isAnalyzing && (
           <GridItem colSpan={{ base: 1, lg: 2 }}>
