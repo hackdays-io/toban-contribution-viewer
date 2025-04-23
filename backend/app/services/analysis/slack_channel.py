@@ -607,7 +607,7 @@ class SlackChannelAnalysisService(ResourceAnalysisService):
                 # Extract each section
                 for i, section in enumerate(sections):
                     section_pattern = re.compile(
-                        rf"{section}:?\s*(.*?)(?=\n\s*(?:{'|'.join(sections[i+1:])})|$)",
+                        rf"{section}:?\s*(.*?)(?=\n\s*(?:{'|'.join(sections[i + 1:])})|$)",
                         re.DOTALL | re.IGNORECASE,
                     )
                     match = section_pattern.search(content)

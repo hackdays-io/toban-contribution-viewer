@@ -210,7 +210,7 @@ class ResourceAnalysisService(abc.ABC):
             # For certain error types, we might want to retry
             if self._is_retryable_error(error):
                 logger.info(
-                    f"Retrying analysis {analysis_id} (attempt {current_retry+1}/{max_retries})"
+                    f"Retrying analysis {analysis_id} (attempt {current_retry + 1}/{max_retries})"
                 )
                 # Mark as pending for retry
                 return await self.update_analysis_status(
