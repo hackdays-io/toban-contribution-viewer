@@ -294,9 +294,7 @@ const CreateAnalysisPage: React.FC = () => {
 
         console.log('Channel data retrieved:', channelData)
 
-        // Reset any previous analysis
-        setAnalysis(null)
-        setAnalysisCompleted(false)
+        // Channel data loaded successfully
       } catch (error) {
         console.error('Error fetching channel data:', error)
         toast({
@@ -338,7 +336,6 @@ const CreateAnalysisPage: React.FC = () => {
 
     try {
       setIsAnalyzing(true)
-      setAnalysis(null)
 
       // Format date parameters
       const startDateParam = startDate ? new Date(startDate).toISOString() : ''
