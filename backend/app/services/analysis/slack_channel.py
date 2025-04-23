@@ -12,7 +12,7 @@ from app.models.integration import Integration
 from app.models.reports import AnalysisType
 from app.models.slack import SlackChannel, SlackUser
 from app.services.analysis.base import ResourceAnalysisService
-from app.services.llm.openrouter import OpenRouterClient
+from app.services.llm.openrouter import OpenRouterService
 from app.services.slack.messages import SlackMessageService
 
 logger = logging.getLogger(__name__)
@@ -23,16 +23,18 @@ class SlackChannelAnalysisService(ResourceAnalysisService):
     Service for analyzing Slack channels.
     """
 
-    def __init__(self, db: AsyncSession, llm_client: Optional[OpenRouterClient] = None):
+    def __init__(
+        self, db: AsyncSession, llm_client: Optional[OpenRouterService] = None
+    ):
         """
         Initialize with a database session and optional LLM client.
 
         Args:
             db: Database session
-            llm_client: OpenRouter client for LLM analysis (will create if None)
+            llm_client: OpenRouter service for LLM analysis (will create if None)
         """
         super().__init__(db)
-        self.llm_client = llm_client or OpenRouterClient()
+        self.llm_client = llm_client or OpenRouterService()
         self.message_service = SlackMessageService(db)
 
     async def fetch_data(
@@ -306,8 +308,6 @@ class SlackChannelAnalysisService(ResourceAnalysisService):
         model_params = parameters.get("model_params", {}) if parameters else {}
         default_model = "anthropic/claude-3-opus-20240229"
         model = model_params.get("model", default_model)
-        temperature = model_params.get("temperature", 0.2)
-        max_tokens = model_params.get("max_tokens", 4000)
 
         # Create a context string from the data
         context = self.create_context_for_llm(data, analysis_type)
@@ -315,9 +315,28 @@ class SlackChannelAnalysisService(ResourceAnalysisService):
         # Generate the prompt from the template and context
         prompt = prompt_template.format(context=context)
 
-        # Call the LLM API
-        response = await self.llm_client.generate_completion(
-            model=model, prompt=prompt, temperature=temperature, max_tokens=max_tokens
+        # Prepare message data for the LLM
+        message_data = {
+            "messages": [
+                {
+                    "text": prompt,
+                    "user_name": "System",
+                    "timestamp": datetime.utcnow().isoformat(),
+                }
+            ],
+            "message_count": 1,
+            "participant_count": 1,
+            "thread_count": 0,
+            "reaction_count": 0,
+        }
+
+        # Call the LLM API using the OpenRouterService interface
+        response = await self.llm_client.analyze_channel_messages(
+            channel_name=data.get("channel_name", "Unknown channel"),
+            messages_data=message_data,
+            start_date=data.get("period_start", datetime.utcnow().isoformat()),
+            end_date=data.get("period_end", datetime.utcnow().isoformat()),
+            model=model,
         )
 
         # Parse the LLM response
@@ -451,7 +470,7 @@ class SlackChannelAnalysisService(ResourceAnalysisService):
             user_contributions = data.get("user_contributions", {})
             user_lines = []
 
-            for user_id, stats in user_contributions.items():
+            for _user_id, stats in user_contributions.items():
                 user_info = stats["user_info"]
                 user_lines.append(
                     f"User: {user_info.get('display_name', user_info.get('name', 'Unknown'))}\n"
@@ -508,92 +527,93 @@ class SlackChannelAnalysisService(ResourceAnalysisService):
         Parse the LLM response into structured data.
 
         Args:
-            response: Raw LLM response
+            response: Analysis results from OpenRouterService
             analysis_type: Type of analysis that was performed
 
         Returns:
             Parsed response data
         """
-        # Extract the content from the response
-        content = response.get("choices", [{}])[0].get("message", {}).get("content", "")
+        # With OpenRouterService, the response is already partially structured
+        # We'll adapt it to our expected format
 
-        # Try to extract JSON from the response
-        try:
-            import json
-            import re
+        # Get the full response text for fallback parsing if needed
+        content = response.get("channel_summary", "")
 
-            # Look for JSON-like structure in the response
-            json_match = re.search(r"\{[\s\S]*\}", content)
-            if json_match:
-                json_str = json_match.group(0)
-                parsed = json.loads(json_str)
-
-                # Ensure all expected keys are present
-                expected_keys = []
-                if analysis_type == AnalysisType.CONTRIBUTION:
-                    expected_keys = [
-                        "contributor_insights",
-                        "key_highlights",
-                        "resource_summary",
-                    ]
-                elif analysis_type == AnalysisType.TOPICS:
-                    expected_keys = [
-                        "topic_analysis",
-                        "key_highlights",
-                        "resource_summary",
-                    ]
-                else:
-                    expected_keys = [
-                        "resource_summary",
-                        "key_highlights",
-                        "contributor_insights",
-                        "topic_analysis",
-                    ]
-
-                # Add missing keys with empty values
-                for key in expected_keys:
-                    if key not in parsed:
-                        parsed[key] = ""
-
-                # Store the full response for reference
-                parsed["full_response"] = content
-
-                return parsed
-        except Exception as e:
-            logger.warning(f"Failed to parse LLM response as JSON: {str(e)}")
-
-        # Fallback: use regex to extract sections
+        # Map the OpenRouterService response keys to our expected output
         result = {}
 
-        # Define sections to extract based on analysis type
-        sections = []
         if analysis_type == AnalysisType.CONTRIBUTION:
-            sections = ["CONTRIBUTOR_INSIGHTS", "KEY_HIGHLIGHTS", "RESOURCE_SUMMARY"]
+            result = {
+                "contributor_insights": response.get("contributor_insights", ""),
+                "key_highlights": response.get("key_highlights", ""),
+                "resource_summary": response.get("channel_summary", ""),
+                "full_response": content,
+            }
         elif analysis_type == AnalysisType.TOPICS:
-            sections = ["TOPIC_ANALYSIS", "KEY_HIGHLIGHTS", "RESOURCE_SUMMARY"]
+            result = {
+                "topic_analysis": response.get("topic_analysis", ""),
+                "key_highlights": response.get("key_highlights", ""),
+                "resource_summary": response.get("channel_summary", ""),
+                "full_response": content,
+            }
         else:
-            sections = [
-                "RESOURCE_SUMMARY",
-                "KEY_HIGHLIGHTS",
-                "CONTRIBUTOR_INSIGHTS",
-                "TOPIC_ANALYSIS",
-            ]
+            result = {
+                "resource_summary": response.get("channel_summary", ""),
+                "key_highlights": response.get("key_highlights", ""),
+                "contributor_insights": response.get("contributor_insights", ""),
+                "topic_analysis": response.get("topic_analysis", ""),
+                "full_response": content,
+            }
 
-        # Extract each section
-        for i, section in enumerate(sections):
-            section_pattern = re.compile(
-                rf"{section}:?\s*(.*?)(?=\n\s*(?:{'|'.join(sections[i+1:])})|$)",
-                re.DOTALL | re.IGNORECASE,
-            )
-            match = section_pattern.search(content)
-            if match:
-                # Convert section name to lowercase with underscores
-                key = section.lower()
-                result[key] = match.group(1).strip()
-            else:
-                result[section.lower()] = ""
+        # Try to extract JSON if we received content that might contain JSON
+        if not any(result[k] for k in result if k != "full_response"):
+            try:
+                import json
+                import re
 
-        # Store the full response for reference
-        result["full_response"] = content
+                # Look for JSON-like structure in the response
+                json_match = re.search(r"\{[\s\S]*\}", content)
+                if json_match:
+                    json_str = json_match.group(0)
+                    parsed = json.loads(json_str)
+
+                    # Add all keys from parsed JSON to result
+                    for key, value in parsed.items():
+                        result[key] = value
+            except Exception as e:
+                logger.warning(f"Failed to parse LLM response as JSON: {str(e)}")
+
+                # If JSON parsing failed, try regex extraction as fallback
+                import re
+
+                # Define sections to extract based on analysis type
+                sections = []
+                if analysis_type == AnalysisType.CONTRIBUTION:
+                    sections = [
+                        "CONTRIBUTOR_INSIGHTS",
+                        "KEY_HIGHLIGHTS",
+                        "RESOURCE_SUMMARY",
+                    ]
+                elif analysis_type == AnalysisType.TOPICS:
+                    sections = ["TOPIC_ANALYSIS", "KEY_HIGHLIGHTS", "RESOURCE_SUMMARY"]
+                else:
+                    sections = [
+                        "RESOURCE_SUMMARY",
+                        "KEY_HIGHLIGHTS",
+                        "CONTRIBUTOR_INSIGHTS",
+                        "TOPIC_ANALYSIS",
+                    ]
+
+                # Extract each section
+                for i, section in enumerate(sections):
+                    section_pattern = re.compile(
+                        rf"{section}:?\s*(.*?)(?=\n\s*(?:{'|'.join(sections[i+1:])})|$)",
+                        re.DOTALL | re.IGNORECASE,
+                    )
+                    match = section_pattern.search(content)
+                    if match:
+                        # Convert section name to lowercase with underscores
+                        key = section.lower()
+                        result[key] = match.group(1).strip()
 
         return result

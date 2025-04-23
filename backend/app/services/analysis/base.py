@@ -46,7 +46,6 @@ class ResourceAnalysisService(abc.ABC):
         Returns:
             Dictionary containing the resource data
         """
-        pass
 
     @abc.abstractmethod
     async def analyze_data(
@@ -63,7 +62,6 @@ class ResourceAnalysisService(abc.ABC):
         Returns:
             Analysis results from the LLM
         """
-        pass
 
     @abc.abstractmethod
     async def prepare_data_for_analysis(
@@ -79,7 +77,6 @@ class ResourceAnalysisService(abc.ABC):
         Returns:
             Processed data ready for LLM analysis
         """
-        pass
 
     async def update_analysis_status(
         self,
