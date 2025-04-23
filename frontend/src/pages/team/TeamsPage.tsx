@@ -77,7 +77,7 @@ const TeamsPage: React.FC = () => {
     setFormData({ name: '', slug: '', description: '' })
     baseOnOpen()
   }
-  
+
   // Custom onClose that ensures form is reset when modal is closed
   const onClose = () => {
     setFormData({ name: '', slug: '', description: '' })
@@ -99,7 +99,9 @@ const TeamsPage: React.FC = () => {
       setIsLoading(true)
 
       // Fetch teams directly from the API to get complete team details including description
-      const { data: { session } } = await supabase.auth.getSession()
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
       const token = session?.access_token
 
       if (!token) {
@@ -132,10 +134,13 @@ const TeamsPage: React.FC = () => {
         duration: 5000,
         isClosable: true,
       })
-      
+
       // Fallback to teams from context if API fails
       if (teamContext && teamContext.teams) {
-        console.log('Falling back to teams from AuthContext:', teamContext.teams)
+        console.log(
+          'Falling back to teams from AuthContext:',
+          teamContext.teams
+        )
         const formattedTeams = teamContext.teams.map((team) => ({
           id: team.id,
           name: team.name,
@@ -175,33 +180,33 @@ const TeamsPage: React.FC = () => {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target
-    
+
     if (name === 'name') {
       // When name changes, automatically update the slug unless it's been manually edited
       // This implements the incremental update as you type
       const newSlug = generateSlugFromName(value)
-      
+
       // Only update when we have a proper name to generate from
       if (value.trim()) {
         // Update both name and slug in a single operation to avoid batching issues
-        setFormData(prev => ({
+        setFormData((prev) => ({
           ...prev,
           name: value,
-          slug: newSlug
+          slug: newSlug,
         }))
       } else {
         // If name is empty, just update the name field
-        setFormData(prev => ({
+        setFormData((prev) => ({
           ...prev,
           name: value,
-          slug: '' // Also clear the slug if name is empty
+          slug: '', // Also clear the slug if name is empty
         }))
       }
     } else {
       // For other fields (including slug), just update that field
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        [name]: value
+        [name]: value,
       }))
     }
 
@@ -259,7 +264,7 @@ const TeamsPage: React.FC = () => {
       }
 
       const data = await response.json()
-      
+
       // Instead of just adding the new team to the existing list,
       // fetch all teams to ensure descriptions are shown properly
       await fetchTeams()
