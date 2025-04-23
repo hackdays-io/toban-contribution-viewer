@@ -34,12 +34,22 @@ class OpenRouterRequest(BaseModel):
     max_tokens: Optional[int] = None
     temperature: Optional[float] = None
     top_p: Optional[float] = None
+    response_format: Optional[Dict[str, str]] = None
 
 
 class OpenRouterService:
     """Service for interacting with the OpenRouter API."""
 
     API_URL = "https://openrouter.ai/api/v1/chat/completions"
+    
+    # Models known to support JSON mode
+    JSON_MODE_SUPPORTED_MODELS = [
+        "anthropic/claude-3",  # All Claude 3 models
+        "openai/gpt-4",        # GPT-4 models
+        "openai/gpt-3.5-turbo",
+        "mistralai/mistral-large",
+        "google/gemini-pro",
+    ]
 
     def __init__(self):
         """Initialize the OpenRouter service with configuration from settings."""
@@ -61,6 +71,18 @@ class OpenRouterService:
         self.app_site = os.environ.get(
             "SITE_DOMAIN", "toban-contribution-viewer.example.com"
         )
+        
+    def _model_supports_json_mode(self, model: str) -> bool:
+        """
+        Check if the specified model supports JSON mode.
+        
+        Args:
+            model: The model identifier
+            
+        Returns:
+            True if the model supports JSON mode, False otherwise
+        """
+        return any(model.startswith(supported_model) for supported_model in self.JSON_MODE_SUPPORTED_MODELS)
 
     async def analyze_channel_messages(
         self,
@@ -69,6 +91,7 @@ class OpenRouterService:
         start_date: Union[str, datetime],
         end_date: Union[str, datetime],
         model: Optional[str] = None,
+        use_json_mode: bool = True,
     ) -> Dict[str, str]:
         """
         Send channel messages to LLM for analysis and get structured insights.
@@ -79,6 +102,7 @@ class OpenRouterService:
             start_date: Start date for analysis period (ISO8601 string or datetime)
             end_date: End date for analysis period (ISO8601 string or datetime)
             model: Optional LLM model to use (falls back to default if not specified)
+            use_json_mode: Whether to request a JSON-formatted response (default: True)
 
         Returns:
             Dictionary with analysis sections (channel_summary, topic_analysis, etc.)
@@ -100,10 +124,19 @@ class OpenRouterService:
         # Format message content for the LLM - handle potential large message counts
         message_content = self._format_messages(messages_data.get("messages", []))
 
-        # Build the system prompt
+        # Build the system prompt with JSON instructions if needed
         system_prompt = """You are an expert analyst of communication patterns in team chat platforms.
 You're tasked with analyzing Slack conversation data to help team leaders understand communication dynamics.
 Provide insightful, specific, and actionable observations based on actual message content."""
+
+        if use_json_mode:
+            system_prompt += """
+Your response must be a valid JSON object with these keys:
+- channel_summary: A comprehensive overview of the channel's purpose and activity
+- topic_analysis: Identification of main discussion topics with examples
+- contributor_insights: Analysis of key contributors and their patterns
+- key_highlights: Notable discussions or interactions worth attention
+"""
 
         # Build the user prompt with the template
         user_prompt = CHANNEL_ANALYSIS_PROMPT.format(
@@ -117,6 +150,18 @@ Provide insightful, specific, and actionable observations based on actual messag
             message_content=message_content,
         )
 
+        # Add specific instructions for JSON response if needed
+        if use_json_mode:
+            user_prompt += """
+Format your response as a valid JSON object with these exact keys:
+{
+  "channel_summary": "...",
+  "topic_analysis": "...",
+  "contributor_insights": "...",
+  "key_highlights": "..."
+}
+"""
+
         # Build the API request
         request = OpenRouterRequest(
             model=model or self.default_model,
@@ -127,6 +172,16 @@ Provide insightful, specific, and actionable observations based on actual messag
             max_tokens=self.default_max_tokens,
             temperature=self.default_temperature,
         )
+        
+        # Add response_format for JSON mode if the model supports it and JSON mode is requested
+        actual_model = model or self.default_model
+        model_supports_json = self._model_supports_json_mode(actual_model)
+        
+        if use_json_mode and model_supports_json:
+            request.response_format = {"type": "json_object"}
+            logger.info(f"Using JSON mode for model {actual_model}")
+        elif use_json_mode and not model_supports_json:
+            logger.warning(f"JSON mode requested but model {actual_model} does not support it. Using text mode instead.")
 
         # Call the API
         try:
@@ -150,8 +205,31 @@ Provide insightful, specific, and actionable observations based on actual messag
                     result.get("choices", [{}])[0].get("message", {}).get("content", "")
                 )
 
-                # Extract sections from the response
-                sections = self._extract_sections(llm_response)
+                # Try to parse JSON response directly first if we're using JSON mode
+                sections = {}
+                if use_json_mode:
+                    try:
+                        import json
+                        
+                        # Handle potential JSON formatting in text response
+                        json_content = llm_response.strip()
+                        if json_content.startswith("```json"):
+                            json_content = json_content.split("```json", 1)[1]
+                        if json_content.endswith("```"):
+                            json_content = json_content.rsplit("```", 1)[0]
+                            
+                        parsed_json = json.loads(json_content.strip())
+                        
+                        # Map expected fields from JSON response
+                        for key in ["channel_summary", "topic_analysis", "contributor_insights", "key_highlights"]:
+                            if key in parsed_json:
+                                sections[key] = parsed_json[key]
+                    except (json.JSONDecodeError, ValueError, KeyError) as e:
+                        logger.warning(f"Failed to parse JSON response: {str(e)}. Falling back to text extraction.")
+                
+                # Fall back to extracting sections from text if JSON parsing failed or not used
+                if not any(sections.values()):
+                    sections = self._extract_sections(llm_response)
 
                 # Add the model used to the response
                 sections["model_used"] = result.get(

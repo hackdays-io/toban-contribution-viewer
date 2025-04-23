@@ -31,6 +31,17 @@ OpenRouter provides access to many models. Here are some recommended options:
 
 See the [OpenRouter documentation](https://openrouter.ai/docs) for a full list of available models.
 
+### JSON Mode Support
+
+The following models support JSON mode for more reliable structured responses:
+
+- All Claude 3 models (`anthropic/claude-3-*`)
+- OpenAI models (`openai/gpt-4-*`, `openai/gpt-3.5-turbo`)
+- Mistral Large (`mistralai/mistral-large`)
+- Google Gemini Pro (`google/gemini-pro`)
+
+When using these models, the API can request structured JSON responses, which improves parsing reliability and reduces the need for manual extraction.
+
 ## Usage
 
 The OpenRouter integration is primarily used by the Slack channel analysis feature. The service handles:
@@ -38,7 +49,10 @@ The OpenRouter integration is primarily used by the Slack channel analysis featu
 1. Formatting conversation data for analysis
 2. Constructing prompts with specific analysis tasks
 3. Handling API communication with OpenRouter
-4. Processing the LLM response into structured sections
+4. Requesting JSON-formatted responses from supported models
+5. Processing the LLM response into structured sections
+
+When using a model that supports JSON mode, the service will request a structured JSON response and parse it directly. For models without JSON mode support, the service falls back to extracting sections from the text response.
 
 ## Implementation Details
 
@@ -46,6 +60,7 @@ The integration is implemented in `app/services/llm/openrouter.py` with the foll
 
 - `OpenRouterService` - Main class for interacting with the OpenRouter API
 - `analyze_channel_messages()` - Method for sending channel data to an LLM and getting analysis
+- `_model_supports_json_mode()` - Helper method to check if a model supports JSON mode
 
 ### Prompt Structure
 
