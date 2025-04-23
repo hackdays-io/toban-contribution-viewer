@@ -271,6 +271,58 @@ const CreateAnalysisPage: React.FC = () => {
   const filteredResources = resources.filter((resource) =>
     resource.name.toLowerCase().includes(searchTerm.toLowerCase())
   )
+  
+  /**
+   * Toggle channel selection for analysis
+   */
+  const toggleChannelSelection = async (resourceId: string) => {
+    if (!selectedIntegration) return;
+    
+    try {
+      const isCurrentlySelected = selectedChannels.includes(resourceId);
+      const selectionAction = !isCurrentlySelected;
+      
+      // Call the API to update the selection
+      const result = await integrationService.selectChannelsForAnalysis(
+        selectedIntegration,
+        {
+          channel_ids: [resourceId],
+          for_analysis: selectionAction,
+        }
+      );
+      
+      if (integrationService.isApiError(result)) {
+        throw new Error(`Failed to ${selectionAction ? 'select' : 'deselect'} channel: ${result.message}`);
+      }
+      
+      // Update local state
+      if (selectionAction) {
+        setSelectedChannels([...selectedChannels, resourceId]);
+      } else {
+        setSelectedChannels(selectedChannels.filter(id => id !== resourceId));
+      }
+      
+      toast({
+        title: selectionAction ? "Channel Selected" : "Channel Deselected",
+        description: `Channel ${selectionAction ? "added to" : "removed from"} analysis selection`,
+        status: "success",
+        duration: 2000,
+        isClosable: true,
+      });
+      
+      // Refresh resources to update UI
+      await loadIntegrationResources(selectedIntegration);
+    } catch (error) {
+      console.error("Error toggling channel selection:", error);
+      toast({
+        title: "Selection Failed",
+        description: error instanceof Error ? error.message : "Failed to update channel selection",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+  }
 
   /**
    * Load the selected channel data
@@ -741,23 +793,52 @@ const CreateAnalysisPage: React.FC = () => {
                         transition="all 0.2s"
                         position="relative"
                       >
-                        <HStack>
-                          <Icon
-                            as={FiMessageSquare}
-                            color={
-                              resource.is_private ||
-                              (resource.metadata &&
-                                resource.metadata.is_private)
-                                ? 'orange.500'
-                                : 'green.500'
-                            }
-                          />
-                          <Text>#{resource.name}</Text>
-                          {selectedChannels.includes(resource.id) && (
-                            <Badge colorScheme="purple" ml="auto">
-                              Selected for analysis
-                            </Badge>
-                          )}
+                        <HStack justify="space-between">
+                          <HStack>
+                            <Icon
+                              as={FiMessageSquare}
+                              color={
+                                resource.is_private ||
+                                (resource.metadata &&
+                                  resource.metadata.is_private)
+                                  ? 'orange.500'
+                                  : 'green.500'
+                              }
+                            />
+                            <Text>#{resource.name}</Text>
+                          </HStack>
+                          
+                          <HStack>
+                            {selectedChannels.includes(resource.id) ? (
+                              <Badge 
+                                colorScheme="purple" 
+                                cursor="pointer" 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleChannelSelection(resource.id);
+                                }}
+                                _hover={{ opacity: 0.8 }}
+                                px={2}
+                                py={1}
+                              >
+                                Selected for Analysis ✓
+                              </Badge>
+                            ) : (
+                              <Badge 
+                                colorScheme="gray" 
+                                cursor="pointer" 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleChannelSelection(resource.id);
+                                }}
+                                _hover={{ bg: "gray.200" }}
+                                px={2}
+                                py={1}
+                              >
+                                Add to Analysis
+                              </Badge>
+                            )}
+                          </HStack>
                         </HStack>
                       </Box>
                     ))
