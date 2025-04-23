@@ -50,7 +50,7 @@ import {
   FiSlack,
   FiUsers,
 } from 'react-icons/fi'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import useAuth from '../../context/useAuth'
 import useIntegration from '../../context/useIntegration'
 import integrationService, {
@@ -75,6 +75,7 @@ interface ChannelResource extends ServiceResource {
  */
 const CreateAnalysisPage: React.FC = () => {
   const toast = useToast()
+  const navigate = useNavigate()
   const { teamContext } = useAuth()
   const { integrations, fetchIntegrations } = useIntegration()
 
@@ -94,9 +95,6 @@ const CreateAnalysisPage: React.FC = () => {
   const [showAllChannels, setShowAllChannels] = useState(false)
   const [selectedChannels, setSelectedChannels] = useState<string[]>([])
   const [selectedChannel, setSelectedChannel] = useState<string>('')
-  // Removed unused state
-  const [analysis, setAnalysis] = useState<SlackAnalysisResult | null>(null)
-  const [analysisCompleted, setAnalysisCompleted] = useState(false)
 
   // Multi-step form state
   const [activeStep, setActiveStep] = useState(0)
@@ -478,20 +476,22 @@ const CreateAnalysisPage: React.FC = () => {
         throw new Error(errorMessage)
       }
 
-      // Set the analysis result
-      setAnalysis(result as unknown as SlackAnalysisResult)
-      setAnalysisCompleted(true)
-
+      // Instead of showing the result on this page, notify user and redirect
       toast({
         title: 'Report Generated Successfully',
-        description: 'Your channel analysis report is now ready to view',
+        description: 'Redirecting to the detailed report page...',
         status: 'success',
-        duration: 5000,
+        duration: 3000,
         isClosable: true,
       })
 
-      // We're already showing the results in the UI, so this second toast is redundant
-      // Remove the second toast to avoid notification overload
+      // Redirect to the detailed report page
+      if (result.analysis_id) {
+        // Set a short timeout to allow the toast to be seen before redirecting
+        setTimeout(() => {
+          navigate(`/dashboard/integrations/${selectedIntegration}/channels/${selectedChannel}/analysis/${result.analysis_id}`);
+        }, 1500);
+      }
     } catch (error) {
       console.error('Error during analysis:', error)
       toast({
@@ -502,7 +502,8 @@ const CreateAnalysisPage: React.FC = () => {
         duration: 10000,
         isClosable: true,
       })
-    } finally {
+      // Only set isAnalyzing to false if there was an error
+      // This keeps the button disabled after successful creation
       setIsAnalyzing(false)
     }
   }
@@ -1005,204 +1006,7 @@ const CreateAnalysisPage: React.FC = () => {
           </Box>
         )}
 
-        {/* Analysis Results (only shown when analysis is complete) */}
-        {analysisCompleted && analysis && (
-          <Box maxWidth="800px" mx="auto">
-            <Card
-              variant="elevated"
-              mb={6}
-              borderColor="green.300"
-              borderWidth={2}
-            >
-              <CardHeader>
-                <Heading size="lg">Analysis Results</Heading>
-              </CardHeader>
-              <CardBody>
-                {/* Analysis Stats */}
-                <SimpleGrid
-                  columns={{ base: 1, md: 2, lg: 4 }}
-                  spacing={4}
-                  mb={6}
-                >
-                  <Stat>
-                    <StatLabel>Messages</StatLabel>
-                    <StatNumber>
-                      {analysis.stats?.message_count || 0}
-                    </StatNumber>
-                    <StatHelpText>Total messages analyzed</StatHelpText>
-                  </Stat>
-
-                  <Stat>
-                    <StatLabel>Participants</StatLabel>
-                    <StatNumber>
-                      {analysis.stats?.participant_count || 0}
-                    </StatNumber>
-                    <StatHelpText>Unique contributors</StatHelpText>
-                  </Stat>
-
-                  <Stat>
-                    <StatLabel>Threads</StatLabel>
-                    <StatNumber>{analysis.stats?.thread_count || 0}</StatNumber>
-                    <StatHelpText>Conversation threads</StatHelpText>
-                  </Stat>
-
-                  <Stat>
-                    <StatLabel>Reactions</StatLabel>
-                    <StatNumber>
-                      {analysis.stats?.reaction_count || 0}
-                    </StatNumber>
-                    <StatHelpText>Total emoji reactions</StatHelpText>
-                  </Stat>
-                </SimpleGrid>
-
-                {/* Analysis Content */}
-                <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
-                  <Card>
-                    <CardHeader>
-                      <Heading size="md">Channel Summary</Heading>
-                    </CardHeader>
-                    <CardBody>
-                      {analysis.channel_summary ? (
-                        <Box>
-                          {analysis.channel_summary
-                            .split('\n')
-                            .map((paragraph, index) => (
-                              <Box key={index} mb={2}>
-                                {paragraph || <Box height="1em" />}
-                              </Box>
-                            ))}
-                        </Box>
-                      ) : (
-                        <Text color="gray.500">No summary available</Text>
-                      )}
-                    </CardBody>
-                  </Card>
-
-                  <Card>
-                    <CardHeader>
-                      <Heading size="md">Topic Analysis</Heading>
-                    </CardHeader>
-                    <CardBody>
-                      {analysis.topic_analysis ? (
-                        <Box>
-                          {analysis.topic_analysis
-                            .split('\n')
-                            .map((paragraph, index) => (
-                              <Box key={index} mb={2}>
-                                {paragraph || <Box height="1em" />}
-                              </Box>
-                            ))}
-                        </Box>
-                      ) : (
-                        <Text color="gray.500">
-                          No topic analysis available
-                        </Text>
-                      )}
-                    </CardBody>
-                  </Card>
-
-                  <Card>
-                    <CardHeader>
-                      <Heading size="md">Contributor Insights</Heading>
-                    </CardHeader>
-                    <CardBody>
-                      {analysis.contributor_insights ? (
-                        <Box>
-                          {analysis.contributor_insights
-                            .split('\n')
-                            .map((paragraph, index) => (
-                              <Box key={index} mb={2}>
-                                {paragraph || <Box height="1em" />}
-                              </Box>
-                            ))}
-                        </Box>
-                      ) : (
-                        <Text color="gray.500">
-                          No contributor insights available
-                        </Text>
-                      )}
-                    </CardBody>
-                  </Card>
-
-                  <Card>
-                    <CardHeader>
-                      <Heading size="md">Key Highlights</Heading>
-                    </CardHeader>
-                    <CardBody>
-                      {analysis.key_highlights ? (
-                        <Box>
-                          {analysis.key_highlights
-                            .split('\n')
-                            .map((paragraph, index) => (
-                              <Box key={index} mb={2}>
-                                {paragraph || <Box height="1em" />}
-                              </Box>
-                            ))}
-                        </Box>
-                      ) : (
-                        <Text color="gray.500">
-                          No key highlights available
-                        </Text>
-                      )}
-                    </CardBody>
-                  </Card>
-                </SimpleGrid>
-
-                {/* Analysis metadata */}
-                <Box mt={4} p={3} borderRadius="md" bg="gray.50">
-                  <HStack spacing={2}>
-                    <Text fontWeight="bold" fontSize="sm">
-                      Analysis period:
-                    </Text>
-                    <Text fontSize="sm">
-                      {analysis.period?.start
-                        ? new Date(analysis.period.start).toLocaleDateString()
-                        : 'Unknown'}{' '}
-                      to{' '}
-                      {analysis.period?.end
-                        ? new Date(analysis.period.end).toLocaleDateString()
-                        : 'Unknown'}
-                    </Text>
-                  </HStack>
-
-                  <HStack spacing={2}>
-                    <Text fontWeight="bold" fontSize="sm">
-                      Model:
-                    </Text>
-                    <Text fontSize="sm">
-                      {analysis.model_used || 'Unknown'}
-                    </Text>
-                  </HStack>
-
-                  <HStack spacing={2}>
-                    <Text fontWeight="bold" fontSize="sm">
-                      Generated:
-                    </Text>
-                    <Text fontSize="sm">
-                      {analysis.generated_at
-                        ? new Date(analysis.generated_at).toLocaleString()
-                        : 'Unknown'}
-                    </Text>
-                  </HStack>
-                </Box>
-
-                {/* View detailed results button */}
-                {analysis.analysis_id && (
-                  <Flex justify="center" mt={6}>
-                    <Button
-                      as={Link}
-                      to={`/dashboard/integrations/${selectedIntegration}/channels/${selectedChannel}/analysis/${analysis.analysis_id}`}
-                      colorScheme="purple"
-                      leftIcon={<Icon as={FiFileText} />}
-                    >
-                      View Detailed Results
-                    </Button>
-                  </Flex>
-                )}
-              </CardBody>
-            </Card>
-          </Box>
-        )}
+        {/* We no longer show results here as we're redirecting to the detail page */}
     </Box>
   )
 }
