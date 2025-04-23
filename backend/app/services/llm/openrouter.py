@@ -127,14 +127,18 @@ class OpenRouterService:
         # Build the system prompt with JSON instructions if needed
         system_prompt = """You are an expert analyst of communication patterns in team chat platforms.
 You're tasked with analyzing Slack conversation data to help team leaders understand communication dynamics.
-Provide insightful, specific, and actionable observations based on actual message content."""
+Provide insightful, specific, and actionable observations based on actual message content.
+
+CRITICAL: When referring to Slack users in your analysis, always keep the original user mention format 
+(such as "<@U12345>") intact. Do not replace these mentions with plain text like "Unknown User" or attempt 
+to resolve them. The frontend application will handle proper user display."""
 
         if use_json_mode:
             system_prompt += """
 Your response must be a valid JSON object with these keys:
 - channel_summary: A comprehensive overview of the channel's purpose and activity
 - topic_analysis: Identification of main discussion topics with examples
-- contributor_insights: Analysis of key contributors and their patterns
+- contributor_insights: Analysis of key contributors and their patterns (preserve user mentions like <@U12345>)
 - key_highlights: Notable discussions or interactions worth attention
 """
 
@@ -160,6 +164,9 @@ Format your response as a valid JSON object with these exact keys:
   "contributor_insights": "...",
   "key_highlights": "..."
 }
+
+FINAL REMINDER: Don't attempt to resolve or replace Slack user mentions like <@U12345>. 
+Keep them intact exactly as they appear in the original messages.
 """
 
         # Build the API request
@@ -257,6 +264,21 @@ Format your response as a valid JSON object with these exact keys:
 
     def _format_messages(self, messages: List[Dict[str, Any]]) -> str:
         """Format messages for inclusion in the prompt, applying sampling for large datasets."""
+        # Helper to format user mention properly
+        def format_user_mention(msg):
+            # Preserve original user ID if we have it, fallback to user_name
+            user_id = msg.get("user_id")
+            timestamp = msg.get("timestamp", "")
+            text = msg.get("text", "")
+            
+            if user_id:
+                # Use Slack user mention format which frontend can resolve
+                return f"[{timestamp}] <@{user_id}>: {text}"
+            else:
+                # Fallback to user_name but avoid "Unknown User" label
+                user = msg.get("user_name", "Participant")
+                return f"[{timestamp}] {user}: {text}"
+                
         # Determine if we need to sample
         if len(messages) > 200:
             # With larger datasets, we take samples from beginning, middle and end
@@ -275,13 +297,7 @@ Format your response as a valid JSON object with these exact keys:
             # Combine samples
             sampled_messages = start_sample + middle_sample + end_sample
 
-            formatted_messages = []
-            for msg in sampled_messages:
-                user = msg.get("user_name", "Unknown User")
-                text = msg.get("text", "")
-                timestamp = msg.get("timestamp", "")
-
-                formatted_messages.append(f"[{timestamp}] {user}: {text}")
+            formatted_messages = [format_user_mention(msg) for msg in sampled_messages]
 
             return "\n".join(
                 [
@@ -297,14 +313,7 @@ Format your response as a valid JSON object with these exact keys:
             )
         else:
             # For smaller datasets, include everything
-            formatted_messages = []
-            for msg in messages:
-                user = msg.get("user_name", "Unknown User")
-                text = msg.get("text", "")
-                timestamp = msg.get("timestamp", "")
-
-                formatted_messages.append(f"[{timestamp}] {user}: {text}")
-
+            formatted_messages = [format_user_mention(msg) for msg in messages]
             return "\n".join(formatted_messages)
 
     def _extract_sections(self, llm_response: str) -> Dict[str, str]:

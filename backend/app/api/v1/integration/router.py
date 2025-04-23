@@ -1782,13 +1782,15 @@ async def analyze_integration_resource(
                 reaction_count += msg.reaction_count
 
             user = user_dict.get(msg.user_id) if msg.user_id else None
-            user_name = user.display_name or user.name if user else "Unknown User"
+            # Instead of using "Unknown User", we'll use the actual user_id if available,
+            # which will be used in _format_messages to create the <@USER_ID> format
+            user_name = user.display_name or user.name if user else "Participant"
 
             processed_messages.append(
                 {
                     "id": msg.id,
-                    "user_id": msg.user_id,
-                    "user_name": user_name,
+                    "user_id": msg.user_id,  # This will be used to create <@USER_ID> format in _format_messages
+                    "user_name": user_name,  # Only used as fallback if user_id is not available
                     "text": msg.text,
                     "timestamp": msg.message_datetime.isoformat(),
                     "is_thread_parent": msg.is_thread_parent,
