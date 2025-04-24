@@ -27,13 +27,11 @@ from app.models.reports import (  # noqa: F401
 
 # Import models to make them discoverable
 from app.models.slack import (  # noqa: F401
-    SlackAnalysis,
     SlackChannel,
-    SlackContribution,
     SlackMessage,
-    SlackReaction,
+    SlackReaction, 
     SlackUser,
     SlackWorkspace,
-    analysis_channels,
+    # Legacy models removed: SlackAnalysis, SlackContribution, analysis_channels
 )
 from app.models.team import Team, TeamMember, TeamMemberRole  # noqa: F401

@@ -47,7 +47,9 @@ from app.models.integration import (
     ServiceResource,
     ShareLevel,
 )
-from app.models.slack import SlackChannel, SlackChannelAnalysis, SlackWorkspace
+from app.models.reports import ResourceAnalysis, AnalysisResourceType, AnalysisType
+from app.models.slack import SlackChannel, SlackWorkspace
+# Legacy SlackChannelAnalysis import removed
 from app.services.integration.base import IntegrationService
 from app.services.integration.slack import SlackIntegrationService
 from app.services.llm.analysis_store import AnalysisStoreService
