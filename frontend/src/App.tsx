@@ -266,6 +266,18 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+              
+              {/* Add route for team/cross-resource analysis results */}
+              <Route
+                path="/dashboard/integrations/:integrationId/team-analysis/:analysisId"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <TeamAnalysisResultPage />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
 
               {/* Add route for team/cross-resource analysis results */}
               <Route

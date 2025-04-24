@@ -48,23 +48,6 @@ import { SlackAnalysisResult } from '../../lib/slackApiClient'
 // Use the SlackAnalysisResult interface directly from slackApiClient.ts
 type AnalysisResponse = SlackAnalysisResult
 
-// Define the possible types for content
-type ContentType =
-  | string
-  | boolean
-  | Record<string, unknown>
-  | {
-      start: string
-      end: string
-    }
-  | {
-      message_count: number
-      participant_count: number
-      thread_count: number
-      reaction_count: number
-    }
-  | undefined
-
 interface Channel extends ServiceResource {
   type: string
   topic?: string
@@ -510,14 +493,11 @@ const TeamChannelAnalysisPage: React.FC = () => {
     if (!analysis) return <Box>No analysis data available</Box>
 
     // Check if the field exists directly on the analysis object
-    let content: ContentType = analysis[fieldName]
+    let content = analysis[fieldName]
 
     // If content doesn't exist, check if it might be in the result field
     if (!content && analysis.result && typeof analysis.result === 'object') {
-      // Need to use type assertion to satisfy TypeScript
-      const resultObj = analysis.result as Record<string, unknown>
-      const fieldValue = resultObj[fieldName as string] as ContentType
-      content = fieldValue
+      content = analysis.result[fieldName as string]
     }
 
     // If we found a string content, format it
@@ -805,8 +785,7 @@ const TeamChannelAnalysisPage: React.FC = () => {
           <AlertIcon />
           <AlertTitle>Unsupported integration type</AlertTitle>
           <AlertDescription>
-            Resource analysis is currently only available for Slack
-            integrations.
+            Channel analysis is currently only available for Slack integrations.
           </AlertDescription>
         </Alert>
       </Box>
@@ -849,7 +828,7 @@ const TeamChannelAnalysisPage: React.FC = () => {
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbItem isCurrentPage>
-            <BreadcrumbLink>Resource Analysis</BreadcrumbLink>
+            <BreadcrumbLink>Channel Analysis</BreadcrumbLink>
           </BreadcrumbItem>
         </Breadcrumb>
 
@@ -874,7 +853,7 @@ const TeamChannelAnalysisPage: React.FC = () => {
           <>
             <Box mb={6}>
               <Heading as="h1" size="xl">
-                Resource Analysis
+                Channel Analysis
               </Heading>
               <HStack mt={2} spacing={2}>
                 <Text fontWeight="bold">{currentIntegration.name}</Text>

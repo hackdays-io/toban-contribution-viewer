@@ -1997,7 +1997,6 @@ async def analyze_integration_resource(
         logger.info(
             f"analyze_integration_resource - Building response with date range: start={start_date}, end={end_date}"
         )
-        
         response = AnalysisResponse(
             analysis_id=str(analysis_uuid),
             channel_id=str(channel.id),
@@ -2016,6 +2015,11 @@ async def analyze_integration_resource(
             report_id=str(report_uuid),  # Add report_id to the response
             team_id=str(team_id),  # Use the validated team_id from earlier
             is_unified_report=True,  # Mark this as a unified report
+        )
+
+        # Explicitly log what dates are being returned
+        logger.info(
+            f"analyze_integration_resource - Response period: start={response.period['start']}, end={response.period['end']}"
         )
 
         # Explicitly log what dates are being returned

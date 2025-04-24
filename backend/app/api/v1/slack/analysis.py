@@ -98,7 +98,7 @@ async def analyze_channel(
         None, description="Specific LLM model to use"
     ),
     use_json_mode: bool = Query(
-        True, description="Whether to request JSON-formatted responses from LLM"
+        True, description="Whether to request JSON-formatted responses from LLM (may not be supported by all models)"
     ),
     db: AsyncSession = Depends(get_async_db),
 ):
