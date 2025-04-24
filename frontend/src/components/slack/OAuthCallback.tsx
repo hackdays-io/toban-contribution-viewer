@@ -406,7 +406,6 @@ const OAuthCallback: React.FC = () => {
               }, 2000)
             }
           }
-          }
         } catch (linkError) {
           console.error('Error linking workspace to team:', linkError)
           // Still consider it a success since the OAuth part worked
