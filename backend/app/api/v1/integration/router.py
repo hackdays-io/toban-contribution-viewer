@@ -582,7 +582,7 @@ async def get_integration_resources(
                 selected_channels = [
                     row[0] for row in selected_channels_result.fetchall()
                 ]
-                logger.info(
+                logger.debug(
                     f"Found {len(selected_channels)} selected channels in SlackChannel table for workspace {workspace.id}"
                 )
 
@@ -2332,7 +2332,7 @@ async def get_integration_resource_analysis(
 
                     if analysis:
                         real_analysis_id = str(analysis.id)
-                        logger.info(f"Found analysis by timestamp: {real_analysis_id}")
+                        logger.debug(f"Found analysis by timestamp: {real_analysis_id}")
                     else:
                         logger.warning(
                             f"No analysis found near timestamp {timestamp_str}"
@@ -2344,11 +2344,10 @@ async def get_integration_resource_analysis(
 
             if not real_analysis_id:
                 # As fallback, try to get the latest analysis
-                logger.info(
+                logger.debug(
                     f"Using fallback to get latest analysis for channel {channel.id}"
                 )
                 # Get latest analysis for this resource from ResourceAnalysis
-                from sqlalchemy import select
                 from app.models.reports import ResourceAnalysis, AnalysisResourceType
                 
                 stmt = (
@@ -2365,7 +2364,7 @@ async def get_integration_resource_analysis(
 
                 if analysis:
                     real_analysis_id = str(analysis.id)
-                    logger.info(
+                    logger.debug(
                         f"Using latest analysis as fallback: {real_analysis_id}"
                     )
 
