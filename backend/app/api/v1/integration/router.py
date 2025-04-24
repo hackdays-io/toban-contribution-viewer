@@ -1878,20 +1878,43 @@ async def analyze_integration_resource(
             "reaction_count": reaction_count,
         }
 
+        # Generate a proper UUID for the analysis_id
+        analysis_uuid = uuid.uuid4()
+        
         try:
-            await AnalysisStoreService.store_channel_analysis(
-                db=db,
-                workspace_id=str(workspace.id),
-                channel_id=str(channel.id),
-                start_date=start_date,
-                end_date=end_date,
-                stats=stats,
-                analysis_results=analysis_results,
+            # Create a ResourceAnalysis record in the database
+            from datetime import datetime
+            
+            # Store the analysis in the ResourceAnalysis table
+            resource_analysis = ResourceAnalysis(
+                id=analysis_uuid,  # Use the generated UUID
+                cross_resource_report_id=None,  # Not part of a cross-resource report
+                integration_id=integration_id,
+                resource_id=channel.id,
+                resource_type=AnalysisResourceType.SLACK_CHANNEL,
+                analysis_type=AnalysisType.CONTRIBUTION,  # Default to contribution analysis
+                status=ReportStatus.COMPLETED,
+                period_start=start_date,
+                period_end=end_date,
+                analysis_parameters={
+                    "include_threads": include_threads,
+                    "include_reactions": include_reactions,
+                    "model": model,
+                },
+                results=stats,
+                resource_summary=analysis_results.get("channel_summary", ""),
+                topic_analysis=analysis_results.get("topic_analysis", ""),
+                contributor_insights=analysis_results.get("contributor_insights", ""),
+                key_highlights=analysis_results.get("key_highlights", ""),
                 model_used=analysis_results.get("model_used", model or ""),
+                analysis_generated_at=datetime.utcnow(),
             )
-            logger.info(f"Stored analysis for channel {channel.id}")
+            
+            db.add(resource_analysis)
+            await db.commit()
+            logger.info(f"Stored analysis in ResourceAnalysis table with ID: {analysis_uuid}")
         except Exception as e:
-            logger.error(f"Error storing analysis results: {str(e)}")
+            logger.error(f"Error storing analysis in ResourceAnalysis table: {str(e)}", exc_info=True)
             # We'll continue with the API response even if storage fails
 
         # Build the response with the correct date period
@@ -1899,12 +1922,9 @@ async def analyze_integration_resource(
         logger.info(
             f"analyze_integration_resource - Building response with date range: start={start_date}, end={end_date}"
         )
-
-        # Generate a proper UUID for the analysis_id instead of a formatted string
-        analysis_uuid = str(uuid.uuid4())
         
         response = AnalysisResponse(
-            analysis_id=analysis_uuid,
+            analysis_id=str(analysis_uuid),
             channel_id=str(channel.id),
             channel_name=channel.name,
             period={
