@@ -14,6 +14,8 @@ from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_async_db
+from app.services.slack.channels import get_channel_by_id, get_channel_users
+from app.services.slack.messages import get_channel_messages
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +24,7 @@ router = APIRouter()
 
 class AnalysisOptions(BaseModel):
     """Options for configuring the channel analysis."""
+
     include_threads: bool = True
     include_reactions: bool = True
     model: Optional[str] = None
@@ -30,6 +33,7 @@ class AnalysisOptions(BaseModel):
 
 class AnalysisResponse(BaseModel):
     """Response model for channel analysis results."""
+
     analysis_id: str
     channel_id: str
     channel_name: str
@@ -48,6 +52,7 @@ class AnalysisResponse(BaseModel):
 
 class StoredAnalysisResponse(BaseModel):
     """Response model for retrieving stored channel analyses."""
+
     id: str
     channel_id: str
     channel_name: str
@@ -68,6 +73,7 @@ class StoredAnalysisResponse(BaseModel):
 
 class DeprecationResponse(BaseModel):
     """Response for deprecated endpoints."""
+
     message: str
     suggested_alternative: str
 
@@ -94,21 +100,20 @@ async def analyze_channel(
     include_reactions: bool = Query(
         True, description="Whether to include reactions data in the analysis"
     ),
-    model: Optional[str] = Query(
-        None, description="Specific LLM model to use"
-    ),
+    model: Optional[str] = Query(None, description="Specific LLM model to use"),
     use_json_mode: bool = Query(
-        True, description="Whether to request JSON-formatted responses from LLM (may not be supported by all models)"
+        True,
+        description="Whether to request JSON-formatted responses from LLM (may not be supported by all models)",
     ),
     db: AsyncSession = Depends(get_async_db),
 ):
     """
-    DEPRECATED: This endpoint has been removed. 
+    DEPRECATED: This endpoint has been removed.
     Please use the integration-based ResourceAnalysis system instead.
     """
     return DeprecationResponse(
         message="This endpoint has been deprecated and removed.",
-        suggested_alternative="Please use POST /integrations/{integration_id}/resources/{resource_id}/analyze instead."
+        suggested_alternative="Please use POST /integrations/{integration_id}/resources/{resource_id}/analyze instead.",
     )
 
 
@@ -134,7 +139,7 @@ async def get_channel_analyses(
     """
     return DeprecationResponse(
         message="This endpoint has been deprecated and removed.",
-        suggested_alternative="Please use GET /integrations/{integration_id}/resources/{resource_id}/analyses instead."
+        suggested_alternative="Please use GET /integrations/{integration_id}/resources/{resource_id}/analyses instead.",
     )
 
 
@@ -156,5 +161,5 @@ async def get_latest_channel_analysis(
     """
     return DeprecationResponse(
         message="This endpoint has been deprecated and removed.",
-        suggested_alternative="Please use GET /integrations/{integration_id}/resources/{resource_id}/analyses/latest instead."
+        suggested_alternative="Please use GET /integrations/{integration_id}/resources/{resource_id}/analyses/latest instead.",
     )
