@@ -1900,8 +1900,11 @@ async def analyze_integration_resource(
             f"analyze_integration_resource - Building response with date range: start={start_date}, end={end_date}"
         )
 
+        # Generate a proper UUID for the analysis_id instead of a formatted string
+        analysis_uuid = str(uuid.uuid4())
+        
         response = AnalysisResponse(
-            analysis_id=f"analysis_{channel.id}_{int(datetime.utcnow().timestamp())}",
+            analysis_id=analysis_uuid,
             channel_id=str(channel.id),
             channel_name=channel.name,
             period={
@@ -2296,16 +2299,17 @@ async def get_integration_resource_analysis(
                 detail="Channel not found in database.",
             )
 
-        # Extract the real analysis ID from the formatted string
-        # analysis_id format: analysis_{channel_id}_{timestamp}
+        # Get the analysis by its ID (which is now a proper UUID)
         real_analysis_id = None
         try:
-            # If the analysis_id is a UUID, use it directly
+            # Try to parse the analysis_id as a UUID
             uuid_obj = uuid.UUID(analysis_id)
             real_analysis_id = str(uuid_obj)
+            logger.debug(f"Using analysis ID directly: {real_analysis_id}")
         except ValueError:
-            # If the analysis_id is not a UUID, it might be in the format we generate
-            # Try to lookup the analysis by composite key
+            # For backward compatibility with old format (analysis_{channel_id}_{timestamp})
+            # Attempts to locate an analysis close to the provided timestamp
+            logger.warning(f"Received legacy analysis ID format: {analysis_id}")
             parts = analysis_id.split("_")
             if len(parts) >= 3 and parts[0] == "analysis":
                 # Try to extract timestamp
