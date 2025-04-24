@@ -38,6 +38,7 @@ import {
   FiChevronRight,
   FiFileText,
   FiMessageSquare,
+  FiRefreshCw,
   FiSearch,
   FiSlack,
   FiUsers,
@@ -75,6 +76,7 @@ const CreateAnalysisPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [isSelectedChannelsLoading, setIsSelectedChannelsLoading] = useState(false)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [isSyncing, setIsSyncing] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedIntegration, setSelectedIntegration] = useState<string>('')
   const [resources, setResources] = useState<ChannelResource[]>([])
@@ -706,12 +708,83 @@ const CreateAnalysisPage: React.FC = () => {
     }
   }
 
+  // Auto-sync function to trigger a sync when no channels are found
+  const autoSyncIfNeeded = useCallback(async (integrationId: string) => {
+    try {
+      // Load resources first to check if sync needed
+      setIsLoading(true);
+      const result = await integrationService.getResources(integrationId);
+      
+      if (integrationService.isApiError(result)) {
+        console.warn('Error checking resources before auto-sync:', result.message);
+        return false;
+      }
+      
+      // Filter to just channel resources
+      const channels = result.filter(r => r.resource_type === 'slack_channel');
+      
+      // If no channels found, trigger a sync automatically
+      if (channels.length === 0) {
+        console.log('No channels found, triggering automatic sync...');
+        setIsSyncing(true);
+        
+        // Show toast to inform user
+        toast({
+          title: "Auto-syncing channels",
+          description: "No channels found. Syncing data from Slack automatically...",
+          status: "info",
+          duration: 5000,
+          isClosable: true,
+        });
+        
+        // Perform the sync
+        const syncResult = await integrationService.syncResources(
+          integrationId,
+          [ResourceType.SLACK_CHANNEL, ResourceType.SLACK_USER]
+        );
+        
+        if (integrationService.isApiError(syncResult)) {
+          console.warn('Auto-sync failed:', syncResult.message);
+          return false;
+        }
+        
+        // Wait a moment for sync to start processing
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // Load resources again after sync
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('Error in autoSyncIfNeeded:', error);
+      return false;
+    } finally {
+      setIsLoading(false);
+      setIsSyncing(false);
+    }
+  }, [toast]);
+
   // When an integration is selected, load its resources
   useEffect(() => {
     if (selectedIntegration) {
-      loadIntegrationResources(selectedIntegration)
+      const loadResources = async () => {
+        // First, load integration resources
+        await loadIntegrationResources(selectedIntegration);
+        
+        // Check if auto-sync is needed
+        if (allChannelResources.length === 0) {
+          const didSync = await autoSyncIfNeeded(selectedIntegration);
+          if (didSync) {
+            // If we did sync, load resources again
+            await loadIntegrationResources(selectedIntegration);
+          }
+        }
+      };
+      
+      loadResources();
     }
-  }, [selectedIntegration, loadIntegrationResources])
+  }, [selectedIntegration, loadIntegrationResources, allChannelResources.length, autoSyncIfNeeded])
 
   return (
     <Box width="100%">
@@ -892,12 +965,124 @@ const CreateAnalysisPage: React.FC = () => {
               <Text>Choose the Slack channels you'd like to analyze. You can select multiple channels for cross-resource analysis.</Text>
               
               {isLoading || isSelectedChannelsLoading ? (
-                <Flex justify="center" align="center" py={8}>
+                <Flex direction="column" justify="center" align="center" py={8} gap={4}>
                   <Spinner size="md" color="purple.500" />
-                  <Text ml={3}>
-                    {isLoading ? "Loading channels..." : "Loading selected channels..."}
-                  </Text>
+                  <VStack spacing={2}>
+                    <Text fontWeight="medium">
+                      {isLoading ? "Loading channels..." : "Loading selected channels..."}
+                    </Text>
+                    <Text color="gray.600" fontSize="sm" maxW="450px" textAlign="center">
+                      {isLoading && allChannelResources.length === 0 ? 
+                        "This may take a moment if this is the first time loading this workspace." : 
+                        "Preparing channel selection options..."}
+                    </Text>
+                  </VStack>
+                  
+                  {/* Show sync button if loading is taking a while and no channels found */}
+                  {isLoading && allChannelResources.length === 0 && (
+                    <Button 
+                      mt={4}
+                      colorScheme="purple"
+                      size="sm"
+                      isLoading={isSyncing}
+                      onClick={async () => {
+                        if (!selectedIntegration) return;
+                        
+                        try {
+                          setIsSyncing(true);
+                          // Use integrationService to sync resources
+                          const result = await integrationService.syncResources(
+                            selectedIntegration, 
+                            [ResourceType.SLACK_CHANNEL, ResourceType.SLACK_USER]
+                          );
+                          
+                          if (integrationService.isApiError(result)) {
+                            throw new Error(`Sync failed: ${result.message}`);
+                          }
+                          
+                          toast({
+                            title: "Channel sync started",
+                            description: "Refreshing channel data from Slack. This may take a moment.",
+                            status: "info",
+                            duration: 5000,
+                            isClosable: true,
+                          });
+                          
+                          // Reload the resources after a short delay
+                          setTimeout(() => {
+                            loadIntegrationResources(selectedIntegration);
+                          }, 2000);
+                        } catch (error) {
+                          console.error("Error syncing channels:", error);
+                          toast({
+                            title: "Sync failed",
+                            description: error instanceof Error ? error.message : "Failed to sync channels",
+                            status: "error",
+                            duration: 5000,
+                            isClosable: true,
+                          });
+                        } finally {
+                          setIsSyncing(false);
+                        }
+                      }}
+                    >
+                      Sync Channels from Slack
+                    </Button>
+                  )}
                 </Flex>
+              ) : allChannelResources.length === 0 ? (
+                <Box py={6} textAlign="center">
+                  <VStack spacing={6}>
+                    <Text>No channels found for this workspace. You need to sync channels first.</Text>
+                    <Button
+                      colorScheme="purple"
+                      leftIcon={<FiRefreshCw />}
+                      isLoading={isSyncing}
+                      onClick={async () => {
+                        if (!selectedIntegration) return;
+                        
+                        try {
+                          setIsSyncing(true);
+                          // Use integrationService to sync resources
+                          const result = await integrationService.syncResources(
+                            selectedIntegration, 
+                            [ResourceType.SLACK_CHANNEL, ResourceType.SLACK_USER]
+                          );
+                          
+                          if (integrationService.isApiError(result)) {
+                            throw new Error(`Sync failed: ${result.message}`);
+                          }
+                          
+                          toast({
+                            title: "Channel sync started",
+                            description: "Refreshing channel data from Slack. This may take a moment.",
+                            status: "info",
+                            duration: 5000,
+                            isClosable: true,
+                          });
+                          
+                          // Reload the resources after a short delay
+                          setTimeout(() => {
+                            loadIntegrationResources(selectedIntegration);
+                          }, 2000);
+                        } catch (error) {
+                          console.error("Error syncing channels:", error);
+                          toast({
+                            title: "Sync failed",
+                            description: error instanceof Error ? error.message : "Failed to sync channels",
+                            status: "error",
+                            duration: 5000,
+                            isClosable: true,
+                          });
+                        } finally {
+                          setIsSyncing(false);
+                        }
+                      }}
+                    >
+                      Sync Channels from Slack
+                    </Button>
+                  </VStack>
+                </Box>
               ) : (
                 <Box>
                   {/* Use our TeamChannelSelector with multiSelect mode */}
