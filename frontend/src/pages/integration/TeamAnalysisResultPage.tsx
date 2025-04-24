@@ -147,8 +147,12 @@ const TeamAnalysisResultPage: React.FC = () => {
 
 
       // Fetch integration info
-      if (integrationId) {
-        await fetchIntegration(integrationId)
+      try {
+        if (integrationId) {
+          await fetchIntegration(integrationId)
+        }
+      } catch (error) {
+        // Error will be handled later in the direct API call
       }
 
       // Check if this is a team analysis (cross-resource) result by checking the URL pattern
