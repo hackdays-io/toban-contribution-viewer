@@ -14,8 +14,8 @@ from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_async_db
-from app.services.slack.channels import get_channel_by_id, get_channel_users
-from app.services.slack.messages import get_channel_messages
+from app.services.slack.channels import get_channel_by_id
+from app.services.slack.messages import get_channel_messages, get_channel_users
 
 logger = logging.getLogger(__name__)
 
