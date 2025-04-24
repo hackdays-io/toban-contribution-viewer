@@ -73,7 +73,7 @@ const CreateAnalysisPage: React.FC = () => {
 
   // UI state
   const [isLoading, setIsLoading] = useState(false)
-  const [setIsSelectedChannelsLoading] = useState(false)
+  const [isSelectedChannelsLoading, setIsSelectedChannelsLoading] = useState(false)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedIntegration, setSelectedIntegration] = useState<string>('')
@@ -570,11 +570,95 @@ const CreateAnalysisPage: React.FC = () => {
       let result;
       let redirectPath;
       
-      // For now, use the single channel method for all channels
-      // In the future, this will use the cross-resource report API for multiple channels
-      if (false && selectedChannels.length > 1) { // Temporarily disable multi-channel report
-        // This code is temporarily disabled because the cross-resource report tables don't exist
-        console.log('Multi-channel report is temporarily disabled, using primary channel only');
+      // Use the cross-resource report API for multiple channels
+      if (selectedChannels.length > 1) { // Multi-channel report is now enabled
+        console.log('Creating multi-channel report with', selectedChannels.length, 'channels');
+        
+        // First, create resource analysis data for each selected channel
+        const resourceAnalyses = selectedChannels.map(channelId => {
+          // Find the channel details
+          const channel = allChannelResources.find(r => r.id === channelId);
+          if (!channel) {
+            console.warn(`Could not find details for channel ${channelId}`);
+          }
+          
+          return {
+            integration_id: selectedIntegration,
+            resource_id: channelId,
+            resource_type: "SLACK_CHANNEL",
+            analysis_type: "CONTRIBUTION",
+            period_start: startDateParam || undefined,
+            period_end: endDateParam || undefined,
+            analysis_parameters: {
+              include_threads: includeThreads,
+              include_reactions: includeReactions
+            }
+          };
+        });
+        
+        // Create a cross-resource report
+        const reportData = {
+          title: `Multi-channel Analysis (${selectedChannels.length} channels)`,
+          description: `Analysis of ${selectedChannels.length} Slack channels`,
+          date_range_start: startDateParam,
+          date_range_end: endDateParam,
+          report_parameters: {
+            include_threads: includeThreads,
+            include_reactions: includeReactions
+          },
+          resource_analyses: resourceAnalyses
+        };
+        
+        // Call the API to create the cross-resource report
+        try {
+          const headers = await integrationService.getAuthHeaders();
+          const teamId = teamContext?.currentTeamId;
+          
+          if (!teamId) {
+            throw new Error("No team ID available");
+          }
+          
+          // Create the cross-resource report
+          const reportResponse = await fetch(`${env.apiUrl}/reports/${teamId}/cross-resource-reports`, {
+            method: 'POST',
+            headers: {
+              ...headers,
+              'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify(reportData)
+          });
+          
+          if (!reportResponse.ok) {
+            const errorData = await reportResponse.json();
+            throw new Error(`Failed to create cross-resource report: ${errorData.detail || reportResponse.statusText}`);
+          }
+          
+          // Parse the report response
+          const report = await reportResponse.json();
+          console.log('Created cross-resource report:', report);
+          
+          // Generate the report
+          const generateResponse = await fetch(`${env.apiUrl}/reports/${teamId}/cross-resource-reports/${report.id}/generate`, {
+            method: 'POST',
+            headers,
+            credentials: 'include'
+          });
+          
+          if (!generateResponse.ok) {
+            const errorData = await generateResponse.json();
+            throw new Error(`Failed to generate report: ${errorData.detail || generateResponse.statusText}`);
+          }
+          
+          const generateResult = await generateResponse.json();
+          console.log('Report generation started:', generateResult);
+          
+          // Set the redirect path to the team analysis result page
+          redirectPath = `/dashboard/integrations/${selectedIntegration}/team-analysis/${report.id}`;
+        } catch (error) {
+          console.error('Error creating multi-channel report:', error);
+          throw error;
+        }
       } else {
         // Use the single channel analysis for just one channel
         result = await integrationService.analyzeResource(
@@ -807,9 +891,12 @@ const CreateAnalysisPage: React.FC = () => {
             <VStack spacing={6} align="stretch">
               <Text>Choose the Slack channels you'd like to analyze. You can select multiple channels for cross-resource analysis.</Text>
               
-              {isLoading ? (
+              {isLoading || isSelectedChannelsLoading ? (
                 <Flex justify="center" align="center" py={8}>
                   <Spinner size="md" color="purple.500" />
+                  <Text ml={3}>
+                    {isLoading ? "Loading channels..." : "Loading selected channels..."}
+                  </Text>
                 </Flex>
               ) : (
                 <Box>
