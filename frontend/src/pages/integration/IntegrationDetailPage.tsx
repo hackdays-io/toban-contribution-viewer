@@ -462,7 +462,7 @@ const IntegrationDetailPage: React.FC = () => {
                           )
                         }
                       >
-                        Manage Channel Analysis
+                        Select Resources for Analysis
                       </Button>
                     </Flex>
                   )}

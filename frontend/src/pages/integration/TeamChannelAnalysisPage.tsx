@@ -785,7 +785,7 @@ const TeamChannelAnalysisPage: React.FC = () => {
           <AlertIcon />
           <AlertTitle>Unsupported integration type</AlertTitle>
           <AlertDescription>
-            Channel analysis is currently only available for Slack integrations.
+            Resource analysis is currently only available for Slack integrations.
           </AlertDescription>
         </Alert>
       </Box>
@@ -828,7 +828,7 @@ const TeamChannelAnalysisPage: React.FC = () => {
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbItem isCurrentPage>
-            <BreadcrumbLink>Channel Analysis</BreadcrumbLink>
+            <BreadcrumbLink>Resource Analysis</BreadcrumbLink>
           </BreadcrumbItem>
         </Breadcrumb>
 
@@ -853,7 +853,7 @@ const TeamChannelAnalysisPage: React.FC = () => {
           <>
             <Box mb={6}>
               <Heading as="h1" size="xl">
-                Channel Analysis
+                Resource Analysis
               </Heading>
               <HStack mt={2} spacing={2}>
                 <Text fontWeight="bold">{currentIntegration.name}</Text>
