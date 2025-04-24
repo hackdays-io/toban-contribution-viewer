@@ -156,15 +156,39 @@ const TeamAnalysisResultPage: React.FC = () => {
 
       // For team analysis, we need to use a different API endpoint
       if (isTeamAnalysis) {
-        // First, find the team ID - we need to get it from the integration
+        // Try to get integration data through context or direct API call
+        let teamId;
+        let directIntegration = null;
+
+        // First try context
         if (currentIntegration) {
-          const teamId = currentIntegration.owner_team.id;
+          teamId = currentIntegration.owner_team.id;
+        } else {
+          // If context doesn't have it yet, get it directly
+          const integrationResult = await integrationService.getIntegration(integrationId);
           
-          // Now fetch the cross-resource report
-          const reportResult = await integrationService.getCrossResourceReport(
-            teamId,
-            analysisId || ''
-          );
+          if (!integrationService.isApiError(integrationResult)) {
+            directIntegration = integrationResult;
+            teamId = directIntegration.owner_team.id;
+          } else {
+            // Failed to get integration data
+            toast({
+              title: 'Error',
+              description: 'Failed to load integration data for analysis.',
+              status: 'error',
+              duration: 5000,
+              isClosable: true,
+            });
+            setIsLoading(false);
+            return;
+          }
+        }
+        
+        // Now fetch the cross-resource report
+        const reportResult = await integrationService.getCrossResourceReport(
+          teamId,
+          analysisId || ''
+        );
           
           // Check if there was an error
           if (integrationService.isApiError(reportResult)) {
@@ -204,7 +228,7 @@ const TeamAnalysisResultPage: React.FC = () => {
               key_highlights: "Multiple resource analysis - see individual analyses for details",
               model_used: firstAnalysis.model_used || "N/A",
               generated_at: reportResult.created_at || new Date().toISOString(),
-              workspace_id: currentIntegration.id // Use integration ID as workspace ID for display
+              workspace_id: directIntegration ? directIntegration.id : currentIntegration.id // Use integration ID as workspace ID for display
             };
             
             setAnalysis(adaptedAnalysis);
