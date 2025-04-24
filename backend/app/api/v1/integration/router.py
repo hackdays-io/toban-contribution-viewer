@@ -2316,11 +2316,11 @@ async def get_integration_resource_analysis(
 
                     # Find the analysis closest to this timestamp
                     stmt = (
-                        select(SlackChannelAnalysis)
-                        .where(SlackChannelAnalysis.channel_id == channel.id)
+                        select(ResourceAnalysis)
+                        .where(ResourceAnalysis.resource_id == channel.id)
                         .order_by(
                             func.abs(
-                                func.extract("epoch", SlackChannelAnalysis.generated_at)
+                                func.extract("epoch", ResourceAnalysis.analysis_generated_at)
                                 - timestamp
                             )
                         )
@@ -2347,10 +2347,21 @@ async def get_integration_resource_analysis(
                 logger.info(
                     f"Using fallback to get latest analysis for channel {channel.id}"
                 )
-                analysis = await AnalysisStoreService.get_latest_channel_analysis(
-                    db=db,
-                    channel_id=str(channel.id),
+                # Get latest analysis for this resource from ResourceAnalysis
+                from sqlalchemy import select
+                from app.models.reports import ResourceAnalysis, AnalysisResourceType
+                
+                stmt = (
+                    select(ResourceAnalysis)
+                    .where(
+                        ResourceAnalysis.resource_id == channel.id,
+                        ResourceAnalysis.resource_type == AnalysisResourceType.SLACK_CHANNEL,
+                    )
+                    .order_by(ResourceAnalysis.analysis_generated_at.desc())
+                    .limit(1)
                 )
+                result = await db.execute(stmt)
+                analysis = result.scalar_one_or_none()
 
                 if analysis:
                     real_analysis_id = str(analysis.id)
@@ -2366,16 +2377,16 @@ async def get_integration_resource_analysis(
             )
 
         # Get the analysis by ID
-        stmt = select(SlackChannelAnalysis).where(
-            SlackChannelAnalysis.id == real_analysis_id
+        stmt = select(ResourceAnalysis).where(
+            ResourceAnalysis.id == real_analysis_id
         )
         result = await db.execute(stmt)
         analysis = result.scalar_one_or_none()
 
         if not analysis:
             # Try getting it directly by the ID that was passed
-            stmt = select(SlackChannelAnalysis).where(
-                SlackChannelAnalysis.id == analysis_id
+            stmt = select(ResourceAnalysis).where(
+                ResourceAnalysis.id == analysis_id
             )
             result = await db.execute(stmt)
             analysis = result.scalar_one_or_none()
@@ -2387,22 +2398,26 @@ async def get_integration_resource_analysis(
                 )
 
         # Return the analysis with the workspace_id included
+        # Map ResourceAnalysis fields to StoredAnalysisResponse fields
         return StoredAnalysisResponse(
             id=str(analysis.id),
             channel_id=str(channel.id),
             channel_name=channel.name,
-            start_date=analysis.start_date,
-            end_date=analysis.end_date,
-            message_count=analysis.message_count,
-            participant_count=analysis.participant_count,
-            thread_count=analysis.thread_count,
-            reaction_count=analysis.reaction_count,
-            channel_summary=analysis.channel_summary,
+            start_date=analysis.period_start,
+            end_date=analysis.period_end,
+            # Get message count, participant count, thread count, and reaction count 
+            # from the results JSON field if available
+            message_count=analysis.results.get("message_count", 0) if analysis.results else 0,
+            participant_count=analysis.results.get("participant_count", 0) if analysis.results else 0,
+            thread_count=analysis.results.get("thread_count", 0) if analysis.results else 0,
+            reaction_count=analysis.results.get("reaction_count", 0) if analysis.results else 0,
+            # Map analysis text fields to response fields
+            channel_summary=analysis.resource_summary,
             topic_analysis=analysis.topic_analysis,
             contributor_insights=analysis.contributor_insights,
             key_highlights=analysis.key_highlights,
             model_used=analysis.model_used,
-            generated_at=analysis.generated_at,
+            generated_at=analysis.analysis_generated_at,
             workspace_id=str(
                 workspace.id
             ),  # Include database UUID as workspace_id for user display
