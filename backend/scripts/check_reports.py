@@ -10,7 +10,7 @@ import json
 import logging
 import sys
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List
 
 # Configure logging
 logging.basicConfig(
@@ -25,7 +25,7 @@ from sqlalchemy import desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import AsyncSessionLocal
-from app.models.integration import Integration, ResourceType, ServiceResource
+from app.models.integration import Integration
 from app.models.reports import (
     AnalysisResourceType,
     AnalysisType,
@@ -33,7 +33,6 @@ from app.models.reports import (
     ReportStatus,
     ResourceAnalysis,
 )
-from app.models.slack import SlackChannel, SlackWorkspace
 
 
 async def check_report_count(db: AsyncSession) -> Dict[str, int]:

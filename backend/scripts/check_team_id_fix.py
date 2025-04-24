@@ -47,7 +47,7 @@ async def test_team_id_selection():
     integration_team_id = uuid.uuid4()
     integration = MockIntegration(integration_id, integration_team_id)
     
-    logger.info(f"Case 1: workspace.team_id exists")
+    logger.info("Case 1: workspace.team_id exists")
     logger.info(f"Creating CrossResourceReport with workspace ID: {workspace.id}")
     
     # Apply the fix logic

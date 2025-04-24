@@ -13,7 +13,7 @@ import json
 import logging
 import sys
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List
 
 # Configure logging
 logging.basicConfig(
@@ -31,8 +31,6 @@ from app.db.session import AsyncSessionLocal
 from app.models.integration import (
     Integration,
     IntegrationType,
-    ResourceType,
-    ServiceResource,
 )
 from app.models.slack import SlackChannel, SlackMessage, SlackWorkspace
 
@@ -326,7 +324,7 @@ async def main():
     try:
         # Run all checks
         counts = await check_workspace_counts(db)
-        orphaned = await check_orphaned_workspaces(db)
+        await check_orphaned_workspaces(db)
         inconsistent = await check_workspace_consistency(db)
         usage_stats = await check_workspace_usage(db)
 

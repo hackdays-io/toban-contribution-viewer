@@ -8,7 +8,7 @@ to ensure everything is properly connected in the unified analysis flow.
 import asyncio
 import logging
 import sys
-from typing import Dict, List, Optional
+from typing import Dict
 
 # Configure logging
 logging.basicConfig(
@@ -25,13 +25,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.session import AsyncSessionLocal
 from app.models.integration import (
     Integration,
-    IntegrationCredential,
-    IntegrationType,
     ResourceType,
     ServiceResource,
 )
 from app.models.reports import CrossResourceReport, ResourceAnalysis
-from app.models.slack import SlackChannel, SlackMessage, SlackWorkspace
+from app.models.slack import SlackChannel, SlackWorkspace
 
 
 async def check_workspace_team_ids(db: AsyncSession) -> Dict[str, int]:
@@ -220,7 +218,7 @@ async def check_channel_resources(db: AsyncSession) -> Dict[str, int]:
         "total_channels": total_channels,
         "total_channel_resources": total_resources,
         "matched_count": matched_count,
-        "channel_resource_ratio": f"{matched_count}/{total_channels} ({(matched_count/total_channels*100 if total_channels else 0):.1f}%)",
+        "channel_resource_ratio": f"{matched_count}/{total_channels} ({(matched_count / total_channels * 100 if total_channels else 0):.1f}%)",
     }
 
     logger.info(f"SlackChannel and ServiceResource consistency check: {results}")

@@ -11,7 +11,7 @@ import logging
 import sys
 import uuid
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 # Configure logging
 logging.basicConfig(
@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 # We need to add the parent directory to the path to import the app modules
 sys.path.insert(0, ".")
 
-from sqlalchemy import func, select, update
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import AsyncSessionLocal
@@ -358,7 +358,7 @@ async def test_multi_channel_analysis(
     multi_report = CrossResourceReport(
         id=report_uuid,
         team_id=team_id,
-        title=f"Test Multi-Channel Analysis",
+        title="Test Multi-Channel Analysis",
         description=f"Multi-channel analysis of {channel_names} from {start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}",
         status=ReportStatus.COMPLETED,
         date_range_start=start_date,

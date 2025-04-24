@@ -12,7 +12,6 @@ import logging
 import os
 import sys
 from datetime import datetime, timedelta
-from uuid import UUID, uuid4
 
 # Add parent directory to path so we can import app modules
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -118,12 +117,6 @@ async def patched_analyze_data(
 ):
     if parameters and parameters.get("dry_run"):
         # Only format the prompt, don't call the LLM
-        result = await original_analyze_data.__get__(self, SlackChannelAnalysisService)(
-            data=data, 
-            analysis_type=analysis_type, 
-            parameters=parameters, 
-            **kwargs
-        )
         # Intercept just before the OpenRouter call
         return {"success": True, "prompt_formatted": True}
     return await original_analyze_data.__get__(self, SlackChannelAnalysisService)(

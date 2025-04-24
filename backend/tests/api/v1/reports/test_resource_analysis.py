@@ -11,7 +11,7 @@ from httpx import AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.integration import Integration
+from app.models.integration import Integration, ResourceType
 from app.models.reports import (
     AnalysisResourceType,
     AnalysisType,

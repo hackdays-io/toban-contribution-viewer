@@ -8,7 +8,7 @@ and proposes fixes for workspaces with missing team_id values.
 import asyncio
 import logging
 import sys
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 # Configure logging
 logging.basicConfig(
