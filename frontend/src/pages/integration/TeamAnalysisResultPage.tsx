@@ -103,16 +103,28 @@ const TeamAnalysisResultPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState(0)
   const highlightBg = useColorModeValue('purple.50', 'purple.800')
 
-  // Create share URL for the current analysis
-  const shareUrl = `${window.location.origin}/dashboard/integrations/${integrationId}/channels/${channelId}/analysis/${analysisId}`
+  // Create share URL for the current analysis based on URL type
+  const isTeamAnalysis = window.location.pathname.includes('/team-analysis/');
+  const shareUrl = isTeamAnalysis
+    ? `${window.location.origin}/dashboard/integrations/${integrationId}/team-analysis/${analysisId}`
+    : `${window.location.origin}/dashboard/integrations/${integrationId}/channels/${channelId}/analysis/${analysisId}`;
   const { hasCopied, onCopy } = useClipboard(shareUrl)
 
   useEffect(() => {
-    if (integrationId && channelId && analysisId) {
-      fetchData()
+    // Different conditions for team analysis vs channel analysis
+    if (isTeamAnalysis) {
+      // For team analysis, we only need integrationId and analysisId
+      if (integrationId && analysisId) {
+        fetchData();
+      }
+    } else {
+      // For channel analysis, we need all three IDs
+      if (integrationId && channelId && analysisId) {
+        fetchData();
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [integrationId, channelId, analysisId])
+  }, [integrationId, channelId, analysisId, isTeamAnalysis])
 
   // Format date for display
   const formatDate = (dateString: string) => {
@@ -133,11 +145,94 @@ const TeamAnalysisResultPage: React.FC = () => {
     try {
       setIsLoading(true)
 
+
       // Fetch integration info
       if (integrationId) {
         await fetchIntegration(integrationId)
       }
 
+      // Check if this is a team analysis (cross-resource) result by checking the URL pattern
+      const isTeamAnalysis = window.location.pathname.includes('/team-analysis/');
+
+      // For team analysis, we need to use a different API endpoint
+      if (isTeamAnalysis) {
+        // First, find the team ID - we need to get it from the integration
+        if (currentIntegration) {
+          const teamId = currentIntegration.owner_team.id;
+          
+          // Now fetch the cross-resource report
+          const reportResult = await integrationService.getCrossResourceReport(
+            teamId,
+            analysisId || ''
+          );
+          
+          // Check if there was an error
+          if (integrationService.isApiError(reportResult)) {
+            console.error("Error fetching cross-resource report:", reportResult);
+            toast({
+              title: 'Error',
+              description: `Failed to load team analysis: ${reportResult.message}`,
+              status: 'error',
+              duration: 5000,
+              isClosable: true,
+            });
+            setIsLoading(false);
+            return;
+          }
+          
+          
+          // Extract data from the report to match our Analysis interface format
+          // This is a temporary solution until we implement proper cross-resource report handling
+          if (reportResult.resource_analyses && reportResult.resource_analyses.length > 0) {
+            // Use the first resource analysis as a template
+            const firstAnalysis = reportResult.resource_analyses[0];
+            
+            // Construct an analysis object using data from the report and first resource analysis
+            const adaptedAnalysis: AnalysisResponse = {
+              id: reportResult.id,
+              channel_id: firstAnalysis.resource_id,
+              channel_name: reportResult.title || "Cross-resource Report",
+              start_date: reportResult.date_range_start,
+              end_date: reportResult.date_range_end,
+              message_count: reportResult.total_resources || 0,
+              participant_count: reportResult.completed_analyses || 0,
+              thread_count: reportResult.resource_analyses?.length || 0,
+              reaction_count: 0,
+              channel_summary: reportResult.description || "Cross-resource analysis report",
+              topic_analysis: "Multiple resource analysis - see individual analyses for details",
+              contributor_insights: "Multiple resource analysis - see individual analyses for details",
+              key_highlights: "Multiple resource analysis - see individual analyses for details",
+              model_used: firstAnalysis.model_used || "N/A",
+              generated_at: reportResult.created_at || new Date().toISOString(),
+              workspace_id: currentIntegration.id // Use integration ID as workspace ID for display
+            };
+            
+            setAnalysis(adaptedAnalysis);
+          } else {
+            toast({
+              title: 'No Analyses Found',
+              description: 'This team analysis report does not contain any resource analyses.',
+              status: 'warning',
+              duration: 5000,
+              isClosable: true,
+            });
+          }
+        } else {
+          console.error("Cannot fetch team analysis without integration data");
+          toast({
+            title: 'Error',
+            description: 'Failed to load team data for analysis. Please try again.',
+            status: 'error',
+            duration: 5000,
+            isClosable: true,
+          });
+        }
+        
+        setIsLoading(false);
+        return;
+      }
+
+      // Regular single-channel analysis flow:
       // Fetch channel from resource list
       if (integrationId && channelId) {
         await fetchResources(integrationId)
@@ -908,7 +1003,7 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
   }
 
   // Try to get the workspace ID from different sources
-  const workspaceId = analysis?.workspace_id || currentIntegration?.workspace_id
+  const workspaceId = analysis?.workspace_id || currentIntegration?.id
 
   // Try to extract missing sections if needed
   let enrichedAnalysis = analysis ? extractMissingFields() : null
