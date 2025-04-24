@@ -10,12 +10,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.integration import Integration, IntegrationType
 from app.models.reports import (
+    AnalysisResourceType,
     AnalysisType,
     CrossResourceReport,
     ReportStatus,
     ResourceAnalysis,
 )
-from app.models.reports import AnalysisResourceType
 from app.models.team import Team
 from tests.conftest import team_test_mark
 
