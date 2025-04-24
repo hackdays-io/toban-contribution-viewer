@@ -1886,11 +1886,30 @@ async def analyze_integration_resource(
         analysis_uuid = uuid.uuid4()
         
         try:
+            # Log the workspace and team_id status for debugging
+            logger.info(f"Creating CrossResourceReport with workspace ID: {workspace.id}")
+            
+            # Check if workspace.team_id is None and handle it gracefully
+            team_id = workspace.team_id
+            if team_id is None:
+                # If workspace.team_id is None, try to get it from the integration's owner_team_id
+                logger.warning(f"Workspace {workspace.id} has null team_id, using integration.owner_team_id instead")
+                team_id = integration.owner_team_id
+                
+                if team_id is None:
+                    # If still no team_id, log error and raise exception
+                    logger.error(f"Cannot create CrossResourceReport: No valid team_id found in workspace {workspace.id} or integration {integration_id}")
+                    raise ValueError("Could not determine team_id for CrossResourceReport. Please check workspace and integration configuration.")
+                
+                logger.info(f"Using integration.owner_team_id: {team_id} for CrossResourceReport")
+            else:
+                logger.info(f"Using workspace.team_id: {team_id} for CrossResourceReport")
+            
             # First create a CrossResourceReport to link the ResourceAnalysis to
             # This is needed because cross_resource_report_id in ResourceAnalysis is non-nullable
             cross_report = CrossResourceReport(
                 id=report_uuid,
-                team_id=workspace.team_id,  # Get the team_id from the workspace
+                team_id=team_id,  # Use the verified team_id from the workspace or integration
                 title=f"Analysis of {channel.name}",
                 description=f"Single-channel analysis of {channel.name} from {start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}",
                 status=ReportStatus.COMPLETED,
@@ -1901,6 +1920,8 @@ async def analyze_integration_resource(
                     "include_reactions": include_reactions,
                     "model": model,
                     "single_channel_analysis": True,  # Mark as a single-channel analysis
+                    "channel_id": str(channel.id),  # Add channel_id to report parameters
+                    "channel_name": channel.name,  # Add channel_name to report parameters
                 },
                 comprehensive_analysis=analysis_results.get("channel_summary", ""),
                 comprehensive_analysis_generated_at=datetime.utcnow(),
@@ -1947,6 +1968,7 @@ async def analyze_integration_resource(
                     "include_threads": include_threads,
                     "include_reactions": include_reactions,
                     "model": model,
+                    "channel_name": channel.name,  # Add channel_name to analysis parameters
                 },
                 results=safe_stats,
                 resource_summary=clean_summary,
@@ -1954,7 +1976,7 @@ async def analyze_integration_resource(
                 contributor_insights=clean_insights,
                 key_highlights=clean_highlights,
                 model_used=clean_model,
-                analysis_generated_at=datetime.utcnow(),
+                analysis_generated_at=datetime.utcnow()
             )
             
             db.add(resource_analysis)
@@ -1991,6 +2013,9 @@ async def analyze_integration_resource(
             key_highlights=analysis_results.get("key_highlights", ""),
             model_used=analysis_results.get("model_used", ""),
             generated_at=datetime.utcnow(),
+            report_id=str(report_uuid),  # Add report_id to the response
+            team_id=str(team_id),  # Use the validated team_id from earlier
+            is_unified_report=True,  # Mark this as a unified report
         )
 
         # Explicitly log what dates are being returned

@@ -41,6 +41,9 @@ class AnalysisResponse(BaseModel):
     key_highlights: str
     model_used: str
     generated_at: datetime
+    report_id: Optional[str] = None
+    team_id: Optional[str] = None
+    is_unified_report: bool = False
 
 
 class StoredAnalysisResponse(BaseModel):

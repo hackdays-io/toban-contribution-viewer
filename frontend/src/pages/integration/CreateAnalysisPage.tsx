@@ -77,7 +77,6 @@ const CreateAnalysisPage: React.FC = () => {
     useState(false)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [isSyncing, setIsSyncing] = useState(false)
-  const [searchTerm, setSearchTerm] = useState('')
   const [selectedIntegration, setSelectedIntegration] = useState<string>('')
   const [resources, setResources] = useState<ChannelResource[]>([])
   const [allChannelResources, setAllChannelResources] = useState<
@@ -85,7 +84,7 @@ const CreateAnalysisPage: React.FC = () => {
   >([])
   const [selectedForAnalysisChannels, setSelectedForAnalysisChannels] =
     useState<ChannelResource[]>([])
-  const [showAllChannels, setShowAllChannels] = useState(false)
+  const [showAllChannels] = useState(false)
   const [selectedChannels, setSelectedChannels] = useState<string[]>([])
   const [selectedChannel, setSelectedChannel] = useState<string>('')
 
@@ -270,14 +269,18 @@ const CreateAnalysisPage: React.FC = () => {
 
   /**
    * Filter resources based on search term
+   * (Currently unused - will be implemented in future updates)
    */
-  const filteredResources = resources.filter((resource) =>
-    resource.name.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  // Example of how we would filter resources when search is implemented:
+  // const filteredResources = resources.filter((resource) =>
+  //   resource.name.toLowerCase().includes(searchQuery.toLowerCase())
+  // )
 
   /**
    * Toggle channel selection for analysis
+   * (Function is currently handled by TeamChannelSelector component)
    */
+  /* 
   const toggleChannelSelection = async (resourceId: string) => {
     if (!selectedIntegration) return
 
@@ -331,6 +334,7 @@ const CreateAnalysisPage: React.FC = () => {
       })
     }
   }
+  */
 
   /**
    * Load the selected channel data

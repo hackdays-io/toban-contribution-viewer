@@ -1023,7 +1023,9 @@ class IntegrationService {
     includeAnalyses: boolean = true
   ): Promise<Record<string, unknown> | ApiError> {
     try {
-      console.log(`[DEBUG] Getting cross-resource report ${reportId} for team ${teamId}`)
+      console.log(
+        `[DEBUG] Getting cross-resource report ${reportId} for team ${teamId}`
+      )
 
       const headers = await this.getAuthHeaders()
       const url = `${REPORTS_API_BASE}/${teamId}/cross-resource-reports/${reportId}?include_analyses=${includeAnalyses}`
