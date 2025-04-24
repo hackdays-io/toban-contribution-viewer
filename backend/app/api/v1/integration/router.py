@@ -685,9 +685,9 @@ async def get_integration_resources(
                         resource["metadata"]["has_bot"] = has_bot
                         resource["has_bot"] = has_bot
 
-                        logger.info(
-                            f"Channel {resource['name']} (id={external_id}): is_selected_for_analysis={is_selected}, has_bot={has_bot}"
-                        )
+                        #logger.debug(
+                        #    f"Channel {resource['name']} (id={external_id}): is_selected_for_analysis={is_selected}, has_bot={has_bot}"
+                        #)
 
     return response_resources
 
@@ -1307,7 +1307,7 @@ async def select_channels_for_integration(
 
                 if resource:
                     # Create a new SlackChannel record from the ServiceResource
-                    logger.info(
+                    logger.debug(
                         f"Creating new SlackChannel record for {resource.name} (id={resource.id})"
                     )
                     metadata = resource.resource_metadata or {}
