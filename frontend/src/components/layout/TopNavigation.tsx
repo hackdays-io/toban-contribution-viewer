@@ -193,13 +193,13 @@ const TopNavigation = () => {
             </TabItem>
             <TabItem
               icon={FiDatabase}
-              to="/dashboard/workspaces"
+              to="/dashboard/integrations"
               isActive={
                 isActivePath('/dashboard/workspaces') ||
                 isActivePath('/dashboard/integrations')
               }
             >
-              Workspaces
+              Integrations
             </TabItem>
             <TabItem
               icon={FiBarChart2}
@@ -263,13 +263,13 @@ const TopNavigation = () => {
             </TabItem>
             <TabItem
               icon={FiDatabase}
-              to="/dashboard/workspaces"
+              to="/dashboard/integrations"
               isActive={
                 isActivePath('/dashboard/workspaces') ||
                 isActivePath('/dashboard/integrations')
               }
             >
-              Workspaces
+              Integrations
             </TabItem>
             <TabItem
               icon={FiBarChart2}
