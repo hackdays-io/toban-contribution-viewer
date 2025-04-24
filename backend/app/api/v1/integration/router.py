@@ -47,8 +47,14 @@ from app.models.integration import (
     ServiceResource,
     ShareLevel,
 )
-from app.models.reports import ResourceAnalysis, AnalysisResourceType, AnalysisType, ReportStatus
+from app.models.reports import (
+    AnalysisResourceType,
+    AnalysisType,
+    ReportStatus,
+    ResourceAnalysis,
+)
 from app.models.slack import SlackChannel, SlackWorkspace
+
 # Legacy SlackChannelAnalysis import removed
 from app.services.integration.base import IntegrationService
 from app.services.integration.slack import SlackIntegrationService
@@ -685,9 +691,9 @@ async def get_integration_resources(
                         resource["metadata"]["has_bot"] = has_bot
                         resource["has_bot"] = has_bot
 
-                        #logger.debug(
+                        # logger.debug(
                         #    f"Channel {resource['name']} (id={external_id}): is_selected_for_analysis={is_selected}, has_bot={has_bot}"
-                        #)
+                        # )
 
     return response_resources
 
@@ -1880,31 +1886,44 @@ async def analyze_integration_resource(
 
         # Generate proper UUIDs for both the report and analysis
         from datetime import datetime
+
         from app.models.reports import CrossResourceReport
-        
+
         report_uuid = uuid.uuid4()
         analysis_uuid = uuid.uuid4()
-        
+
         try:
             # Log the workspace and team_id status for debugging
-            logger.info(f"Creating CrossResourceReport with workspace ID: {workspace.id}")
-            
+            logger.info(
+                f"Creating CrossResourceReport with workspace ID: {workspace.id}"
+            )
+
             # Check if workspace.team_id is None and handle it gracefully
             team_id = workspace.team_id
             if team_id is None:
                 # If workspace.team_id is None, try to get it from the integration's owner_team_id
-                logger.warning(f"Workspace {workspace.id} has null team_id, using integration.owner_team_id instead")
+                logger.warning(
+                    f"Workspace {workspace.id} has null team_id, using integration.owner_team_id instead"
+                )
                 team_id = integration.owner_team_id
-                
+
                 if team_id is None:
                     # If still no team_id, log error and raise exception
-                    logger.error(f"Cannot create CrossResourceReport: No valid team_id found in workspace {workspace.id} or integration {integration_id}")
-                    raise ValueError("Could not determine team_id for CrossResourceReport. Please check workspace and integration configuration.")
-                
-                logger.info(f"Using integration.owner_team_id: {team_id} for CrossResourceReport")
+                    logger.error(
+                        f"Cannot create CrossResourceReport: No valid team_id found in workspace {workspace.id} or integration {integration_id}"
+                    )
+                    raise ValueError(
+                        "Could not determine team_id for CrossResourceReport. Please check workspace and integration configuration."
+                    )
+
+                logger.info(
+                    f"Using integration.owner_team_id: {team_id} for CrossResourceReport"
+                )
             else:
-                logger.info(f"Using workspace.team_id: {team_id} for CrossResourceReport")
-            
+                logger.info(
+                    f"Using workspace.team_id: {team_id} for CrossResourceReport"
+                )
+
             # First create a CrossResourceReport to link the ResourceAnalysis to
             # This is needed because cross_resource_report_id in ResourceAnalysis is non-nullable
             cross_report = CrossResourceReport(
@@ -1920,7 +1939,9 @@ async def analyze_integration_resource(
                     "include_reactions": include_reactions,
                     "model": model,
                     "single_channel_analysis": True,  # Mark as a single-channel analysis
-                    "channel_id": str(channel.id),  # Add channel_id to report parameters
+                    "channel_id": str(
+                        channel.id
+                    ),  # Add channel_id to report parameters
                     "channel_name": channel.name,  # Add channel_name to report parameters
                 },
                 comprehensive_analysis=analysis_results.get("channel_summary", ""),
@@ -1928,17 +1949,28 @@ async def analyze_integration_resource(
                 model_used=analysis_results.get("model_used", model or ""),
             )
             db.add(cross_report)
-            
+
             # Clean up the analysis results for storage
             # Ensure we handle special characters properly in text fields
-            clean_summary = str(analysis_results.get("channel_summary", "")).replace("\x00", "")
-            clean_topics = str(analysis_results.get("topic_analysis", "")).replace("\x00", "")
-            clean_insights = str(analysis_results.get("contributor_insights", "")).replace("\x00", "")
-            clean_highlights = str(analysis_results.get("key_highlights", "")).replace("\x00", "")
-            clean_model = str(analysis_results.get("model_used", model or "")).replace("\x00", "")
-            
+            clean_summary = str(analysis_results.get("channel_summary", "")).replace(
+                "\x00", ""
+            )
+            clean_topics = str(analysis_results.get("topic_analysis", "")).replace(
+                "\x00", ""
+            )
+            clean_insights = str(
+                analysis_results.get("contributor_insights", "")
+            ).replace("\x00", "")
+            clean_highlights = str(analysis_results.get("key_highlights", "")).replace(
+                "\x00", ""
+            )
+            clean_model = str(analysis_results.get("model_used", model or "")).replace(
+                "\x00", ""
+            )
+
             # Create a safe version of stats for JSON storage
             import json
+
             safe_stats = {}
             try:
                 # Convert stats to JSON and back to ensure it's serializable
@@ -1952,7 +1984,7 @@ async def analyze_integration_resource(
                     "thread_count": stats.get("thread_count", 0),
                     "reaction_count": stats.get("reaction_count", 0),
                 }
-            
+
             # Store the analysis in the ResourceAnalysis table
             resource_analysis = ResourceAnalysis(
                 id=analysis_uuid,  # Use the generated UUID
@@ -1976,20 +2008,27 @@ async def analyze_integration_resource(
                 contributor_insights=clean_insights,
                 key_highlights=clean_highlights,
                 model_used=clean_model,
-                analysis_generated_at=datetime.utcnow()
+                analysis_generated_at=datetime.utcnow(),
             )
-            
+
             db.add(resource_analysis)
             await db.commit()
-            logger.info(f"Stored analysis in ResourceAnalysis table with ID: {analysis_uuid}, linked to report: {report_uuid}")
+            logger.info(
+                f"Stored analysis in ResourceAnalysis table with ID: {analysis_uuid}, linked to report: {report_uuid}"
+            )
         except Exception as e:
-            logger.error(f"Error storing analysis in ResourceAnalysis table: {str(e)}", exc_info=True)
+            logger.error(
+                f"Error storing analysis in ResourceAnalysis table: {str(e)}",
+                exc_info=True,
+            )
             # Rollback the transaction to prevent half-committed state
             try:
                 await db.rollback()
                 logger.info("Transaction rolled back successfully after error")
             except Exception as rollback_error:
-                logger.error(f"Error during transaction rollback: {str(rollback_error)}")
+                logger.error(
+                    f"Error during transaction rollback: {str(rollback_error)}"
+                )
             # We'll continue with the API response even if storage fails
 
         # Build the response with the correct date period
@@ -2426,7 +2465,9 @@ async def get_integration_resource_analysis(
                         .where(ResourceAnalysis.resource_id == channel.id)
                         .order_by(
                             func.abs(
-                                func.extract("epoch", ResourceAnalysis.analysis_generated_at)
+                                func.extract(
+                                    "epoch", ResourceAnalysis.analysis_generated_at
+                                )
                                 - timestamp
                             )
                         )
@@ -2459,7 +2500,8 @@ async def get_integration_resource_analysis(
                     select(ResourceAnalysis)
                     .where(
                         ResourceAnalysis.resource_id == channel.id,
-                        ResourceAnalysis.resource_type == AnalysisResourceType.SLACK_CHANNEL,
+                        ResourceAnalysis.resource_type
+                        == AnalysisResourceType.SLACK_CHANNEL,
                     )
                     .order_by(ResourceAnalysis.analysis_generated_at.desc())
                     .limit(1)
@@ -2481,17 +2523,13 @@ async def get_integration_resource_analysis(
             )
 
         # Get the analysis by ID
-        stmt = select(ResourceAnalysis).where(
-            ResourceAnalysis.id == real_analysis_id
-        )
+        stmt = select(ResourceAnalysis).where(ResourceAnalysis.id == real_analysis_id)
         result = await db.execute(stmt)
         analysis = result.scalar_one_or_none()
 
         if not analysis:
             # Try getting it directly by the ID that was passed
-            stmt = select(ResourceAnalysis).where(
-                ResourceAnalysis.id == analysis_id
-            )
+            stmt = select(ResourceAnalysis).where(ResourceAnalysis.id == analysis_id)
             result = await db.execute(stmt)
             analysis = result.scalar_one_or_none()
 
@@ -2509,12 +2547,20 @@ async def get_integration_resource_analysis(
             channel_name=channel.name,
             start_date=analysis.period_start,
             end_date=analysis.period_end,
-            # Get message count, participant count, thread count, and reaction count 
+            # Get message count, participant count, thread count, and reaction count
             # from the results JSON field if available
-            message_count=analysis.results.get("message_count", 0) if analysis.results else 0,
-            participant_count=analysis.results.get("participant_count", 0) if analysis.results else 0,
-            thread_count=analysis.results.get("thread_count", 0) if analysis.results else 0,
-            reaction_count=analysis.results.get("reaction_count", 0) if analysis.results else 0,
+            message_count=(
+                analysis.results.get("message_count", 0) if analysis.results else 0
+            ),
+            participant_count=(
+                analysis.results.get("participant_count", 0) if analysis.results else 0
+            ),
+            thread_count=(
+                analysis.results.get("thread_count", 0) if analysis.results else 0
+            ),
+            reaction_count=(
+                analysis.results.get("reaction_count", 0) if analysis.results else 0
+            ),
             # Map analysis text fields to response fields
             channel_summary=analysis.resource_summary,
             topic_analysis=analysis.topic_analysis,

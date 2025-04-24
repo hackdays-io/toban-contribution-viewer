@@ -5,13 +5,15 @@ Revises: ea5ebf7c670a
 Create Date: 2025-04-24 12:00:00.000000
 
 """
-from alembic import op
+
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
+from alembic import op
+
 # revision identifiers, used by Alembic.
-revision = 'remove_workspace_analysis'
-down_revision = 'ea5ebf7c670a'  # Make sure this matches your latest migration
+revision = "remove_workspace_analysis"
+down_revision = "ea5ebf7c670a"  # Make sure this matches your latest migration
 branch_labels = None
 depends_on = None
 
@@ -19,7 +21,7 @@ depends_on = None
 def upgrade() -> None:
     # This is a no-op migration now that we've removed these tables from the initial migration
     # The tables are already removed from the create_all_tables.py migration
-    
+
     # Leaving this migration in place for version tracking purposes
     pass
 

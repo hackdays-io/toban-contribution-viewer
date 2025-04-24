@@ -13,11 +13,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.integration import Integration
 from app.models.reports import (
+    AnalysisResourceType,
     AnalysisType,
     CrossResourceReport,
     ReportStatus,
     ResourceAnalysis,
-    AnalysisResourceType,
 )
 from app.models.slack import SlackChannel
 from app.models.team import Team

@@ -198,73 +198,83 @@ class ResourceAnalysisTaskScheduler:
             del cls._tasks[analysis_id]
 
     @classmethod
-    async def _check_and_update_report_status(cls, db: AsyncSession, report_id: UUID) -> None:
+    async def _check_and_update_report_status(
+        cls, db: AsyncSession, report_id: UUID
+    ) -> None:
         """
         Check the status of all analyses in a report and update the report status if needed.
-        
+
         Args:
             db: Database session
             report_id: ID of the CrossResourceReport to check
         """
-        from app.models.reports import CrossResourceReport
         from sqlalchemy import func, update
-        
+
+        from app.models.reports import CrossResourceReport
+
         try:
             # Count the analyses for this report by status
             analyses_result = await db.execute(
-                select(
-                    ResourceAnalysis.status,
-                    func.count().label("count")
-                )
+                select(ResourceAnalysis.status, func.count().label("count"))
                 .where(ResourceAnalysis.cross_resource_report_id == report_id)
                 .group_by(ResourceAnalysis.status)
             )
-            
+
             status_counts = {status: count for status, count in analyses_result.all()}
-            
+
             # Calculate totals
             total_analyses = sum(status_counts.values())
             completed_analyses = status_counts.get(ReportStatus.COMPLETED, 0)
             failed_analyses = status_counts.get(ReportStatus.FAILED, 0)
             pending_analyses = status_counts.get(ReportStatus.PENDING, 0)
             in_progress_analyses = status_counts.get(ReportStatus.IN_PROGRESS, 0)
-            
+
             logger.info(f"Report {report_id} status check: {status_counts}")
-            
+
             # If all analyses are complete, update the report status to COMPLETED
             if total_analyses > 0 and completed_analyses == total_analyses:
-                logger.info(f"All analyses for report {report_id} are complete. Updating report status to COMPLETED.")
+                logger.info(
+                    f"All analyses for report {report_id} are complete. Updating report status to COMPLETED."
+                )
                 await db.execute(
                     update(CrossResourceReport)
                     .where(CrossResourceReport.id == report_id)
                     .values(status=ReportStatus.COMPLETED)
                 )
                 await db.commit()
-            
+
             # If all analyses are failed, update the report status to FAILED
             elif total_analyses > 0 and failed_analyses == total_analyses:
-                logger.warning(f"All analyses for report {report_id} have failed. Updating report status to FAILED.")
+                logger.warning(
+                    f"All analyses for report {report_id} have failed. Updating report status to FAILED."
+                )
                 await db.execute(
                     update(CrossResourceReport)
                     .where(CrossResourceReport.id == report_id)
                     .values(status=ReportStatus.FAILED)
                 )
                 await db.commit()
-            
+
             # If there are no pending or in-progress analyses but we have a mix of completed and failed,
             # mark the report as COMPLETED but should show warnings in the UI
-            elif total_analyses > 0 and pending_analyses == 0 and in_progress_analyses == 0:
-                logger.info(f"Report {report_id} has {completed_analyses} completed and {failed_analyses} failed analyses. Marking as COMPLETED with partial success.")
+            elif (
+                total_analyses > 0
+                and pending_analyses == 0
+                and in_progress_analyses == 0
+            ):
+                logger.info(
+                    f"Report {report_id} has {completed_analyses} completed and {failed_analyses} failed analyses. Marking as COMPLETED with partial success."
+                )
                 await db.execute(
                     update(CrossResourceReport)
                     .where(CrossResourceReport.id == report_id)
                     .values(status=ReportStatus.COMPLETED)
                 )
                 await db.commit()
-        
+
         except Exception as e:
             logger.error(f"Error checking report status: {e}")
-    
+
     @classmethod
     async def _run_analysis(cls, analysis_id: Union[str, UUID]) -> None:
         """
@@ -318,10 +328,12 @@ class ResourceAnalysisTaskScheduler:
 
             # Commit changes
             await db.commit()
-            
+
             # Check if this is part of a report and if all analyses are complete
             if analysis.cross_resource_report_id:
-                await cls._check_and_update_report_status(db, analysis.cross_resource_report_id)
+                await cls._check_and_update_report_status(
+                    db, analysis.cross_resource_report_id
+                )
 
         except asyncio.CancelledError:
             # Cancellation is not an error
@@ -333,34 +345,34 @@ class ResourceAnalysisTaskScheduler:
             logger.error(
                 f"Error running analysis {analysis_id}: {str(e)}", exc_info=True
             )
-            
+
             # Update the analysis status to FAILED
             from sqlalchemy import update
-            
+
             try:
                 await db.execute(
                     update(ResourceAnalysis)
                     .where(ResourceAnalysis.id == analysis_id)
-                    .values(
-                        status=ReportStatus.FAILED,
-                        results={"error": str(e)}
-                    )
+                    .values(status=ReportStatus.FAILED, results={"error": str(e)})
                 )
                 await db.commit()
-                
+
                 # Check if this analysis is part of a report
                 analysis_result = await db.execute(
-                    select(ResourceAnalysis.cross_resource_report_id)
-                    .where(ResourceAnalysis.id == analysis_id)
+                    select(ResourceAnalysis.cross_resource_report_id).where(
+                        ResourceAnalysis.id == analysis_id
+                    )
                 )
                 cross_resource_report_id = analysis_result.scalar_one_or_none()
-                
+
                 if cross_resource_report_id:
-                    await cls._check_and_update_report_status(db, cross_resource_report_id)
-            
+                    await cls._check_and_update_report_status(
+                        db, cross_resource_report_id
+                    )
+
             except Exception as update_error:
                 logger.error(f"Error updating analysis status: {update_error}")
-                
+
             raise
 
         finally:
