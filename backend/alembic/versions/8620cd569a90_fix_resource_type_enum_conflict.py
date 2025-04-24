@@ -1,27 +1,24 @@
-"""add_cross_resource_report_tables
+"""fix_resource_type_enum_conflict
 
-Revision ID: 69208caae8cb
-Revises: 08c3539fba42
-Create Date: 2025-04-22 23:50:44.681274
+Revision ID: 8620cd569a90
+Revises: 69208caae8cb
+Create Date: 2025-04-24 09:39:54.388944
 
 """
-
+from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
-from alembic import op
 
 # revision identifiers, used by Alembic.
-revision = "69208caae8cb"
-down_revision = "08c3539fba42"
+revision = '8620cd569a90'
+down_revision = '69208caae8cb'
 branch_labels = None
 depends_on = None
 
 
 def upgrade() -> None:
-    # This migration is replaced by 8620cd569a90_fix_resource_type_enum_conflict.py
-    # Skip all operations to avoid conflicts
-    return
+    # ### Create a modified version of cross resource report tables with different enum name ###
     op.create_table(
         "crossresourcereport",
         sa.Column("team_id", sa.UUID(), nullable=False),
@@ -80,7 +77,7 @@ def upgrade() -> None:
         sa.Column("resource_id", sa.UUID(), nullable=False),
         sa.Column(
             "resource_type",
-            sa.Enum("SLACK_CHANNEL", "GITHUB_REPO", "NOTION_PAGE", name="resourcetype"),
+            sa.Enum("SLACK_CHANNEL", "GITHUB_REPO", "NOTION_PAGE", name="analysisresourcetype"),
             nullable=False,
         ),
         sa.Column(
@@ -167,13 +164,10 @@ def upgrade() -> None:
     op.create_index(
         op.f("ix_resourceanalysis_status"), "resourceanalysis", ["status"], unique=False
     )
-    # ### end Alembic commands ###
 
 
 def downgrade() -> None:
-    # This migration is replaced by 8620cd569a90_fix_resource_type_enum_conflict.py
-    # Skip all operations to avoid conflicts
-    return
+    # Drop all indexes and tables created in the upgrade
     op.drop_index(op.f("ix_resourceanalysis_status"), table_name="resourceanalysis")
     op.drop_index(
         op.f("ix_resourceanalysis_resource_type"), table_name="resourceanalysis"
@@ -205,4 +199,3 @@ def downgrade() -> None:
         "ix_cross_resource_report_team_id_status", table_name="crossresourcereport"
     )
     op.drop_table("crossresourcereport")
-    # ### end Alembic commands ###

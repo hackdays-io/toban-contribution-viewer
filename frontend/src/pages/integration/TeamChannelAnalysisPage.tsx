@@ -32,7 +32,6 @@ import {
   AlertIcon,
   AlertTitle,
   AlertDescription,
-  Tooltip,
 } from '@chakra-ui/react'
 import { FiChevronRight, FiArrowLeft, FiRefreshCw } from 'react-icons/fi'
 import { Link, useParams, useNavigate, useLocation } from 'react-router-dom'
@@ -296,7 +295,7 @@ const TeamChannelAnalysisPage: React.FC = () => {
       console.log('- includeThreads:', includeThreads)
       console.log('- includeReactions:', includeReactions)
       console.log('- useJsonMode:', useJsonMode)
-      
+
       // First - sync the Slack data to ensure we have the latest messages
       toast({
         title: 'Syncing channel data',
@@ -488,38 +487,38 @@ const TeamChannelAnalysisPage: React.FC = () => {
    * This function handles both direct properties and nested JSON strings
    */
   const extractAndFormatContent = (
-    analysis: AnalysisResponse, 
+    analysis: AnalysisResponse,
     fieldName: keyof AnalysisResponse
   ) => {
-    if (!analysis) return <Box>No analysis data available</Box>;
-    
+    if (!analysis) return <Box>No analysis data available</Box>
+
     // Check if the field exists directly on the analysis object
-    let content = analysis[fieldName];
-    
+    let content = analysis[fieldName]
+
     // If content doesn't exist, check if it might be in the result field
     if (!content && analysis.result && typeof analysis.result === 'object') {
-      content = analysis.result[fieldName as string];
+      content = analysis.result[fieldName as string]
     }
-    
+
     // If we found a string content, format it
     if (typeof content === 'string') {
-      return formatText(content);
+      return formatText(content)
     }
-    
+
     // Check if we have a raw result string that might be JSON
     if (analysis.result && typeof analysis.result === 'string') {
       try {
         // Try to parse the result as JSON
-        const jsonResult = JSON.parse(analysis.result);
+        const jsonResult = JSON.parse(analysis.result)
         if (jsonResult[fieldName as string]) {
-          return formatText(jsonResult[fieldName as string]);
+          return formatText(jsonResult[fieldName as string])
         }
-      } catch (e) {
+      } catch {
         // Not valid JSON, ignore
       }
     }
-    
-    return <Box>No data available for {fieldName}</Box>;
+
+    return <Box>No data available for {fieldName}</Box>
   }
 
   /**
@@ -614,7 +613,7 @@ const TeamChannelAnalysisPage: React.FC = () => {
                 </FormLabel>
               </FormControl>
             </HStack>
-            
+
             {/* JSON mode is now enabled by default and hidden from UI */}
 
             <FormControl>

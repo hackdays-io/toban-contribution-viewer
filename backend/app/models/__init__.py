@@ -18,13 +18,11 @@ from app.models.integration import (  # noqa: F401
     ShareLevel,
 )
 from app.models.reports import (  # noqa: F401
+    AnalysisResourceType,
     AnalysisType,
     CrossResourceReport,
     ReportStatus,
     ResourceAnalysis,
-)
-from app.models.reports import (  # noqa: F401; Rename to avoid confusion with integration.ResourceType
-    ResourceType as AnalysisResourceType,
 )
 
 # Import models to make them discoverable

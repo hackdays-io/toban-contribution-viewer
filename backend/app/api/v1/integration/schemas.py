@@ -195,6 +195,27 @@ class ChannelSelectionRequest(BaseModel):
     for_analysis: bool = True
 
 
+class AnalysisOptions(BaseModel):
+    """Schema for analysis options when analyzing a channel."""
+
+    analysis_type: Optional[str] = Field(
+        "contribution", description="The type of analysis to perform"
+    )
+    start_date: Optional[datetime] = Field(
+        None, description="Start date for analysis period"
+    )
+    end_date: Optional[datetime] = Field(
+        None, description="End date for analysis period"
+    )
+    include_threads: bool = Field(
+        True, description="Whether to include thread replies in the analysis"
+    )
+    include_reactions: bool = Field(
+        True, description="Whether to include reactions data in the analysis"
+    )
+    model: Optional[str] = Field(None, description="Specific LLM model to use")
+
+
 # Schemas for API responses
 class TeamInfo(BaseModel):
     """Schema for team information in responses."""

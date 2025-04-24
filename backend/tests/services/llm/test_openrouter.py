@@ -130,10 +130,10 @@ async def test_format_messages(mock_openrouter_service, mock_messages_data):
     # Test with a small number of messages
     formatted = mock_openrouter_service._format_messages(mock_messages_data["messages"])
 
-    # Verify format includes all messages
-    assert "[2023-05-01T10:00:00Z] Test User: Hello world!" in formatted
-    assert "[2023-05-01T10:05:00Z] Another User: This is a reply" in formatted
-    assert "[2023-05-01T10:10:00Z] Test User: Another message" in formatted
+    # Verify format includes all messages with user IDs instead of names
+    assert "[2023-05-01T10:00:00Z] <@U12345>: Hello world!" in formatted
+    assert "[2023-05-01T10:05:00Z] <@U67890>: This is a reply" in formatted
+    assert "[2023-05-01T10:10:00Z] <@U12345>: Another message" in formatted
 
     # Test with a large number of messages that should trigger sampling
     large_messages = []

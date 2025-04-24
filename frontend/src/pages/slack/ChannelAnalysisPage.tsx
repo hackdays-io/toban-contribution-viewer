@@ -346,7 +346,7 @@ const ChannelAnalysisPage: React.FC = () => {
                   Include Reactions
                 </FormLabel>
               </FormControl>
-              
+
               <FormControl display="flex" alignItems="center">
                 <Switch
                   id="use-json-mode"
@@ -355,7 +355,7 @@ const ChannelAnalysisPage: React.FC = () => {
                   colorScheme="blue"
                   mr={2}
                 />
-                <Tooltip 
+                <Tooltip
                   label="JSON mode requests structured data from the AI model, improving the reliability and consistency of analysis results. Supported by Claude 3, GPT-4, and other advanced models."
                   placement="top"
                   hasArrow

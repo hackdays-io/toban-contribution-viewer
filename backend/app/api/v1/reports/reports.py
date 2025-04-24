@@ -23,12 +23,12 @@ from app.core.auth import get_current_user
 from app.core.team_scoped_access import check_team_access
 from app.db.session import get_async_db
 from app.models.reports import (
+    AnalysisResourceType,
     AnalysisType,
     CrossResourceReport,
     ReportStatus,
     ResourceAnalysis,
 )
-from app.models.reports import ResourceType as AnalysisResourceType
 from app.models.team import Team, TeamMemberRole
 
 logger = logging.getLogger(__name__)

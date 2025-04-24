@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.api.v1.integration.schemas import (
+    AnalysisOptions,
     ChannelSelectionRequest,
     IntegrationCreate,
     IntegrationResponse,
@@ -1600,24 +1601,16 @@ async def sync_integration_resource_messages(
 async def analyze_integration_resource(
     integration_id: uuid.UUID,
     resource_id: uuid.UUID,
-    start_date: Optional[datetime] = Query(
-        None, description="Start date for analysis period (defaults to 30 days ago)"
-    ),
-    end_date: Optional[datetime] = Query(
-        None, description="End date for analysis period (defaults to current date)"
-    ),
-    include_threads: bool = Query(
-        True, description="Whether to include thread replies in the analysis"
-    ),
-    include_reactions: bool = Query(
-        True, description="Whether to include reactions data in the analysis"
-    ),
-    model: Optional[str] = Query(
-        None, description="Specific LLM model to use (see OpenRouter docs)"
-    ),
+    analysis_options: AnalysisOptions,
     db: AsyncSession = Depends(get_async_db),
     current_user: Dict = Depends(get_current_user),
 ):
+    # Extract options from the request body
+    start_date = analysis_options.start_date
+    end_date = analysis_options.end_date
+    include_threads = analysis_options.include_threads
+    include_reactions = analysis_options.include_reactions
+    model = analysis_options.model
     """
     Analyze messages in a Slack channel using LLM to provide insights.
 
@@ -1635,32 +1628,38 @@ async def analyze_integration_resource(
     - Key highlights (notable discussions worth attention)
     """
     # Handle date parameters with detailed logging
-    logger.info(f"analyze_integration_resource - Received date parameters - start_date: {start_date}, end_date: {end_date}")
-    
+    logger.info(
+        f"analyze_integration_resource - Received date parameters - start_date: {start_date}, end_date: {end_date}"
+    )
+
     # Store the original provided start date if it exists
     original_start_date = None
     if start_date:
         original_start_date = start_date
         logger.info(f"Preserving original provided start_date: {original_start_date}")
-    
+
     # Default to last 30 days only if dates not provided
     if not end_date:
         end_date = datetime.utcnow()
         logger.info(f"Using default end_date: {end_date}")
     else:
         logger.info(f"Using provided end_date: {end_date}")
-        
+
     if not start_date:
         start_date = end_date - timedelta(days=30)
         logger.info(f"Using default start_date (30 days before end): {start_date}")
     else:
         logger.info(f"Using provided start_date: {start_date}")
-        
+
     # Extra validation to ensure start_date is respected
     if original_start_date:
-        logger.info(f"Double-checking start_date is preserved: original={original_start_date}, current={start_date}")
+        logger.info(
+            f"Double-checking start_date is preserved: original={original_start_date}, current={start_date}"
+        )
         if original_start_date != start_date:
-            logger.warning(f"start_date was modified! Restoring original: {original_start_date}")
+            logger.warning(
+                f"start_date was modified! Restoring original: {original_start_date}"
+            )
             start_date = original_start_date
 
     # Create an instance of the OpenRouter service
@@ -1774,17 +1773,23 @@ async def analyze_integration_resource(
 
         # Get messages for the channel within the date range
         # Log the dates that will be used in the API call
-        logger.info(f"analyze_integration_resource - Getting messages with dates: start={start_date}, end={end_date}")
-        
+        logger.info(
+            f"analyze_integration_resource - Getting messages with dates: start={start_date}, end={end_date}"
+        )
+
         # Make sure start_date is being properly passed if provided
         if start_date:
-            logger.info(f"analyze_integration_resource - Using explicit start_date: {start_date.isoformat()}")
-            
+            logger.info(
+                f"analyze_integration_resource - Using explicit start_date: {start_date.isoformat()}"
+            )
+
             # Extra check - make sure it's properly formatted in the correct ISO format
             if hasattr(start_date, "isoformat"):
                 iso_formatted = start_date.isoformat()
-                logger.info(f"analyze_integration_resource - ISO formatted start_date: {iso_formatted}")
-        
+                logger.info(
+                    f"analyze_integration_resource - ISO formatted start_date: {iso_formatted}"
+                )
+
         # Use the exact start_date passed to the function
         messages = await get_channel_messages(
             db,
@@ -1794,9 +1799,11 @@ async def analyze_integration_resource(
             end_date=end_date,
             include_replies=include_threads,
         )
-        
+
         # Log how many messages were found
-        logger.info(f"analyze_integration_resource - Found {len(messages)} messages between {start_date} and {end_date}")
+        logger.info(
+            f"analyze_integration_resource - Found {len(messages)} messages between {start_date} and {end_date}"
+        )
 
         # Get user data for the channel
         users = await get_channel_users(db, str(workspace.id), str(channel.id))
@@ -1821,7 +1828,7 @@ async def analyze_integration_resource(
                 reaction_count += msg.reaction_count
 
             user = user_dict.get(msg.user_id) if msg.user_id else None
-            
+
             # Get the Slack user ID (not our database UUID) for proper <@USER_ID> format
             slack_user_id = user.slack_id if user else None
             # Use the user's display name as fallback only if we don't have the Slack ID
@@ -1832,7 +1839,7 @@ async def analyze_integration_resource(
                     "id": msg.id,
                     "user_id": slack_user_id,  # This is the Slack user ID, not our UUID
                     "db_user_id": msg.user_id,  # Keep our UUID for reference if needed
-                    "user_name": user_name,     # Only used as fallback if slack_user_id is not available
+                    "user_name": user_name,  # Only used as fallback if slack_user_id is not available
                     "text": msg.text,
                     "timestamp": msg.message_datetime.isoformat(),
                     "is_thread_parent": msg.is_thread_parent,
@@ -1887,13 +1894,18 @@ async def analyze_integration_resource(
 
         # Build the response with the correct date period
         # Make sure we're respecting the provided date range exactly as it was received
-        logger.info(f"analyze_integration_resource - Building response with date range: start={start_date}, end={end_date}")
-        
+        logger.info(
+            f"analyze_integration_resource - Building response with date range: start={start_date}, end={end_date}"
+        )
+
         response = AnalysisResponse(
             analysis_id=f"analysis_{channel.id}_{int(datetime.utcnow().timestamp())}",
             channel_id=str(channel.id),
             channel_name=channel.name,
-            period={"start": start_date, "end": end_date},  # Use the dates exactly as provided
+            period={
+                "start": start_date,
+                "end": end_date,
+            },  # Use the dates exactly as provided
             stats=stats,
             channel_summary=analysis_results.get("channel_summary", ""),
             topic_analysis=analysis_results.get("topic_analysis", ""),
@@ -1902,9 +1914,11 @@ async def analyze_integration_resource(
             model_used=analysis_results.get("model_used", ""),
             generated_at=datetime.utcnow(),
         )
-        
+
         # Explicitly log what dates are being returned
-        logger.info(f"analyze_integration_resource - Response period: start={response.period['start']}, end={response.period['end']}")
+        logger.info(
+            f"analyze_integration_resource - Response period: start={response.period['start']}, end={response.period['end']}"
+        )
 
         return response
 
