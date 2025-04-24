@@ -47,7 +47,7 @@ from app.models.integration import (
     ServiceResource,
     ShareLevel,
 )
-from app.models.reports import ResourceAnalysis, AnalysisResourceType, AnalysisType
+from app.models.reports import ResourceAnalysis, AnalysisResourceType, AnalysisType, ReportStatus
 from app.models.slack import SlackChannel, SlackWorkspace
 # Legacy SlackChannelAnalysis import removed
 from app.services.integration.base import IntegrationService
@@ -1885,6 +1885,30 @@ async def analyze_integration_resource(
             # Create a ResourceAnalysis record in the database
             from datetime import datetime
             
+            # Clean up the analysis results for storage
+            # Ensure we handle special characters properly in text fields
+            clean_summary = str(analysis_results.get("channel_summary", "")).replace("\x00", "")
+            clean_topics = str(analysis_results.get("topic_analysis", "")).replace("\x00", "")
+            clean_insights = str(analysis_results.get("contributor_insights", "")).replace("\x00", "")
+            clean_highlights = str(analysis_results.get("key_highlights", "")).replace("\x00", "")
+            clean_model = str(analysis_results.get("model_used", model or "")).replace("\x00", "")
+            
+            # Create a safe version of stats for JSON storage
+            import json
+            safe_stats = {}
+            try:
+                # Convert stats to JSON and back to ensure it's serializable
+                safe_stats = json.loads(json.dumps(stats))
+            except (TypeError, ValueError) as e:
+                logger.warning(f"Could not serialize stats for storage: {e}")
+                # Use a simplified version if serialization fails
+                safe_stats = {
+                    "message_count": stats.get("message_count", 0),
+                    "participant_count": stats.get("participant_count", 0),
+                    "thread_count": stats.get("thread_count", 0),
+                    "reaction_count": stats.get("reaction_count", 0),
+                }
+            
             # Store the analysis in the ResourceAnalysis table
             resource_analysis = ResourceAnalysis(
                 id=analysis_uuid,  # Use the generated UUID
@@ -1901,12 +1925,12 @@ async def analyze_integration_resource(
                     "include_reactions": include_reactions,
                     "model": model,
                 },
-                results=stats,
-                resource_summary=analysis_results.get("channel_summary", ""),
-                topic_analysis=analysis_results.get("topic_analysis", ""),
-                contributor_insights=analysis_results.get("contributor_insights", ""),
-                key_highlights=analysis_results.get("key_highlights", ""),
-                model_used=analysis_results.get("model_used", model or ""),
+                results=safe_stats,
+                resource_summary=clean_summary,
+                topic_analysis=clean_topics,
+                contributor_insights=clean_insights,
+                key_highlights=clean_highlights,
+                model_used=clean_model,
                 analysis_generated_at=datetime.utcnow(),
             )
             
