@@ -5,7 +5,7 @@ from typing import Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.reports import ResourceType
+from app.models.reports import AnalysisResourceType
 from app.services.analysis.base import ResourceAnalysisService
 from app.services.analysis.slack_channel import SlackChannelAnalysisService
 from app.services.llm.openrouter import OpenRouterService
@@ -38,13 +38,13 @@ class ResourceAnalysisServiceFactory:
         Raises:
             ValueError: If resource type is not supported
         """
-        if resource_type == ResourceType.SLACK_CHANNEL:
+        if resource_type == AnalysisResourceType.SLACK_CHANNEL:
             return SlackChannelAnalysisService(db, llm_client)
 
         # TODO: Add support for other resource types
-        # elif resource_type == ResourceType.GITHUB_REPO:
+        # elif resource_type == AnalysisResourceType.GITHUB_REPO:
         #     return GitHubRepoAnalysisService(db, llm_client)
-        # elif resource_type == ResourceType.NOTION_PAGE:
+        # elif resource_type == AnalysisResourceType.NOTION_PAGE:
         #     return NotionPageAnalysisService(db, llm_client)
 
         # If resource type is not supported

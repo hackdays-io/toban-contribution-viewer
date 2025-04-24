@@ -73,6 +73,8 @@ const TeamChannelAnalysisPage: React.FC = () => {
   const [endDate, setEndDate] = useState<string>('')
   const [includeThreads, setIncludeThreads] = useState(true)
   const [includeReactions, setIncludeReactions] = useState(true)
+  // Always use JSON mode by default - no toggle needed
+  const useJsonMode = true
   const toast = useToast()
   const navigate = useNavigate()
 
@@ -103,6 +105,7 @@ const TeamChannelAnalysisPage: React.FC = () => {
         endDate: endDateParam,
         includeThreads: includeThreadsParam,
         includeReactions: includeReactionsParam,
+        useJsonMode: useJsonModeParam,
         _timestamp,
       } = location.state
 
@@ -111,6 +114,7 @@ const TeamChannelAnalysisPage: React.FC = () => {
         endDate: endDateParam,
         includeThreads: includeThreadsParam,
         includeReactions: includeReactionsParam,
+        useJsonMode: useJsonModeParam,
         _timestamp,
       })
 
@@ -129,6 +133,7 @@ const TeamChannelAnalysisPage: React.FC = () => {
         setIncludeThreads(includeThreadsParam)
       if (includeReactionsParam !== undefined)
         setIncludeReactions(includeReactionsParam)
+      // JSON mode is always enabled now, so we don't need to set it from params
     } else {
       console.log('No location state, applying default date range')
       // Default date range (last 30 days)
@@ -289,6 +294,7 @@ const TeamChannelAnalysisPage: React.FC = () => {
       console.log('- end_date:', endDateParam || 'undefined')
       console.log('- includeThreads:', includeThreads)
       console.log('- includeReactions:', includeReactions)
+      console.log('- useJsonMode:', useJsonMode)
 
       // First - sync the Slack data to ensure we have the latest messages
       toast({
@@ -419,6 +425,7 @@ const TeamChannelAnalysisPage: React.FC = () => {
           end_date: endDateParam || undefined,
           include_threads: includeThreads,
           include_reactions: includeReactions,
+          use_json_mode: useJsonMode,
         }
       )
 
@@ -476,11 +483,51 @@ const TeamChannelAnalysisPage: React.FC = () => {
   }
 
   /**
+   * Extract and format content from the analysis result
+   * This function handles both direct properties and nested JSON strings
+   */
+  const extractAndFormatContent = (
+    analysis: AnalysisResponse,
+    fieldName: keyof AnalysisResponse
+  ) => {
+    if (!analysis) return <Box>No analysis data available</Box>
+
+    // Check if the field exists directly on the analysis object
+    let content = analysis[fieldName]
+
+    // If content doesn't exist, check if it might be in the result field
+    if (!content && analysis.result && typeof analysis.result === 'object') {
+      content = analysis.result[fieldName as string]
+    }
+
+    // If we found a string content, format it
+    if (typeof content === 'string') {
+      return formatText(content)
+    }
+
+    // Check if we have a raw result string that might be JSON
+    if (analysis.result && typeof analysis.result === 'string') {
+      try {
+        // Try to parse the result as JSON
+        const jsonResult = JSON.parse(analysis.result)
+        if (jsonResult[fieldName as string]) {
+          return formatText(jsonResult[fieldName as string])
+        }
+      } catch {
+        // Not valid JSON, ignore
+      }
+    }
+
+    return <Box>No data available for {fieldName}</Box>
+  }
+
+  /**
    * Format text with paragraphs and process Slack mentions.
    */
   const formatText = (text: string | undefined) => {
     if (!text) return <Box>No data available</Box>
 
+    // Process the text into paragraphs
     return text.split('\n').map((paragraph, index) => (
       <Box key={index} mb={2}>
         {paragraph.trim() ? (
@@ -567,6 +614,8 @@ const TeamChannelAnalysisPage: React.FC = () => {
               </FormControl>
             </HStack>
 
+            {/* JSON mode is now enabled by default and hidden from UI */}
+
             <FormControl>
               <FormHelperText>
                 Select a date range and options for analysis. A larger date
@@ -599,9 +648,12 @@ const TeamChannelAnalysisPage: React.FC = () => {
 
     return (
       <Box mt={8}>
-        <Heading as="h2" size="lg" mb={4}>
-          Analysis Results
-        </Heading>
+        <Flex justify="space-between" align="center" mb={4}>
+          <Heading as="h2" size="lg">
+            Analysis Results
+          </Heading>
+          {/* JSON mode badge removed since JSON mode is now the default */}
+        </Flex>
 
         <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={4} mb={6}>
           <Stat>
@@ -634,28 +686,36 @@ const TeamChannelAnalysisPage: React.FC = () => {
             <CardHeader>
               <Heading size="md">Channel Summary</Heading>
             </CardHeader>
-            <CardBody>{formatText(analysis.channel_summary)}</CardBody>
+            <CardBody>
+              {extractAndFormatContent(analysis, 'channel_summary')}
+            </CardBody>
           </Card>
 
           <Card>
             <CardHeader>
               <Heading size="md">Topic Analysis</Heading>
             </CardHeader>
-            <CardBody>{formatText(analysis.topic_analysis)}</CardBody>
+            <CardBody>
+              {extractAndFormatContent(analysis, 'topic_analysis')}
+            </CardBody>
           </Card>
 
           <Card>
             <CardHeader>
               <Heading size="md">Contributor Insights</Heading>
             </CardHeader>
-            <CardBody>{formatText(analysis.contributor_insights)}</CardBody>
+            <CardBody>
+              {extractAndFormatContent(analysis, 'contributor_insights')}
+            </CardBody>
           </Card>
 
           <Card>
             <CardHeader>
               <Heading size="md">Key Highlights</Heading>
             </CardHeader>
-            <CardBody>{formatText(analysis.key_highlights)}</CardBody>
+            <CardBody>
+              {extractAndFormatContent(analysis, 'key_highlights')}
+            </CardBody>
           </Card>
         </SimpleGrid>
 

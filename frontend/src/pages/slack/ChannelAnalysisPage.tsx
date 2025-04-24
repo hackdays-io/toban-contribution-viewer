@@ -28,6 +28,7 @@ import {
   StatHelpText,
   Switch,
   FormHelperText,
+  Tooltip,
 } from '@chakra-ui/react'
 import { FiChevronRight, FiArrowLeft, FiRefreshCw } from 'react-icons/fi'
 import { Link, useParams, useNavigate } from 'react-router-dom'
@@ -89,6 +90,7 @@ const ChannelAnalysisPage: React.FC = () => {
   const [endDate, setEndDate] = useState<string>('')
   const [includeThreads, setIncludeThreads] = useState(true)
   const [includeReactions, setIncludeReactions] = useState(true)
+  const [useJsonMode, setUseJsonMode] = useState(true)
   const toast = useToast()
   const navigate = useNavigate()
 
@@ -214,6 +216,7 @@ const ChannelAnalysisPage: React.FC = () => {
 
       url.searchParams.append('include_threads', includeThreads.toString())
       url.searchParams.append('include_reactions', includeReactions.toString())
+      url.searchParams.append('use_json_mode', useJsonMode.toString())
 
       // Make the API request
       const response = await fetch(url.toString(), {
@@ -317,7 +320,7 @@ const ChannelAnalysisPage: React.FC = () => {
               </FormControl>
             </HStack>
 
-            <HStack spacing={6}>
+            <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6}>
               <FormControl display="flex" alignItems="center">
                 <Switch
                   id="include-threads"
@@ -343,7 +346,29 @@ const ChannelAnalysisPage: React.FC = () => {
                   Include Reactions
                 </FormLabel>
               </FormControl>
-            </HStack>
+
+              <FormControl display="flex" alignItems="center">
+                <Switch
+                  id="use-json-mode"
+                  isChecked={useJsonMode}
+                  onChange={(e) => setUseJsonMode(e.target.checked)}
+                  colorScheme="blue"
+                  mr={2}
+                />
+                <Tooltip
+                  label="JSON mode requests structured data from the AI model, improving the reliability and consistency of analysis results. Supported by Claude 3, GPT-4, and other advanced models."
+                  placement="top"
+                  hasArrow
+                >
+                  <FormLabel htmlFor="use-json-mode" mb={0}>
+                    Use JSON Mode
+                  </FormLabel>
+                </Tooltip>
+                <FormHelperText ml={2} fontSize="xs">
+                  (Improves reliability)
+                </FormHelperText>
+              </FormControl>
+            </SimpleGrid>
 
             <FormControl>
               <FormHelperText>
@@ -453,6 +478,11 @@ const ChannelAnalysisPage: React.FC = () => {
               Model:
             </Text>
             <Text fontSize="sm">{analysis.model_used}</Text>
+            {useJsonMode && (
+              <Badge colorScheme="blue" ml={1}>
+                JSON Mode
+              </Badge>
+            )}
           </HStack>
 
           <HStack spacing={2}>

@@ -30,6 +30,7 @@ class AnalysisOptions(BaseModel):
     include_threads: bool = True
     include_reactions: bool = True
     model: Optional[str] = None
+    use_json_mode: bool = True
 
 
 class AnalysisResponse(BaseModel):
@@ -92,6 +93,9 @@ async def analyze_channel(
     ),
     model: Optional[str] = Query(
         None, description="Specific LLM model to use (see OpenRouter docs)"
+    ),
+    use_json_mode: bool = Query(
+        True, description="Whether to request JSON-formatted responses from LLM (may not be supported by all models)"
     ),
     db: AsyncSession = Depends(get_async_db),
 ):
@@ -191,6 +195,7 @@ async def analyze_channel(
             start_date=start_date,
             end_date=end_date,
             model=model,
+            use_json_mode=use_json_mode,
         )
 
         # Store analysis results in the database

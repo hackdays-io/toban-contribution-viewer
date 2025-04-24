@@ -30,7 +30,7 @@ class ReportStatus(str, enum.Enum):
     FAILED = "FAILED"
 
 
-class ResourceType(str, enum.Enum):
+class AnalysisResourceType(str, enum.Enum):
     """Type of resource being analyzed."""
 
     SLACK_CHANNEL = "SLACK_CHANNEL"
@@ -112,7 +112,7 @@ class ResourceAnalysis(Base, BaseModel):
 
     # Resource metadata
     resource_type = Column(
-        Enum(ResourceType, name="resourcetype"), nullable=False, index=True
+        Enum(AnalysisResourceType, name="analysisresourcetype"), nullable=False, index=True
     )
     analysis_type = Column(
         Enum(AnalysisType, name="analysistype"), nullable=False, index=True

@@ -54,6 +54,9 @@ import useIntegration from '../../context/useIntegration'
 // Type definitions
 interface TeamChannelSelectorProps {
   integrationId: string
+  multiSelect?: boolean
+  onSelectionChange?: (selectedIds: string[]) => void
+  initialSelection?: string[]
 }
 
 // Channel type filter options
@@ -78,6 +81,9 @@ enum SortOption {
  */
 const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
   integrationId,
+  multiSelect = false,
+  onSelectionChange,
+  initialSelection = [],
 }) => {
   const toast = useToast()
   const navigate = useNavigate()
@@ -180,34 +186,42 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
       'channels (ONE TIME ONLY)'
     )
 
-    // Process channels to find selected ones
-    const selectedIds = channels
-      .filter((channel) => {
-        // Check direct properties first
-        if (channel.is_selected_for_analysis === true) {
-          return true
-        }
+    // If we have initialSelection, use it
+    if (initialSelection.length > 0) {
+      console.log(
+        `📋 Using provided initial selection: ${initialSelection.length} channels`
+      )
+      setSelectedChannelIds(initialSelection)
+    } else {
+      // Otherwise, process channels to find selected ones
+      const selectedIds = channels
+        .filter((channel) => {
+          // Check direct properties first
+          if (channel.is_selected_for_analysis === true) {
+            return true
+          }
 
-        // Then check metadata
-        if (channel.metadata?.is_selected_for_analysis === true) {
-          return true
-        }
+          // Then check metadata
+          if (channel.metadata?.is_selected_for_analysis === true) {
+            return true
+          }
 
-        // Finally check context method
-        return isChannelSelectedForAnalysis(channel.id)
-      })
-      .map((channel) => channel.id)
+          // Finally check context method
+          return isChannelSelectedForAnalysis(channel.id)
+        })
+        .map((channel) => channel.id)
 
-    console.log(`📋 Found ${selectedIds.length} selected channels`)
+      console.log(`📋 Found ${selectedIds.length} selected channels`)
 
-    // Set selected channel IDs
-    setSelectedChannelIds(selectedIds)
+      // Set selected channel IDs
+      setSelectedChannelIds(selectedIds)
+    }
 
     // Mark as initialized to prevent running again
     didInitialLoadRef.current = true
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [channels.length]) // Only depend on channels.length to detect when channels are available
+  }, [channels.length, initialSelection]) // Depend on channels.length and initialSelection
 
   // Apply all filters and sort options
   const filteredAndSortedChannels = useMemo(() => {
@@ -289,6 +303,11 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
       if (newSelection.includes(channelId)) {
         return newSelection.filter((id) => id !== channelId)
       } else {
+        // In single select mode, replace the selection
+        if (!multiSelect) {
+          return [channelId]
+        }
+        // In multi-select mode, add to the selection
         return [...newSelection, channelId]
       }
     })
@@ -296,6 +315,9 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
 
   // Handle select all (filtered channels only)
   const handleSelectAll = () => {
+    // In single select mode, we don't allow selecting all
+    if (!multiSelect) return
+
     const filteredIds = paginatedChannels.map((channel) => channel.id)
     setSelectedChannelIds((prev) => {
       // Add all filtered channel IDs that aren't already in the selection
@@ -383,6 +405,13 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
       setIsSaving(false)
     }
   }
+
+  // Notify parent component when selection changes
+  useEffect(() => {
+    if (onSelectionChange) {
+      onSelectionChange(selectedChannelIds)
+    }
+  }, [selectedChannelIds, onSelectionChange])
 
   // Check if bot is installed in a channel
   const hasBotInstalled = (channel: ServiceResource) => {
@@ -494,7 +523,11 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
   return (
     <Box>
       <Flex mb={3} justifyContent="space-between" alignItems="center">
-        <Heading size="md">Channel Selection</Heading>
+        <Heading size="md">
+          {multiSelect
+            ? 'Channel Selection (Multi-select)'
+            : 'Channel Selection'}
+        </Heading>
 
         <Button
           colorScheme="blue"

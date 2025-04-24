@@ -10,13 +10,11 @@ import {
   CardFooter,
   CardHeader,
   Checkbox,
+  Circle,
   Divider,
   Flex,
   FormControl,
-  FormHelperText,
   FormLabel,
-  Grid,
-  GridItem,
   Heading,
   HStack,
   Icon,
@@ -25,37 +23,34 @@ import {
   InputLeftElement,
   SimpleGrid,
   Spinner,
-  Stack,
-  Stat,
-  StatLabel,
-  StatNumber,
-  StatHelpText,
-  Switch,
   Text,
   useColorModeValue,
   useToast,
   VStack,
+  Badge,
 } from '@chakra-ui/react'
 import {
   FiArrowRight,
+  FiArrowLeft,
   FiBarChart2,
   FiCalendar,
   FiChevronRight,
   FiFileText,
   FiMessageSquare,
-  FiSearch,
+  FiRefreshCw,
   FiSlack,
   FiUsers,
 } from 'react-icons/fi'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import useAuth from '../../context/useAuth'
 import useIntegration from '../../context/useIntegration'
 import integrationService, {
   ServiceResource,
   AnalysisOptions,
+  ResourceType,
 } from '../../lib/integrationService'
-import { SlackAnalysisResult } from '../../lib/slackApiClient'
 import env from '../../config/env'
+import TeamChannelSelector from '../../components/integration/TeamChannelSelector'
 
 interface ChannelResource extends ServiceResource {
   type?: string
@@ -72,6 +67,7 @@ interface ChannelResource extends ServiceResource {
  */
 const CreateAnalysisPage: React.FC = () => {
   const toast = useToast()
+  const navigate = useNavigate()
   const { teamContext } = useAuth()
   const { integrations, fetchIntegrations } = useIntegration()
 
@@ -80,6 +76,7 @@ const CreateAnalysisPage: React.FC = () => {
   const [isSelectedChannelsLoading, setIsSelectedChannelsLoading] =
     useState(false)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [isSyncing, setIsSyncing] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedIntegration, setSelectedIntegration] = useState<string>('')
   const [resources, setResources] = useState<ChannelResource[]>([])
@@ -91,9 +88,10 @@ const CreateAnalysisPage: React.FC = () => {
   const [showAllChannels, setShowAllChannels] = useState(false)
   const [selectedChannels, setSelectedChannels] = useState<string[]>([])
   const [selectedChannel, setSelectedChannel] = useState<string>('')
-  // Removed unused state
-  const [analysis, setAnalysis] = useState<SlackAnalysisResult | null>(null)
-  const [analysisCompleted, setAnalysisCompleted] = useState(false)
+
+  // Multi-step form state
+  const [activeStep, setActiveStep] = useState(0)
+  const totalSteps = 3
 
   // Analysis parameters
   const [startDate, setStartDate] = useState<string>('')
@@ -105,6 +103,33 @@ const CreateAnalysisPage: React.FC = () => {
   const bgHover = useColorModeValue('purple.50', 'purple.900')
   const borderColorHover = useColorModeValue('purple.300', 'purple.700')
   const selectedBg = useColorModeValue('purple.100', 'purple.800')
+
+  // Step navigation functions
+  const nextStep = () => {
+    if (activeStep < totalSteps - 1) {
+      setActiveStep(activeStep + 1)
+    }
+  }
+
+  const prevStep = () => {
+    if (activeStep > 0) {
+      setActiveStep(activeStep - 1)
+    }
+  }
+
+  // Validation functions for each step
+  const isStepValid = (step: number): boolean => {
+    switch (step) {
+      case 0: // Integration selection
+        return !!selectedIntegration
+      case 1: // Channel selection
+        return selectedChannels.length > 0 // Now we check for any selected channels
+      case 2: // Analysis parameters
+        return !!startDate && !!endDate
+      default:
+        return false
+    }
+  }
 
   // Style colors for loading state
 
@@ -199,6 +224,16 @@ const CreateAnalysisPage: React.FC = () => {
         // Save all channel resources
         setAllChannelResources(channelResources)
 
+        // Log channel names and IDs for debugging
+        console.log(
+          'Available channels:',
+          channelResources.map((c) => ({
+            id: c.id,
+            name: c.name,
+            selected: c.metadata?.is_selected_for_analysis,
+          }))
+        )
+
         // Find channels that are selected for analysis
         const selectedChannelResources = channelResources.filter(
           (resource) => resource.metadata?.is_selected_for_analysis === true
@@ -241,6 +276,63 @@ const CreateAnalysisPage: React.FC = () => {
   )
 
   /**
+   * Toggle channel selection for analysis
+   */
+  const toggleChannelSelection = async (resourceId: string) => {
+    if (!selectedIntegration) return
+
+    try {
+      const isCurrentlySelected = selectedChannels.includes(resourceId)
+      const selectionAction = !isCurrentlySelected
+
+      // Call the API to update the selection
+      const result = await integrationService.selectChannelsForAnalysis(
+        selectedIntegration,
+        {
+          channel_ids: [resourceId],
+          for_analysis: selectionAction,
+        }
+      )
+
+      if (integrationService.isApiError(result)) {
+        throw new Error(
+          `Failed to ${selectionAction ? 'select' : 'deselect'} channel: ${result.message}`
+        )
+      }
+
+      // Update local state
+      if (selectionAction) {
+        setSelectedChannels([...selectedChannels, resourceId])
+      } else {
+        setSelectedChannels(selectedChannels.filter((id) => id !== resourceId))
+      }
+
+      toast({
+        title: selectionAction ? 'Channel Selected' : 'Channel Deselected',
+        description: `Channel ${selectionAction ? 'added to' : 'removed from'} analysis selection`,
+        status: 'success',
+        duration: 2000,
+        isClosable: true,
+      })
+
+      // Refresh resources to update UI
+      await loadIntegrationResources(selectedIntegration)
+    } catch (error) {
+      console.error('Error toggling channel selection:', error)
+      toast({
+        title: 'Selection Failed',
+        description:
+          error instanceof Error
+            ? error.message
+            : 'Failed to update channel selection',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      })
+    }
+  }
+
+  /**
    * Load the selected channel data
    */
   const loadSelectedChannelData = useCallback(
@@ -262,9 +354,7 @@ const CreateAnalysisPage: React.FC = () => {
 
         console.log('Channel data retrieved:', channelData)
 
-        // Reset any previous analysis
-        setAnalysis(null)
-        setAnalysisCompleted(false)
+        // Channel data loaded successfully
       } catch (error) {
         console.error('Error fetching channel data:', error)
         toast({
@@ -289,14 +379,29 @@ const CreateAnalysisPage: React.FC = () => {
     }
   }, [selectedChannel, loadSelectedChannelData])
 
+  // Debug log for selected channels
+  useEffect(() => {
+    if (selectedChannels.length > 0) {
+      console.log('Selected channels:', selectedChannels)
+
+      // Try to log the names too
+      const names = selectedChannels.map((id) => {
+        const channel = allChannelResources.find((r) => r.id === id)
+        return channel ? `${id} (${channel.name})` : id
+      })
+      console.log('Selected channel names:', names)
+    }
+  }, [selectedChannels, allChannelResources])
+
   /**
    * Run channel analysis with current settings
    */
   const runAnalysis = async () => {
-    if (!selectedIntegration || !selectedChannel) {
+    if (!selectedIntegration || selectedChannels.length === 0) {
       toast({
         title: 'Selection Required',
-        description: 'Please select an integration and channel to analyze',
+        description:
+          'Please select an integration and at least one channel to analyze',
         status: 'warning',
         duration: 5000,
         isClosable: true,
@@ -306,26 +411,37 @@ const CreateAnalysisPage: React.FC = () => {
 
     try {
       setIsAnalyzing(true)
-      setAnalysis(null)
 
-      // Format date parameters
-      const startDateParam = startDate ? new Date(startDate).toISOString() : ''
-      const endDateParam = endDate ? new Date(endDate).toISOString() : ''
+      // Format date parameters - use only date part without timezone
+      // The backend expects dates without timezone info to avoid offset-aware vs offset-naive comparison issues
+      const formatDateWithoutTimezone = (dateStr: string) => {
+        const date = new Date(dateStr)
+        // Format as YYYY-MM-DD with no timezone info
+        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+      }
+
+      const startDateParam = startDate
+        ? formatDateWithoutTimezone(startDate)
+        : ''
+      const endDateParam = endDate ? formatDateWithoutTimezone(endDate) : ''
 
       // Show toast to indicate analysis is starting
       toast({
-        title: 'Analysis Started',
+        title: 'The report creation process successfully started',
         description:
-          'Running channel analysis. This may take several minutes for large channels.',
-        status: 'info',
+          'Analysis is now processing. This may take several minutes depending on channel size.',
+        status: 'success',
         duration: 8000,
         isClosable: true,
       })
 
+      // Get the first channel from our selection
+      const primaryChannel = selectedChannels[0]
+
       // Log the analysis parameters
       console.log('Running analysis with parameters:', {
         integrationId: selectedIntegration,
-        channelId: selectedChannel,
+        channelId: primaryChannel,
         startDate: startDateParam,
         endDate: endDateParam,
         includeThreads,
@@ -334,24 +450,29 @@ const CreateAnalysisPage: React.FC = () => {
 
       // First - sync the channel data to ensure we have the latest messages
       try {
+        // Use the primary channel we defined above
+        // No need to redefine it here
+
         // Step 1: Sync general integration resources
         console.log('Syncing general integration data first...')
         await integrationService.syncResources(selectedIntegration)
 
         // Step 2: Specifically sync messages for this channel
-        console.log(`Syncing messages for channel ${selectedChannel}...`)
-        const syncChannelEndpoint = `${env.apiUrl}/integrations/${selectedIntegration}/resources/${selectedChannel}/sync-messages`
+        console.log(`Syncing messages for channel ${primaryChannel}...`)
+        const syncChannelEndpoint = `${env.apiUrl}/integrations/${selectedIntegration}/resources/${primaryChannel}/sync-messages`
 
         // Build the request URL with query parameters
         const url = new URL(syncChannelEndpoint)
         url.searchParams.append(
           'start_date',
           startDateParam ||
-            new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString()
+            formatDateWithoutTimezone(
+              new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString()
+            )
         )
         url.searchParams.append(
           'end_date',
-          endDateParam || new Date().toISOString()
+          endDateParam || formatDateWithoutTimezone(new Date().toISOString())
         )
         url.searchParams.append('include_replies', includeThreads.toString())
 
@@ -394,13 +515,21 @@ const CreateAnalysisPage: React.FC = () => {
           const newMessages = syncStats.new_message_count || 0
           const repliesCount = syncStats.replies_synced || 0
 
-          toast({
-            title: 'Channel Sync Complete',
-            description: `Synced ${newMessages} new messages and ${repliesCount} thread replies from Slack.`,
-            status: 'success',
-            duration: 3000,
-            isClosable: true,
-          })
+          // Only show the sync message if there are actual messages synced
+          if (newMessages > 0 || repliesCount > 0) {
+            toast({
+              title: 'Channel Data Updated',
+              description: `Added ${newMessages} new messages and ${repliesCount} thread replies from Slack.`,
+              status: 'info',
+              duration: 3000,
+              isClosable: true,
+            })
+          }
+
+          // Log sync results but don't show toast if nothing new was synced
+          console.log(
+            `Sync complete: ${newMessages} messages, ${repliesCount} replies synced.`
+          )
         }
       } catch (syncError) {
         console.error('Error syncing data:', syncError)
@@ -416,7 +545,7 @@ const CreateAnalysisPage: React.FC = () => {
         })
       }
 
-      // Now, run the analysis
+      // Now, run the analysis for all selected channels
       const analysisOptions: AnalysisOptions = {
         analysis_type: 'contribution',
         start_date: startDateParam || undefined,
@@ -425,42 +554,181 @@ const CreateAnalysisPage: React.FC = () => {
         include_reactions: includeReactions,
       }
 
-      const result = await integrationService.analyzeResource(
-        selectedIntegration,
-        selectedChannel,
-        analysisOptions
-      )
+      // We need to make sure we have the full resource information for selected channels
+      const selectedChannelsDetails = selectedChannels.map((channelId) => {
+        const channel = allChannelResources.find((r) => r.id === channelId)
+        if (!channel) {
+          console.warn(`Could not find details for channel ${channelId}`)
+        }
+        return {
+          id: channelId,
+          name: channel?.name || 'Unknown Channel',
+          has_bot: channel?.metadata?.has_bot || false,
+        }
+      })
 
-      // Check if the result is an error
-      if (integrationService.isApiError(result)) {
-        const errorMessage = `Analysis failed: ${result.message}${result.detail ? `\nDetail: ${result.detail}` : ''}`
-        console.error(errorMessage)
-        throw new Error(errorMessage)
-      }
+      // We already defined primaryChannel above
+      // No need to redefine it here
 
-      // Set the analysis result
-      setAnalysis(result as unknown as SlackAnalysisResult)
-      setAnalysisCompleted(true)
+      console.log('Selected channels for analysis:', selectedChannelsDetails)
 
+      // Show how many channels are being analyzed
       toast({
-        title: 'Analysis Complete',
-        description: 'Channel analysis has been completed successfully',
-        status: 'success',
-        duration: 5000,
+        title: `Analyzing ${selectedChannels.length} channels`,
+        description:
+          selectedChannels.length > 1
+            ? 'Multiple channels selected. Creating a cross-resource analysis.'
+            : 'Analyzing single channel.',
+        status: 'info',
+        duration: 3000,
         isClosable: true,
       })
 
-      // Optionally, if the user wants to view the result in the detailed page:
-      if (result.analysis_id) {
-        toast({
-          title: 'Analysis Result Available',
-          description:
-            'You can view detailed results or navigate to the analysis result page.',
-          status: 'info',
-          duration: 8000,
-          isClosable: true,
+      // Handle the creation of analysis differently based on whether we have multiple channels
+      let result
+      let redirectPath
+
+      // Use the cross-resource report API for multiple channels
+      if (selectedChannels.length > 1) {
+        // Multi-channel report is now enabled
+        console.log(
+          'Creating multi-channel report with',
+          selectedChannels.length,
+          'channels'
+        )
+
+        // First, create resource analysis data for each selected channel
+        const resourceAnalyses = selectedChannels.map((channelId) => {
+          // Find the channel details
+          const channel = allChannelResources.find((r) => r.id === channelId)
+          if (!channel) {
+            console.warn(`Could not find details for channel ${channelId}`)
+          }
+
+          return {
+            integration_id: selectedIntegration,
+            resource_id: channelId,
+            resource_type: 'SLACK_CHANNEL',
+            analysis_type: 'CONTRIBUTION',
+            period_start: startDateParam || undefined,
+            period_end: endDateParam || undefined,
+            analysis_parameters: {
+              include_threads: includeThreads,
+              include_reactions: includeReactions,
+            },
+          }
         })
+
+        // Create a cross-resource report
+        const reportData = {
+          title: `Multi-channel Analysis (${selectedChannels.length} channels)`,
+          description: `Analysis of ${selectedChannels.length} Slack channels`,
+          date_range_start: startDateParam,
+          date_range_end: endDateParam,
+          report_parameters: {
+            include_threads: includeThreads,
+            include_reactions: includeReactions,
+          },
+          resource_analyses: resourceAnalyses,
+        }
+
+        console.log('Creating cross-resource report with date range:', {
+          start: startDateParam,
+          end: endDateParam,
+          format: 'YYYY-MM-DD (without timezone)',
+        })
+
+        // Call the API to create the cross-resource report
+        try {
+          const headers = await integrationService.getAuthHeaders()
+          const teamId = teamContext?.currentTeamId
+
+          if (!teamId) {
+            throw new Error('No team ID available')
+          }
+
+          // Create the cross-resource report
+          const reportResponse = await fetch(
+            `${env.apiUrl}/reports/${teamId}/cross-resource-reports`,
+            {
+              method: 'POST',
+              headers: {
+                ...headers,
+                'Content-Type': 'application/json',
+              },
+              credentials: 'include',
+              body: JSON.stringify(reportData),
+            }
+          )
+
+          if (!reportResponse.ok) {
+            const errorData = await reportResponse.json()
+            throw new Error(
+              `Failed to create cross-resource report: ${errorData.detail || reportResponse.statusText}`
+            )
+          }
+
+          // Parse the report response
+          const report = await reportResponse.json()
+          console.log('Created cross-resource report:', report)
+
+          // Generate the report
+          const generateResponse = await fetch(
+            `${env.apiUrl}/reports/${teamId}/cross-resource-reports/${report.id}/generate`,
+            {
+              method: 'POST',
+              headers,
+              credentials: 'include',
+            }
+          )
+
+          if (!generateResponse.ok) {
+            const errorData = await generateResponse.json()
+            throw new Error(
+              `Failed to generate report: ${errorData.detail || generateResponse.statusText}`
+            )
+          }
+
+          const generateResult = await generateResponse.json()
+          console.log('Report generation started:', generateResult)
+
+          // Set the redirect path to the team analysis result page
+          redirectPath = `/dashboard/integrations/${selectedIntegration}/team-analysis/${report.id}`
+        } catch (error) {
+          console.error('Error creating multi-channel report:', error)
+          throw error
+        }
+      } else {
+        // Use the single channel analysis for just one channel
+        result = await integrationService.analyzeResource(
+          selectedIntegration,
+          primaryChannel,
+          analysisOptions
+        )
+
+        // Check if the result is an error
+        if (integrationService.isApiError(result)) {
+          const errorMessage = `Analysis failed: ${result.message}${result.detail ? `\nDetail: ${result.detail}` : ''}`
+          console.error(errorMessage)
+          throw new Error(errorMessage)
+        }
+
+        redirectPath = `/dashboard/integrations/${selectedIntegration}/channels/${primaryChannel}/analysis/${result.analysis_id}`
       }
+
+      // Notify user and redirect
+      toast({
+        title: 'Report Generated Successfully',
+        description: 'Redirecting to the detailed report page...',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      })
+
+      // Redirect to the appropriate report page
+      setTimeout(() => {
+        navigate(redirectPath)
+      }, 1500)
     } catch (error) {
       console.error('Error during analysis:', error)
       toast({
@@ -471,17 +739,103 @@ const CreateAnalysisPage: React.FC = () => {
         duration: 10000,
         isClosable: true,
       })
-    } finally {
+      // Only set isAnalyzing to false if there was an error
+      // This keeps the button disabled after successful creation
       setIsAnalyzing(false)
     }
   }
 
+  // Auto-sync function to trigger a sync when no channels are found
+  const autoSyncIfNeeded = useCallback(
+    async (integrationId: string) => {
+      try {
+        // Load resources first to check if sync needed
+        setIsLoading(true)
+        const result = await integrationService.getResources(integrationId)
+
+        if (integrationService.isApiError(result)) {
+          console.warn(
+            'Error checking resources before auto-sync:',
+            result.message
+          )
+          return false
+        }
+
+        // Filter to just channel resources
+        const channels = result.filter(
+          (r) => r.resource_type === 'slack_channel'
+        )
+
+        // If no channels found, trigger a sync automatically
+        if (channels.length === 0) {
+          console.log('No channels found, triggering automatic sync...')
+          setIsSyncing(true)
+
+          // Show toast to inform user
+          toast({
+            title: 'Auto-syncing channels',
+            description:
+              'No channels found. Syncing data from Slack automatically...',
+            status: 'info',
+            duration: 5000,
+            isClosable: true,
+          })
+
+          // Perform the sync
+          const syncResult = await integrationService.syncResources(
+            integrationId,
+            [ResourceType.SLACK_CHANNEL, ResourceType.SLACK_USER]
+          )
+
+          if (integrationService.isApiError(syncResult)) {
+            console.warn('Auto-sync failed:', syncResult.message)
+            return false
+          }
+
+          // Wait a moment for sync to start processing
+          await new Promise((resolve) => setTimeout(resolve, 2000))
+
+          // Load resources again after sync
+          return true
+        }
+
+        return false
+      } catch (error) {
+        console.error('Error in autoSyncIfNeeded:', error)
+        return false
+      } finally {
+        setIsLoading(false)
+        setIsSyncing(false)
+      }
+    },
+    [toast]
+  )
+
   // When an integration is selected, load its resources
   useEffect(() => {
     if (selectedIntegration) {
-      loadIntegrationResources(selectedIntegration)
+      const loadResources = async () => {
+        // First, load integration resources
+        await loadIntegrationResources(selectedIntegration)
+
+        // Check if auto-sync is needed
+        if (allChannelResources.length === 0) {
+          const didSync = await autoSyncIfNeeded(selectedIntegration)
+          if (didSync) {
+            // If we did sync, load resources again
+            await loadIntegrationResources(selectedIntegration)
+          }
+        }
+      }
+
+      loadResources()
     }
-  }, [selectedIntegration, loadIntegrationResources])
+  }, [
+    selectedIntegration,
+    loadIntegrationResources,
+    allChannelResources.length,
+    autoSyncIfNeeded,
+  ])
 
   return (
     <Box width="100%">
@@ -509,662 +863,636 @@ const CreateAnalysisPage: React.FC = () => {
         Create New Analysis
       </Heading>
 
-      <Grid templateColumns={{ base: '1fr', lg: '1fr 1fr' }} gap={6}>
-        {/* Step 1: Select integration and channel */}
-        <GridItem>
-          <Card mb={6} variant="outline">
-            <CardHeader pb={2}>
-              <Heading size="md">Step 1: Select Channel to Analyze</Heading>
-            </CardHeader>
-            <CardBody>
-              <Stack spacing={4}>
-                {/* Integration selector */}
-                <FormControl>
-                  <FormLabel>Workspace</FormLabel>
-                  <SimpleGrid columns={{ base: 1, sm: 2, md: 3 }} spacing={3}>
-                    {integrations.map((integration) => (
-                      <Box
-                        key={integration.id}
-                        p={3}
-                        borderWidth="1px"
-                        borderRadius="md"
-                        cursor="pointer"
-                        onClick={() => setSelectedIntegration(integration.id)}
-                        bg={
-                          selectedIntegration === integration.id
-                            ? selectedBg
-                            : 'transparent'
-                        }
-                        borderColor={
-                          selectedIntegration === integration.id
-                            ? borderColorHover
-                            : 'inherit'
-                        }
-                        _hover={{ bg: bgHover, borderColor: borderColorHover }}
-                        transition="all 0.2s"
-                      >
-                        <HStack>
-                          <Icon as={FiSlack} color="purple.500" />
-                          <Text fontWeight="medium">{integration.name}</Text>
-                        </HStack>
-                      </Box>
-                    ))}
+      {/* Step indicator */}
+      <Flex mb={8} justify="center">
+        <HStack spacing={8} width={{ base: '100%', md: '80%' }}>
+          {Array.from({ length: totalSteps }).map((_, index) => (
+            <Flex
+              key={index}
+              flex={1}
+              direction="column"
+              alignItems="center"
+              position="relative"
+            >
+              {/* Connector line */}
+              {index < totalSteps - 1 && (
+                <Box
+                  position="absolute"
+                  height="2px"
+                  bg={index < activeStep ? 'purple.500' : 'gray.200'}
+                  right="-50%"
+                  top="14px"
+                  width="100%"
+                  zIndex={1}
+                />
+              )}
 
-                    {integrations.length === 0 && (
-                      <Box p={4} borderWidth="1px" borderRadius="md">
-                        <Text>No integrations available</Text>
-                        <Button
-                          as={Link}
-                          to="/dashboard/integrations"
-                          size="sm"
-                          colorScheme="purple"
-                          mt={2}
-                        >
-                          Connect Workspace
-                        </Button>
-                      </Box>
-                    )}
-                  </SimpleGrid>
-                </FormControl>
-
-                {/* Channel selector */}
-                {selectedIntegration && (
-                  <FormControl>
-                    <FormLabel>Channel</FormLabel>
-
-                    {/* Show selected channels for quick access - only if we're showing all channels */}
-                    {showAllChannels &&
-                      (isSelectedChannelsLoading ? (
-                        <Flex align="center" justify="center" p={4}>
-                          <Spinner size="sm" color="purple.500" mr={2} />
-                          <Text fontSize="sm">
-                            Loading selected channels...
-                          </Text>
-                        </Flex>
-                      ) : selectedChannels.length > 0 ? (
-                        <Box mb={4}>
-                          <Text
-                            fontSize="sm"
-                            fontWeight="medium"
-                            mb={2}
-                            color="purple.600"
-                          >
-                            Selected for Analysis (Quick Access)
-                          </Text>
-                          <SimpleGrid columns={{ base: 1, md: 2 }} spacing={2}>
-                            {resources
-                              .filter((resource) =>
-                                selectedChannels.includes(resource.id)
-                              )
-                              .map((resource) => (
-                                <Box
-                                  key={resource.id}
-                                  p={2}
-                                  borderWidth="1px"
-                                  borderRadius="md"
-                                  cursor="pointer"
-                                  onClick={() =>
-                                    setSelectedChannel(resource.id)
-                                  }
-                                  bg={
-                                    selectedChannel === resource.id
-                                      ? selectedBg
-                                      : 'transparent'
-                                  }
-                                  _hover={{ bg: bgHover }}
-                                  borderColor="purple.300"
-                                >
-                                  <HStack>
-                                    <Icon
-                                      as={FiMessageSquare}
-                                      color="purple.500"
-                                    />
-                                    <Text>#{resource.name}</Text>
-                                  </HStack>
-                                </Box>
-                              ))}
-                          </SimpleGrid>
-                        </Box>
-                      ) : null)}
-
-                    <Flex justify="space-between" align="center" mb={4}>
-                      <InputGroup flex="1" mr={4}>
-                        <InputLeftElement>
-                          <Icon as={FiSearch} color="gray.400" />
-                        </InputLeftElement>
-                        <Input
-                          placeholder="Search channels..."
-                          value={searchTerm}
-                          onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                      </InputGroup>
-
-                      <FormControl
-                        display="flex"
-                        alignItems="center"
-                        width="auto"
-                      >
-                        <Switch
-                          id="show-all-channels"
-                          isChecked={showAllChannels}
-                          onChange={(e) => setShowAllChannels(e.target.checked)}
-                          colorScheme="purple"
-                          mr={2}
-                        />
-                        <FormLabel
-                          htmlFor="show-all-channels"
-                          mb={0}
-                          fontSize="sm"
-                        >
-                          Show All Channels
-                        </FormLabel>
-                      </FormControl>
-                    </Flex>
-
-                    <Flex justify="space-between" align="center" mb={2}>
-                      <Text
-                        fontSize="sm"
-                        fontWeight="medium"
-                        color={showAllChannels ? 'gray.600' : 'purple.600'}
-                      >
-                        {showAllChannels
-                          ? 'All Channels'
-                          : selectedForAnalysisChannels.length > 0
-                            ? 'Channels Selected for Analysis'
-                            : 'All Channels'}
-                      </Text>
-                      <Text fontSize="xs" color="gray.500">
-                        {filteredResources.length} channel
-                        {filteredResources.length !== 1 ? 's' : ''} found
-                      </Text>
-                    </Flex>
-
-                    <Box
-                      borderWidth="1px"
-                      borderRadius="md"
-                      maxHeight="300px"
-                      overflowY="auto"
-                    >
-                      {isLoading ? (
-                        <Flex justify="center" align="center" py={8}>
-                          <Spinner size="md" color="purple.500" />
-                        </Flex>
-                      ) : filteredResources.length === 0 ? (
-                        <Box p={4} textAlign="center">
-                          <Text color="gray.500">No channels found</Text>
-                        </Box>
-                      ) : (
-                        filteredResources.map((resource) => (
-                          <Box
-                            key={resource.id}
-                            p={3}
-                            borderBottomWidth="1px"
-                            cursor="pointer"
-                            onClick={() => setSelectedChannel(resource.id)}
-                            bg={
-                              selectedChannel === resource.id
-                                ? selectedBg
-                                : selectedChannels.includes(resource.id)
-                                  ? bgHover
-                                  : 'transparent'
-                            }
-                            _hover={{ bg: bgHover }}
-                            transition="all 0.2s"
-                            position="relative"
-                          >
-                            <HStack>
-                              <Icon
-                                as={FiMessageSquare}
-                                color={
-                                  resource.is_private ||
-                                  (resource.metadata &&
-                                    resource.metadata.is_private)
-                                    ? 'orange.500'
-                                    : 'green.500'
-                                }
-                              />
-                              <Text>#{resource.name}</Text>
-                              {selectedChannels.includes(resource.id) && (
-                                <Text
-                                  fontSize="xs"
-                                  color="purple.500"
-                                  fontWeight="bold"
-                                >
-                                  (Selected for analysis)
-                                </Text>
-                              )}
-                            </HStack>
-                          </Box>
-                        ))
-                      )}
-                    </Box>
-                  </FormControl>
-                )}
-              </Stack>
-            </CardBody>
-          </Card>
-        </GridItem>
-
-        {/* Step 2: Set analysis parameters */}
-        <GridItem>
-          <Card mb={6} variant="outline">
-            <CardHeader pb={2}>
-              <Heading size="md">Step 2: Set Analysis Parameters</Heading>
-            </CardHeader>
-            <CardBody>
-              <VStack spacing={4} align="stretch">
-                <HStack spacing={4}>
-                  <FormControl>
-                    <FormLabel>Start Date</FormLabel>
-                    <InputGroup>
-                      <InputLeftElement>
-                        <Icon as={FiCalendar} color="gray.400" />
-                      </InputLeftElement>
-                      <Input
-                        type="date"
-                        value={startDate}
-                        onChange={(e) => setStartDate(e.target.value)}
-                      />
-                    </InputGroup>
-                  </FormControl>
-
-                  <FormControl>
-                    <FormLabel>End Date</FormLabel>
-                    <InputGroup>
-                      <InputLeftElement>
-                        <Icon as={FiCalendar} color="gray.400" />
-                      </InputLeftElement>
-                      <Input
-                        type="date"
-                        value={endDate}
-                        onChange={(e) => setEndDate(e.target.value)}
-                      />
-                    </InputGroup>
-                  </FormControl>
-                </HStack>
-
-                <FormControl>
-                  <FormLabel>Analysis Options</FormLabel>
-                  <Stack>
-                    <Checkbox
-                      isChecked={includeThreads}
-                      onChange={(e) => setIncludeThreads(e.target.checked)}
-                      colorScheme="purple"
-                    >
-                      Include Thread Replies
-                    </Checkbox>
-
-                    <Checkbox
-                      isChecked={includeReactions}
-                      onChange={(e) => setIncludeReactions(e.target.checked)}
-                      colorScheme="purple"
-                    >
-                      Include Reactions
-                    </Checkbox>
-                  </Stack>
-                </FormControl>
-
-                <FormControl>
-                  <FormHelperText>
-                    Select a date range and options for analysis. A larger date
-                    range will take longer to analyze.
-                  </FormHelperText>
-                </FormControl>
-              </VStack>
-            </CardBody>
-            <Divider />
-            <CardFooter>
-              <Button
-                rightIcon={<Icon as={isAnalyzing ? undefined : FiArrowRight} />}
-                colorScheme="purple"
-                onClick={runAnalysis}
-                isDisabled={
-                  !selectedIntegration || !selectedChannel || isAnalyzing
+              {/* Step circle */}
+              <Circle
+                size="30px"
+                bg={
+                  index < activeStep
+                    ? 'purple.500'
+                    : index === activeStep
+                      ? 'purple.200'
+                      : 'gray.200'
                 }
-                isLoading={isAnalyzing}
-                loadingText="Running Analysis..."
-                width="100%"
+                color={
+                  index < activeStep
+                    ? 'white'
+                    : index === activeStep
+                      ? 'purple.600'
+                      : 'gray.500'
+                }
+                fontWeight="bold"
+                mb={2}
+                zIndex={2}
               >
-                Run Analysis
-              </Button>
-            </CardFooter>
-          </Card>
+                {index + 1}
+              </Circle>
 
-          {/* Analysis information */}
-          <Card variant="outline">
-            <CardHeader pb={0}>
-              <HStack>
-                <Icon as={FiFileText} color="purple.500" />
-                <Heading size="md">Analysis Information</Heading>
-              </HStack>
-            </CardHeader>
-            <CardBody>
-              <VStack spacing={3} align="stretch">
-                <Text>
-                  The analysis will evaluate channel communication patterns and
-                  identify:
-                </Text>
+              {/* Step label */}
+              <Text
+                fontSize="sm"
+                fontWeight="medium"
+                color={index <= activeStep ? 'purple.600' : 'gray.500'}
+              >
+                {index === 0
+                  ? 'Select Workspace'
+                  : index === 1
+                    ? 'Select Channel'
+                    : 'Configure'}
+              </Text>
+            </Flex>
+          ))}
+        </HStack>
+      </Flex>
+
+      {/* Step 1: Select Workspace */}
+      {activeStep === 0 && (
+        <Card variant="outline" mb={6} maxWidth="800px" mx="auto">
+          <CardHeader pb={2}>
+            <Heading size="md">Step 1: Select Workspace</Heading>
+          </CardHeader>
+          <CardBody>
+            <VStack spacing={6} align="stretch">
+              <Text>Choose the Slack workspace you'd like to analyze.</Text>
+
+              <SimpleGrid columns={{ base: 1, sm: 2, md: 3 }} spacing={4}>
+                {integrations.map((integration) => (
+                  <Box
+                    key={integration.id}
+                    p={4}
+                    borderWidth="1px"
+                    borderRadius="md"
+                    cursor="pointer"
+                    onClick={() => setSelectedIntegration(integration.id)}
+                    bg={
+                      selectedIntegration === integration.id
+                        ? selectedBg
+                        : 'transparent'
+                    }
+                    borderColor={
+                      selectedIntegration === integration.id
+                        ? borderColorHover
+                        : 'inherit'
+                    }
+                    _hover={{ bg: bgHover, borderColor: borderColorHover }}
+                    transition="all 0.2s"
+                  >
+                    <VStack spacing={3}>
+                      <Icon as={FiSlack} color="purple.500" boxSize={6} />
+                      <Text fontWeight="medium">{integration.name}</Text>
+                    </VStack>
+                  </Box>
+                ))}
+
+                {integrations.length === 0 && (
+                  <Box
+                    p={4}
+                    borderWidth="1px"
+                    borderRadius="md"
+                    gridColumn="span 3"
+                  >
+                    <VStack>
+                      <Text>No integrations available</Text>
+                      <Button
+                        as={Link}
+                        to="/dashboard/integrations"
+                        size="sm"
+                        colorScheme="purple"
+                        mt={2}
+                      >
+                        Connect Workspace
+                      </Button>
+                    </VStack>
+                  </Box>
+                )}
+              </SimpleGrid>
+            </VStack>
+          </CardBody>
+          <Divider />
+          <CardFooter justifyContent="flex-end">
+            <Button
+              rightIcon={<Icon as={FiArrowRight} />}
+              colorScheme="purple"
+              onClick={nextStep}
+              isDisabled={!isStepValid(0)}
+            >
+              Continue
+            </Button>
+          </CardFooter>
+        </Card>
+      )}
+
+      {/* Step 2: Select Channels */}
+      {activeStep === 1 && (
+        <Card variant="outline" mb={6} maxWidth="800px" mx="auto">
+          <CardHeader pb={2}>
+            <Heading size="md">Step 2: Select Channels</Heading>
+          </CardHeader>
+          <CardBody>
+            <VStack spacing={6} align="stretch">
+              <Text>
+                Choose the Slack channels you'd like to analyze. You can select
+                multiple channels for cross-resource analysis.
+              </Text>
+
+              {isLoading || isSelectedChannelsLoading ? (
+                <Flex
+                  direction="column"
+                  justify="center"
+                  align="center"
+                  py={8}
+                  gap={4}
+                >
+                  <Spinner size="md" color="purple.500" />
+                  <VStack spacing={2}>
+                    <Text fontWeight="medium">
+                      {isLoading
+                        ? 'Loading channels...'
+                        : 'Loading selected channels...'}
+                    </Text>
+                    <Text
+                      color="gray.600"
+                      fontSize="sm"
+                      maxW="450px"
+                      textAlign="center"
+                    >
+                      {isLoading && allChannelResources.length === 0
+                        ? 'This may take a moment if this is the first time loading this workspace.'
+                        : 'Preparing channel selection options...'}
+                    </Text>
+                  </VStack>
+
+                  {/* Show sync button if loading is taking a while and no channels found */}
+                  {isLoading && allChannelResources.length === 0 && (
+                    <Button
+                      mt={4}
+                      colorScheme="purple"
+                      size="sm"
+                      isLoading={isSyncing}
+                      onClick={async () => {
+                        if (!selectedIntegration) return
+
+                        try {
+                          setIsSyncing(true)
+                          // Use integrationService to sync resources
+                          const result = await integrationService.syncResources(
+                            selectedIntegration,
+                            [
+                              ResourceType.SLACK_CHANNEL,
+                              ResourceType.SLACK_USER,
+                            ]
+                          )
+
+                          if (integrationService.isApiError(result)) {
+                            throw new Error(`Sync failed: ${result.message}`)
+                          }
+
+                          toast({
+                            title: 'Channel sync started',
+                            description:
+                              'Refreshing channel data from Slack. This may take a moment.',
+                            status: 'info',
+                            duration: 5000,
+                            isClosable: true,
+                          })
+
+                          // Reload the resources after a short delay
+                          setTimeout(() => {
+                            loadIntegrationResources(selectedIntegration)
+                          }, 2000)
+                        } catch (error) {
+                          console.error('Error syncing channels:', error)
+                          toast({
+                            title: 'Sync failed',
+                            description:
+                              error instanceof Error
+                                ? error.message
+                                : 'Failed to sync channels',
+                            status: 'error',
+                            duration: 5000,
+                            isClosable: true,
+                          })
+                        } finally {
+                          setIsSyncing(false)
+                        }
+                      }}
+                    >
+                      Sync Channels from Slack
+                    </Button>
+                  )}
+                </Flex>
+              ) : allChannelResources.length === 0 ? (
+                <Box py={6} textAlign="center">
+                  <VStack spacing={6}>
+                    <Text>
+                      No channels found for this workspace. You need to sync
+                      channels first.
+                    </Text>
+                    <Button
+                      colorScheme="purple"
+                      leftIcon={<FiRefreshCw />}
+                      isLoading={isSyncing}
+                      onClick={async () => {
+                        if (!selectedIntegration) return
+
+                        try {
+                          setIsSyncing(true)
+                          // Use integrationService to sync resources
+                          const result = await integrationService.syncResources(
+                            selectedIntegration,
+                            [
+                              ResourceType.SLACK_CHANNEL,
+                              ResourceType.SLACK_USER,
+                            ]
+                          )
+
+                          if (integrationService.isApiError(result)) {
+                            throw new Error(`Sync failed: ${result.message}`)
+                          }
+
+                          toast({
+                            title: 'Channel sync started',
+                            description:
+                              'Refreshing channel data from Slack. This may take a moment.',
+                            status: 'info',
+                            duration: 5000,
+                            isClosable: true,
+                          })
+
+                          // Reload the resources after a short delay
+                          setTimeout(() => {
+                            loadIntegrationResources(selectedIntegration)
+                          }, 2000)
+                        } catch (error) {
+                          console.error('Error syncing channels:', error)
+                          toast({
+                            title: 'Sync failed',
+                            description:
+                              error instanceof Error
+                                ? error.message
+                                : 'Failed to sync channels',
+                            status: 'error',
+                            duration: 5000,
+                            isClosable: true,
+                          })
+                        } finally {
+                          setIsSyncing(false)
+                        }
+                      }}
+                    >
+                      Sync Channels from Slack
+                    </Button>
+                  </VStack>
+                </Box>
+              ) : (
+                <Box>
+                  {/* Use our TeamChannelSelector with multiSelect mode */}
+                  <TeamChannelSelector
+                    integrationId={selectedIntegration}
+                    multiSelect={true}
+                    onSelectionChange={(selectedIds) => {
+                      console.log('Channel selection changed:', selectedIds)
+                      setSelectedChannels(selectedIds)
+                      // Ensure we have loaded the channel resources for all selected channels
+                      if (
+                        selectedIds.length > 0 &&
+                        allChannelResources.length > 0
+                      ) {
+                        const unrecognizedChannels = selectedIds.filter(
+                          (id) => !allChannelResources.some((r) => r.id === id)
+                        )
+                        if (unrecognizedChannels.length > 0) {
+                          console.warn(
+                            'Some selected channels are not in allChannelResources:',
+                            unrecognizedChannels
+                          )
+                          // Reload all resources to ensure we have the latest
+                          loadIntegrationResources(selectedIntegration)
+                        }
+                      }
+                    }}
+                    initialSelection={selectedChannels}
+                  />
+                </Box>
+              )}
+            </VStack>
+          </CardBody>
+          <Divider />
+          <CardFooter justifyContent="space-between">
+            <Button
+              leftIcon={<Icon as={FiArrowLeft} />}
+              variant="outline"
+              onClick={prevStep}
+            >
+              Back
+            </Button>
+            <Button
+              rightIcon={<Icon as={FiArrowRight} />}
+              colorScheme="purple"
+              onClick={nextStep}
+              isDisabled={!isStepValid(1)}
+            >
+              Continue
+            </Button>
+          </CardFooter>
+        </Card>
+      )}
+
+      {/* Step 3: Analysis Parameters */}
+      {activeStep === 2 && (
+        <Card variant="outline" mb={6} maxWidth="800px" mx="auto">
+          <CardHeader pb={2}>
+            <Heading size="md">
+              Step 3: Configure Analysis{' '}
+              {selectedChannels.length > 1 &&
+                `(${selectedChannels.length} Channels)`}
+            </Heading>
+          </CardHeader>
+          <CardBody>
+            <VStack spacing={6} align="stretch">
+              <Text>Set your analysis parameters and options.</Text>
+
+              <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+                <FormControl>
+                  <FormLabel>Start Date</FormLabel>
+                  <InputGroup>
+                    <InputLeftElement>
+                      <Icon as={FiCalendar} color="gray.400" />
+                    </InputLeftElement>
+                    <Input
+                      type="date"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                    />
+                  </InputGroup>
+                </FormControl>
+
+                <FormControl>
+                  <FormLabel>End Date</FormLabel>
+                  <InputGroup>
+                    <InputLeftElement>
+                      <Icon as={FiCalendar} color="gray.400" />
+                    </InputLeftElement>
+                    <Input
+                      type="date"
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                    />
+                  </InputGroup>
+                </FormControl>
+              </SimpleGrid>
+
+              <FormControl>
+                <FormLabel>Analysis Options</FormLabel>
+                <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4} mt={2}>
+                  <Checkbox
+                    isChecked={includeThreads}
+                    onChange={(e) => setIncludeThreads(e.target.checked)}
+                    colorScheme="purple"
+                  >
+                    Include Thread Replies
+                  </Checkbox>
+
+                  <Checkbox
+                    isChecked={includeReactions}
+                    onChange={(e) => setIncludeReactions(e.target.checked)}
+                    colorScheme="purple"
+                  >
+                    Include Reactions
+                  </Checkbox>
+                </SimpleGrid>
+              </FormControl>
+
+              {/* Selected Channels Display */}
+              <Box
+                p={4}
+                borderWidth="1px"
+                borderRadius="md"
+                borderColor="purple.200"
+              >
+                <Heading size="sm" mb={3}>
+                  Selected Channels ({selectedChannels.length}):
+                </Heading>
+
+                {selectedChannels.length === 0 ? (
+                  <Text fontSize="sm" color="gray.500">
+                    No channels selected
+                  </Text>
+                ) : (
+                  <VStack align="stretch" spacing={2}>
+                    <Flex wrap="wrap" gap={2}>
+                      {selectedChannels.map((channelId) => {
+                        // Try to find channel name from different sources
+                        // First check in all channel resources (most reliable)
+                        const channel = allChannelResources.find(
+                          (r) => r.id === channelId
+                        )
+                        // Get channel name, fallback to filtered resources, then default to ID
+                        const channelName =
+                          channel?.name ||
+                          resources.find((r) => r.id === channelId)?.name ||
+                          'Unknown Channel'
+
+                        // Log for debugging
+                        if (!channel) {
+                          console.warn(
+                            `Could not find channel ${channelId} in resources`
+                          )
+                        }
+
+                        return (
+                          <Badge
+                            key={channelId}
+                            colorScheme="purple"
+                            px={2}
+                            py={1}
+                            borderRadius="full"
+                          >
+                            #{channelName}
+                          </Badge>
+                        )
+                      })}
+                    </Flex>
+
+                    {/* Debug info - lists all channel IDs in text form */}
+                    <Text fontSize="xs" color="gray.500" mt={2}>
+                      Selected IDs: {selectedChannels.join(', ')}
+                    </Text>
+                  </VStack>
+                )}
+              </Box>
+
+              <Box bg="purple.50" p={4} borderRadius="md">
+                <Heading size="sm" mb={3}>
+                  Analysis will include:
+                </Heading>
                 <SimpleGrid columns={{ base: 1, sm: 2 }} spacing={4}>
-                  <Box p={3} borderWidth="1px" borderRadius="md">
-                    <Heading size="xs" mb={2}>
-                      Channel Summary
-                    </Heading>
-                    <Text fontSize="sm">
+                  <VStack align="start" spacing={2}>
+                    <HStack>
+                      <Icon as={FiFileText} color="purple.500" />
+                      <Text fontWeight="medium">Channel Summary</Text>
+                    </HStack>
+                    <Text fontSize="sm" pl={6}>
                       Overall activity patterns and main discussion topics
                     </Text>
-                  </Box>
-                  <Box p={3} borderWidth="1px" borderRadius="md">
-                    <Heading size="xs" mb={2}>
-                      Topic Analysis
-                    </Heading>
-                    <Text fontSize="sm">
+                  </VStack>
+
+                  <VStack align="start" spacing={2}>
+                    <HStack>
+                      <Icon as={FiBarChart2} color="purple.500" />
+                      <Text fontWeight="medium">Topic Analysis</Text>
+                    </HStack>
+                    <Text fontSize="sm" pl={6}>
                       Key topics and themes discussed in the channel
                     </Text>
-                  </Box>
-                  <Box p={3} borderWidth="1px" borderRadius="md">
-                    <Heading size="xs" mb={2}>
-                      Contributor Insights
-                    </Heading>
-                    <Text fontSize="sm">
+                  </VStack>
+
+                  <VStack align="start" spacing={2}>
+                    <HStack>
+                      <Icon as={FiUsers} color="purple.500" />
+                      <Text fontWeight="medium">Contributor Insights</Text>
+                    </HStack>
+                    <Text fontSize="sm" pl={6}>
                       Participation patterns and key contributors
                     </Text>
-                  </Box>
-                  <Box p={3} borderWidth="1px" borderRadius="md">
-                    <Heading size="xs" mb={2}>
-                      Key Highlights
-                    </Heading>
-                    <Text fontSize="sm">
+                  </VStack>
+
+                  <VStack align="start" spacing={2}>
+                    <HStack>
+                      <Icon as={FiMessageSquare} color="purple.500" />
+                      <Text fontWeight="medium">Key Highlights</Text>
+                    </HStack>
+                    <Text fontSize="sm" pl={6}>
                       Important discussions and significant threads
                     </Text>
-                  </Box>
+                  </VStack>
                 </SimpleGrid>
-                <Text fontSize="sm" color="gray.600">
-                  Analysis typically takes 1-2 minutes to complete depending on
-                  channel volume.
-                </Text>
-              </VStack>
-            </CardBody>
-          </Card>
-        </GridItem>
-        {/* Processing Indicator */}
-        {isAnalyzing && (
-          <GridItem colSpan={{ base: 1, lg: 2 }}>
-            <Card
-              mb={6}
-              bgColor="purple.50"
-              boxShadow="lg"
-              position="relative"
-              sx={{
-                animation: 'pulse 2s infinite',
-                '@keyframes pulse': {
-                  '0%': { boxShadow: '0 0 0 0px rgba(159, 122, 234, 0.7)' },
-                  '70%': { boxShadow: '0 0 0 15px rgba(159, 122, 234, 0)' },
-                  '100%': { boxShadow: '0 0 0 0px rgba(159, 122, 234, 0)' },
-                },
-              }}
+              </Box>
+
+              <Text fontSize="sm" color="gray.600">
+                Analysis typically takes 1-2 minutes to complete depending on
+                channel volume. We'll notify you when results are ready.
+              </Text>
+            </VStack>
+          </CardBody>
+          <Divider />
+          <CardFooter justifyContent="space-between">
+            <Button
+              leftIcon={<Icon as={FiArrowLeft} />}
+              variant="outline"
+              onClick={prevStep}
             >
-              <CardBody>
-                <Flex direction="column" align="center" justify="center" py={8}>
-                  <Box position="relative" mb={4}>
-                    <Spinner
-                      size="xl"
-                      color="purple.500"
-                      thickness="4px"
-                      speed="0.8s"
-                    />
-                    <Box
-                      position="absolute"
-                      top="50%"
-                      left="50%"
-                      transform="translate(-50%, -50%)"
-                      fontSize="sm"
-                      fontWeight="bold"
-                      color="purple.600"
-                    >
-                      LLM
-                    </Box>
-                  </Box>
-
-                  <Heading size="md" mb={2} color="purple.700">
-                    Analyzing Channel Data
-                  </Heading>
-                  <Text textAlign="center" maxW="lg" mb={3}>
-                    Analysis is in progress. This process may take several
-                    minutes for large channels with many messages.
-                  </Text>
-
+              Back
+            </Button>
+            <Button
+              rightIcon={<Icon as={isAnalyzing ? undefined : FiArrowRight} />}
+              colorScheme="purple"
+              onClick={runAnalysis}
+              isDisabled={!isStepValid(2) || isAnalyzing}
+              isLoading={isAnalyzing}
+              loadingText="Running Analysis..."
+            >
+              Run Analysis
+            </Button>
+          </CardFooter>
+        </Card>
+      )}
+      {/* Processing Indicator */}
+      {isAnalyzing && (
+        <Box maxWidth="800px" mx="auto">
+          <Card
+            mb={6}
+            bgColor="purple.50"
+            boxShadow="lg"
+            position="relative"
+            sx={{
+              animation: 'pulse 2s infinite',
+              '@keyframes pulse': {
+                '0%': { boxShadow: '0 0 0 0px rgba(159, 122, 234, 0.7)' },
+                '70%': { boxShadow: '0 0 0 15px rgba(159, 122, 234, 0)' },
+                '100%': { boxShadow: '0 0 0 0px rgba(159, 122, 234, 0)' },
+              },
+            }}
+          >
+            <CardBody>
+              <Flex direction="column" align="center" justify="center" py={8}>
+                <Box position="relative" mb={4}>
+                  <Spinner
+                    size="xl"
+                    color="purple.500"
+                    thickness="4px"
+                    speed="0.8s"
+                  />
                   <Box
-                    p={3}
-                    bg="white"
-                    borderRadius="md"
-                    width="100%"
-                    maxW="lg"
+                    position="absolute"
+                    top="50%"
+                    left="50%"
+                    transform="translate(-50%, -50%)"
+                    fontSize="sm"
+                    fontWeight="bold"
+                    color="purple.600"
                   >
-                    <Heading size="xs" mb={2} color="purple.600">
-                      Processing Steps:
-                    </Heading>
-                    <HStack mb={1}>
-                      <Icon as={FiMessageSquare} color="green.500" />
-                      <Text fontSize="sm">Retrieving channel messages</Text>
-                    </HStack>
-                    <HStack mb={1}>
-                      <Icon as={FiUsers} color="purple.500" />
-                      <Text fontSize="sm">
-                        Analyzing communication patterns
-                      </Text>
-                    </HStack>
-                    <HStack>
-                      <Icon as={FiBarChart2} color="blue.500" />
-                      <Text fontSize="sm">
-                        Generating insights and recommendations
-                      </Text>
-                    </HStack>
+                    LLM
                   </Box>
-                </Flex>
-              </CardBody>
-            </Card>
-          </GridItem>
-        )}
+                </Box>
 
-        {/* Analysis Results (only shown when analysis is complete) */}
-        {analysisCompleted && analysis && (
-          <GridItem colSpan={{ base: 1, lg: 2 }}>
-            <Card
-              variant="elevated"
-              mb={6}
-              borderColor="green.300"
-              borderWidth={2}
-            >
-              <CardHeader>
-                <Heading size="lg">Analysis Results</Heading>
-              </CardHeader>
-              <CardBody>
-                {/* Analysis Stats */}
-                <SimpleGrid
-                  columns={{ base: 1, md: 2, lg: 4 }}
-                  spacing={4}
-                  mb={6}
-                >
-                  <Stat>
-                    <StatLabel>Messages</StatLabel>
-                    <StatNumber>
-                      {analysis.stats?.message_count || 0}
-                    </StatNumber>
-                    <StatHelpText>Total messages analyzed</StatHelpText>
-                  </Stat>
+                <Heading size="md" mb={2} color="purple.700">
+                  Analyzing Channel Data
+                </Heading>
+                <Text textAlign="center" maxW="lg" mb={3}>
+                  Analysis is in progress. This process may take several minutes
+                  for large channels with many messages.
+                </Text>
 
-                  <Stat>
-                    <StatLabel>Participants</StatLabel>
-                    <StatNumber>
-                      {analysis.stats?.participant_count || 0}
-                    </StatNumber>
-                    <StatHelpText>Unique contributors</StatHelpText>
-                  </Stat>
-
-                  <Stat>
-                    <StatLabel>Threads</StatLabel>
-                    <StatNumber>{analysis.stats?.thread_count || 0}</StatNumber>
-                    <StatHelpText>Conversation threads</StatHelpText>
-                  </Stat>
-
-                  <Stat>
-                    <StatLabel>Reactions</StatLabel>
-                    <StatNumber>
-                      {analysis.stats?.reaction_count || 0}
-                    </StatNumber>
-                    <StatHelpText>Total emoji reactions</StatHelpText>
-                  </Stat>
-                </SimpleGrid>
-
-                {/* Analysis Content */}
-                <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
-                  <Card>
-                    <CardHeader>
-                      <Heading size="md">Channel Summary</Heading>
-                    </CardHeader>
-                    <CardBody>
-                      {analysis.channel_summary ? (
-                        <Box>
-                          {analysis.channel_summary
-                            .split('\n')
-                            .map((paragraph, index) => (
-                              <Box key={index} mb={2}>
-                                {paragraph || <Box height="1em" />}
-                              </Box>
-                            ))}
-                        </Box>
-                      ) : (
-                        <Text color="gray.500">No summary available</Text>
-                      )}
-                    </CardBody>
-                  </Card>
-
-                  <Card>
-                    <CardHeader>
-                      <Heading size="md">Topic Analysis</Heading>
-                    </CardHeader>
-                    <CardBody>
-                      {analysis.topic_analysis ? (
-                        <Box>
-                          {analysis.topic_analysis
-                            .split('\n')
-                            .map((paragraph, index) => (
-                              <Box key={index} mb={2}>
-                                {paragraph || <Box height="1em" />}
-                              </Box>
-                            ))}
-                        </Box>
-                      ) : (
-                        <Text color="gray.500">
-                          No topic analysis available
-                        </Text>
-                      )}
-                    </CardBody>
-                  </Card>
-
-                  <Card>
-                    <CardHeader>
-                      <Heading size="md">Contributor Insights</Heading>
-                    </CardHeader>
-                    <CardBody>
-                      {analysis.contributor_insights ? (
-                        <Box>
-                          {analysis.contributor_insights
-                            .split('\n')
-                            .map((paragraph, index) => (
-                              <Box key={index} mb={2}>
-                                {paragraph || <Box height="1em" />}
-                              </Box>
-                            ))}
-                        </Box>
-                      ) : (
-                        <Text color="gray.500">
-                          No contributor insights available
-                        </Text>
-                      )}
-                    </CardBody>
-                  </Card>
-
-                  <Card>
-                    <CardHeader>
-                      <Heading size="md">Key Highlights</Heading>
-                    </CardHeader>
-                    <CardBody>
-                      {analysis.key_highlights ? (
-                        <Box>
-                          {analysis.key_highlights
-                            .split('\n')
-                            .map((paragraph, index) => (
-                              <Box key={index} mb={2}>
-                                {paragraph || <Box height="1em" />}
-                              </Box>
-                            ))}
-                        </Box>
-                      ) : (
-                        <Text color="gray.500">
-                          No key highlights available
-                        </Text>
-                      )}
-                    </CardBody>
-                  </Card>
-                </SimpleGrid>
-
-                {/* Analysis metadata */}
-                <Box mt={4} p={3} borderRadius="md" bg="gray.50">
-                  <HStack spacing={2}>
-                    <Text fontWeight="bold" fontSize="sm">
-                      Analysis period:
-                    </Text>
-                    <Text fontSize="sm">
-                      {analysis.period?.start
-                        ? new Date(analysis.period.start).toLocaleDateString()
-                        : 'Unknown'}{' '}
-                      to{' '}
-                      {analysis.period?.end
-                        ? new Date(analysis.period.end).toLocaleDateString()
-                        : 'Unknown'}
-                    </Text>
+                <Box p={3} bg="white" borderRadius="md" width="100%" maxW="lg">
+                  <Heading size="xs" mb={2} color="purple.600">
+                    Processing Steps:
+                  </Heading>
+                  <HStack mb={1}>
+                    <Icon as={FiMessageSquare} color="green.500" />
+                    <Text fontSize="sm">Retrieving channel messages</Text>
                   </HStack>
-
-                  <HStack spacing={2}>
-                    <Text fontWeight="bold" fontSize="sm">
-                      Model:
-                    </Text>
-                    <Text fontSize="sm">
-                      {analysis.model_used || 'Unknown'}
-                    </Text>
+                  <HStack mb={1}>
+                    <Icon as={FiUsers} color="purple.500" />
+                    <Text fontSize="sm">Analyzing communication patterns</Text>
                   </HStack>
-
-                  <HStack spacing={2}>
-                    <Text fontWeight="bold" fontSize="sm">
-                      Generated:
-                    </Text>
+                  <HStack>
+                    <Icon as={FiBarChart2} color="blue.500" />
                     <Text fontSize="sm">
-                      {analysis.generated_at
-                        ? new Date(analysis.generated_at).toLocaleString()
-                        : 'Unknown'}
+                      Generating insights and recommendations
                     </Text>
                   </HStack>
                 </Box>
+              </Flex>
+            </CardBody>
+          </Card>
+        </Box>
+      )}
 
-                {/* View detailed results button */}
-                {analysis.analysis_id && (
-                  <Flex justify="center" mt={6}>
-                    <Button
-                      as={Link}
-                      to={`/dashboard/integrations/${selectedIntegration}/channels/${selectedChannel}/analysis/${analysis.analysis_id}`}
-                      colorScheme="purple"
-                      leftIcon={<Icon as={FiFileText} />}
-                    >
-                      View Detailed Results
-                    </Button>
-                  </Flex>
-                )}
-              </CardBody>
-            </Card>
-          </GridItem>
-        )}
-      </Grid>
+      {/* We no longer show results here as we're redirecting to the detail page */}
     </Box>
   )
 }

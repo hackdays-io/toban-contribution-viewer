@@ -6,6 +6,9 @@
 import env from '../config/env'
 import { supabase } from './supabase'
 
+// Cross-Resource Reports API Base URL
+const REPORTS_API_BASE = `${env.apiUrl}/reports`
+
 // Types for integration service
 export enum IntegrationType {
   SLACK = 'slack',
@@ -182,6 +185,7 @@ export interface AnalysisOptions {
   include_threads?: boolean
   include_reactions?: boolean
   analysis_type?: string
+  use_json_mode?: boolean
 }
 
 // Error types
@@ -1005,6 +1009,59 @@ class IntegrationService {
         // Or if status is a string but not "success"
         (typeof response.status === 'string' && response.status !== 'success'))
     )
+  }
+
+  /**
+   * Get cross-resource report by ID
+   * @param teamId Team UUID
+   * @param reportId Report UUID
+   * @param includeAnalyses Whether to include resource analyses in the response
+   */
+  async getCrossResourceReport(
+    teamId: string,
+    reportId: string,
+    includeAnalyses: boolean = true
+  ): Promise<Record<string, unknown> | ApiError> {
+    try {
+      console.log(`[DEBUG] Getting cross-resource report ${reportId} for team ${teamId}`)
+
+      const headers = await this.getAuthHeaders()
+      const url = `${REPORTS_API_BASE}/${teamId}/cross-resource-reports/${reportId}?include_analyses=${includeAnalyses}`
+
+      console.log(`[DEBUG] Getting report with URL: ${url}`)
+
+      // Make the API call
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          ...headers,
+          Accept: 'application/json',
+        },
+        credentials: 'include',
+      })
+
+      if (!response.ok) {
+        // Try to extract more detailed error information
+        let errorDetail = ''
+        try {
+          const errorText = await response.text()
+          const errorJson = JSON.parse(errorText)
+          errorDetail = errorJson.detail || errorText
+        } catch {
+          errorDetail = response.statusText
+        }
+
+        return {
+          status: response.status,
+          message: `Failed to retrieve report: ${response.status} ${response.statusText}`,
+          detail: errorDetail,
+        }
+      }
+
+      return await response.json()
+    } catch (error) {
+      return this.handleError(error, 'Failed to get cross-resource report')
+    }
   }
 }
 
