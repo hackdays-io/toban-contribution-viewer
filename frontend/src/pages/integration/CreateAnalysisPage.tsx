@@ -77,7 +77,8 @@ const CreateAnalysisPage: React.FC = () => {
     useState(false)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [isSyncing, setIsSyncing] = useState(false)
-  const [searchTerm, setSearchTerm] = useState('')
+  // Commented out unused state
+  // const [searchTerm] = useState('')
   const [selectedIntegration, setSelectedIntegration] = useState<string>('')
   const [resources, setResources] = useState<ChannelResource[]>([])
   const [allChannelResources, setAllChannelResources] = useState<
@@ -85,7 +86,7 @@ const CreateAnalysisPage: React.FC = () => {
   >([])
   const [selectedForAnalysisChannels, setSelectedForAnalysisChannels] =
     useState<ChannelResource[]>([])
-  const [showAllChannels, setShowAllChannels] = useState(false)
+  const [showAllChannels] = useState(false)
   const [selectedChannels, setSelectedChannels] = useState<string[]>([])
   const [selectedChannel, setSelectedChannel] = useState<string>('')
 
@@ -271,66 +272,68 @@ const CreateAnalysisPage: React.FC = () => {
   /**
    * Filter resources based on search term
    */
-  const filteredResources = resources.filter((resource) =>
-    resource.name.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  // Commented out unused function
+  // const filteredResources = resources.filter((resource) =>
+  //   resource.name.toLowerCase().includes(searchTerm.toLowerCase())
+  // )
 
   /**
    * Toggle channel selection for analysis
    */
-  const toggleChannelSelection = async (resourceId: string) => {
-    if (!selectedIntegration) return
+  // Commented out unused function
+  // const toggleChannelSelection = async (resourceId: string) => {
+  //   if (!selectedIntegration) return
 
-    try {
-      const isCurrentlySelected = selectedChannels.includes(resourceId)
-      const selectionAction = !isCurrentlySelected
+  //   try {
+  //     const isCurrentlySelected = selectedChannels.includes(resourceId)
+  //     const selectionAction = !isCurrentlySelected
 
-      // Call the API to update the selection
-      const result = await integrationService.selectChannelsForAnalysis(
-        selectedIntegration,
-        {
-          channel_ids: [resourceId],
-          for_analysis: selectionAction,
-        }
-      )
+  //     // Call the API to update the selection
+  //     const result = await integrationService.selectChannelsForAnalysis(
+  //       selectedIntegration,
+  //       {
+  //         channel_ids: [resourceId],
+  //         for_analysis: selectionAction,
+  //       }
+  //     )
 
-      if (integrationService.isApiError(result)) {
-        throw new Error(
-          `Failed to ${selectionAction ? 'select' : 'deselect'} channel: ${result.message}`
-        )
-      }
+  //     if (integrationService.isApiError(result)) {
+  //       throw new Error(
+  //         `Failed to ${selectionAction ? 'select' : 'deselect'} channel: ${result.message}`
+  //       )
+  //     }
 
-      // Update local state
-      if (selectionAction) {
-        setSelectedChannels([...selectedChannels, resourceId])
-      } else {
-        setSelectedChannels(selectedChannels.filter((id) => id !== resourceId))
-      }
+  //     // Update local state
+  //     if (selectionAction) {
+  //       setSelectedChannels([...selectedChannels, resourceId])
+  //     } else {
+  //       setSelectedChannels(selectedChannels.filter((id) => id !== resourceId))
+  //     }
 
-      toast({
-        title: selectionAction ? 'Channel Selected' : 'Channel Deselected',
-        description: `Channel ${selectionAction ? 'added to' : 'removed from'} analysis selection`,
-        status: 'success',
-        duration: 2000,
-        isClosable: true,
-      })
+  //     toast({
+  //       title: selectionAction ? 'Channel Selected' : 'Channel Deselected',
+  //       description: `Channel ${selectionAction ? 'added to' : 'removed from'} analysis selection`,
+  //       status: 'success',
+  //       duration: 2000,
+  //       isClosable: true,
+  //     })
 
-      // Refresh resources to update UI
-      await loadIntegrationResources(selectedIntegration)
-    } catch (error) {
-      console.error('Error toggling channel selection:', error)
-      toast({
-        title: 'Selection Failed',
-        description:
-          error instanceof Error
-            ? error.message
-            : 'Failed to update channel selection',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      })
-    }
-  }
+  //     // Refresh resources to update UI
+  //     await loadIntegrationResources(selectedIntegration)
+  //   } catch (error) {
+  //     console.error('Error toggling channel selection:', error)
+  //     toast({
+  //       title: 'Selection Failed',
+  //       description:
+  //         error instanceof Error
+  //           ? error.message
+  //           : 'Failed to update channel selection',
+  //       status: 'error',
+  //       duration: 5000,
+  //       isClosable: true,
+  //     })
+  //   }
+  // }
 
   /**
    * Load the selected channel data
