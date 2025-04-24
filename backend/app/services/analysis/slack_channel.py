@@ -89,15 +89,41 @@ class SlackChannelAnalysisService(ResourceAnalysisService):
         message_limit = parameters.get("message_limit", 1000) if parameters else 1000
 
         # Get messages within the date range
+        # First, we need to get the SlackWorkspace.id using the integration.workspace_id
+        if not integration.workspace_id:
+            logger.error(f"Integration {integration_id} has no workspace_id")
+            raise ValueError(f"Integration {integration_id} has no workspace_id")
+            
+        # Query the SlackWorkspace table to get the workspace by slack_id
+        from app.models.slack import SlackWorkspace
+        workspace_result = await self.db.execute(
+            select(SlackWorkspace).where(SlackWorkspace.slack_id == integration.workspace_id)
+        )
+        workspace = workspace_result.scalar_one_or_none()
+        
+        if not workspace:
+            logger.error(f"SlackWorkspace not found with slack_id={integration.workspace_id}")
+            raise ValueError(f"SlackWorkspace not found with slack_id={integration.workspace_id}")
+        
+        # Now we have the correct workspace ID (UUID) to use with get_channel_messages
+        workspace_id = str(workspace.id)
+        
+        logger.info(f"Fetching messages for SlackWorkspace.id={workspace_id}, " 
+                   f"channel_id={resource_id}, integration_id={integration_id}")
+        logger.info(f"Integration.workspace_id (Slack ID): {integration.workspace_id}")
+        logger.info(f"Date range: {start_date} to {end_date}")
+            
         messages = await get_channel_messages(
             db=self.db,
-            workspace_id=str(integration.id),
+            workspace_id=workspace_id,
             channel_id=str(resource_id),
             start_date=start_date,
             end_date=end_date,
             include_replies=include_threads,
             limit=message_limit,
         )
+        
+        logger.info(f"Retrieved {len(messages)} messages from channel {resource_id}")
 
         # Get users who have sent messages in this channel
         user_ids = list(set(msg.user_id for msg in messages if msg.user_id))
@@ -302,7 +328,28 @@ class SlackChannelAnalysisService(ResourceAnalysisService):
             Analysis results from the LLM
         """
         logger.info(f"Analyzing Slack channel data for {analysis_type} analysis")
+        
+        # Check if there's enough data to analyze
+        total_messages = data.get("total_messages", 0)
+        channel_name = data.get("channel_name", "Unknown channel")
+        logger.info(f"Channel {channel_name} has {total_messages} messages to analyze")
+        
+        if total_messages == 0:
+            logger.warning(f"No messages found for analysis in {channel_name}")
+            # Return empty analysis with explanation
+            return {
+                "resource_summary": "No messages were found in this channel during the specified time period. This could be because the channel is inactive, or because the date range was too narrow.",
+                "key_highlights": "No activity to highlight in this time period.",
+                "contributor_insights": "No user activity to analyze in this time period.",
+                "topic_analysis": "No discussion topics found in this time period.",
+                "model_used": "N/A - No data to analyze",
+                "analysis_type": analysis_type,
+                "channel_name": channel_name,
+                "timestamp": datetime.utcnow().isoformat(),
+                "no_data": True
+            }
 
+        # Continue with normal analysis if we have messages
         # Choose the prompt template based on analysis type
         prompt_template = self.get_prompt_template(analysis_type)
 
@@ -314,9 +361,43 @@ class SlackChannelAnalysisService(ResourceAnalysisService):
         # Create a context string from the data
         context = self.create_context_for_llm(data, analysis_type)
 
-        # Generate the prompt from the template and context
-        prompt = prompt_template.format(context=context)
-
+        # Format the prompt using standard string formatting
+        try:
+            # Direct string formatting with named parameters
+            prompt = prompt_template.format(
+                channel_name=context.get("channel_name", "Unknown channel"),
+                channel_purpose=context.get("channel_purpose", "No purpose specified"),
+                channel_topic=context.get("channel_topic", "No topic specified"),
+                workspace_name=context.get("workspace_name", "Unknown workspace"),
+                period_start=context.get("period_start", "Unknown"),
+                period_end=context.get("period_end", "Unknown"),
+                total_messages=context.get("total_messages", 0),
+                total_users=context.get("total_users", 0),
+                total_threads=context.get("total_threads", 0),
+                user_contributions_text=context.get("user_contributions_text", "No user contributions data available."),
+                messages_by_date_text=context.get("messages_by_date_text", "No messages data available."),
+                messages_sample_text=context.get("messages_sample_text", "No message samples available.")
+            )
+            logger.info(f"Successfully formatted prompt template for {analysis_type} analysis")
+        except KeyError as e:
+            logger.error(f"KeyError formatting prompt template: {e}")
+            # Fall back to a simpler prompt with just the available information
+            prompt = f"""
+            You are a Slack channel analyst. You're analyzing the Slack channel '{channel_name}'.
+            
+            Time period: {context.get('period_start', 'Unknown')} to {context.get('period_end', 'Unknown')}
+            
+            Total messages: {total_messages}
+            Total users: {context.get('total_users', 0)}
+            Total threads: {context.get('total_threads', 0)}
+            
+            Please analyze this channel data and provide insights on activity, contributors, and topics.
+            """
+            logger.info("Using fallback prompt due to template formatting error")
+        except Exception as e:
+            logger.error(f"Error formatting prompt template: {e}")
+            raise ValueError(f"Error preparing analysis prompt: {str(e)}")
+            
         # Prepare message data for the LLM
         message_data = {
             "messages": [
@@ -332,6 +413,21 @@ class SlackChannelAnalysisService(ResourceAnalysisService):
             "reaction_count": 0,
         }
 
+        # Check if this is a dry run (for testing prompt formatting)
+        if parameters and parameters.get("dry_run"):
+            logger.info("Dry run mode - skipping LLM API call")
+            return {
+                "resource_summary": "Dry run - prompt formatting successful",
+                "key_highlights": "Dry run - no LLM call made",
+                "contributor_insights": "Dry run - testing only",
+                "topic_analysis": "Dry run - testing only",
+                "model_used": model,
+                "analysis_type": analysis_type,
+                "channel_name": data.get("channel_name", "Unknown channel"),
+                "timestamp": datetime.utcnow().isoformat(),
+                "dry_run": True
+            }
+            
         # Call the LLM API using the OpenRouterService interface
         response = await self.llm_client.analyze_channel_messages(
             channel_name=data.get("channel_name", "Unknown channel"),
@@ -366,14 +462,14 @@ class SlackChannelAnalysisService(ResourceAnalysisService):
             return """
             You are a Slack channel analyst. You're analyzing a Slack channel to understand user contributions.
             
-            Channel: {context["channel_name"]}
-            Purpose: {context["channel_purpose"]}
-            Workspace: {context["workspace_name"]}
-            Period: {context["period_start"]} to {context["period_end"]}
+            Channel: {channel_name}
+            Purpose: {channel_purpose}
+            Workspace: {workspace_name}
+            Period: {period_start} to {period_end}
             
             Below is user contribution data showing each user's message count, thread activity, and reactions:
             
-            {context["user_contributions_text"]}
+            {user_contributions_text}
             
             Please analyze this data and provide:
             
@@ -391,14 +487,14 @@ class SlackChannelAnalysisService(ResourceAnalysisService):
             return """
             You are a Slack channel analyst. You're analyzing a Slack channel to identify discussion topics.
             
-            Channel: {context["channel_name"]}
-            Purpose: {context["channel_purpose"]}
-            Workspace: {context["workspace_name"]}
-            Period: {context["period_start"]} to {context["period_end"]}
+            Channel: {channel_name}
+            Purpose: {channel_purpose}
+            Workspace: {workspace_name}
+            Period: {period_start} to {period_end}
             
             Below are messages grouped by date:
             
-            {context["messages_by_date_text"]}
+            {messages_by_date_text}
             
             Please analyze these messages and provide:
             
@@ -416,17 +512,17 @@ class SlackChannelAnalysisService(ResourceAnalysisService):
             return """
             You are a Slack channel analyst. You're analyzing a Slack channel to provide a general activity summary.
             
-            Channel: {context["channel_name"]}
-            Purpose: {context["channel_purpose"]}
-            Workspace: {context["workspace_name"]}
-            Period: {context["period_start"]} to {context["period_end"]}
+            Channel: {channel_name}
+            Purpose: {channel_purpose}
+            Workspace: {workspace_name}
+            Period: {period_start} to {period_end}
             
             Statistics:
-            - Total messages: {context["total_messages"]}
-            - Total users: {context["total_users"]}
-            - Total threads: {context["total_threads"]}
+            - Total messages: {total_messages}
+            - Total users: {total_users}
+            - Total threads: {total_threads}
             
-            {context["messages_sample_text"]}
+            {messages_sample_text}
             
             Please analyze this data and provide:
             
