@@ -18,7 +18,7 @@ Provide the following insights based on this data:
 
 4. KEY HIGHLIGHTS: Identify 2-3 notable discussions, decisions, or interactions worth highlighting.
 
-IMPORTANT: When referring to users in your response, preserve the original format exactly as it appears in the messages, 
+IMPORTANT: When referring to users in your response, preserve the original format exactly as it appears in the messages,
 especially user mentions like <@U12345>. Do not translate these to plain names.
 
 Be specific, reference actual messages when possible, and provide actionable insights.

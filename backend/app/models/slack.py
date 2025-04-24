@@ -26,23 +26,7 @@ from app.db.base import Base
 from app.models.base import BaseModel
 from app.models.team import Team
 
-# Association table for many-to-many relationship between SlackAnalysis and SlackChannel
-analysis_channels = Table(
-    "analysis_channels",
-    Base.metadata,
-    Column(
-        "analysis_id",
-        UUID(as_uuid=True),
-        ForeignKey("slackanalysis.id"),
-        primary_key=True,
-    ),
-    Column(
-        "channel_id",
-        UUID(as_uuid=True),
-        ForeignKey("slackchannel.id"),
-        primary_key=True,
-    ),
-)
+# Legacy analysis_channels association table removed
 
 
 class SlackWorkspace(Base, BaseModel):
@@ -86,9 +70,7 @@ class SlackWorkspace(Base, BaseModel):
     users: Mapped[List["SlackUser"]] = relationship(
         "SlackUser", back_populates="workspace"
     )
-    analyses: Mapped[List["SlackAnalysis"]] = relationship(
-        "SlackAnalysis", back_populates="workspace"
-    )
+    # Legacy SlackAnalysis relationship removed
 
     def __repr__(self) -> str:
         return f"<SlackWorkspace {self.name} ({self.slack_id})>"
@@ -138,9 +120,7 @@ class SlackChannel(Base, BaseModel):
     messages: Mapped[List["SlackMessage"]] = relationship(
         "SlackMessage", back_populates="channel"
     )
-    analyses: Mapped[List["SlackAnalysis"]] = relationship(
-        "SlackAnalysis", secondary=analysis_channels, back_populates="channels"
-    )
+    # Legacy SlackAnalysis relationship removed
 
     # Ensure uniqueness of channels per workspace
     __table_args__ = (
@@ -198,9 +178,7 @@ class SlackUser(Base, BaseModel):
     reactions: Mapped[List["SlackReaction"]] = relationship(
         "SlackReaction", back_populates="user"
     )
-    contributions: Mapped[List["SlackContribution"]] = relationship(
-        "SlackContribution", back_populates="user"
-    )
+    # Legacy SlackContribution relationship removed
 
     # Ensure uniqueness of users per workspace
     __table_args__ = (
@@ -336,184 +314,6 @@ class SlackReaction(Base, BaseModel):
         return f"<SlackReaction :{self.emoji_name}: by {self.user_id} on {self.message_id}>"
 
 
-class SlackAnalysis(Base, BaseModel):
-    """
-    Model for Slack contribution analysis.
-    """
-
-    # Analysis identifiers
-    name = Column(String(255), nullable=False)
-    description = Column(Text, nullable=True)
-
-    # Analysis parameters
-    start_date = Column(DateTime, nullable=False)
-    end_date = Column(DateTime, nullable=False)
-    parameters = Column(JSONB, nullable=True)  # Custom analysis parameters
-
-    # LLM configuration
-    llm_model = Column(String(255), nullable=True)
-    analysis_type = Column(String(50), default="channel_analysis", nullable=False)
-
-    # Scheduling
-    is_scheduled = Column(Boolean, default=False, nullable=False)
-    schedule_frequency = Column(
-        String(50), nullable=True
-    )  # 'daily', 'weekly', 'monthly'
-    next_run_at = Column(DateTime, nullable=True)
-
-    # Status
-    status = Column(String(50), default="pending", nullable=False)
-    progress = Column(Float, default=0.0, nullable=False)
-    error_message = Column(Text, nullable=True)
-
-    # Results
-    result_summary = Column(JSONB, nullable=True)
-    completion_time = Column(DateTime, nullable=True)
-
-    # Foreign keys
-    workspace_id = Column(
-        UUID(as_uuid=True), ForeignKey("slackworkspace.id"), nullable=False
-    )
-    created_by_user_id = Column(
-        UUID(as_uuid=True), nullable=True
-    )  # User who created the analysis
-
-    # Relationships
-    workspace: Mapped["SlackWorkspace"] = relationship(
-        "SlackWorkspace", back_populates="analyses"
-    )
-    channels: Mapped[List["SlackChannel"]] = relationship(
-        "SlackChannel", secondary=analysis_channels, back_populates="analyses"
-    )
-    contributions: Mapped[List["SlackContribution"]] = relationship(
-        "SlackContribution", back_populates="analysis"
-    )
-    channel_analyses: Mapped[List["SlackChannelAnalysis"]] = relationship(
-        "SlackChannelAnalysis", back_populates="analysis", cascade="all, delete-orphan"
-    )
-
-    def __repr__(self) -> str:
-        return f"<SlackAnalysis {self.name} ({self.id})>"
-
-
-class SlackContribution(Base, BaseModel):
-    """
-    Model for user contribution scores from analysis.
-    """
-
-    # Contribution scores
-    problem_solving_score = Column(Float, nullable=True)
-    knowledge_sharing_score = Column(Float, nullable=True)
-    team_coordination_score = Column(Float, nullable=True)
-    engagement_score = Column(Float, nullable=True)
-    total_score = Column(Float, nullable=True)
-
-    # Contribution metrics
-    message_count = Column(Integer, default=0, nullable=False)
-    thread_reply_count = Column(Integer, default=0, nullable=False)
-    reaction_given_count = Column(Integer, default=0, nullable=False)
-    reaction_received_count = Column(Integer, default=0, nullable=False)
-
-    # Notable contributions
-    notable_contributions = Column(
-        JSONB, nullable=True
-    )  # List of message IDs and why they're notable
-
-    # Insights
-    insights = Column(
-        Text, nullable=True
-    )  # Generated insights about the user's contributions
-    insights_data = Column(JSONB, nullable=True)  # Structured insights data
-
-    # Foreign keys
-    analysis_id = Column(
-        UUID(as_uuid=True), ForeignKey("slackanalysis.id"), nullable=False
-    )
-    user_id = Column(UUID(as_uuid=True), ForeignKey("slackuser.id"), nullable=False)
-    channel_id = Column(
-        UUID(as_uuid=True), ForeignKey("slackchannel.id"), nullable=True
-    )  # Null for overall score
-
-    # Relationships
-    analysis: Mapped["SlackAnalysis"] = relationship(
-        "SlackAnalysis", back_populates="contributions"
-    )
-    user: Mapped["SlackUser"] = relationship(
-        "SlackUser", back_populates="contributions"
-    )
-    channel: Mapped[Optional["SlackChannel"]] = relationship("SlackChannel")
-
-    # Ensure uniqueness of contributions per analysis, user, and channel
-    __table_args__ = (
-        Index(
-            "ix_slackcontribution_analysis_id_user_id_channel_id",
-            "analysis_id",
-            "user_id",
-            "channel_id",
-            unique=True,
-        ),
-    )
-
-    def __repr__(self) -> str:
-        return f"<SlackContribution by {self.user_id} in analysis {self.analysis_id}>"
-
-
-class SlackChannelAnalysis(Base, BaseModel):
-    """
-    Model for storing LLM channel analysis results.
-
-    This model stores detailed results from LLM analysis of Slack channels,
-    including summaries, topic analysis, and insights about communication patterns.
-    """
-
-    # Foreign keys
-    analysis_id = Column(
-        UUID(as_uuid=True), ForeignKey("slackanalysis.id"), nullable=False, index=True
-    )
-    channel_id = Column(
-        UUID(as_uuid=True), ForeignKey("slackchannel.id"), nullable=False, index=True
-    )
-
-    # Analysis period
-    start_date = Column(DateTime, nullable=False)
-    end_date = Column(DateTime, nullable=False)
-
-    # Statistics
-    message_count = Column(Integer, default=0, nullable=False)
-    participant_count = Column(Integer, default=0, nullable=False)
-    thread_count = Column(Integer, default=0, nullable=False)
-    reaction_count = Column(Integer, default=0, nullable=False)
-
-    # Analysis content sections
-    channel_summary = Column(Text, nullable=True)
-    topic_analysis = Column(Text, nullable=True)
-    contributor_insights = Column(Text, nullable=True)
-    key_highlights = Column(Text, nullable=True)
-
-    # LLM metadata
-    model_used = Column(String(255), nullable=True)
-    generated_at = Column(DateTime, nullable=False, index=True)
-    raw_response = Column(JSONB, nullable=True)  # Store the full LLM response
-
-    # Status tracking
-    status = Column(String(50), default="completed", nullable=False)
-    error_message = Column(Text, nullable=True)
-
-    # Relationships
-    analysis: Mapped["SlackAnalysis"] = relationship(
-        "SlackAnalysis", back_populates="channel_analyses"
-    )
-    channel: Mapped["SlackChannel"] = relationship("SlackChannel")
-
-    # Ensure uniqueness of analysis per channel
-    __table_args__ = (
-        Index(
-            "ix_slackchannelanalysis_analysis_id_channel_id",
-            "analysis_id",
-            "channel_id",
-            unique=True,
-        ),
-    )
-
-    def __repr__(self) -> str:
-        return f"<SlackChannelAnalysis for channel {self.channel_id} in analysis {self.analysis_id}>"
+# Legacy model classes (SlackAnalysis, SlackContribution, SlackChannelAnalysis) removed
+# These have been replaced by the resource-based analysis system
+# See models/reports/cross_resource_report.py for the new model structure

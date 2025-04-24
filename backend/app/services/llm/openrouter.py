@@ -41,7 +41,7 @@ class OpenRouterService:
     """Service for interacting with the OpenRouter API."""
 
     API_URL = "https://openrouter.ai/api/v1/chat/completions"
-    
+
     # Models known to support JSON mode
     JSON_MODE_SUPPORTED_MODELS = [
         "anthropic/claude-3",  # All Claude 3 models
@@ -71,14 +71,14 @@ class OpenRouterService:
         self.app_site = os.environ.get(
             "SITE_DOMAIN", "toban-contribution-viewer.example.com"
         )
-        
+
     def _model_supports_json_mode(self, model: str) -> bool:
         """
         Check if the specified model supports JSON mode.
-        
+
         Args:
             model: The model identifier
-            
+
         Returns:
             True if the model supports JSON mode, False otherwise
         """
@@ -129,8 +129,8 @@ class OpenRouterService:
 You're tasked with analyzing Slack conversation data to help team leaders understand communication dynamics.
 Provide insightful, specific, and actionable observations based on actual message content.
 
-CRITICAL: When referring to Slack users in your analysis, always keep the original user mention format 
-(such as "<@U12345>") intact. Do not replace these mentions with plain text like "Unknown User" or attempt 
+CRITICAL: When referring to Slack users in your analysis, always keep the original user mention format
+(such as "<@U12345>") intact. Do not replace these mentions with plain text like "Unknown User" or attempt
 to resolve them. The frontend application will handle proper user display."""
 
         if use_json_mode:
@@ -165,7 +165,7 @@ Format your response as a valid JSON object with these exact keys:
   "key_highlights": "..."
 }
 
-FINAL REMINDER: Don't attempt to resolve or replace Slack user mentions like <@U12345>. 
+FINAL REMINDER: Don't attempt to resolve or replace Slack user mentions like <@U12345>.
 Keep them intact exactly as they appear in the original messages.
 """
 
@@ -179,11 +179,11 @@ Keep them intact exactly as they appear in the original messages.
             max_tokens=self.default_max_tokens,
             temperature=self.default_temperature,
         )
-        
+
         # Add response_format for JSON mode if the model supports it and JSON mode is requested
         actual_model = model or self.default_model
         model_supports_json = self._model_supports_json_mode(actual_model)
-        
+
         if use_json_mode and model_supports_json:
             request.response_format = {"type": "json_object"}
             logger.info(f"Using JSON mode for model {actual_model}")
@@ -217,23 +217,23 @@ Keep them intact exactly as they appear in the original messages.
                 if use_json_mode:
                     try:
                         import json
-                        
+
                         # Handle potential JSON formatting in text response
                         json_content = llm_response.strip()
                         if json_content.startswith("```json"):
                             json_content = json_content.split("```json", 1)[1]
                         if json_content.endswith("```"):
                             json_content = json_content.rsplit("```", 1)[0]
-                            
+
                         parsed_json = json.loads(json_content.strip())
-                        
+
                         # Map expected fields from JSON response
                         for key in ["channel_summary", "topic_analysis", "contributor_insights", "key_highlights"]:
                             if key in parsed_json:
                                 sections[key] = parsed_json[key]
                     except (json.JSONDecodeError, ValueError, KeyError) as e:
                         logger.warning(f"Failed to parse JSON response: {str(e)}. Falling back to text extraction.")
-                
+
                 # Fall back to extracting sections from text if JSON parsing failed or not used
                 if not any(sections.values()):
                     sections = self._extract_sections(llm_response)
@@ -270,7 +270,7 @@ Keep them intact exactly as they appear in the original messages.
             user_id = msg.get("user_id")
             timestamp = msg.get("timestamp", "")
             text = msg.get("text", "")
-            
+
             if user_id:
                 # Use Slack user mention format which frontend can resolve
                 return f"[{timestamp}] <@{user_id}>: {text}"
@@ -278,7 +278,7 @@ Keep them intact exactly as they appear in the original messages.
                 # Fallback to user_name but avoid "Unknown User" label
                 user = msg.get("user_name", "Participant")
                 return f"[{timestamp}] {user}: {text}"
-                
+
         # Determine if we need to sample
         if len(messages) > 200:
             # With larger datasets, we take samples from beginning, middle and end

@@ -26,6 +26,8 @@ import {
   ConnectPage as SlackConnectPage,
 } from './pages/slack'
 
+// Note: Workspace-specific analysis has been removed in favor of ResourceAnalysis system
+
 // Team Pages
 import { TeamsPage, TeamDetailPage, TeamMembersPage } from './pages/team'
 
@@ -132,7 +134,7 @@ function App() {
                 }
               />
 
-              {/* Legacy Slack routes removed */}
+              {/* Legacy Slack routes and workspace-specific analysis removed */}
 
               {/* Analysis Hub routes */}
               <Route
@@ -146,7 +148,7 @@ function App() {
                 }
               />
 
-              {/* Legacy Analytics routes (for backward compatibility) */}
+              {/* Redirect legacy analytics routes to the new analysis hub */}
               <Route
                 path="/dashboard/analytics"
                 element={
@@ -264,8 +266,8 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-              
-              {/* Add route for team/cross-resource analysis results */}
+
+              {/* Route for team/cross-resource analysis results */}
               <Route
                 path="/dashboard/integrations/:integrationId/team-analysis/:analysisId"
                 element={

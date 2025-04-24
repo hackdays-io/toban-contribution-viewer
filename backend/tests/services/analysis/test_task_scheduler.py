@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.reports import ReportStatus, ResourceAnalysis, ResourceType
+from app.models.reports import AnalysisResourceType, ReportStatus, ResourceAnalysis
 from app.services.analysis.task_scheduler import ResourceAnalysisTaskScheduler
 
 
@@ -80,7 +80,7 @@ async def test_schedule_analyses_for_report():
             id=uuid.uuid4(),
             cross_resource_report_id=report_id,
             status=ReportStatus.PENDING,
-            resource_type=ResourceType.SLACK_CHANNEL,
+            resource_type=AnalysisResourceType.SLACK_CHANNEL,
             resource_id=uuid.uuid4(),
             integration_id=uuid.uuid4(),
             period_start=datetime.utcnow() - timedelta(days=30),
@@ -90,7 +90,7 @@ async def test_schedule_analyses_for_report():
             id=uuid.uuid4(),
             cross_resource_report_id=report_id,
             status=ReportStatus.FAILED,
-            resource_type=ResourceType.SLACK_CHANNEL,
+            resource_type=AnalysisResourceType.SLACK_CHANNEL,
             resource_id=uuid.uuid4(),
             integration_id=uuid.uuid4(),
             period_start=datetime.utcnow() - timedelta(days=30),
@@ -142,7 +142,7 @@ async def test_run_analysis():
         id=analysis_id,
         cross_resource_report_id=uuid.uuid4(),
         status=ReportStatus.PENDING,
-        resource_type=ResourceType.SLACK_CHANNEL,
+        resource_type=AnalysisResourceType.SLACK_CHANNEL,
         resource_id=resource_id,
         integration_id=integration_id,
         period_start=datetime.utcnow() - timedelta(days=30),

@@ -493,11 +493,33 @@ const TeamChannelAnalysisPage: React.FC = () => {
     if (!analysis) return <Box>No analysis data available</Box>
 
     // Check if the field exists directly on the analysis object
-    let content = analysis[fieldName]
+    let content:
+      | string
+      | boolean
+      | Record<string, unknown>
+      | { start: string; end: string }
+      | {
+          message_count: number
+          participant_count: number
+          thread_count: number
+          reaction_count: number
+        }
+      | undefined = analysis[fieldName]
 
     // If content doesn't exist, check if it might be in the result field
     if (!content && analysis.result && typeof analysis.result === 'object') {
-      content = analysis.result[fieldName as string]
+      const result = analysis.result as Record<string, unknown>
+      const fieldValue = result[fieldName as string]
+
+      // Only assign if the type matches our expected types
+      if (
+        fieldValue === undefined ||
+        typeof fieldValue === 'string' ||
+        typeof fieldValue === 'boolean' ||
+        (typeof fieldValue === 'object' && fieldValue !== null)
+      ) {
+        content = fieldValue as typeof content
+      }
     }
 
     // If we found a string content, format it

@@ -11,13 +11,13 @@ from httpx import AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.integration import Integration
+from app.models.integration import Integration, ResourceType
 from app.models.reports import (
+    AnalysisResourceType,
     AnalysisType,
     CrossResourceReport,
     ReportStatus,
     ResourceAnalysis,
-    ResourceType,
 )
 from app.models.slack import SlackChannel
 from app.models.team import Team
@@ -164,7 +164,7 @@ async def test_get_resource_analyses(
         id=uuid.uuid4(),
         cross_resource_report_id=report.id,
         resource_id=resource_id1,
-        resource_type=ResourceType.SLACK_CHANNEL,
+        resource_type=AnalysisResourceType.SLACK_CHANNEL,
         integration_id=uuid.uuid4(),
         analysis_type=AnalysisType.CONTRIBUTION,
         status=ReportStatus.COMPLETED,
@@ -177,7 +177,7 @@ async def test_get_resource_analyses(
         id=uuid.uuid4(),
         cross_resource_report_id=report.id,
         resource_id=resource_id2,
-        resource_type=ResourceType.SLACK_CHANNEL,
+        resource_type=AnalysisResourceType.SLACK_CHANNEL,
         integration_id=uuid.uuid4(),
         analysis_type=AnalysisType.TOPICS,
         status=ReportStatus.IN_PROGRESS,
@@ -244,7 +244,7 @@ async def test_get_resource_analysis_detail(
         id=uuid.uuid4(),
         cross_resource_report_id=report.id,
         resource_id=resource_id,
-        resource_type=ResourceType.SLACK_CHANNEL,
+        resource_type=AnalysisResourceType.SLACK_CHANNEL,
         integration_id=uuid.uuid4(),
         analysis_type=AnalysisType.CONTRIBUTION,
         status=ReportStatus.COMPLETED,
@@ -311,7 +311,7 @@ async def test_retry_resource_analysis(
         id=uuid.uuid4(),
         cross_resource_report_id=report.id,
         resource_id=resource_id,
-        resource_type=ResourceType.SLACK_CHANNEL,
+        resource_type=AnalysisResourceType.SLACK_CHANNEL,
         integration_id=uuid.uuid4(),
         analysis_type=AnalysisType.CONTRIBUTION,
         status=ReportStatus.FAILED,
@@ -393,7 +393,7 @@ async def test_get_task_status(
         id=uuid.uuid4(),
         cross_resource_report_id=report.id,
         resource_id=resource_id,
-        resource_type=ResourceType.SLACK_CHANNEL,
+        resource_type=AnalysisResourceType.SLACK_CHANNEL,
         integration_id=uuid.uuid4(),
         analysis_type=AnalysisType.CONTRIBUTION,
         status=ReportStatus.IN_PROGRESS,

@@ -141,7 +141,7 @@ def test_analyze_channel_success(
     mock_get_channel_users,
     mock_openrouter_service,
 ):
-    """Test successful channel analysis."""
+    """Test successful channel analysis with deprecated endpoint."""
     # Make the request
     response = client.post(
         f"/api/v1/slack/workspaces/{mock_workspace_id}/channels/{mock_channel_id}/analyze",
@@ -153,48 +153,17 @@ def test_analyze_channel_success(
         },
     )
 
-    # Assert the response
-    assert response.status_code == 200
+    # Assert the response - now 410 Gone because API is deprecated
+    assert response.status_code == 410
     result = response.json()
 
-    # Check structure
-    assert "analysis_id" in result
-    assert "channel_id" in result
-    assert "channel_name" in result
-    assert "period" in result
-    assert "stats" in result
-    assert "channel_summary" in result
-    assert "topic_analysis" in result
-    assert "contributor_insights" in result
-    assert "key_highlights" in result
-    assert "model_used" in result
-    assert "generated_at" in result
-
-    # Check specific fields
-    assert result["channel_id"] == mock_channel_id
-    assert result["channel_name"] == "test-channel"
-    assert result["channel_summary"] == "This is a summary"
-    assert result["topic_analysis"] == "These are topics"
-    assert result["contributor_insights"] == "These are insights"
-    assert result["key_highlights"] == "These are highlights"
-    assert result["model_used"] == "anthropic/claude-3-sonnet:20240229"
-
-    # Verify stats
-    assert result["stats"]["message_count"] == 3
-    assert result["stats"]["participant_count"] == 2
-    assert result["stats"]["thread_count"] == 1
-    assert (
-        result["stats"]["reaction_count"] == 3
-    )  # Sum of reaction_count values (0+1+2)
-
-    # Verify the LLM service was called with correct parameters
-    mock_openrouter_service.analyze_channel_messages.assert_called_once()
-    call_kwargs = mock_openrouter_service.analyze_channel_messages.call_args[1]
-    assert call_kwargs["channel_name"] == "test-channel"
-    assert "start_date" in call_kwargs
-    assert "end_date" in call_kwargs
-    assert "messages_data" in call_kwargs
-    assert call_kwargs["messages_data"]["message_count"] == 3
+    # Check structure for deprecation message
+    assert "message" in result
+    assert "suggested_alternative" in result
+    
+    # Check message contains deprecation notice
+    assert "deprecated" in result["message"].lower()
+    assert "integrations" in result["suggested_alternative"].lower()
 
 
 def test_analyze_channel_with_model_override(
@@ -207,7 +176,7 @@ def test_analyze_channel_with_model_override(
     mock_get_channel_users,
     mock_openrouter_service,
 ):
-    """Test channel analysis with model override."""
+    """Test channel analysis with model override on deprecated endpoint."""
     # Make the request with model override
     custom_model = "anthropic/claude-3-opus:20240229"
     response = client.post(
@@ -219,13 +188,13 @@ def test_analyze_channel_with_model_override(
         },
     )
 
-    # Assert the response
-    assert response.status_code == 200
-
-    # Verify model parameter was passed
-    mock_openrouter_service.analyze_channel_messages.assert_called_once()
-    call_kwargs = mock_openrouter_service.analyze_channel_messages.call_args[1]
-    assert call_kwargs["model"] == custom_model
+    # Assert the response - now 410 Gone because API is deprecated
+    assert response.status_code == 410
+    result = response.json()
+    
+    # Check deprecation message
+    assert "deprecated" in result["message"].lower()
+    assert "integrations" in result["suggested_alternative"].lower()
 
 
 def test_analyze_channel_no_dates(
@@ -238,33 +207,19 @@ def test_analyze_channel_no_dates(
     mock_get_channel_users,
     mock_openrouter_service,
 ):
-    """Test channel analysis with default date range."""
+    """Test channel analysis with default date range on deprecated endpoint."""
     # Make the request without date parameters
     response = client.post(
         f"/api/v1/slack/workspaces/{mock_workspace_id}/channels/{mock_channel_id}/analyze"
     )
 
-    # Assert the response
-    assert response.status_code == 200
-
-    # Verify date calculations
-    mock_get_channel_messages.assert_called_once()
-    call_kwargs = mock_get_channel_messages.call_args[1]
-    assert "start_date" in call_kwargs
-    assert "end_date" in call_kwargs
-
-    # End date should be close to now (accounting for potential timezone differences)
-    now = datetime.now()
-    end_date = call_kwargs["end_date"]
-    difference = abs(now - end_date)
-    assert (
-        difference.total_seconds() < 60 * 60 * 10
-    )  # Within 10 hours (to accommodate any timezone differences)
-
-    # Start date should be 30 days before end date
-    start_date = call_kwargs["start_date"]
-    difference = end_date - start_date
-    assert abs(difference.days - 30) < 1  # Within 1 day of 30 days
+    # Assert the response - now 410 Gone because API is deprecated
+    assert response.status_code == 410
+    result = response.json()
+    
+    # Check deprecation message
+    assert "deprecated" in result["message"].lower()
+    assert "integrations" in result["suggested_alternative"].lower()
 
 
 def test_analyze_channel_not_found(
@@ -281,9 +236,10 @@ def test_analyze_channel_not_found(
             f"/api/v1/slack/workspaces/{mock_workspace_id}/channels/{mock_channel_id}/analyze"
         )
 
-    # Assert the response
-    assert response.status_code == 404
-    assert "Channel not found" in response.json()["detail"]
+    # Assert the response - the API has been deprecated and returns 410 Gone
+    assert response.status_code == 410
+    assert "deprecated" in response.json()["message"].lower()
+    assert "integrations" in response.json()["suggested_alternative"].lower()
 
 
 def test_analyze_channel_error_handling(
@@ -295,7 +251,7 @@ def test_analyze_channel_error_handling(
     mock_get_channel_messages,
     mock_get_channel_users,
 ):
-    """Test error handling in the analysis endpoint."""
+    """Test error handling in the deprecated analysis endpoint."""
     # Mock OpenRouterService to raise an exception
     with patch("app.api.v1.slack.analysis.OpenRouterService") as mock_class:
         instance = MagicMock()
@@ -309,6 +265,10 @@ def test_analyze_channel_error_handling(
             f"/api/v1/slack/workspaces/{mock_workspace_id}/channels/{mock_channel_id}/analyze"
         )
 
-    # Assert the response
-    assert response.status_code == 400
-    assert "Test error from OpenRouter" in response.json()["detail"]
+    # Assert the response - now 410 Gone because API is deprecated
+    assert response.status_code == 410
+    result = response.json()
+    
+    # Check deprecation message
+    assert "deprecated" in result["message"].lower()
+    assert "integrations" in result["suggested_alternative"].lower()

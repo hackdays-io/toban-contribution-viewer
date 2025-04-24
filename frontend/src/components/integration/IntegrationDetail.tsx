@@ -434,12 +434,12 @@ const IntegrationDetail: React.FC<IntegrationDetailProps> = ({
                     size="20px"
                     color="var(--chakra-colors-purple-500)"
                   />
-                  <Heading size="md">Channel Analysis</Heading>
+                  <Heading size="md">Resource Analysis</Heading>
                 </Flex>
               </CardHeader>
               <CardBody>
                 <Text fontSize="sm" color="gray.500" mb={3}>
-                  Select and analyze channels to understand team contribution
+                  Select and analyze resources to understand team contribution
                   patterns
                 </Text>
                 <Button
@@ -448,7 +448,7 @@ const IntegrationDetail: React.FC<IntegrationDetailProps> = ({
                   width="full"
                   leftIcon={<FiBarChart />}
                 >
-                  Manage Channel Analysis
+                  Select Resources for Analysis
                 </Button>
               </CardBody>
             </Card>

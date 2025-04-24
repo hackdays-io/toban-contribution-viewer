@@ -90,7 +90,8 @@ fi
 echo -e "\n${YELLOW}Step 3/5: Running flake8${NC}"
 
 # Check if we're in a local environment with additional plugins
-FLAKE8_IGNORE="C901,E501,W503,W293,E203"
+# E402 for scripts that modify sys.path before importing
+FLAKE8_IGNORE="C901,E501,W503,W293,E203,E402"
 
 # If in CI compatibility mode, use a more extensive ignore list
 if [ "$CI_COMPATIBLE" = true ]; then
