@@ -2352,8 +2352,7 @@ async def get_integration_resource_analysis(
                     f"Using fallback to get latest analysis for channel {channel.id}"
                 )
                 # Get latest analysis for this resource from ResourceAnalysis
-                from app.models.reports import ResourceAnalysis, AnalysisResourceType
-                
+                # Note: ResourceAnalysis is already imported at the top of the file
                 stmt = (
                     select(ResourceAnalysis)
                     .where(
