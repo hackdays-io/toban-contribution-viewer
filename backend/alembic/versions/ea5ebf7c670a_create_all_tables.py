@@ -104,6 +104,8 @@ def upgrade() -> None:
     op.create_index(op.f('ix_slackworkspace_id'), 'slackworkspace', ['id'], unique=False)
     op.create_index(op.f('ix_slackworkspace_slack_id'), 'slackworkspace', ['slack_id'], unique=True)
     op.create_index(op.f('ix_slackworkspace_team_id'), 'slackworkspace', ['team_id'], unique=False)
+    
+    # Legacy slackanalysis table removed
     op.create_table('teammember',
     sa.Column('user_id', sa.String(length=255), nullable=False),
     sa.Column('email', sa.String(length=255), nullable=True),
@@ -227,32 +229,6 @@ def upgrade() -> None:
     op.create_index(op.f('ix_serviceresource_id'), 'serviceresource', ['id'], unique=False)
     op.create_index(op.f('ix_serviceresource_integration_id'), 'serviceresource', ['integration_id'], unique=False)
     op.create_index('ix_serviceresource_integration_id_resource_type_external_id', 'serviceresource', ['integration_id', 'resource_type', 'external_id'], unique=True)
-    op.create_table('slackanalysis',
-    sa.Column('name', sa.String(length=255), nullable=False),
-    sa.Column('description', sa.Text(), nullable=True),
-    sa.Column('start_date', sa.DateTime(), nullable=False),
-    sa.Column('end_date', sa.DateTime(), nullable=False),
-    sa.Column('parameters', postgresql.JSONB(astext_type=sa.Text()), nullable=True),
-    sa.Column('llm_model', sa.String(length=255), nullable=True),
-    sa.Column('analysis_type', sa.String(length=50), nullable=False),
-    sa.Column('is_scheduled', sa.Boolean(), nullable=False),
-    sa.Column('schedule_frequency', sa.String(length=50), nullable=True),
-    sa.Column('next_run_at', sa.DateTime(), nullable=True),
-    sa.Column('status', sa.String(length=50), nullable=False),
-    sa.Column('progress', sa.Float(), nullable=False),
-    sa.Column('error_message', sa.Text(), nullable=True),
-    sa.Column('result_summary', postgresql.JSONB(astext_type=sa.Text()), nullable=True),
-    sa.Column('completion_time', sa.DateTime(), nullable=True),
-    sa.Column('workspace_id', sa.UUID(), nullable=False),
-    sa.Column('created_by_user_id', sa.UUID(), nullable=True),
-    sa.Column('id', sa.UUID(), nullable=False),
-    sa.Column('created_at', sa.DateTime(), nullable=False),
-    sa.Column('updated_at', sa.DateTime(), nullable=False),
-    sa.Column('is_active', sa.Boolean(), nullable=False),
-    sa.ForeignKeyConstraint(['workspace_id'], ['slackworkspace.id'], ),
-    sa.PrimaryKeyConstraint('id')
-    )
-    op.create_index(op.f('ix_slackanalysis_id'), 'slackanalysis', ['id'], unique=False)
     op.create_table('slackchannel',
     sa.Column('slack_id', sa.String(length=255), nullable=False),
     sa.Column('name', sa.String(length=255), nullable=False),
@@ -306,13 +282,7 @@ def upgrade() -> None:
     op.create_index(op.f('ix_slackuser_id'), 'slackuser', ['id'], unique=False)
     op.create_index(op.f('ix_slackuser_slack_id'), 'slackuser', ['slack_id'], unique=False)
     op.create_index('ix_slackuser_workspace_id_slack_id', 'slackuser', ['workspace_id', 'slack_id'], unique=True)
-    op.create_table('analysis_channels',
-    sa.Column('analysis_id', sa.UUID(), nullable=False),
-    sa.Column('channel_id', sa.UUID(), nullable=False),
-    sa.ForeignKeyConstraint(['analysis_id'], ['slackanalysis.id'], ),
-    sa.ForeignKeyConstraint(['channel_id'], ['slackchannel.id'], ),
-    sa.PrimaryKeyConstraint('analysis_id', 'channel_id')
-    )
+    # Legacy analysis_channels table removed
     op.create_table('resourceaccess',
     sa.Column('access_level', sa.Enum('READ', 'WRITE', 'ADMIN', name='accesslevel'), nullable=False),
     sa.Column('resource_id', sa.UUID(), nullable=False),
@@ -330,64 +300,8 @@ def upgrade() -> None:
     op.create_index(op.f('ix_resourceaccess_resource_id'), 'resourceaccess', ['resource_id'], unique=False)
     op.create_index('ix_resourceaccess_resource_id_team_id', 'resourceaccess', ['resource_id', 'team_id'], unique=True)
     op.create_index(op.f('ix_resourceaccess_team_id'), 'resourceaccess', ['team_id'], unique=False)
-    op.create_table('slackchannelanalysis',
-    sa.Column('analysis_id', sa.UUID(), nullable=False),
-    sa.Column('channel_id', sa.UUID(), nullable=False),
-    sa.Column('start_date', sa.DateTime(), nullable=False),
-    sa.Column('end_date', sa.DateTime(), nullable=False),
-    sa.Column('message_count', sa.Integer(), nullable=False),
-    sa.Column('participant_count', sa.Integer(), nullable=False),
-    sa.Column('thread_count', sa.Integer(), nullable=False),
-    sa.Column('reaction_count', sa.Integer(), nullable=False),
-    sa.Column('channel_summary', sa.Text(), nullable=True),
-    sa.Column('topic_analysis', sa.Text(), nullable=True),
-    sa.Column('contributor_insights', sa.Text(), nullable=True),
-    sa.Column('key_highlights', sa.Text(), nullable=True),
-    sa.Column('model_used', sa.String(length=255), nullable=True),
-    sa.Column('generated_at', sa.DateTime(), nullable=False),
-    sa.Column('raw_response', postgresql.JSONB(astext_type=sa.Text()), nullable=True),
-    sa.Column('status', sa.String(length=50), nullable=False),
-    sa.Column('error_message', sa.Text(), nullable=True),
-    sa.Column('id', sa.UUID(), nullable=False),
-    sa.Column('created_at', sa.DateTime(), nullable=False),
-    sa.Column('updated_at', sa.DateTime(), nullable=False),
-    sa.Column('is_active', sa.Boolean(), nullable=False),
-    sa.ForeignKeyConstraint(['analysis_id'], ['slackanalysis.id'], ),
-    sa.ForeignKeyConstraint(['channel_id'], ['slackchannel.id'], ),
-    sa.PrimaryKeyConstraint('id')
-    )
-    op.create_index(op.f('ix_slackchannelanalysis_analysis_id'), 'slackchannelanalysis', ['analysis_id'], unique=False)
-    op.create_index('ix_slackchannelanalysis_analysis_id_channel_id', 'slackchannelanalysis', ['analysis_id', 'channel_id'], unique=True)
-    op.create_index(op.f('ix_slackchannelanalysis_channel_id'), 'slackchannelanalysis', ['channel_id'], unique=False)
-    op.create_index(op.f('ix_slackchannelanalysis_generated_at'), 'slackchannelanalysis', ['generated_at'], unique=False)
-    op.create_index(op.f('ix_slackchannelanalysis_id'), 'slackchannelanalysis', ['id'], unique=False)
-    op.create_table('slackcontribution',
-    sa.Column('problem_solving_score', sa.Float(), nullable=True),
-    sa.Column('knowledge_sharing_score', sa.Float(), nullable=True),
-    sa.Column('team_coordination_score', sa.Float(), nullable=True),
-    sa.Column('engagement_score', sa.Float(), nullable=True),
-    sa.Column('total_score', sa.Float(), nullable=True),
-    sa.Column('message_count', sa.Integer(), nullable=False),
-    sa.Column('thread_reply_count', sa.Integer(), nullable=False),
-    sa.Column('reaction_given_count', sa.Integer(), nullable=False),
-    sa.Column('reaction_received_count', sa.Integer(), nullable=False),
-    sa.Column('notable_contributions', postgresql.JSONB(astext_type=sa.Text()), nullable=True),
-    sa.Column('insights', sa.Text(), nullable=True),
-    sa.Column('insights_data', postgresql.JSONB(astext_type=sa.Text()), nullable=True),
-    sa.Column('analysis_id', sa.UUID(), nullable=False),
-    sa.Column('user_id', sa.UUID(), nullable=False),
-    sa.Column('channel_id', sa.UUID(), nullable=True),
-    sa.Column('id', sa.UUID(), nullable=False),
-    sa.Column('created_at', sa.DateTime(), nullable=False),
-    sa.Column('updated_at', sa.DateTime(), nullable=False),
-    sa.Column('is_active', sa.Boolean(), nullable=False),
-    sa.ForeignKeyConstraint(['analysis_id'], ['slackanalysis.id'], ),
-    sa.ForeignKeyConstraint(['channel_id'], ['slackchannel.id'], ),
-    sa.ForeignKeyConstraint(['user_id'], ['slackuser.id'], ),
-    sa.PrimaryKeyConstraint('id')
-    )
-    op.create_index('ix_slackcontribution_analysis_id_user_id_channel_id', 'slackcontribution', ['analysis_id', 'user_id', 'channel_id'], unique=True)
-    op.create_index(op.f('ix_slackcontribution_id'), 'slackcontribution', ['id'], unique=False)
+    # Legacy slackchannelanalysis table removed
+    # Legacy slackcontribution table removed
     op.create_table('slackmessage',
     sa.Column('slack_id', sa.String(length=255), nullable=False),
     sa.Column('slack_ts', sa.String(length=50), nullable=False),
@@ -462,21 +376,12 @@ def downgrade() -> None:
     op.drop_index(op.f('ix_slackmessage_id'), table_name='slackmessage')
     op.drop_index('ix_slackmessage_channel_id_slack_ts', table_name='slackmessage')
     op.drop_table('slackmessage')
-    op.drop_index(op.f('ix_slackcontribution_id'), table_name='slackcontribution')
-    op.drop_index('ix_slackcontribution_analysis_id_user_id_channel_id', table_name='slackcontribution')
-    op.drop_table('slackcontribution')
-    op.drop_index(op.f('ix_slackchannelanalysis_id'), table_name='slackchannelanalysis')
-    op.drop_index(op.f('ix_slackchannelanalysis_generated_at'), table_name='slackchannelanalysis')
-    op.drop_index(op.f('ix_slackchannelanalysis_channel_id'), table_name='slackchannelanalysis')
-    op.drop_index('ix_slackchannelanalysis_analysis_id_channel_id', table_name='slackchannelanalysis')
-    op.drop_index(op.f('ix_slackchannelanalysis_analysis_id'), table_name='slackchannelanalysis')
-    op.drop_table('slackchannelanalysis')
+    # Legacy tables removed: slackcontribution, slackchannelanalysis, analysis_channels
     op.drop_index(op.f('ix_resourceaccess_team_id'), table_name='resourceaccess')
     op.drop_index('ix_resourceaccess_resource_id_team_id', table_name='resourceaccess')
     op.drop_index(op.f('ix_resourceaccess_resource_id'), table_name='resourceaccess')
     op.drop_index(op.f('ix_resourceaccess_id'), table_name='resourceaccess')
     op.drop_table('resourceaccess')
-    op.drop_table('analysis_channels')
     op.drop_index('ix_slackuser_workspace_id_slack_id', table_name='slackuser')
     op.drop_index(op.f('ix_slackuser_slack_id'), table_name='slackuser')
     op.drop_index(op.f('ix_slackuser_id'), table_name='slackuser')
@@ -485,8 +390,7 @@ def downgrade() -> None:
     op.drop_index(op.f('ix_slackchannel_slack_id'), table_name='slackchannel')
     op.drop_index(op.f('ix_slackchannel_id'), table_name='slackchannel')
     op.drop_table('slackchannel')
-    op.drop_index(op.f('ix_slackanalysis_id'), table_name='slackanalysis')
-    op.drop_table('slackanalysis')
+    # Legacy slackanalysis table removed
     op.drop_index('ix_serviceresource_integration_id_resource_type_external_id', table_name='serviceresource')
     op.drop_index(op.f('ix_serviceresource_integration_id'), table_name='serviceresource')
     op.drop_index(op.f('ix_serviceresource_id'), table_name='serviceresource')

@@ -17,17 +17,11 @@ depends_on = None
 
 
 def upgrade() -> None:
-    # Drop tables in the correct order (respecting foreign key constraints)
+    # This is a no-op migration now that we've removed these tables from the initial migration
+    # The tables are already removed from the create_all_tables.py migration
     
-    # First drop the many-to-many join table
-    op.drop_table('analysis_channels')
-    
-    # Then drop dependent tables
-    op.drop_table('slackcontribution')
-    op.drop_table('slackchannelanalysis')
-    
-    # Finally drop the parent table
-    op.drop_table('slackanalysis')
+    # Leaving this migration in place for version tracking purposes
+    pass
 
 
 def downgrade() -> None:
