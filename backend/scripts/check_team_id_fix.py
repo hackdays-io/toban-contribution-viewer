@@ -81,7 +81,7 @@ async def test_team_id_selection():
     # Case 2: workspace.team_id is None, fallback to integration.owner_team_id
     workspace_without_team = MockWorkspace(workspace_id, None)
     
-    logger.info(f"Case 2: workspace.team_id is None")
+    logger.info("Case 2: workspace.team_id is None")
     logger.info(f"Creating CrossResourceReport with workspace ID: {workspace_without_team.id}")
     
     # Apply the fix logic
@@ -115,7 +115,7 @@ async def test_team_id_selection():
     # Case 3: both workspace.team_id and integration.owner_team_id are None
     integration_without_team = MockIntegration(integration_id, None)
     
-    logger.info(f"Case 3: both workspace.team_id and integration.owner_team_id are None")
+    logger.info("Case 3: both workspace.team_id and integration.owner_team_id are None")
     logger.info(f"Creating CrossResourceReport with workspace ID: {workspace_without_team.id}")
     
     try:
