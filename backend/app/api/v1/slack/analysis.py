@@ -14,6 +14,7 @@ from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_async_db
+from app.services.llm.openrouter import OpenRouterService
 from app.services.slack.channels import get_channel_by_id
 from app.services.slack.messages import get_channel_messages, get_channel_users
 
@@ -22,7 +23,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 # These imports are used in the test files via mock patches
-__all__ = ["router", "get_channel_by_id", "get_channel_messages", "get_channel_users"]
+__all__ = ["router", "get_channel_by_id", "get_channel_messages", "get_channel_users", "OpenRouterService"]
 
 
 class AnalysisOptions(BaseModel):
