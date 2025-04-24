@@ -438,16 +438,12 @@ class IntegrationService {
     resourceId: string
   ): Promise<ServiceResource | ApiError> {
     try {
-      console.log(
-        `[DEBUG] Fetching resource ${resourceId} for integration ${integrationId}`
-      )
-
       // Fetch all resources and filter for the specific one
       const resources = await this.getResources(integrationId)
 
       // Check if we got an error from getResources
       if (this.isApiError(resources)) {
-        console.error('[DEBUG] Error fetching resources:', resources.message)
+        console.error('Error fetching resources:', resources.message)
         throw new Error(`Failed to fetch resources: ${resources.message}`)
       }
 
@@ -455,11 +451,9 @@ class IntegrationService {
       const resource = resources.find((res) => res.id === resourceId)
 
       if (!resource) {
-        console.error(`[DEBUG] Resource ${resourceId} not found in resources`)
+        console.error(`Resource ${resourceId} not found in integration ${integrationId}`)
         throw new Error(`Resource ${resourceId} not found`)
       }
-
-      console.log(`[DEBUG] Found resource:`, resource)
       return resource
     } catch (error) {
       return this.handleError(error, 'Failed to fetch resource')
@@ -474,8 +468,9 @@ class IntegrationService {
     resourceTypes?: string[]
   ): Promise<Record<string, unknown> | ApiError> {
     try {
-      console.log('[SYNC DEBUG] Starting syncResources with ID:', integrationId)
-      console.log('[SYNC DEBUG] Resource types:', resourceTypes)
+      // Basic logging for sync request
+      console.log(`Syncing resources for integration ${integrationId}`, 
+        resourceTypes && resourceTypes.length > 0 ? resourceTypes : 'all resource types')
 
       const headers = await this.getAuthHeaders()
       let url = `${this.apiUrl}/${integrationId}/sync`
@@ -488,41 +483,22 @@ class IntegrationService {
         url += `?${resourceTypeParams}`
       }
 
-      console.log('[SYNC DEBUG] Sync URL:', url)
-      console.log('[SYNC DEBUG] Headers:', {
-        ...headers,
-        Authorization: 'Bearer [redacted]',
-      })
-
-      // Make the request
-      console.log('[SYNC DEBUG] Making fetch request...')
+      // Make the request with concise logging
       const response = await fetch(url, {
         method: 'POST',
         headers,
         credentials: 'include',
       })
 
-      console.log('[SYNC DEBUG] Response received:', {
-        ok: response.ok,
-        status: response.status,
-        statusText: response.statusText,
-        headers:
-          response.headers instanceof Headers
-            ? Object.fromEntries([...response.headers.entries()])
-            : '(headers not available)',
-      })
-
       // Try to parse the response as JSON
       let result: Record<string, unknown>
       try {
         const text = await response.text()
-        console.log('[SYNC DEBUG] Raw response text:', text)
-
+        
         try {
           result = text ? JSON.parse(text) : {}
-          console.log('[SYNC DEBUG] Parsed JSON result:', result)
         } catch (jsonError) {
-          console.error('[SYNC DEBUG] Failed to parse JSON:', jsonError)
+          console.warn('Failed to parse sync response as JSON', jsonError)
           // If can't parse as JSON, use a default result based on status
           result = {
             status: response.ok ? 'success' : 'error',
@@ -532,7 +508,7 @@ class IntegrationService {
           }
         }
       } catch (textError) {
-        console.error('[SYNC DEBUG] Failed to get response text:', textError)
+        console.warn('Failed to get sync response text', textError)
         // Fallback if we can't even get text
         result = {
           status: response.ok ? 'success' : 'error',
@@ -545,7 +521,7 @@ class IntegrationService {
       // For non-OK responses, return an error
       if (!response.ok) {
         console.error(
-          '[SYNC DEBUG] Response not OK:',
+          'Sync request failed:',
           response.status,
           response.statusText
         )
@@ -711,24 +687,17 @@ class IntegrationService {
     integrationId: string
   ): Promise<ServiceResource[] | ApiError> {
     try {
-      console.log(
-        '📊 Getting selected channels for integration:',
-        integrationId
-      )
-
       // Get all channels from the resources endpoint
       const resources = await this.getResources(integrationId, [
         ResourceType.SLACK_CHANNEL,
       ])
 
       if (this.isApiError(resources)) {
-        console.error('❌ Error getting resources:', resources)
+        console.error('Error getting channel resources:', resources)
         throw resources
       }
 
-      console.log(`📂 Got ${resources.length} channel resources`)
-
-      // Filter for channels with the is_selected_for_analysis flag in metadata
+      // Filter for channels with the is_selected_for_analysis flag
       // Check both the metadata.is_selected_for_analysis field and the top-level field
       // that might have been added by the backend
       const selectedChannels = resources.filter((resource) => {
@@ -736,38 +705,17 @@ class IntegrationService {
           resource.metadata?.is_selected_for_analysis === true
         const resourceSelected = resource.is_selected_for_analysis === true
 
-        // Debug log for each resource with selection status
-        if (metadataSelected || resourceSelected) {
-          console.log(`✓ Channel selected: ${resource.name} (${resource.id})`)
-          console.log(
-            `  - metadata.is_selected_for_analysis: ${metadataSelected}`
-          )
-          console.log(
-            `  - resource.is_selected_for_analysis: ${resourceSelected}`
-          )
-        }
-
         return (
           (metadataSelected || resourceSelected) &&
           resource.resource_type === ResourceType.SLACK_CHANNEL
         )
       })
 
-      console.log(
-        `🎯 Found ${selectedChannels.length} channels selected for analysis`
-      )
-
-      // Log the IDs of selected channels for debugging
-      if (selectedChannels.length > 0) {
-        console.log('🔍 Selected channel details:')
-        selectedChannels.forEach((ch) => {
-          console.log(`  - ${ch.name} (${ch.id})`)
-        })
-      }
+      console.log(`Found ${selectedChannels.length} channels selected for analysis out of ${resources.length} total channels`)
 
       return selectedChannels
     } catch (error) {
-      console.error('❌ Error getting selected channels:', error)
+      console.error('Error getting selected channels:', error)
       return this.handleError(error, 'Failed to get selected channels')
     }
   }
@@ -784,15 +732,8 @@ class IntegrationService {
     options?: AnalysisOptions
   ): Promise<Record<string, unknown> | ApiError> {
     try {
-      console.log(
-        `[DEBUG] Analyzing resource ${resourceId} for integration ${integrationId}`
-      )
-
       const headers = await this.getAuthHeaders()
       const url = `${this.apiUrl}/${integrationId}/resources/${resourceId}/analyze`
-
-      // Log the API URL being called
-      console.log(`[DEBUG] Analyzing resource with URL: ${url}`)
 
       // Create request body with analysis options
       const body = options || {}
@@ -842,12 +783,8 @@ class IntegrationService {
     resourceId: string
   ): Promise<Record<string, unknown>[] | ApiError> {
     try {
-      console.log(`[DEBUG] Getting analysis history for resource ${resourceId}`)
-
       const headers = await this.getAuthHeaders()
       const url = `${this.apiUrl}/${integrationId}/resources/${resourceId}/analyses`
-
-      console.log(`[DEBUG] Getting analysis history with URL: ${url}`)
 
       // Make the API call
       const response = await fetch(url, {
@@ -893,12 +830,8 @@ class IntegrationService {
     resourceId: string
   ): Promise<Record<string, unknown> | ApiError> {
     try {
-      console.log(`[DEBUG] Getting latest analysis for resource ${resourceId}`)
-
       const headers = await this.getAuthHeaders()
       const url = `${this.apiUrl}/${integrationId}/resources/${resourceId}/analyses/latest`
-
-      console.log(`[DEBUG] Getting latest analysis with URL: ${url}`)
 
       // Make the API call
       const response = await fetch(url, {
@@ -946,14 +879,8 @@ class IntegrationService {
     analysisId: string
   ): Promise<Record<string, unknown> | ApiError> {
     try {
-      console.log(
-        `[DEBUG] Getting analysis ${analysisId} for resource ${resourceId}`
-      )
-
       const headers = await this.getAuthHeaders()
       const url = `${this.apiUrl}/${integrationId}/resources/${resourceId}/analysis/${analysisId}`
-
-      console.log(`[DEBUG] Getting analysis with URL: ${url}`)
 
       // Make the API call
       const response = await fetch(url, {
@@ -1023,14 +950,8 @@ class IntegrationService {
     includeAnalyses: boolean = true
   ): Promise<Record<string, unknown> | ApiError> {
     try {
-      console.log(
-        `[DEBUG] Getting cross-resource report ${reportId} for team ${teamId}`
-      )
-
       const headers = await this.getAuthHeaders()
       const url = `${REPORTS_API_BASE}/${teamId}/cross-resource-reports/${reportId}?include_analyses=${includeAnalyses}`
-
-      console.log(`[DEBUG] Getting report with URL: ${url}`)
 
       // Make the API call
       const response = await fetch(url, {
