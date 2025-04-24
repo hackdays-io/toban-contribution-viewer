@@ -346,40 +346,50 @@ const OAuthCallback: React.FC = () => {
               setStatus('reconnected')
               setSuccessMessage('Workspace reconnected successfully!')
             }
-            
+
             // Set a useful success message
-            setSuccessMessage('Workspace connected successfully! Syncing channels...')
-            
+            setSuccessMessage(
+              'Workspace connected successfully! Syncing channels...'
+            )
+
             // Get the integration ID
-            const integrationId = 
+            const integrationId =
               result.integration_id ||
               result.existing_integration?.id ||
               integrationResult.id
-              
+
             if (integrationId) {
               try {
                 // Trigger an immediate resource sync
-                console.log('Starting automatic channel sync for new integration:', integrationId)
-                
+                console.log(
+                  'Starting automatic channel sync for new integration:',
+                  integrationId
+                )
+
                 // Update the message
                 setSuccessMessage('Syncing channels and users from Slack...')
-                
+
                 // Make a sync request
-                const syncResponse = await fetch(`${env.apiUrl}/integrations/${integrationId}/sync-resources`, {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                    Accept: 'application/json',
-                  },
-                  credentials: 'include',
-                  body: JSON.stringify({
-                    resource_types: ['slack_channel', 'slack_user']
-                  })
-                })
-                
+                const syncResponse = await fetch(
+                  `${env.apiUrl}/integrations/${integrationId}/sync-resources`,
+                  {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      Accept: 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                      resource_types: ['slack_channel', 'slack_user'],
+                    }),
+                  }
+                )
+
                 if (syncResponse.ok) {
                   console.log('Initial channel sync successful')
-                  setSuccessMessage('Channels synced successfully! Redirecting...')
+                  setSuccessMessage(
+                    'Channels synced successfully! Redirecting...'
+                  )
                 } else {
                   console.warn('Initial channel sync failed, but continuing')
                   // Don't show an error to the user, as this is just an optimization
@@ -388,7 +398,7 @@ const OAuthCallback: React.FC = () => {
                 console.error('Error during initial channel sync:', syncError)
                 // Don't show an error to the user, as this is just an optimization
               }
-              
+
               // Navigate after sync (or sync attempt)
               setTimeout(() => {
                 if (integrationResult.updated) {
@@ -400,7 +410,9 @@ const OAuthCallback: React.FC = () => {
               }, 2000)
             } else {
               // Fallback if we don't have an integration ID
-              setSuccessMessage('Workspace connected successfully! Redirecting...')
+              setSuccessMessage(
+                'Workspace connected successfully! Redirecting...'
+              )
               setTimeout(() => {
                 navigate('/dashboard/integrations')
               }, 2000)

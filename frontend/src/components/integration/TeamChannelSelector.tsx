@@ -188,7 +188,9 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
 
     // If we have initialSelection, use it
     if (initialSelection.length > 0) {
-      console.log(`📋 Using provided initial selection: ${initialSelection.length} channels`)
+      console.log(
+        `📋 Using provided initial selection: ${initialSelection.length} channels`
+      )
       setSelectedChannelIds(initialSelection)
     } else {
       // Otherwise, process channels to find selected ones
@@ -315,7 +317,7 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
   const handleSelectAll = () => {
     // In single select mode, we don't allow selecting all
     if (!multiSelect) return
-    
+
     const filteredIds = paginatedChannels.map((channel) => channel.id)
     setSelectedChannelIds((prev) => {
       // Add all filtered channel IDs that aren't already in the selection
@@ -403,7 +405,7 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
       setIsSaving(false)
     }
   }
-  
+
   // Notify parent component when selection changes
   useEffect(() => {
     if (onSelectionChange) {
@@ -522,7 +524,9 @@ const TeamChannelSelector: React.FC<TeamChannelSelectorProps> = ({
     <Box>
       <Flex mb={3} justifyContent="space-between" alignItems="center">
         <Heading size="md">
-          {multiSelect ? "Channel Selection (Multi-select)" : "Channel Selection"}
+          {multiSelect
+            ? 'Channel Selection (Multi-select)'
+            : 'Channel Selection'}
         </Heading>
 
         <Button
