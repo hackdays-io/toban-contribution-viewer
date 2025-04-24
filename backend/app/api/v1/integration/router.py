@@ -1878,12 +1878,35 @@ async def analyze_integration_resource(
             "reaction_count": reaction_count,
         }
 
-        # Generate a proper UUID for the analysis_id
+        # Generate proper UUIDs for both the report and analysis
+        from datetime import datetime
+        from app.models.reports import CrossResourceReport
+        
+        report_uuid = uuid.uuid4()
         analysis_uuid = uuid.uuid4()
         
         try:
-            # Create a ResourceAnalysis record in the database
-            from datetime import datetime
+            # First create a CrossResourceReport to link the ResourceAnalysis to
+            # This is needed because cross_resource_report_id in ResourceAnalysis is non-nullable
+            cross_report = CrossResourceReport(
+                id=report_uuid,
+                team_id=workspace.team_id,  # Get the team_id from the workspace
+                title=f"Analysis of {channel.name}",
+                description=f"Single-channel analysis of {channel.name} from {start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}",
+                status=ReportStatus.COMPLETED,
+                date_range_start=start_date,
+                date_range_end=end_date,
+                report_parameters={
+                    "include_threads": include_threads,
+                    "include_reactions": include_reactions,
+                    "model": model,
+                    "single_channel_analysis": True,  # Mark as a single-channel analysis
+                },
+                comprehensive_analysis=analysis_results.get("channel_summary", ""),
+                comprehensive_analysis_generated_at=datetime.utcnow(),
+                model_used=analysis_results.get("model_used", model or ""),
+            )
+            db.add(cross_report)
             
             # Clean up the analysis results for storage
             # Ensure we handle special characters properly in text fields
@@ -1912,7 +1935,7 @@ async def analyze_integration_resource(
             # Store the analysis in the ResourceAnalysis table
             resource_analysis = ResourceAnalysis(
                 id=analysis_uuid,  # Use the generated UUID
-                cross_resource_report_id=None,  # Not part of a cross-resource report
+                cross_resource_report_id=report_uuid,  # Link to the created report
                 integration_id=integration_id,
                 resource_id=channel.id,
                 resource_type=AnalysisResourceType.SLACK_CHANNEL,
@@ -1936,9 +1959,15 @@ async def analyze_integration_resource(
             
             db.add(resource_analysis)
             await db.commit()
-            logger.info(f"Stored analysis in ResourceAnalysis table with ID: {analysis_uuid}")
+            logger.info(f"Stored analysis in ResourceAnalysis table with ID: {analysis_uuid}, linked to report: {report_uuid}")
         except Exception as e:
             logger.error(f"Error storing analysis in ResourceAnalysis table: {str(e)}", exc_info=True)
+            # Rollback the transaction to prevent half-committed state
+            try:
+                await db.rollback()
+                logger.info("Transaction rolled back successfully after error")
+            except Exception as rollback_error:
+                logger.error(f"Error during transaction rollback: {str(rollback_error)}")
             # We'll continue with the API response even if storage fails
 
         # Build the response with the correct date period
