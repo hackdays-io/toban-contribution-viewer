@@ -167,7 +167,15 @@ async def get_channel_users(
 class SlackMessageService:
     """
     Service for retrieving, processing, and storing Slack messages.
+    
+    Note: This service doesn't store a database session in the constructor,
+    but instead requires it to be passed to each method to ensure sessions are
+    properly scoped.
     """
+    
+    def __init__(self):
+        """Initialize the SlackMessageService."""
+        pass
 
     @staticmethod
     async def get_channel_messages(

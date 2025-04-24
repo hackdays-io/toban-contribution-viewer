@@ -13,7 +13,7 @@ from app.models.reports import AnalysisType
 from app.models.slack import SlackChannel, SlackUser
 from app.services.analysis.base import ResourceAnalysisService
 from app.services.llm.openrouter import OpenRouterService
-from app.services.slack.messages import SlackMessageService
+from app.services.slack.messages import SlackMessageService, get_channel_messages
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +35,7 @@ class SlackChannelAnalysisService(ResourceAnalysisService):
         """
         super().__init__(db)
         self.llm_client = llm_client or OpenRouterService()
-        self.message_service = SlackMessageService(db)
+        self.message_service = SlackMessageService()
 
     async def fetch_data(
         self,
@@ -89,11 +89,13 @@ class SlackChannelAnalysisService(ResourceAnalysisService):
         message_limit = parameters.get("message_limit", 1000) if parameters else 1000
 
         # Get messages within the date range
-        messages = await self.message_service.get_channel_messages(
-            channel_id=resource_id,
+        messages = await get_channel_messages(
+            db=self.db,
+            workspace_id=str(integration.id),
+            channel_id=str(resource_id),
             start_date=start_date,
             end_date=end_date,
-            include_threads=include_threads,
+            include_replies=include_threads,
             limit=message_limit,
         )
 
