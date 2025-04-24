@@ -49,6 +49,7 @@ import useIntegration from '../../context/useIntegration'
 import integrationService, {
   ServiceResource,
   AnalysisOptions,
+  ResourceType,
 } from '../../lib/integrationService'
 import env from '../../config/env'
 import TeamChannelSelector from '../../components/integration/TeamChannelSelector'
