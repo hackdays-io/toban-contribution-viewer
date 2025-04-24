@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, FC } from 'react'
 import {
   Badge,
   Box,
@@ -77,6 +77,267 @@ interface Channel extends ServiceResource {
   purpose?: string
 }
 
+interface ChannelAnalysisListProps {
+  title: string;
+  reportResult: Record<string, unknown> | null;
+  currentResources: ServiceResource[];
+  integrationId: string;
+  filterFn?: (analysis: Record<string, unknown>) => boolean;
+  contentField: string;
+  emptyMessage?: string;
+  workspaceId?: string;
+}
+
+/**
+ * A reusable component for displaying individual channel analyses in the team analysis view
+ */
+const ChannelAnalysisList: FC<ChannelAnalysisListProps> = ({
+  title,
+  reportResult,
+  currentResources,
+  integrationId, 
+  filterFn = () => true,
+  contentField,
+  emptyMessage = "No information available.",
+  workspaceId
+}) => {
+  // Use react-router's useNavigate hook for navigation
+  const navigate = useNavigate();
+  // Function to format plain text with proper formatting and support for markdown-like syntax
+  const renderPlainText = (text: string | undefined) => {
+    // Handle undefined or empty text
+    if (!text || text.trim().length === 0) {
+      return <Text color="gray.500">No content available</Text>
+    }
+
+    // Clean up text content if it has strange characters (common in JSON parsing errors)
+    let cleanedText = text
+
+    // Check if text is just "{}" or similar
+    if (/^\s*\{\s*\}\s*$/.test(cleanedText)) {
+      return <Text color="gray.500">No content available</Text>
+    }
+
+    // Fix escaped newlines in the text
+    cleanedText = cleanedText.replace(/\\n/g, '\n')
+
+    // Check if this is plain text (like "Analysis of X channels")
+    // This is especially for team analysis reports where channel_summary is not JSON
+    const isLikelyPlainText = 
+      /^[A-Za-z]/.test(cleanedText.trim()) && 
+      !cleanedText.includes('```json') &&
+      !(cleanedText.trim().startsWith('{') && cleanedText.trim().endsWith('}'));
+    
+    // For plain text content, just return it directly without JSON processing
+    if (isLikelyPlainText) {
+      return (
+        <Box className="formatted-text">
+          {cleanedText.split('\n').map((paragraph, index) => (
+            <Box key={index} mb={2}>
+              {paragraph.trim() ? (
+                <MessageText
+                  text={paragraph}
+                  workspaceId={workspaceId || ''}
+                  resolveMentions={true}
+                  fallbackToSimpleFormat={true}
+                />
+              ) : (
+                <Box height="0.7em" />
+              )}
+            </Box>
+          ))}
+        </Box>
+      );
+    }
+
+    // If text contains curly braces and quotes, it might be JSON-like structure
+    // Try to clean it up by removing quotes and braces
+    if (
+      cleanedText.includes('{') &&
+      cleanedText.includes('}') &&
+      cleanedText.includes('"')
+    ) {
+      try {
+        // First try to extract just the text content if it's in a "field": "value" format
+        const contentMatch = cleanedText.match(/"[^"]+"\s*:\s*"([^"]*)"/)
+        if (contentMatch && contentMatch[1]) {
+          cleanedText = contentMatch[1].replace(/\\n/g, '\n')
+        } else {
+          // Remove all JSON syntax characters
+          cleanedText = cleanedText
+            .replace(/[{}"]/g, '') // Remove braces and quotes
+            .replace(/[\w_]+\s*:/g, '') // Remove field names
+            .replace(/,\s*/g, '\n') // Replace commas with newlines
+            .trim()
+        }
+      } catch (e) {
+        console.warn('Error cleaning text content:', e)
+      }
+    }
+
+    // First check if text might have markdown-style headers
+    const hasMarkdownHeaders = /^#+\s+.+$/m.test(cleanedText)
+
+    return (
+      <Box className="formatted-text">
+        {cleanedText.split('\n').map((paragraph, index) => {
+          if (!paragraph.trim()) {
+            return <Box key={index} height="0.7em" />
+          }
+
+          // Special handling for markdown-like headers
+          if (hasMarkdownHeaders && /^(#+)\s+(.+)$/.test(paragraph)) {
+            const match = paragraph.match(/^(#+)\s+(.+)$/)
+            if (match) {
+              const level = match[1].length
+              const headerText = match[2]
+
+              // Don't render headers that match our tab names to avoid duplication
+              const isTabHeader = [
+                'Summary',
+                'Topics',
+                'Contributors',
+                'Highlights',
+              ].some((tab) =>
+                headerText.toLowerCase().includes(tab.toLowerCase())
+              )
+
+              if (isTabHeader) {
+                return <Box key={index} height="0.5em" /> // Skip this header
+              }
+
+              // Render other headers based on level
+              const size = level === 1 ? 'lg' : level === 2 ? 'md' : 'sm'
+              return (
+                <Heading
+                  as={`h${Math.min(level, 6)}`}
+                  size={size}
+                  mt={4}
+                  mb={2}
+                  key={index}
+                >
+                  {headerText}
+                </Heading>
+              )
+            }
+          }
+
+          // Handle bullet lists
+          if (
+            paragraph.trim().startsWith('- ') ||
+            paragraph.trim().startsWith('* ')
+          ) {
+            return (
+              <Box key={index} mb={2} pl={4} display="flex">
+                <Box as="span" mr={2}>
+                  •
+                </Box>
+                <Box flex="1">
+                  <MessageText
+                  text={paragraph.trim().substring(2)}
+                  workspaceId={workspaceId || ''}
+                  resolveMentions={true}
+                  fallbackToSimpleFormat={true}
+                />
+                </Box>
+              </Box>
+            )
+          }
+
+          // Regular paragraph handling
+          return (
+            <Box key={index} mb={2}>
+              <MessageText
+                text={paragraph}
+                workspaceId={workspaceId || ''}
+                resolveMentions={true}
+                fallbackToSimpleFormat={true}
+              />
+            </Box>
+          )
+        })}
+      </Box>
+    )
+  }
+
+  // Filter analyses using the provided filter function
+  const filteredAnalyses = reportResult?.resource_analyses?.filter(filterFn) || [];
+  
+  if (!reportResult || !reportResult.resource_analyses || reportResult.resource_analyses.length === 0) {
+    return null;
+  }
+
+  return (
+    <>
+      <Heading size="md" mb={3} mt={6}>{title}</Heading>
+      {filteredAnalyses.length > 0 ? (
+        filteredAnalyses.map((channelAnalysis) => (
+          <Card 
+            key={channelAnalysis.id}
+            variant="outline" 
+            mb={4}
+            boxShadow="sm"
+          >
+            <CardHeader pb={1}>
+              <Flex justify="space-between" align="center">
+                <Heading size="sm" color="purple.600">
+                  {/* Try to get channel name from different sources with fallbacks */}
+                  {(channelAnalysis.results?.channel_name || 
+                     channelAnalysis.channel_name || 
+                     channelAnalysis.resource_name || 
+                     // Try to find the resource in currentResources
+                     currentResources.find(r => r.id === channelAnalysis.resource_id)?.name ||
+                     // Fallback to formatted resource ID if name not available
+                     `Channel ${channelAnalysis.resource_id.substring(0, 8)}...`)}
+                </Heading>
+                <Badge colorScheme={channelAnalysis.status === 'COMPLETED' ? 'green' : channelAnalysis.status === 'FAILED' ? 'red' : 'yellow'}>
+                  {channelAnalysis.status}
+                </Badge>
+              </Flex>
+            </CardHeader>
+            <CardBody pt={2}>
+              {channelAnalysis[contentField] ? (
+                <Box className="analysis-content">
+                  {renderPlainText(
+                    typeof channelAnalysis[contentField] === 'string'
+                      ? channelAnalysis[contentField].replace(/(\d+\.\s)/g, '\n$1')
+                      : "No content available"
+                  )}
+                </Box>
+              ) : (
+                <Text fontSize="sm" color="gray.500">{emptyMessage}</Text>
+              )}
+              {channelAnalysis.status === 'COMPLETED' && (
+                <Button 
+                  size="sm" 
+                  colorScheme="purple" 
+                  variant="outline" 
+                  mt={3}
+                  onClick={() => {
+                    // Get analysis data for debugging
+                    const resourceId = String(channelAnalysis.resource_id);
+                    const analysisId = String(channelAnalysis.id);
+                    console.log('Channel analysis debug:', { resourceId, analysisId });
+                    
+                    // Navigate to the individual analysis page
+                    navigate(`/dashboard/integrations/${integrationId}/channels/${resourceId}/analysis/${analysisId}`);
+                  }}
+                >
+                  View Full Analysis
+                </Button>
+              )}
+            </CardBody>
+          </Card>
+        ))
+      ) : (
+        <Text fontSize="sm" color="gray.500" mt={4}>
+          No completed channel analyses with {contentField.replace(/_/g, ' ')} information available.
+        </Text>
+      )}
+    </>
+  );
+};
+
 /**
  * Improved Analysis Result Page component that provides a more accessible
  * and feature-rich way to view analysis results.
@@ -101,10 +362,13 @@ const TeamAnalysisResultPage: React.FC = () => {
   const [analysis, setAnalysis] = useState<AnalysisResponse | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [activeTab, setActiveTab] = useState(0)
+  const [reportResult, setReportResult] = useState<Record<string, unknown> | null>(null)
   const highlightBg = useColorModeValue('purple.50', 'purple.800')
 
-  // Create share URL for the current analysis based on URL type
+  // Check if this is a team analysis by URL pattern
   const isTeamAnalysis = window.location.pathname.includes('/team-analysis/');
+  
+  // Create share URL for the current analysis based on URL type
   const shareUrl = isTeamAnalysis
     ? `${window.location.origin}/dashboard/integrations/${integrationId}/team-analysis/${analysisId}`
     : `${window.location.origin}/dashboard/integrations/${integrationId}/channels/${channelId}/analysis/${analysisId}`;
@@ -170,17 +434,18 @@ const TeamAnalysisResultPage: React.FC = () => {
     }
     
     // Now fetch the cross-resource report
-    const reportResult = await integrationService.getCrossResourceReport(
+    const crossResourceReport = await integrationService.getCrossResourceReport(
       teamId,
-      analysisId || ''
+      analysisId || '',
+      true // includeAnalyses=true to get all the resource analyses
     );
       
     // Check if there was an error
-    if (integrationService.isApiError(reportResult)) {
-      console.error("Error fetching cross-resource report:", reportResult);
+    if (integrationService.isApiError(crossResourceReport)) {
+      console.error("Error fetching cross-resource report:", crossResourceReport);
       toast({
         title: 'Error',
-        description: `Failed to load team analysis: ${reportResult.message}`,
+        description: `Failed to load team analysis: ${crossResourceReport.message}`,
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -188,32 +453,41 @@ const TeamAnalysisResultPage: React.FC = () => {
       return;
     }
     
+    // Store the complete report result for rendering individual analyses
+    setReportResult(crossResourceReport);
+    
     // Extract data from the report to match our Analysis interface format
     // This is a temporary solution until we implement proper cross-resource report handling
-    if (reportResult.resource_analyses && reportResult.resource_analyses.length > 0) {
+    if (crossResourceReport.resource_analyses && crossResourceReport.resource_analyses.length > 0) {
       // Use the first resource analysis as a template
-      const firstAnalysis = reportResult.resource_analyses[0];
+      const firstAnalysis = crossResourceReport.resource_analyses[0];
       
+      // Get the report description for the channel_summary field, with fallbacks
+      const reportDescription = crossResourceReport.description || 
+        `Team analysis of ${crossResourceReport.resource_analyses.length} channels from ${crossResourceReport.date_range_start} to ${crossResourceReport.date_range_end}`;
+
       // Construct an analysis object using data from the report and first resource analysis
       const adaptedAnalysis: AnalysisResponse = {
-        id: reportResult.id,
+        id: crossResourceReport.id,
         channel_id: firstAnalysis.resource_id,
-        channel_name: reportResult.title || "Cross-resource Report",
-        start_date: reportResult.date_range_start,
-        end_date: reportResult.date_range_end,
-        message_count: reportResult.total_resources || 0,
-        participant_count: reportResult.completed_analyses || 0,
-        thread_count: reportResult.resource_analyses?.length || 0,
+        channel_name: crossResourceReport.title || "Cross-resource Report",
+        start_date: crossResourceReport.date_range_start,
+        end_date: crossResourceReport.date_range_end,
+        message_count: crossResourceReport.total_resources || 0,
+        participant_count: crossResourceReport.completed_analyses || 0,
+        thread_count: crossResourceReport.resource_analyses?.length || 0,
         reaction_count: 0,
-        channel_summary: reportResult.description || "Cross-resource analysis report",
+        // Always set channel_summary, which is important for UI rendering
+        channel_summary: reportDescription,
         topic_analysis: "Multiple resource analysis - see individual analyses for details",
         contributor_insights: "Multiple resource analysis - see individual analyses for details",
         key_highlights: "Multiple resource analysis - see individual analyses for details",
         model_used: firstAnalysis.model_used || "N/A",
-        generated_at: reportResult.created_at || new Date().toISOString(),
+        generated_at: crossResourceReport.created_at || new Date().toISOString(),
         workspace_id: directIntegration ? directIntegration.id : currentIntegration.id // Use integration ID as workspace ID for display
       };
       
+      console.log("Created adapted analysis for team report:", adaptedAnalysis);
       setAnalysis(adaptedAnalysis);
     } else {
       toast({
@@ -223,6 +497,28 @@ const TeamAnalysisResultPage: React.FC = () => {
         duration: 5000,
         isClosable: true,
       });
+      
+      // Create a minimal analysis object so the UI doesn't break
+      const emptyAnalysis: AnalysisResponse = {
+        id: crossResourceReport.id || analysisId || '',
+        channel_id: '',
+        channel_name: crossResourceReport.title || "Cross-resource Report",
+        start_date: crossResourceReport.date_range_start || new Date().toISOString(),
+        end_date: crossResourceReport.date_range_end || new Date().toISOString(),
+        message_count: 0,
+        participant_count: 0,
+        thread_count: 0,
+        reaction_count: 0,
+        channel_summary: "No analyses found for this team report.",
+        topic_analysis: "",
+        contributor_insights: "",
+        key_highlights: "",
+        model_used: "N/A",
+        generated_at: crossResourceReport.created_at || new Date().toISOString(),
+        workspace_id: directIntegration ? directIntegration.id : (currentIntegration?.id || '')
+      };
+      
+      setAnalysis(emptyAnalysis);
     }
   }
 
@@ -268,15 +564,13 @@ const TeamAnalysisResultPage: React.FC = () => {
       if (integrationId) {
         try {
           await fetchIntegration(integrationId);
-        } catch (integrationError) {
+        } catch (error) {
           // Error will be handled later in the direct API call
+          console.log('Integration context fetch failed, will try direct API call:', error);
         }
       }
 
-      // Check if this is a team analysis (cross-resource) result by checking the URL pattern
-      const isTeamAnalysis = window.location.pathname.includes('/team-analysis/');
-
-      // Handle appropriate analysis type
+      // Handle appropriate analysis type based on the isTeamAnalysis flag
       if (isTeamAnalysis) {
         await handleTeamAnalysis();
       } else {
@@ -606,7 +900,8 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
   /**
    * Render plain text with proper formatting and support for markdown-like syntax
    */
-  const renderPlainText = (text: string) => {
+  const renderPlainText = (text: string | undefined) => {
+    // Handle undefined or empty text
     if (!text || text.trim().length === 0) {
       return <Text color="gray.500">No content available</Text>
     }
@@ -621,6 +916,36 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
 
     // Fix escaped newlines in the text
     cleanedText = cleanedText.replace(/\\n/g, '\n')
+
+    // Check if this is plain text (like "Analysis of X channels")
+    // This is especially for team analysis reports where channel_summary is not JSON
+    const isLikelyPlainText = 
+      /^[A-Za-z]/.test(cleanedText.trim()) && 
+      !cleanedText.includes('```json') &&
+      !(cleanedText.trim().startsWith('{') && cleanedText.trim().endsWith('}'));
+    
+    // For plain text content, just return it directly without JSON processing
+    if (isLikelyPlainText) {
+      console.log('Content appears to be plain text, rendering directly');
+      return (
+        <Box className="formatted-text">
+          {cleanedText.split('\n').map((paragraph, index) => (
+            <Box key={index} mb={2}>
+              {paragraph.trim() ? (
+                <MessageText
+                  text={paragraph}
+                  workspaceId={effectiveWorkspaceId || ''}
+                  resolveMentions={true}
+                  fallbackToSimpleFormat={true}
+                />
+              ) : (
+                <Box height="0.7em" />
+              )}
+            </Box>
+          ))}
+        </Box>
+      );
+    }
 
     // If text contains curly braces and quotes, it might be JSON-like structure
     // Try to clean it up by removing quotes and braces
@@ -915,8 +1240,46 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
     if (!hasEmptyFields) {
       return analysis
     }
+    
     const extracted = { ...analysis }
     const summary = analysis.channel_summary
+    
+    // Check if summary is plain text (not JSON) 
+    // For team analysis, the channel_summary is often just plain text like "Analysis of X Slack channels"
+    const isLikelyPlainText = 
+      !summary.includes('```json') && 
+      !summary.trim().startsWith('{') && 
+      !summary.includes('"channel_summary"') &&
+      !summary.includes('"topic_analysis"');
+    
+    if (isLikelyPlainText) {
+      console.log('Channel summary appears to be plain text, not JSON. Using as-is.');
+      
+      // For team analysis reports with plain text, just use the channel_summary as-is
+      // and set the fixedChannelSummary property
+      extracted.fixedChannelSummary = summary;
+      
+      // For the other fields, use defaults or set them empty if needed
+      if (!extracted.topic_analysis || extracted.topic_analysis.trim() === '') {
+        extracted.fixedTopicAnalysis = 'Team analysis summary combines data from multiple channels.';
+      } else {
+        extracted.fixedTopicAnalysis = extracted.topic_analysis;
+      }
+      
+      if (!extracted.contributor_insights || extracted.contributor_insights.trim() === '') {
+        extracted.fixedContributorInsights = 'See individual channel analyses for detailed contributor insights.';
+      } else {
+        extracted.fixedContributorInsights = extracted.contributor_insights;
+      }
+      
+      if (!extracted.key_highlights || extracted.key_highlights.trim() === '') {
+        extracted.fixedKeyHighlights = 'Cross-channel key highlights not available.';
+      } else {
+        extracted.fixedKeyHighlights = extracted.key_highlights;
+      }
+      
+      return extracted;
+    }
 
     // Try to extract JSON from the summary
     let jsonContent = null
@@ -947,6 +1310,11 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
         jsonContent = JSON.parse(cleanedSummary)
       } catch (e) {
         console.warn('Failed to parse entire summary as JSON', e)
+        
+        // Since we know it looks like JSON but failed to parse, 
+        // set up fallback plain text content to avoid display issues
+        extracted.fixedChannelSummary = summary;
+        return extracted;
       }
     }
 
@@ -977,7 +1345,6 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
     }
 
     // Try regex extraction as a fallback
-
     const extractSection = (key: string): string | null => {
       // Use a more lenient regex to handle various JSON formats
       // This handles both "key": "value" format and "key":"value" format
@@ -1040,6 +1407,15 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
     effective: effectiveWorkspaceId
   });
   
+  // Check for null analysis state before continuing (safety check)
+  const hasAnalysisData = analysis !== null;
+  console.log('Analysis data available:', hasAnalysisData);
+  
+  // Create a default analysis object if none exists
+  if (!hasAnalysisData && !isLoading) {
+    console.warn('No analysis data available, this should not happen normally');
+  }
+  
   // Try to extract missing sections if needed
   let enrichedAnalysis = analysis ? extractMissingFields() : null
 
@@ -1048,21 +1424,52 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
     const fixedAnalysis = { ...enrichedAnalysis }
 
     if (analysis && analysis.channel_summary) {
-      try {
-        // Try to parse the channel_summary as JSON
-        const parsedJson = JSON.parse(analysis.channel_summary)
-
-        // Use the JSON values directly
-        fixedAnalysis.fixedChannelSummary = parsedJson.channel_summary || ''
-        fixedAnalysis.fixedTopicAnalysis = parsedJson.topic_analysis || ''
-        fixedAnalysis.fixedContributorInsights =
-          parsedJson.contributor_insights || ''
-        fixedAnalysis.fixedKeyHighlights = parsedJson.key_highlights || ''
-
-        enrichedAnalysis = fixedAnalysis
-        return enrichedAnalysis
-      } catch (e) {
-        console.warn('Failed to parse channel_summary as JSON:', e)
+      // Check if content is JSON or plain text
+      // (e.g., plain text starts with letters like "Analysis of...")
+      const isObviouslyNotJson = 
+        /^[A-Za-z]/.test(analysis.channel_summary.trim()) || 
+        !analysis.channel_summary.trim().startsWith('{');
+      
+      if (isObviouslyNotJson) {
+        console.log('Channel summary appears to be plain text, using as-is');
+        fixedAnalysis.fixedChannelSummary = analysis.channel_summary;
+        
+        // For team analysis with plain text, just use default placeholder texts
+        if (window.location.pathname.includes('/team-analysis/')) {
+          fixedAnalysis.fixedTopicAnalysis = 
+            enrichedAnalysis.topic_analysis || 
+            'Team analysis summary combines data from multiple channels.';
+            
+          fixedAnalysis.fixedContributorInsights = 
+            enrichedAnalysis.contributor_insights || 
+            'See individual channel analyses for detailed contributor insights.';
+            
+          fixedAnalysis.fixedKeyHighlights = 
+            enrichedAnalysis.key_highlights || 
+            'Cross-channel key highlights not available.';
+        }
+        
+        enrichedAnalysis = fixedAnalysis;
+      } else {
+        // Only try to parse as JSON if it looks like JSON (starts with {)
+        try {
+          console.log('Trying to parse channel_summary as JSON');
+          // Try to parse the channel_summary as JSON
+          const parsedJson = JSON.parse(analysis.channel_summary);
+  
+          // Use the JSON values directly
+          fixedAnalysis.fixedChannelSummary = parsedJson.channel_summary || '';
+          fixedAnalysis.fixedTopicAnalysis = parsedJson.topic_analysis || '';
+          fixedAnalysis.fixedContributorInsights =
+            parsedJson.contributor_insights || '';
+          fixedAnalysis.fixedKeyHighlights = parsedJson.key_highlights || '';
+  
+          enrichedAnalysis = fixedAnalysis;
+        } catch (e) {
+          console.warn('Failed to parse channel_summary as JSON:', e);
+          // Use the channel_summary directly as fallback
+          fixedAnalysis.fixedChannelSummary = analysis.channel_summary;
+        }
       }
     }
 
@@ -1110,8 +1517,12 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
     enrichedAnalysis = fixedAnalysis
   }
 
-  // Don't render slack components if no workspace ID is available
-  if (!effectiveWorkspaceId && !isLoading) {
+  // For team analyses, we can proceed even without a workspace ID
+  // For channel analyses, we need the workspace ID
+  const shouldShowErrorScreen = !effectiveWorkspaceId && !isLoading && !isTeamAnalysis;
+  
+  // Don't render slack components if no workspace ID is available and it's not a team analysis
+  if (shouldShowErrorScreen) {
     return (
       <Box p={4}>
         {/* Render the same content without the SlackUserCacheProvider */}
@@ -1238,7 +1649,7 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
 
   return (
     <SlackUserCacheProvider
-      workspaceId={effectiveWorkspaceId || ''}
+      workspaceId={effectiveWorkspaceId || (isTeamAnalysis ? integrationId || '' : '')}
     >
       {/* Apply custom CSS to hide duplicate headings */}
       <style>{customStyles}</style>
@@ -1446,10 +1857,11 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
                 height="100%"
                 bg={highlightBg}
                 boxShadow="sm"
+                mb={4}
               >
                 <CardHeader pb={1}>
                   <Heading size="md" color="purple.700">
-                    Channel Summary
+                    {window.location.pathname.includes('/team-analysis/') ? "Team Summary" : "Channel Summary"}
                   </Heading>
                 </CardHeader>
                 <CardBody pt={2}>
@@ -1464,12 +1876,30 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
                     }}
                   >
                     {renderPlainText(
-                      enrichedAnalysis.fixedChannelSummary ||
-                        fixedChannelSummary
+                      typeof enrichedAnalysis?.fixedChannelSummary === 'string' 
+                        ? enrichedAnalysis.fixedChannelSummary 
+                        : typeof fixedChannelSummary === 'string'
+                          ? fixedChannelSummary
+                          : typeof analysis?.channel_summary === 'string' 
+                            ? analysis.channel_summary 
+                            : "No summary available"
                     )}
                   </Box>
                 </CardBody>
               </Card>
+              
+              {/* Display Individual Channel Summaries for team analysis */}
+              {isTeamAnalysis && (
+                <ChannelAnalysisList
+                  title="Individual Channel Summaries"
+                  reportResult={reportResult}
+                  currentResources={currentResources}
+                  integrationId={integrationId || ''}
+                  contentField="resource_summary"
+                  emptyMessage="No summary available for this channel."
+                  workspaceId={effectiveWorkspaceId}
+                />
+              )}
             </TabPanel>
 
             {/* Topics Tab */}
@@ -1479,10 +1909,11 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
                 height="100%"
                 bg={highlightBg}
                 boxShadow="sm"
+                mb={4}
               >
                 <CardHeader pb={1}>
                   <Heading size="md" color="purple.700">
-                    Topic Analysis
+                    Team Topic Analysis
                   </Heading>
                 </CardHeader>
                 <CardBody pt={2}>
@@ -1500,12 +1931,17 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
                       }}
                     >
                       {renderPlainText(
-                        (
-                          enrichedAnalysis.fixedTopicAnalysis ||
-                          enrichedAnalysis.topic_analysis
-                        ).replace(/(\d+\.\s)/g, '\n$1')
+                        (typeof enrichedAnalysis.fixedTopicAnalysis === 'string' 
+                          ? enrichedAnalysis.fixedTopicAnalysis 
+                          : typeof enrichedAnalysis.topic_analysis === 'string'
+                            ? enrichedAnalysis.topic_analysis
+                            : "No topic analysis available").replace(/(\d+\.\s)/g, '\n$1')
                       )}
                     </Box>
+                  ) : window.location.pathname.includes('/team-analysis/') ? (
+                    <Text fontSize="sm">
+                      This team analysis includes data from multiple channels. See individual channel analyses for detailed topic information.
+                    </Text>
                   ) : (
                     <Text fontSize="sm" color="gray.500">
                       No topic analysis data available
@@ -1513,6 +1949,20 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
                   )}
                 </CardBody>
               </Card>
+
+              {/* Display Individual Channel Topic Analyses for team analysis */}
+              {isTeamAnalysis && (
+                <ChannelAnalysisList
+                  title="Individual Channel Topic Analyses"
+                  reportResult={reportResult}
+                  currentResources={currentResources}
+                  integrationId={integrationId || ''}
+                  filterFn={(analysis) => analysis.status === 'COMPLETED' && analysis.topic_analysis}
+                  contentField="topic_analysis"
+                  emptyMessage="No topic analysis available for this channel."
+                  workspaceId={effectiveWorkspaceId}
+                />
+              )}
             </TabPanel>
 
             {/* Contributors Tab */}
@@ -1522,10 +1972,11 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
                 height="100%"
                 bg={highlightBg}
                 boxShadow="sm"
+                mb={4}
               >
                 <CardHeader pb={1}>
                   <Heading size="md" color="purple.700">
-                    Contributor Insights
+                    Team Contributor Insights
                   </Heading>
                 </CardHeader>
                 <CardBody pt={2}>
@@ -1543,12 +1994,17 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
                       }}
                     >
                       {renderPlainText(
-                        (
-                          enrichedAnalysis.fixedContributorInsights ||
-                          enrichedAnalysis.contributor_insights
-                        ).replace(/(\d+\.\s)/g, '\n$1')
+                        (typeof enrichedAnalysis.fixedContributorInsights === 'string' 
+                          ? enrichedAnalysis.fixedContributorInsights 
+                          : typeof enrichedAnalysis.contributor_insights === 'string'
+                            ? enrichedAnalysis.contributor_insights
+                            : "No contributor insights available").replace(/(\d+\.\s)/g, '\n$1')
                       )}
                     </Box>
+                  ) : window.location.pathname.includes('/team-analysis/') ? (
+                    <Text fontSize="sm">
+                      This team analysis includes data from multiple channels. See individual channel analyses for detailed contributor information.
+                    </Text>
                   ) : (
                     <Text fontSize="sm" color="gray.500">
                       No contributor insights data available
@@ -1556,6 +2012,20 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
                   )}
                 </CardBody>
               </Card>
+
+              {/* Display Individual Channel Contributor Insights for team analysis */}
+              {isTeamAnalysis && (
+                <ChannelAnalysisList
+                  title="Individual Channel Contributor Insights"
+                  reportResult={reportResult}
+                  currentResources={currentResources}
+                  integrationId={integrationId || ''}
+                  filterFn={(analysis) => analysis.status === 'COMPLETED' && analysis.contributor_insights}
+                  contentField="contributor_insights"
+                  emptyMessage="No contributor insights available for this channel."
+                  workspaceId={effectiveWorkspaceId}
+                />
+              )}
             </TabPanel>
 
             {/* Highlights Tab */}
@@ -1565,10 +2035,11 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
                 height="100%"
                 bg={highlightBg}
                 boxShadow="sm"
+                mb={4}
               >
                 <CardHeader pb={1}>
                   <Heading size="md" color="purple.700">
-                    Key Highlights
+                    Team Key Highlights
                   </Heading>
                 </CardHeader>
                 <CardBody pt={2}>
@@ -1586,12 +2057,17 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
                       }}
                     >
                       {renderPlainText(
-                        (
-                          enrichedAnalysis.fixedKeyHighlights ||
-                          enrichedAnalysis.key_highlights
-                        ).replace(/(\d+\.\s)/g, '\n$1')
+                        (typeof enrichedAnalysis.fixedKeyHighlights === 'string' 
+                          ? enrichedAnalysis.fixedKeyHighlights 
+                          : typeof enrichedAnalysis.key_highlights === 'string'
+                            ? enrichedAnalysis.key_highlights
+                            : "No key highlights available").replace(/(\d+\.\s)/g, '\n$1')
                       )}
                     </Box>
+                  ) : window.location.pathname.includes('/team-analysis/') ? (
+                    <Text fontSize="sm">
+                      This team analysis includes data from multiple channels. See individual channel analyses for detailed highlights.
+                    </Text>
                   ) : (
                     <Text fontSize="sm" color="gray.500">
                       No key highlights data available
@@ -1599,6 +2075,20 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
                   )}
                 </CardBody>
               </Card>
+
+              {/* Display Individual Channel Key Highlights for team analysis */}
+              {isTeamAnalysis && (
+                <ChannelAnalysisList
+                  title="Individual Channel Highlights"
+                  reportResult={reportResult}
+                  currentResources={currentResources}
+                  integrationId={integrationId || ''}
+                  filterFn={(analysis) => analysis.status === 'COMPLETED' && analysis.key_highlights}
+                  contentField="key_highlights"
+                  emptyMessage="No key highlights available for this channel."
+                  workspaceId={effectiveWorkspaceId}
+                />
+              )}
             </TabPanel>
           </TabPanels>
         </Tabs>

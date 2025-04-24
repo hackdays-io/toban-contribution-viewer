@@ -1021,7 +1021,7 @@ class IntegrationService {
     teamId: string,
     reportId: string,
     includeAnalyses: boolean = true
-  ): Promise<Record<string, any> | ApiError> {
+  ): Promise<Record<string, unknown> | ApiError> {
     try {
       console.log(`[DEBUG] Getting cross-resource report ${reportId} for team ${teamId}`)
 
