@@ -134,7 +134,7 @@ function App() {
                 }
               />
 
-              {/* Legacy Slack routes removed */}
+              {/* Legacy Slack routes and workspace-specific analysis removed */}
 
               {/* Analysis Hub routes */}
               <Route
@@ -148,7 +148,7 @@ function App() {
                 }
               />
 
-              {/* Legacy Analytics routes (for backward compatibility) */}
+              {/* Redirect legacy analytics routes to the new analysis hub */}
               <Route
                 path="/dashboard/analytics"
                 element={
