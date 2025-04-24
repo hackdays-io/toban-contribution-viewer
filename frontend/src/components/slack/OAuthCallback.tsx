@@ -371,7 +371,7 @@ const OAuthCallback: React.FC = () => {
 
                 // Make a sync request
                 const syncResponse = await fetch(
-                  `${env.apiUrl}/integrations/${integrationId}/sync-resources`,
+                  `${env.apiUrl}/integrations/${integrationId}/sync`,
                   {
                     method: 'POST',
                     headers: {
