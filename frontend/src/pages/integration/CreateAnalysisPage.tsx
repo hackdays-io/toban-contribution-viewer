@@ -23,7 +23,6 @@ import {
   InputLeftElement,
   SimpleGrid,
   Spinner,
-  Switch,
   Text,
   useColorModeValue,
   useToast,
@@ -39,7 +38,6 @@ import {
   FiFileText,
   FiMessageSquare,
   FiRefreshCw,
-  FiSearch,
   FiSlack,
   FiUsers,
 } from 'react-icons/fi'
@@ -75,7 +73,8 @@ const CreateAnalysisPage: React.FC = () => {
 
   // UI state
   const [isLoading, setIsLoading] = useState(false)
-  const [isSelectedChannelsLoading, setIsSelectedChannelsLoading] = useState(false)
+  const [isSelectedChannelsLoading, setIsSelectedChannelsLoading] =
+    useState(false)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [isSyncing, setIsSyncing] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
@@ -224,13 +223,16 @@ const CreateAnalysisPage: React.FC = () => {
 
         // Save all channel resources
         setAllChannelResources(channelResources)
-        
+
         // Log channel names and IDs for debugging
-        console.log('Available channels:', channelResources.map(c => ({
-          id: c.id,
-          name: c.name,
-          selected: c.metadata?.is_selected_for_analysis
-        })))
+        console.log(
+          'Available channels:',
+          channelResources.map((c) => ({
+            id: c.id,
+            name: c.name,
+            selected: c.metadata?.is_selected_for_analysis,
+          }))
+        )
 
         // Find channels that are selected for analysis
         const selectedChannelResources = channelResources.filter(
@@ -376,15 +378,15 @@ const CreateAnalysisPage: React.FC = () => {
       loadSelectedChannelData(selectedChannel)
     }
   }, [selectedChannel, loadSelectedChannelData])
-  
+
   // Debug log for selected channels
   useEffect(() => {
     if (selectedChannels.length > 0) {
       console.log('Selected channels:', selectedChannels)
-      
+
       // Try to log the names too
-      const names = selectedChannels.map(id => {
-        const channel = allChannelResources.find(r => r.id === id)
+      const names = selectedChannels.map((id) => {
+        const channel = allChannelResources.find((r) => r.id === id)
         return channel ? `${id} (${channel.name})` : id
       })
       console.log('Selected channel names:', names)
@@ -398,7 +400,8 @@ const CreateAnalysisPage: React.FC = () => {
     if (!selectedIntegration || selectedChannels.length === 0) {
       toast({
         title: 'Selection Required',
-        description: 'Please select an integration and at least one channel to analyze',
+        description:
+          'Please select an integration and at least one channel to analyze',
         status: 'warning',
         duration: 5000,
         isClosable: true,
@@ -409,9 +412,18 @@ const CreateAnalysisPage: React.FC = () => {
     try {
       setIsAnalyzing(true)
 
-      // Format date parameters
-      const startDateParam = startDate ? new Date(startDate).toISOString() : ''
-      const endDateParam = endDate ? new Date(endDate).toISOString() : ''
+      // Format date parameters - use only date part without timezone
+      // The backend expects dates without timezone info to avoid offset-aware vs offset-naive comparison issues
+      const formatDateWithoutTimezone = (dateStr: string) => {
+        const date = new Date(dateStr)
+        // Format as YYYY-MM-DD with no timezone info
+        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+      }
+
+      const startDateParam = startDate
+        ? formatDateWithoutTimezone(startDate)
+        : ''
+      const endDateParam = endDate ? formatDateWithoutTimezone(endDate) : ''
 
       // Show toast to indicate analysis is starting
       toast({
@@ -424,8 +436,8 @@ const CreateAnalysisPage: React.FC = () => {
       })
 
       // Get the first channel from our selection
-      const primaryChannel = selectedChannels[0];
-      
+      const primaryChannel = selectedChannels[0]
+
       // Log the analysis parameters
       console.log('Running analysis with parameters:', {
         integrationId: selectedIntegration,
@@ -440,7 +452,7 @@ const CreateAnalysisPage: React.FC = () => {
       try {
         // Use the primary channel we defined above
         // No need to redefine it here
-        
+
         // Step 1: Sync general integration resources
         console.log('Syncing general integration data first...')
         await integrationService.syncResources(selectedIntegration)
@@ -454,11 +466,13 @@ const CreateAnalysisPage: React.FC = () => {
         url.searchParams.append(
           'start_date',
           startDateParam ||
-            new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString()
+            formatDateWithoutTimezone(
+              new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString()
+            )
         )
         url.searchParams.append(
           'end_date',
-          endDateParam || new Date().toISOString()
+          endDateParam || formatDateWithoutTimezone(new Date().toISOString())
         )
         url.searchParams.append('include_replies', includeThreads.toString())
 
@@ -541,64 +555,70 @@ const CreateAnalysisPage: React.FC = () => {
       }
 
       // We need to make sure we have the full resource information for selected channels
-      const selectedChannelsDetails = selectedChannels.map(channelId => {
-        const channel = allChannelResources.find(r => r.id === channelId);
+      const selectedChannelsDetails = selectedChannels.map((channelId) => {
+        const channel = allChannelResources.find((r) => r.id === channelId)
         if (!channel) {
-          console.warn(`Could not find details for channel ${channelId}`);
+          console.warn(`Could not find details for channel ${channelId}`)
         }
         return {
           id: channelId,
           name: channel?.name || 'Unknown Channel',
-          has_bot: channel?.metadata?.has_bot || false
-        };
-      });
-      
+          has_bot: channel?.metadata?.has_bot || false,
+        }
+      })
+
       // We already defined primaryChannel above
       // No need to redefine it here
-      
-      console.log('Selected channels for analysis:', selectedChannelsDetails);
-      
+
+      console.log('Selected channels for analysis:', selectedChannelsDetails)
+
       // Show how many channels are being analyzed
       toast({
         title: `Analyzing ${selectedChannels.length} channels`,
-        description: selectedChannels.length > 1 
-          ? 'Multiple channels selected. Creating a cross-resource analysis.' 
-          : 'Analyzing single channel.',
+        description:
+          selectedChannels.length > 1
+            ? 'Multiple channels selected. Creating a cross-resource analysis.'
+            : 'Analyzing single channel.',
         status: 'info',
         duration: 3000,
         isClosable: true,
       })
 
       // Handle the creation of analysis differently based on whether we have multiple channels
-      let result;
-      let redirectPath;
-      
+      let result
+      let redirectPath
+
       // Use the cross-resource report API for multiple channels
-      if (selectedChannels.length > 1) { // Multi-channel report is now enabled
-        console.log('Creating multi-channel report with', selectedChannels.length, 'channels');
-        
+      if (selectedChannels.length > 1) {
+        // Multi-channel report is now enabled
+        console.log(
+          'Creating multi-channel report with',
+          selectedChannels.length,
+          'channels'
+        )
+
         // First, create resource analysis data for each selected channel
-        const resourceAnalyses = selectedChannels.map(channelId => {
+        const resourceAnalyses = selectedChannels.map((channelId) => {
           // Find the channel details
-          const channel = allChannelResources.find(r => r.id === channelId);
+          const channel = allChannelResources.find((r) => r.id === channelId)
           if (!channel) {
-            console.warn(`Could not find details for channel ${channelId}`);
+            console.warn(`Could not find details for channel ${channelId}`)
           }
-          
+
           return {
             integration_id: selectedIntegration,
             resource_id: channelId,
-            resource_type: "SLACK_CHANNEL",
-            analysis_type: "CONTRIBUTION",
+            resource_type: 'SLACK_CHANNEL',
+            analysis_type: 'CONTRIBUTION',
             period_start: startDateParam || undefined,
             period_end: endDateParam || undefined,
             analysis_parameters: {
               include_threads: includeThreads,
-              include_reactions: includeReactions
-            }
-          };
-        });
-        
+              include_reactions: includeReactions,
+            },
+          }
+        })
+
         // Create a cross-resource report
         const reportData = {
           title: `Multi-channel Analysis (${selectedChannels.length} channels)`,
@@ -607,60 +627,76 @@ const CreateAnalysisPage: React.FC = () => {
           date_range_end: endDateParam,
           report_parameters: {
             include_threads: includeThreads,
-            include_reactions: includeReactions
+            include_reactions: includeReactions,
           },
-          resource_analyses: resourceAnalyses
-        };
-        
+          resource_analyses: resourceAnalyses,
+        }
+
+        console.log('Creating cross-resource report with date range:', {
+          start: startDateParam,
+          end: endDateParam,
+          format: 'YYYY-MM-DD (without timezone)',
+        })
+
         // Call the API to create the cross-resource report
         try {
-          const headers = await integrationService.getAuthHeaders();
-          const teamId = teamContext?.currentTeamId;
-          
+          const headers = await integrationService.getAuthHeaders()
+          const teamId = teamContext?.currentTeamId
+
           if (!teamId) {
-            throw new Error("No team ID available");
+            throw new Error('No team ID available')
           }
-          
+
           // Create the cross-resource report
-          const reportResponse = await fetch(`${env.apiUrl}/reports/${teamId}/cross-resource-reports`, {
-            method: 'POST',
-            headers: {
-              ...headers,
-              'Content-Type': 'application/json'
-            },
-            credentials: 'include',
-            body: JSON.stringify(reportData)
-          });
-          
+          const reportResponse = await fetch(
+            `${env.apiUrl}/reports/${teamId}/cross-resource-reports`,
+            {
+              method: 'POST',
+              headers: {
+                ...headers,
+                'Content-Type': 'application/json',
+              },
+              credentials: 'include',
+              body: JSON.stringify(reportData),
+            }
+          )
+
           if (!reportResponse.ok) {
-            const errorData = await reportResponse.json();
-            throw new Error(`Failed to create cross-resource report: ${errorData.detail || reportResponse.statusText}`);
+            const errorData = await reportResponse.json()
+            throw new Error(
+              `Failed to create cross-resource report: ${errorData.detail || reportResponse.statusText}`
+            )
           }
-          
+
           // Parse the report response
-          const report = await reportResponse.json();
-          console.log('Created cross-resource report:', report);
-          
+          const report = await reportResponse.json()
+          console.log('Created cross-resource report:', report)
+
           // Generate the report
-          const generateResponse = await fetch(`${env.apiUrl}/reports/${teamId}/cross-resource-reports/${report.id}/generate`, {
-            method: 'POST',
-            headers,
-            credentials: 'include'
-          });
-          
+          const generateResponse = await fetch(
+            `${env.apiUrl}/reports/${teamId}/cross-resource-reports/${report.id}/generate`,
+            {
+              method: 'POST',
+              headers,
+              credentials: 'include',
+            }
+          )
+
           if (!generateResponse.ok) {
-            const errorData = await generateResponse.json();
-            throw new Error(`Failed to generate report: ${errorData.detail || generateResponse.statusText}`);
+            const errorData = await generateResponse.json()
+            throw new Error(
+              `Failed to generate report: ${errorData.detail || generateResponse.statusText}`
+            )
           }
-          
-          const generateResult = await generateResponse.json();
-          console.log('Report generation started:', generateResult);
-          
+
+          const generateResult = await generateResponse.json()
+          console.log('Report generation started:', generateResult)
+
           // Set the redirect path to the team analysis result page
-          redirectPath = `/dashboard/integrations/${selectedIntegration}/team-analysis/${report.id}`;
+          redirectPath = `/dashboard/integrations/${selectedIntegration}/team-analysis/${report.id}`
         } catch (error) {
-          console.error('Error creating multi-channel report:', error);
-          throw error;
+          console.error('Error creating multi-channel report:', error)
+          throw error
         }
       } else {
         // Use the single channel analysis for just one channel
@@ -668,16 +704,16 @@ const CreateAnalysisPage: React.FC = () => {
           selectedIntegration,
           primaryChannel,
           analysisOptions
-        );
-        
+        )
+
         // Check if the result is an error
         if (integrationService.isApiError(result)) {
-          const errorMessage = `Analysis failed: ${result.message}${result.detail ? `\nDetail: ${result.detail}` : ''}`;
-          console.error(errorMessage);
-          throw new Error(errorMessage);
+          const errorMessage = `Analysis failed: ${result.message}${result.detail ? `\nDetail: ${result.detail}` : ''}`
+          console.error(errorMessage)
+          throw new Error(errorMessage)
         }
-        
-        redirectPath = `/dashboard/integrations/${selectedIntegration}/channels/${primaryChannel}/analysis/${result.analysis_id}`;
+
+        redirectPath = `/dashboard/integrations/${selectedIntegration}/channels/${primaryChannel}/analysis/${result.analysis_id}`
       }
 
       // Notify user and redirect
@@ -687,12 +723,12 @@ const CreateAnalysisPage: React.FC = () => {
         status: 'success',
         duration: 3000,
         isClosable: true,
-      });
+      })
 
       // Redirect to the appropriate report page
       setTimeout(() => {
-        navigate(redirectPath);
-      }, 1500);
+        navigate(redirectPath)
+      }, 1500)
     } catch (error) {
       console.error('Error during analysis:', error)
       toast({
@@ -710,82 +746,96 @@ const CreateAnalysisPage: React.FC = () => {
   }
 
   // Auto-sync function to trigger a sync when no channels are found
-  const autoSyncIfNeeded = useCallback(async (integrationId: string) => {
-    try {
-      // Load resources first to check if sync needed
-      setIsLoading(true);
-      const result = await integrationService.getResources(integrationId);
-      
-      if (integrationService.isApiError(result)) {
-        console.warn('Error checking resources before auto-sync:', result.message);
-        return false;
-      }
-      
-      // Filter to just channel resources
-      const channels = result.filter(r => r.resource_type === 'slack_channel');
-      
-      // If no channels found, trigger a sync automatically
-      if (channels.length === 0) {
-        console.log('No channels found, triggering automatic sync...');
-        setIsSyncing(true);
-        
-        // Show toast to inform user
-        toast({
-          title: "Auto-syncing channels",
-          description: "No channels found. Syncing data from Slack automatically...",
-          status: "info",
-          duration: 5000,
-          isClosable: true,
-        });
-        
-        // Perform the sync
-        const syncResult = await integrationService.syncResources(
-          integrationId,
-          [ResourceType.SLACK_CHANNEL, ResourceType.SLACK_USER]
-        );
-        
-        if (integrationService.isApiError(syncResult)) {
-          console.warn('Auto-sync failed:', syncResult.message);
-          return false;
+  const autoSyncIfNeeded = useCallback(
+    async (integrationId: string) => {
+      try {
+        // Load resources first to check if sync needed
+        setIsLoading(true)
+        const result = await integrationService.getResources(integrationId)
+
+        if (integrationService.isApiError(result)) {
+          console.warn(
+            'Error checking resources before auto-sync:',
+            result.message
+          )
+          return false
         }
-        
-        // Wait a moment for sync to start processing
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        // Load resources again after sync
-        return true;
+
+        // Filter to just channel resources
+        const channels = result.filter(
+          (r) => r.resource_type === 'slack_channel'
+        )
+
+        // If no channels found, trigger a sync automatically
+        if (channels.length === 0) {
+          console.log('No channels found, triggering automatic sync...')
+          setIsSyncing(true)
+
+          // Show toast to inform user
+          toast({
+            title: 'Auto-syncing channels',
+            description:
+              'No channels found. Syncing data from Slack automatically...',
+            status: 'info',
+            duration: 5000,
+            isClosable: true,
+          })
+
+          // Perform the sync
+          const syncResult = await integrationService.syncResources(
+            integrationId,
+            [ResourceType.SLACK_CHANNEL, ResourceType.SLACK_USER]
+          )
+
+          if (integrationService.isApiError(syncResult)) {
+            console.warn('Auto-sync failed:', syncResult.message)
+            return false
+          }
+
+          // Wait a moment for sync to start processing
+          await new Promise((resolve) => setTimeout(resolve, 2000))
+
+          // Load resources again after sync
+          return true
+        }
+
+        return false
+      } catch (error) {
+        console.error('Error in autoSyncIfNeeded:', error)
+        return false
+      } finally {
+        setIsLoading(false)
+        setIsSyncing(false)
       }
-      
-      return false;
-    } catch (error) {
-      console.error('Error in autoSyncIfNeeded:', error);
-      return false;
-    } finally {
-      setIsLoading(false);
-      setIsSyncing(false);
-    }
-  }, [toast]);
+    },
+    [toast]
+  )
 
   // When an integration is selected, load its resources
   useEffect(() => {
     if (selectedIntegration) {
       const loadResources = async () => {
         // First, load integration resources
-        await loadIntegrationResources(selectedIntegration);
-        
+        await loadIntegrationResources(selectedIntegration)
+
         // Check if auto-sync is needed
         if (allChannelResources.length === 0) {
-          const didSync = await autoSyncIfNeeded(selectedIntegration);
+          const didSync = await autoSyncIfNeeded(selectedIntegration)
           if (didSync) {
             // If we did sync, load resources again
-            await loadIntegrationResources(selectedIntegration);
+            await loadIntegrationResources(selectedIntegration)
           }
         }
-      };
-      
-      loadResources();
+      }
+
+      loadResources()
     }
-  }, [selectedIntegration, loadIntegrationResources, allChannelResources.length, autoSyncIfNeeded])
+  }, [
+    selectedIntegration,
+    loadIntegrationResources,
+    allChannelResources.length,
+    autoSyncIfNeeded,
+  ])
 
   return (
     <Box width="100%">
@@ -963,67 +1013,90 @@ const CreateAnalysisPage: React.FC = () => {
           </CardHeader>
           <CardBody>
             <VStack spacing={6} align="stretch">
-              <Text>Choose the Slack channels you'd like to analyze. You can select multiple channels for cross-resource analysis.</Text>
-              
+              <Text>
+                Choose the Slack channels you'd like to analyze. You can select
+                multiple channels for cross-resource analysis.
+              </Text>
+
               {isLoading || isSelectedChannelsLoading ? (
-                <Flex direction="column" justify="center" align="center" py={8} gap={4}>
+                <Flex
+                  direction="column"
+                  justify="center"
+                  align="center"
+                  py={8}
+                  gap={4}
+                >
                   <Spinner size="md" color="purple.500" />
                   <VStack spacing={2}>
                     <Text fontWeight="medium">
-                      {isLoading ? "Loading channels..." : "Loading selected channels..."}
+                      {isLoading
+                        ? 'Loading channels...'
+                        : 'Loading selected channels...'}
                     </Text>
-                    <Text color="gray.600" fontSize="sm" maxW="450px" textAlign="center">
-                      {isLoading && allChannelResources.length === 0 ? 
-                        "This may take a moment if this is the first time loading this workspace." : 
-                        "Preparing channel selection options..."}
+                    <Text
+                      color="gray.600"
+                      fontSize="sm"
+                      maxW="450px"
+                      textAlign="center"
+                    >
+                      {isLoading && allChannelResources.length === 0
+                        ? 'This may take a moment if this is the first time loading this workspace.'
+                        : 'Preparing channel selection options...'}
                     </Text>
                   </VStack>
-                  
+
                   {/* Show sync button if loading is taking a while and no channels found */}
                   {isLoading && allChannelResources.length === 0 && (
-                    <Button 
+                    <Button
                       mt={4}
                       colorScheme="purple"
                       size="sm"
                       isLoading={isSyncing}
                       onClick={async () => {
-                        if (!selectedIntegration) return;
-                        
+                        if (!selectedIntegration) return
+
                         try {
-                          setIsSyncing(true);
+                          setIsSyncing(true)
                           // Use integrationService to sync resources
                           const result = await integrationService.syncResources(
-                            selectedIntegration, 
-                            [ResourceType.SLACK_CHANNEL, ResourceType.SLACK_USER]
-                          );
-                          
+                            selectedIntegration,
+                            [
+                              ResourceType.SLACK_CHANNEL,
+                              ResourceType.SLACK_USER,
+                            ]
+                          )
+
                           if (integrationService.isApiError(result)) {
-                            throw new Error(`Sync failed: ${result.message}`);
+                            throw new Error(`Sync failed: ${result.message}`)
                           }
-                          
+
                           toast({
-                            title: "Channel sync started",
-                            description: "Refreshing channel data from Slack. This may take a moment.",
-                            status: "info",
+                            title: 'Channel sync started',
+                            description:
+                              'Refreshing channel data from Slack. This may take a moment.',
+                            status: 'info',
                             duration: 5000,
                             isClosable: true,
-                          });
-                          
+                          })
+
                           // Reload the resources after a short delay
                           setTimeout(() => {
-                            loadIntegrationResources(selectedIntegration);
-                          }, 2000);
+                            loadIntegrationResources(selectedIntegration)
+                          }, 2000)
                         } catch (error) {
-                          console.error("Error syncing channels:", error);
+                          console.error('Error syncing channels:', error)
                           toast({
-                            title: "Sync failed",
-                            description: error instanceof Error ? error.message : "Failed to sync channels",
-                            status: "error",
+                            title: 'Sync failed',
+                            description:
+                              error instanceof Error
+                                ? error.message
+                                : 'Failed to sync channels',
+                            status: 'error',
                             duration: 5000,
                             isClosable: true,
-                          });
+                          })
                         } finally {
-                          setIsSyncing(false);
+                          setIsSyncing(false)
                         }
                       }}
                     >
@@ -1034,49 +1107,59 @@ const CreateAnalysisPage: React.FC = () => {
               ) : allChannelResources.length === 0 ? (
                 <Box py={6} textAlign="center">
                   <VStack spacing={6}>
-                    <Text>No channels found for this workspace. You need to sync channels first.</Text>
+                    <Text>
+                      No channels found for this workspace. You need to sync
+                      channels first.
+                    </Text>
                     <Button
                       colorScheme="purple"
                       leftIcon={<FiRefreshCw />}
                       isLoading={isSyncing}
                       onClick={async () => {
-                        if (!selectedIntegration) return;
-                        
+                        if (!selectedIntegration) return
+
                         try {
-                          setIsSyncing(true);
+                          setIsSyncing(true)
                           // Use integrationService to sync resources
                           const result = await integrationService.syncResources(
-                            selectedIntegration, 
-                            [ResourceType.SLACK_CHANNEL, ResourceType.SLACK_USER]
-                          );
-                          
+                            selectedIntegration,
+                            [
+                              ResourceType.SLACK_CHANNEL,
+                              ResourceType.SLACK_USER,
+                            ]
+                          )
+
                           if (integrationService.isApiError(result)) {
-                            throw new Error(`Sync failed: ${result.message}`);
+                            throw new Error(`Sync failed: ${result.message}`)
                           }
-                          
+
                           toast({
-                            title: "Channel sync started",
-                            description: "Refreshing channel data from Slack. This may take a moment.",
-                            status: "info",
+                            title: 'Channel sync started',
+                            description:
+                              'Refreshing channel data from Slack. This may take a moment.',
+                            status: 'info',
                             duration: 5000,
                             isClosable: true,
-                          });
-                          
+                          })
+
                           // Reload the resources after a short delay
                           setTimeout(() => {
-                            loadIntegrationResources(selectedIntegration);
-                          }, 2000);
+                            loadIntegrationResources(selectedIntegration)
+                          }, 2000)
                         } catch (error) {
-                          console.error("Error syncing channels:", error);
+                          console.error('Error syncing channels:', error)
                           toast({
-                            title: "Sync failed",
-                            description: error instanceof Error ? error.message : "Failed to sync channels",
-                            status: "error",
+                            title: 'Sync failed',
+                            description:
+                              error instanceof Error
+                                ? error.message
+                                : 'Failed to sync channels',
+                            status: 'error',
                             duration: 5000,
                             isClosable: true,
-                          });
+                          })
                         } finally {
-                          setIsSyncing(false);
+                          setIsSyncing(false)
                         }
                       }}
                     >
@@ -1087,21 +1170,27 @@ const CreateAnalysisPage: React.FC = () => {
               ) : (
                 <Box>
                   {/* Use our TeamChannelSelector with multiSelect mode */}
-                  <TeamChannelSelector 
+                  <TeamChannelSelector
                     integrationId={selectedIntegration}
                     multiSelect={true}
                     onSelectionChange={(selectedIds) => {
-                      console.log('Channel selection changed:', selectedIds);
-                      setSelectedChannels(selectedIds);
+                      console.log('Channel selection changed:', selectedIds)
+                      setSelectedChannels(selectedIds)
                       // Ensure we have loaded the channel resources for all selected channels
-                      if (selectedIds.length > 0 && allChannelResources.length > 0) {
+                      if (
+                        selectedIds.length > 0 &&
+                        allChannelResources.length > 0
+                      ) {
                         const unrecognizedChannels = selectedIds.filter(
-                          id => !allChannelResources.some(r => r.id === id)
-                        );
+                          (id) => !allChannelResources.some((r) => r.id === id)
+                        )
                         if (unrecognizedChannels.length > 0) {
-                          console.warn('Some selected channels are not in allChannelResources:', unrecognizedChannels);
+                          console.warn(
+                            'Some selected channels are not in allChannelResources:',
+                            unrecognizedChannels
+                          )
                           // Reload all resources to ensure we have the latest
-                          loadIntegrationResources(selectedIntegration);
+                          loadIntegrationResources(selectedIntegration)
                         }
                       }
                     }}
@@ -1137,7 +1226,9 @@ const CreateAnalysisPage: React.FC = () => {
         <Card variant="outline" mb={6} maxWidth="800px" mx="auto">
           <CardHeader pb={2}>
             <Heading size="md">
-              Step 3: Configure Analysis {selectedChannels.length > 1 && `(${selectedChannels.length} Channels)`}
+              Step 3: Configure Analysis{' '}
+              {selectedChannels.length > 1 &&
+                `(${selectedChannels.length} Channels)`}
             </Heading>
           </CardHeader>
           <CardBody>
@@ -1196,38 +1287,56 @@ const CreateAnalysisPage: React.FC = () => {
               </FormControl>
 
               {/* Selected Channels Display */}
-              <Box p={4} borderWidth="1px" borderRadius="md" borderColor="purple.200">
+              <Box
+                p={4}
+                borderWidth="1px"
+                borderRadius="md"
+                borderColor="purple.200"
+              >
                 <Heading size="sm" mb={3}>
                   Selected Channels ({selectedChannels.length}):
                 </Heading>
-                
+
                 {selectedChannels.length === 0 ? (
-                  <Text fontSize="sm" color="gray.500">No channels selected</Text>
+                  <Text fontSize="sm" color="gray.500">
+                    No channels selected
+                  </Text>
                 ) : (
                   <VStack align="stretch" spacing={2}>
                     <Flex wrap="wrap" gap={2}>
-                      {selectedChannels.map(channelId => {
+                      {selectedChannels.map((channelId) => {
                         // Try to find channel name from different sources
                         // First check in all channel resources (most reliable)
-                        const channel = allChannelResources.find(r => r.id === channelId);
+                        const channel = allChannelResources.find(
+                          (r) => r.id === channelId
+                        )
                         // Get channel name, fallback to filtered resources, then default to ID
-                        const channelName = channel?.name || 
-                                            resources.find(r => r.id === channelId)?.name || 
-                                            'Unknown Channel';
-                        
+                        const channelName =
+                          channel?.name ||
+                          resources.find((r) => r.id === channelId)?.name ||
+                          'Unknown Channel'
+
                         // Log for debugging
                         if (!channel) {
-                          console.warn(`Could not find channel ${channelId} in resources`);
+                          console.warn(
+                            `Could not find channel ${channelId} in resources`
+                          )
                         }
-                        
+
                         return (
-                          <Badge key={channelId} colorScheme="purple" px={2} py={1} borderRadius="full">
+                          <Badge
+                            key={channelId}
+                            colorScheme="purple"
+                            px={2}
+                            py={1}
+                            borderRadius="full"
+                          >
                             #{channelName}
                           </Badge>
-                        );
+                        )
                       })}
                     </Flex>
-                    
+
                     {/* Debug info - lists all channel IDs in text form */}
                     <Text fontSize="xs" color="gray.500" mt={2}>
                       Selected IDs: {selectedChannels.join(', ')}
