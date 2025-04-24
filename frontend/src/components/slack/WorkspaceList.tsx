@@ -477,14 +477,15 @@ const WorkspaceList: React.FC = () => {
               </VStack>
 
               <HStack spacing={4} mt={4}>
+                {/* Replaced with integration-based approach */}
                 <Button
                   size="sm"
                   variant="solid"
                   colorScheme="purple"
                   as={Link}
-                  to={`/dashboard/slack/workspaces/${workspace.id}/channels`}
+                  to={`/dashboard/integrations`} 
                 >
-                  Select Channels
+                  View as Integration
                 </Button>
                 <Button
                   size="sm"

@@ -429,93 +429,22 @@ const ChannelList: React.FC = () => {
 
   /**
    * Save selected channels for analysis
+   * 
+   * NOTE: This functionality has been deprecated. Analysis features have been
+   * moved to the integration-based ResourceAnalysis system.
    */
   const saveSelectedChannels = async () => {
-    if (!workspaceId) return
-
-    // Check if any selected channels don't have bot membership
-    const nonMemberChannels = allChannels.filter(
-      (channel) =>
-        selectedChannels.includes(channel.id) && !channel.is_bot_member
-    )
-
-    if (nonMemberChannels.length > 0 && !installBot) {
-      onOpen() // Open alert dialog
-      return
-    }
-
-    setIsSaving(true)
-
-    try {
-      const response = await fetch(
-        `${env.apiUrl}/slack/workspaces/${workspaceId}/channels/select`,
-        {
-          method: 'POST',
-          mode: 'cors',
-          credentials: 'include',
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-            Origin: window.location.origin,
-          },
-          body: JSON.stringify({
-            channel_ids: selectedChannels,
-            install_bot: installBot,
-          }),
-        }
-      )
-
-      if (!response.ok) {
-        throw new Error('Failed to save channel selection')
-      }
-
-      const data: SelectChannelsResponse = await response.json()
-
-      // Create custom success message that includes bot installation results
-      let successMessage = `Selected ${data.selected_count} channels for analysis`
-
-      if (data.bot_installation) {
-        const successCount = data.bot_installation.results.filter(
-          (r: BotInstallationResult) => r.status === 'success'
-        ).length
-        const failCount = data.bot_installation.results.filter(
-          (r: BotInstallationResult) => r.status === 'error'
-        ).length
-
-        if (successCount > 0) {
-          successMessage += `, bot installed in ${successCount} new channel${successCount !== 1 ? 's' : ''}`
-        }
-
-        if (failCount > 0) {
-          successMessage += `. Failed to install in ${failCount} channel${failCount !== 1 ? 's' : ''}.`
-        }
-      }
-
-      toast({
-        title: 'Channels Selected',
-        description: successMessage,
-        status: 'success',
-        duration: 5000,
-        isClosable: true,
-      })
-
-      // Navigate to the next step
-      navigate(`/dashboard/slack/workspaces/${workspaceId}`)
-    } catch (error) {
-      console.error('Error saving channel selection:', error)
-      toast({
-        title: 'Error',
-        description:
-          error instanceof Error
-            ? error.message
-            : 'Failed to save channel selection',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      })
-    } finally {
-      setIsSaving(false)
-    }
+    // Display a toast message about the deprecation
+    toast({
+      title: 'Feature Deprecated',
+      description: 'Channel analysis has moved to the Integration system. Please use the "View as Integration" button from the workspaces list.',
+      status: 'info',
+      duration: 8000,
+      isClosable: true,
+    })
+    
+    // Navigate to integrations page
+    navigate('/dashboard/integrations')
   }
 
   /**
@@ -977,10 +906,10 @@ const ChannelList: React.FC = () => {
             colorScheme="purple"
             onClick={saveSelectedChannels}
             isLoading={isSaving}
-            loadingText="Saving..."
-            isDisabled={selectedChannels.length === 0}
+            loadingText="Redirecting..."
+            variant="outline"
           >
-            Save Selection
+            View in Integrations (Analysis Moved)
           </Button>
         </HStack>
       </Flex>
@@ -993,9 +922,8 @@ const ChannelList: React.FC = () => {
             Selected Channels: {selectedChannels.length}
           </Heading>
           <Text fontSize="sm" color="gray.600">
-            {selectedChannels.length === 0
-              ? 'No channels selected. Select channels to analyze from the list above.'
-              : `You've selected ${selectedChannels.length} channel${selectedChannels.length !== 1 ? 's' : ''} for analysis.`}
+            Channel analysis has moved to the Integration system. 
+            Please use the "View in Integrations" button below to access analysis features.
           </Text>
         </Box>
 

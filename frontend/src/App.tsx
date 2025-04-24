@@ -26,6 +26,8 @@ import {
   ConnectPage as SlackConnectPage,
 } from './pages/slack'
 
+// Note: Workspace-specific analysis has been removed in favor of ResourceAnalysis system
+
 // Team Pages
 import { TeamsPage, TeamDetailPage, TeamMembersPage } from './pages/team'
 
