@@ -15,7 +15,7 @@ from app.models.reports import (
     ReportStatus,
     ResourceAnalysis,
 )
-from app.models.reports import ResourceType as AnalysisResourceType
+from app.models.reports import AnalysisResourceType
 from app.models.team import Team
 from tests.conftest import team_test_mark
 

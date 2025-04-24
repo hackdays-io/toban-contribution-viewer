@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.reports import ResourceType
+from app.models.integration import ResourceType
 from app.services.analysis.factory import ResourceAnalysisServiceFactory
 from app.services.analysis.slack_channel import SlackChannelAnalysisService
 from app.services.llm.openrouter import OpenRouterService
