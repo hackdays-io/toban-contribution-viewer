@@ -139,166 +139,160 @@ const TeamAnalysisResultPage: React.FC = () => {
   }
 
   /**
+   * Handle team analysis (cross-resource report)
+   */
+  const handleTeamAnalysis = async () => {
+    // Try to get integration data through context or direct API call
+    let teamId;
+    let directIntegration = null;
+
+    // First try context
+    if (currentIntegration) {
+      teamId = currentIntegration.owner_team.id;
+    } else {
+      // If context doesn't have it yet, get it directly
+      const integrationResult = await integrationService.getIntegration(integrationId);
+      
+      if (!integrationService.isApiError(integrationResult)) {
+        directIntegration = integrationResult;
+        teamId = directIntegration.owner_team.id;
+      } else {
+        // Failed to get integration data
+        toast({
+          title: 'Error',
+          description: 'Failed to load integration data for analysis.',
+          status: 'error',
+          duration: 5000,
+          isClosable: true,
+        });
+        return;
+      }
+    }
+    
+    // Now fetch the cross-resource report
+    const reportResult = await integrationService.getCrossResourceReport(
+      teamId,
+      analysisId || ''
+    );
+      
+    // Check if there was an error
+    if (integrationService.isApiError(reportResult)) {
+      console.error("Error fetching cross-resource report:", reportResult);
+      toast({
+        title: 'Error',
+        description: `Failed to load team analysis: ${reportResult.message}`,
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+      return;
+    }
+    
+    // Extract data from the report to match our Analysis interface format
+    // This is a temporary solution until we implement proper cross-resource report handling
+    if (reportResult.resource_analyses && reportResult.resource_analyses.length > 0) {
+      // Use the first resource analysis as a template
+      const firstAnalysis = reportResult.resource_analyses[0];
+      
+      // Construct an analysis object using data from the report and first resource analysis
+      const adaptedAnalysis: AnalysisResponse = {
+        id: reportResult.id,
+        channel_id: firstAnalysis.resource_id,
+        channel_name: reportResult.title || "Cross-resource Report",
+        start_date: reportResult.date_range_start,
+        end_date: reportResult.date_range_end,
+        message_count: reportResult.total_resources || 0,
+        participant_count: reportResult.completed_analyses || 0,
+        thread_count: reportResult.resource_analyses?.length || 0,
+        reaction_count: 0,
+        channel_summary: reportResult.description || "Cross-resource analysis report",
+        topic_analysis: "Multiple resource analysis - see individual analyses for details",
+        contributor_insights: "Multiple resource analysis - see individual analyses for details",
+        key_highlights: "Multiple resource analysis - see individual analyses for details",
+        model_used: firstAnalysis.model_used || "N/A",
+        generated_at: reportResult.created_at || new Date().toISOString(),
+        workspace_id: directIntegration ? directIntegration.id : currentIntegration.id // Use integration ID as workspace ID for display
+      };
+      
+      setAnalysis(adaptedAnalysis);
+    } else {
+      toast({
+        title: 'No Analyses Found',
+        description: 'This team analysis report does not contain any resource analyses.',
+        status: 'warning',
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+  }
+
+  /**
+   * Handle channel analysis flow
+   */
+  const handleChannelAnalysis = async () => {
+    // Fetch channel from resource list
+    if (integrationId && channelId) {
+      await fetchResources(integrationId);
+      const channelResource = currentResources.find(
+        (resource) => resource.id === channelId
+      );
+      if (channelResource) {
+        setChannel(channelResource as Channel);
+      }
+    }
+
+    // Fetch the specific analysis using the integration service
+    const analysisResult = await integrationService.getResourceAnalysis(
+      integrationId || '',
+      channelId || '',
+      analysisId || ''
+    );
+
+    // Check if the result is an API error
+    if (integrationService.isApiError(analysisResult)) {
+      throw new Error(`Error fetching analysis: ${analysisResult.message}`);
+    }
+
+    // Set the analysis data, casting it to the expected type
+    setAnalysis(analysisResult as unknown as AnalysisResponse);
+  }
+
+  /**
    * Fetch analysis data from API
    */
   const fetchData = async () => {
+    setIsLoading(true);
+    
     try {
-      setIsLoading(true)
-
-
-      // Fetch integration info
-      try {
-        if (integrationId) {
-          await fetchIntegration(integrationId)
+      // Try loading integration through the context
+      if (integrationId) {
+        try {
+          await fetchIntegration(integrationId);
+        } catch (integrationError) {
+          // Error will be handled later in the direct API call
         }
-      } catch (error) {
-        // Error will be handled later in the direct API call
       }
 
       // Check if this is a team analysis (cross-resource) result by checking the URL pattern
       const isTeamAnalysis = window.location.pathname.includes('/team-analysis/');
 
-      // For team analysis, we need to use a different API endpoint
+      // Handle appropriate analysis type
       if (isTeamAnalysis) {
-        // Try to get integration data through context or direct API call
-        let teamId;
-        let directIntegration = null;
-
-        // First try context
-        if (currentIntegration) {
-          teamId = currentIntegration.owner_team.id;
-        } else {
-          // If context doesn't have it yet, get it directly
-          const integrationResult = await integrationService.getIntegration(integrationId);
-          
-          if (!integrationService.isApiError(integrationResult)) {
-            directIntegration = integrationResult;
-            teamId = directIntegration.owner_team.id;
-          } else {
-            // Failed to get integration data
-            toast({
-              title: 'Error',
-              description: 'Failed to load integration data for analysis.',
-              status: 'error',
-              duration: 5000,
-              isClosable: true,
-            });
-            setIsLoading(false);
-            return;
-          }
-        }
-        
-        // Now fetch the cross-resource report
-        const reportResult = await integrationService.getCrossResourceReport(
-          teamId,
-          analysisId || ''
-        );
-          
-          // Check if there was an error
-          if (integrationService.isApiError(reportResult)) {
-            console.error("Error fetching cross-resource report:", reportResult);
-            toast({
-              title: 'Error',
-              description: `Failed to load team analysis: ${reportResult.message}`,
-              status: 'error',
-              duration: 5000,
-              isClosable: true,
-            });
-            setIsLoading(false);
-            return;
-          }
-          
-          
-          // Extract data from the report to match our Analysis interface format
-          // This is a temporary solution until we implement proper cross-resource report handling
-          if (reportResult.resource_analyses && reportResult.resource_analyses.length > 0) {
-            // Use the first resource analysis as a template
-            const firstAnalysis = reportResult.resource_analyses[0];
-            
-            // Construct an analysis object using data from the report and first resource analysis
-            const adaptedAnalysis: AnalysisResponse = {
-              id: reportResult.id,
-              channel_id: firstAnalysis.resource_id,
-              channel_name: reportResult.title || "Cross-resource Report",
-              start_date: reportResult.date_range_start,
-              end_date: reportResult.date_range_end,
-              message_count: reportResult.total_resources || 0,
-              participant_count: reportResult.completed_analyses || 0,
-              thread_count: reportResult.resource_analyses?.length || 0,
-              reaction_count: 0,
-              channel_summary: reportResult.description || "Cross-resource analysis report",
-              topic_analysis: "Multiple resource analysis - see individual analyses for details",
-              contributor_insights: "Multiple resource analysis - see individual analyses for details",
-              key_highlights: "Multiple resource analysis - see individual analyses for details",
-              model_used: firstAnalysis.model_used || "N/A",
-              generated_at: reportResult.created_at || new Date().toISOString(),
-              workspace_id: directIntegration ? directIntegration.id : currentIntegration.id // Use integration ID as workspace ID for display
-            };
-            
-            setAnalysis(adaptedAnalysis);
-          } else {
-            toast({
-              title: 'No Analyses Found',
-              description: 'This team analysis report does not contain any resource analyses.',
-              status: 'warning',
-              duration: 5000,
-              isClosable: true,
-            });
-          }
-        } else {
-          console.error("Cannot fetch team analysis without integration data");
-          toast({
-            title: 'Error',
-            description: 'Failed to load team data for analysis. Please try again.',
-            status: 'error',
-            duration: 5000,
-            isClosable: true,
-          });
-        }
-        
-        setIsLoading(false);
-        return;
+        await handleTeamAnalysis();
+      } else {
+        await handleChannelAnalysis();
       }
-
-      // Regular single-channel analysis flow:
-      // Fetch channel from resource list
-      if (integrationId && channelId) {
-        await fetchResources(integrationId)
-        const channelResource = currentResources.find(
-          (resource) => resource.id === channelId
-        )
-        if (channelResource) {
-          setChannel(channelResource as Channel)
-        }
-      }
-
-      // Fetch the specific analysis using the integration service
-      const analysisResult = await integrationService.getResourceAnalysis(
-        integrationId || '',
-        channelId || '',
-        analysisId || ''
-      )
-
-      // Check if the result is an API error
-      if (integrationService.isApiError(analysisResult)) {
-        throw new Error(`Error fetching analysis: ${analysisResult.message}`)
-      }
-
-      // Validate successful load of analysis data
-
-      // Set the analysis data, casting it to the expected type
-      setAnalysis(analysisResult as unknown as AnalysisResponse)
     } catch (error) {
-      console.error('Error fetching data:', error)
+      console.error('Error fetching data:', error);
       toast({
         title: 'Error',
         description: 'Failed to load analysis data',
         status: 'error',
         duration: 5000,
         isClosable: true,
-      })
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   }
 
@@ -713,7 +707,7 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
                 <Box flex="1">
                   <MessageText
                     text={paragraph.trim().substring(2)}
-                    workspaceId={analysis?.workspace_id || workspaceId || ''}
+                    workspaceId={effectiveWorkspaceId || ''}
                     resolveMentions={true}
                     fallbackToSimpleFormat={true}
                   />
@@ -727,7 +721,7 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
             <Box key={index} mb={2}>
               <MessageText
                 text={paragraph}
-                workspaceId={analysis?.workspace_id || workspaceId || ''}
+                workspaceId={effectiveWorkspaceId || ''}
                 resolveMentions={true}
                 fallbackToSimpleFormat={true}
               />
@@ -818,7 +812,7 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
                 {para.trim() ? (
                   <MessageText
                     text={para}
-                    workspaceId={analysis?.workspace_id || workspaceId || ''}
+                    workspaceId={effectiveWorkspaceId || ''}
                     resolveMentions={true}
                     fallbackToSimpleFormat={true}
                   />
@@ -1033,6 +1027,19 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
   // Try to get the workspace ID from different sources
   const workspaceId = analysis?.workspace_id || currentIntegration?.id
 
+  // Check if we have the workspace ID (try to get from currentIntegration.metadata if needed)
+  const effectiveWorkspaceId = workspaceId || 
+    (currentIntegration?.metadata?.id as string) || 
+    (currentIntegration?.metadata?.workspace_id as string);
+  
+  // Log workspace ID detection for debugging
+  console.log('Workspace ID detection:', {
+    fromAnalysis: analysis?.workspace_id,
+    fromIntegration: currentIntegration?.id,
+    fromMetadata: currentIntegration?.metadata?.workspace_id || currentIntegration?.metadata?.id,
+    effective: effectiveWorkspaceId
+  });
+  
   // Try to extract missing sections if needed
   let enrichedAnalysis = analysis ? extractMissingFields() : null
 
@@ -1104,7 +1111,7 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
   }
 
   // Don't render slack components if no workspace ID is available
-  if (!workspaceId && !isLoading) {
+  if (!effectiveWorkspaceId && !isLoading) {
     return (
       <Box p={4}>
         {/* Render the same content without the SlackUserCacheProvider */}
@@ -1231,42 +1238,78 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
 
   return (
     <SlackUserCacheProvider
-      workspaceId={analysis?.workspace_id || workspaceId || ''}
+      workspaceId={effectiveWorkspaceId || ''}
     >
       {/* Apply custom CSS to hide duplicate headings */}
       <style>{customStyles}</style>
       <Box width="100%">
         {/* Breadcrumb navigation */}
-        <Breadcrumb
-          spacing="8px"
-          separator={<Icon as={FiChevronRight} color="gray.500" />}
-          mb={4}
-        >
-          <BreadcrumbItem>
-            <BreadcrumbLink as={Link} to="/dashboard/analytics">
-              Analytics
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbItem>
-            <BreadcrumbLink
-              as={Link}
-              to={`/dashboard/integrations/${integrationId}`}
-            >
-              {currentIntegration?.name || 'Integration'}
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbItem>
-            <BreadcrumbLink
-              as={Link}
-              to={`/dashboard/integrations/${integrationId}/channels/${channelId}/history`}
-            >
-              {channelName}
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbItem isCurrentPage>
-            <BreadcrumbLink>Analysis</BreadcrumbLink>
-          </BreadcrumbItem>
-        </Breadcrumb>
+        {/* Different breadcrumb paths for team vs. channel analysis */}
+        {window.location.pathname.includes('/team-analysis/') ? (
+          // Team analysis breadcrumb
+          <Breadcrumb
+            spacing="8px"
+            separator={<Icon as={FiChevronRight} color="gray.500" />}
+            mb={4}
+          >
+            <BreadcrumbItem>
+              <BreadcrumbLink as={Link} to="/dashboard/analytics">
+                Analytics
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbItem>
+              <BreadcrumbLink
+                as={Link}
+                to={`/dashboard/integrations/${integrationId}`}
+              >
+                {currentIntegration?.name || 'Integration'}
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbItem>
+              <BreadcrumbLink
+                as={Link}
+                to={`/dashboard/integrations/${integrationId}`}
+              >
+                Team Analysis
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbItem isCurrentPage>
+              <BreadcrumbLink>Report</BreadcrumbLink>
+            </BreadcrumbItem>
+          </Breadcrumb>
+        ) : (
+          // Channel analysis breadcrumb
+          <Breadcrumb
+            spacing="8px"
+            separator={<Icon as={FiChevronRight} color="gray.500" />}
+            mb={4}
+          >
+            <BreadcrumbItem>
+              <BreadcrumbLink as={Link} to="/dashboard/analytics">
+                Analytics
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbItem>
+              <BreadcrumbLink
+                as={Link}
+                to={`/dashboard/integrations/${integrationId}`}
+              >
+                {currentIntegration?.name || 'Integration'}
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbItem>
+              <BreadcrumbLink
+                as={Link}
+                to={`/dashboard/integrations/${integrationId}/channels/${channelId}/history`}
+              >
+                {channelName}
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbItem isCurrentPage>
+              <BreadcrumbLink>Analysis</BreadcrumbLink>
+            </BreadcrumbItem>
+          </Breadcrumb>
+        )}
 
         {/* Header with actions */}
         <Grid templateColumns={{ base: '1fr', md: '2fr 1fr' }} gap={4} mb={6}>
@@ -1275,7 +1318,9 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
               <HStack mb={1}>
                 <Icon as={FiMessageSquare} color="purple.500" />
                 <Heading as="h1" size="lg">
-                  {channelName} Analysis
+                  {window.location.pathname.includes('/team-analysis/') 
+                    ? "Team Analysis Report" 
+                    : `${channelName} Analysis`}
                 </Heading>
                 <Badge colorScheme="purple" fontSize="sm">
                   {formatDate(analysis.start_date)} -{' '}
@@ -1295,18 +1340,29 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
               mt={{ base: 2, md: 0 }}
             >
               <HStack spacing={2}>
-                <Button
-                  leftIcon={<Icon as={FiArrowLeft} />}
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    navigate(
-                      `/dashboard/integrations/${integrationId}/channels/${channelId}/analyze`
-                    )
-                  }
-                >
-                  Back to Analysis
-                </Button>
+                {window.location.pathname.includes('/team-analysis/') ? (
+                  <Button
+                    leftIcon={<Icon as={FiArrowLeft} />}
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigate(`/dashboard/integrations/${integrationId}`)}
+                  >
+                    Back to Integration
+                  </Button>
+                ) : (
+                  <Button
+                    leftIcon={<Icon as={FiArrowLeft} />}
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      navigate(
+                        `/dashboard/integrations/${integrationId}/channels/${channelId}/analyze`
+                      )
+                    }
+                  >
+                    Back to Analysis
+                  </Button>
+                )}
                 <Tooltip label="Copy share link" hasArrow>
                   <IconButton
                     aria-label="Share analysis"
@@ -1576,30 +1632,47 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
 
         {/* Action buttons for navigation */}
         <Flex justifyContent="space-between" mt={6}>
-          <Button
-            leftIcon={<Icon as={FiArrowLeft} />}
-            onClick={() =>
-              navigate(
-                `/dashboard/integrations/${integrationId}/channels/${channelId}/analyze`
-              )
-            }
-            variant="outline"
-            colorScheme="purple"
-          >
-            Back to Analysis
-          </Button>
+          {window.location.pathname.includes('/team-analysis/') ? (
+            /* Team analysis navigation buttons */
+            <Flex justifyContent="center" width="100%">
+              <Button
+                leftIcon={<Icon as={FiArrowLeft} />}
+                onClick={() => navigate(`/dashboard/integrations/${integrationId}`)}
+                variant="outline"
+                colorScheme="purple"
+              >
+                Back to Integration
+              </Button>
+            </Flex>
+          ) : (
+            /* Channel analysis navigation buttons */
+            <>
+              <Button
+                leftIcon={<Icon as={FiArrowLeft} />}
+                onClick={() =>
+                  navigate(
+                    `/dashboard/integrations/${integrationId}/channels/${channelId}/analyze`
+                  )
+                }
+                variant="outline"
+                colorScheme="purple"
+              >
+                Back to Analysis
+              </Button>
 
-          <Button
-            leftIcon={<Icon as={FiClock} />}
-            onClick={() =>
-              navigate(
-                `/dashboard/integrations/${integrationId}/channels/${channelId}/history`
-              )
-            }
-            variant="outline"
-          >
-            View Analysis History
-          </Button>
+              <Button
+                leftIcon={<Icon as={FiClock} />}
+                onClick={() =>
+                  navigate(
+                    `/dashboard/integrations/${integrationId}/channels/${channelId}/history`
+                  )
+                }
+                variant="outline"
+              >
+                View Analysis History
+              </Button>
+            </>
+          )}
         </Flex>
       </Box>
     </SlackUserCacheProvider>
