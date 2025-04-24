@@ -105,7 +105,8 @@ interface SyncResponse {
 }
 
 /**
- * Component to display and select Slack channels for analysis.
+ * Component to display and manage Slack channels.
+ * Note: Analysis features have moved to the Integration system.
  */
 const ChannelList: React.FC = () => {
   const { workspaceId } = useParams<{ workspaceId: string }>()
@@ -618,7 +619,7 @@ const ChannelList: React.FC = () => {
   return (
     <Box p={6} maxWidth="1200px" mx="auto">
       <HStack justifyContent="space-between" mb={6}>
-        <Heading size="lg">Select Channels for Analysis</Heading>
+        <Heading size="lg">Slack Channels</Heading>
         <Button
           as={Link}
           to={`/dashboard/slack/workspaces/${workspaceId}`}
@@ -919,7 +920,7 @@ const ChannelList: React.FC = () => {
         {/* Selected channels summary */}
         <Box p={4} borderWidth="1px" borderRadius="md" bg="gray.50" flex="1">
           <Heading size="sm" mb={2}>
-            Selected Channels: {selectedChannels.length}
+            Channel Management
           </Heading>
           <Text fontSize="sm" color="gray.600">
             Channel analysis has moved to the Integration system. 
