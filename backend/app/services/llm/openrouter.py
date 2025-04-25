@@ -120,14 +120,38 @@ class OpenRouterService:
         participant_count = messages_data.get("participant_count", 0)
         thread_count = messages_data.get("thread_count", 0)
         reaction_count = messages_data.get("reaction_count", 0)
-
+        
+        # Add detailed logging for issue #238
+        logger.info(f"Analyzing channel {channel_name} with {message_count} messages, {participant_count} participants")
+        logger.info(f"Analysis period: {start_date} to {end_date}")
+        
+        # Check if the messages list matches the reported count 
+        messages_list = messages_data.get("messages", [])
+        if len(messages_list) != message_count:
+            logger.warning(f"Message count mismatch: reported {message_count} but list has {len(messages_list)}")
+            
+        # Check if we have actual messages to analyze after filtering
+        if not messages_list:
+            logger.warning(f"No messages provided for analysis of channel {channel_name}")
+            
         # Format message content for the LLM - handle potential large message counts
-        message_content = self._format_messages(messages_data.get("messages", []))
+        message_content = self._format_messages(messages_list)
+        
+        # Check if the formatted content is meaningful
+        if not message_content.strip():
+            logger.error("Formatted message content is empty - LLM will report 'no actual channel messages'")
+        elif len(message_content) < 100:
+            logger.warning(f"Formatted message content is very short ({len(message_content)} chars) - may lead to poor analysis")
 
         # Build the system prompt with JSON instructions if needed
         system_prompt = """You are an expert analyst of communication patterns in team chat platforms.
 You're tasked with analyzing Slack conversation data to help team leaders understand communication dynamics.
 Provide insightful, specific, and actionable observations based on actual message content.
+
+IMPORTANT: This Slack channel may contain messages in Japanese or other non-English languages.
+Please analyze these messages as best you can. Messages with Japanese text are marked with
+"[Note: This message contains Japanese text]". Do not say there are "no actual channel messages"
+just because many messages are in Japanese.
 
 CRITICAL: When referring to Slack users in your analysis, always keep the original user mention format
 (such as "<@U12345>") intact. Do not replace these mentions with plain text like "Unknown User" or attempt
@@ -218,6 +242,13 @@ Keep them intact exactly as they appear in the original messages.
                     try:
                         import json
 
+                        # Log first part of raw response for debugging issue #238
+                        logger.info(f"Raw LLM response (first 200 chars): {llm_response[:200]}...")
+                        
+                        # Check if response mentions "no actual channel messages"
+                        if "no actual channel messages" in llm_response.lower():
+                            logger.error(f"LLM response mentions 'no actual channel messages' - message format may be unrecognized")
+
                         # Handle potential JSON formatting in text response
                         json_content = llm_response.strip()
                         if json_content.startswith("```json"):
@@ -226,6 +257,9 @@ Keep them intact exactly as they appear in the original messages.
                             json_content = json_content.rsplit("```", 1)[0]
 
                         parsed_json = json.loads(json_content.strip())
+                        
+                        # Log successful parsing
+                        logger.info(f"Successfully parsed JSON response with keys: {', '.join(parsed_json.keys())}")
 
                         # Map expected fields from JSON response
                         for key in ["channel_summary", "topic_analysis", "contributor_insights", "key_highlights"]:
@@ -264,6 +298,28 @@ Keep them intact exactly as they appear in the original messages.
 
     def _format_messages(self, messages: List[Dict[str, Any]]) -> str:
         """Format messages for inclusion in the prompt, applying sampling for large datasets."""
+        # Add debug log for issue #238
+        logger.info(f"Formatting {len(messages)} messages for LLM input")
+        
+        # Check content characteristics for debugging
+        if messages:
+            join_messages = sum(1 for m in messages if "さんがチャンネルに参加しました" in m.get("text", ""))
+            empty_messages = sum(1 for m in messages if not m.get("text", "").strip())
+            system_messages = sum(1 for m in messages if not m.get("user_id"))
+            
+            logger.info(f"Message content stats: "
+                      f"{join_messages} join messages, "
+                      f"{empty_messages} empty messages, "
+                      f"{system_messages} system messages, "
+                      f"{len(messages) - join_messages - empty_messages - system_messages} regular messages")
+            
+            # Log a few sample messages for inspection
+            logger.info("Sample messages being formatted for LLM:")
+            for i, msg in enumerate(messages[:5]):
+                logger.info(f"  {i+1}. User: {msg.get('user', 'Unknown')} | "
+                           f"ID: {msg.get('user_id', 'None')} | "
+                           f"Text: {msg.get('text', '')[:100]}")
+        
         # Helper to format user mention properly
         def format_user_mention(msg):
             # Preserve original user ID if we have it, fallback to user_name
@@ -276,7 +332,7 @@ Keep them intact exactly as they appear in the original messages.
                 return f"[{timestamp}] <@{user_id}>: {text}"
             else:
                 # Fallback to user_name but avoid "Unknown User" label
-                user = msg.get("user_name", "Participant")
+                user = msg.get("user_name", "Participant") or msg.get("user", "Participant")
                 return f"[{timestamp}] {user}: {text}"
 
         # Determine if we need to sample
@@ -296,8 +352,16 @@ Keep them intact exactly as they appear in the original messages.
 
             # Combine samples
             sampled_messages = start_sample + middle_sample + end_sample
-
-            formatted_messages = [format_user_mention(msg) for msg in sampled_messages]
+            
+            # Format with special handling for Japanese text (issue #238)
+            formatted_messages = []
+            for msg in sampled_messages:
+                formatted = format_user_mention(msg)
+                # For Japanese text, add a note to help LLM understand
+                text = msg.get("text", "")
+                if text and all(ord(c) > 127 for c in text.strip()):
+                    formatted += " [Note: This message contains Japanese text]"
+                formatted_messages.append(formatted)
 
             return "\n".join(
                 [
@@ -313,7 +377,16 @@ Keep them intact exactly as they appear in the original messages.
             )
         else:
             # For smaller datasets, include everything
-            formatted_messages = [format_user_mention(msg) for msg in messages]
+            # Format with special handling for Japanese text (issue #238)
+            formatted_messages = []
+            for msg in messages:
+                formatted = format_user_mention(msg)
+                # For Japanese text, add a note to help LLM understand
+                text = msg.get("text", "")
+                if text and all(ord(c) > 127 for c in text.strip()):
+                    formatted += " [Note: This message contains Japanese text]"
+                formatted_messages.append(formatted)
+                
             return "\n".join(formatted_messages)
 
     def _extract_sections(self, llm_response: str) -> Dict[str, str]:

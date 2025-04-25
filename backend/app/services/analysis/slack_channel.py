@@ -203,32 +203,48 @@ class SlackChannelAnalysisService(ResourceAnalysisService):
         system_message_count = 0
         empty_message_count = 0
         join_message_count = 0
+        non_text_message_count = 0
         
         for msg in data["messages"]:
-            # Skip messages about users joining channels
-            if "さんがチャンネルに参加しました" in msg["text"]:
+            text = msg["text"]
+            has_user_id = bool(msg["user_id"])
+            
+            # Skip messages about users joining channels or other system notifications
+            if "さんがチャンネルに参加しました" in text or "has joined the channel" in text:
                 join_message_count += 1
                 continue
+            
+            # Skip system notifications about users leaving
+            if "さんがチャンネルから退出しました" in text or "has left the channel" in text:
+                join_message_count += 1  # Count under the same category
+                continue 
                 
             # Skip empty messages
-            if not msg["text"].strip():
+            if not text.strip():
                 empty_message_count += 1
                 continue
-                
+            
             # Skip system messages without user_id
-            if not msg["user_id"]:
+            if not has_user_id:
                 system_message_count += 1
                 continue
+            
+            # Check for messages that only contain non-latin characters (might cause issues for LLM)
+            if text and all(ord(c) > 127 for c in text.strip()):
+                # Count it but still include it - just for tracking
+                non_text_message_count += 1
                 
+            # Include this message for analysis
             filtered_messages.append(msg)
         
         # Log filtering results for debugging
         original_count = len(data["messages"])
         filtered_count = len(filtered_messages)
         logger.info(f"Filtered messages: {original_count} → {filtered_count} "
-                   f"(removed {join_message_count} join messages, "
+                   f"(removed {join_message_count} join/leave messages, "
                    f"{empty_message_count} empty messages, "
-                   f"{system_message_count} system messages)")
+                   f"{system_message_count} system messages, "
+                   f"kept {non_text_message_count} non-Latin text messages)")
         
         # Update the messages and counts in the data
         data["messages"] = filtered_messages
@@ -476,6 +492,28 @@ class SlackChannelAnalysisService(ResourceAnalysisService):
 
         # Parse the LLM response
         parsed_response = self.parse_llm_response(response, analysis_type)
+
+        # Log the raw response for debugging issue #238
+        logger.info(f"LLM raw response: {response.get('channel_summary', '')[:200]}...")
+        
+        # Check if the response mentions "no actual channel messages"
+        if "no actual channel messages" in response.get("channel_summary", "").lower():
+            logger.error(f"LLM reports 'no actual channel messages' despite {total_messages} messages being sent")
+            logger.info(f"This indicates the LLM doesn't recognize the message content as meaningful conversation")
+            
+            # Check the first few messages to see what might be wrong
+            messages_list = data.get("messages", [])
+            if messages_list:
+                logger.info(f"Sample of messages being sent to LLM:")
+                for i, msg in enumerate(messages_list[:5]):
+                    logger.info(f"  {i+1}. User: {msg.get('user', 'Unknown')} | Text: {msg.get('text', '')[:100]}")
+            
+            # Add debugging info to the response
+            parsed_response["debug_info"] = {
+                "total_messages_sent": total_messages,
+                "raw_response_fragment": response.get("channel_summary", "")[:200],
+                "mentions_no_messages": True
+            }
 
         # Add metadata to the results
         parsed_response["model_used"] = model
