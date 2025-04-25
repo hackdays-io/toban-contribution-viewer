@@ -453,9 +453,6 @@ const CreateAnalysisPage: React.FC = () => {
 
       // First - sync the channel data to ensure we have the latest messages
       try {
-        // Use the primary channel we defined above
-        // No need to redefine it here
-
         // Step 1: Sync general integration resources
         console.log('Syncing general integration data first...')
         await integrationService.syncResources(selectedIntegration)
@@ -548,8 +545,8 @@ const CreateAnalysisPage: React.FC = () => {
         })
       }
 
-      // Now, run the analysis for all selected channels
-      const analysisOptions: AnalysisOptions = {
+      // Prepare analysis options
+      const analysisOptions = {
         analysis_type: 'contribution',
         start_date: startDateParam || undefined,
         end_date: endDateParam || undefined,
@@ -557,25 +554,22 @@ const CreateAnalysisPage: React.FC = () => {
         include_reactions: includeReactions,
       }
 
-      // We need to make sure we have the full resource information for selected channels
-      const selectedChannelsDetails = selectedChannels.map((channelId) => {
-        const channel = allChannelResources.find((r) => r.id === channelId)
+      // Prepare channel data for the unified createChannelReport method
+      const channelsForReport = selectedChannels.map(channelId => {
+        const channel = allChannelResources.find(r => r.id === channelId)
         if (!channel) {
           console.warn(`Could not find details for channel ${channelId}`)
         }
         return {
           id: channelId,
           name: channel?.name || 'Unknown Channel',
-          has_bot: channel?.metadata?.has_bot || false,
+          integration_id: selectedIntegration
         }
       })
 
-      // We already defined primaryChannel above
-      // No need to redefine it here
+      console.log('Selected channels for analysis:', channelsForReport)
 
-      console.log('Selected channels for analysis:', selectedChannelsDetails)
-
-      // Show how many channels are being analyzed
+      // Show info about number of channels being analyzed
       toast({
         title: `Analyzing ${selectedChannels.length} channels`,
         description:
@@ -587,135 +581,32 @@ const CreateAnalysisPage: React.FC = () => {
         isClosable: true,
       })
 
-      // Handle the creation of analysis differently based on whether we have multiple channels
-      let result
+      // Use the unified method to create either a single or multi-channel report
+      const teamId = teamContext?.currentTeamId
+      if (!teamId) {
+        throw new Error('No team ID available')
+      }
+
+      const result = await integrationService.createChannelReport(
+        teamId,
+        channelsForReport,
+        analysisOptions
+      )
+
+      // Check for error
+      if (integrationService.isApiError(result)) {
+        const errorMessage = `Analysis failed: ${result.message}${result.detail ? `\nDetail: ${result.detail}` : ''}`
+        console.error(errorMessage)
+        throw new Error(errorMessage)
+      }
+
+      // Determine the redirect path
       let redirectPath
-
-      // Use the cross-resource report API for multiple channels
-      if (selectedChannels.length > 1) {
-        // Multi-channel report is now enabled
-        console.log(
-          'Creating multi-channel report with',
-          selectedChannels.length,
-          'channels'
-        )
-
-        // First, create resource analysis data for each selected channel
-        const resourceAnalyses = selectedChannels.map((channelId) => {
-          // Find the channel details
-          const channel = allChannelResources.find((r) => r.id === channelId)
-          if (!channel) {
-            console.warn(`Could not find details for channel ${channelId}`)
-          }
-
-          return {
-            integration_id: selectedIntegration,
-            resource_id: channelId,
-            resource_type: 'SLACK_CHANNEL',
-            analysis_type: 'CONTRIBUTION',
-            period_start: startDateParam || undefined,
-            period_end: endDateParam || undefined,
-            analysis_parameters: {
-              include_threads: includeThreads,
-              include_reactions: includeReactions,
-            },
-          }
-        })
-
-        // Create a cross-resource report
-        const reportData = {
-          title: `Multi-channel Analysis (${selectedChannels.length} channels)`,
-          description: `Analysis of ${selectedChannels.length} Slack channels`,
-          date_range_start: startDateParam,
-          date_range_end: endDateParam,
-          report_parameters: {
-            include_threads: includeThreads,
-            include_reactions: includeReactions,
-          },
-          resource_analyses: resourceAnalyses,
-        }
-
-        console.log('Creating cross-resource report with date range:', {
-          start: startDateParam,
-          end: endDateParam,
-          format: 'YYYY-MM-DD (without timezone)',
-        })
-
-        // Call the API to create the cross-resource report
-        try {
-          const headers = await integrationService.getAuthHeaders()
-          const teamId = teamContext?.currentTeamId
-
-          if (!teamId) {
-            throw new Error('No team ID available')
-          }
-
-          // Create the cross-resource report
-          const reportResponse = await fetch(
-            `${env.apiUrl}/reports/${teamId}/cross-resource-reports`,
-            {
-              method: 'POST',
-              headers: {
-                ...headers,
-                'Content-Type': 'application/json',
-              },
-              credentials: 'include',
-              body: JSON.stringify(reportData),
-            }
-          )
-
-          if (!reportResponse.ok) {
-            const errorData = await reportResponse.json()
-            throw new Error(
-              `Failed to create cross-resource report: ${errorData.detail || reportResponse.statusText}`
-            )
-          }
-
-          // Parse the report response
-          const report = await reportResponse.json()
-          console.log('Created cross-resource report:', report)
-
-          // Generate the report
-          const generateResponse = await fetch(
-            `${env.apiUrl}/reports/${teamId}/cross-resource-reports/${report.id}/generate`,
-            {
-              method: 'POST',
-              headers,
-              credentials: 'include',
-            }
-          )
-
-          if (!generateResponse.ok) {
-            const errorData = await generateResponse.json()
-            throw new Error(
-              `Failed to generate report: ${errorData.detail || generateResponse.statusText}`
-            )
-          }
-
-          const generateResult = await generateResponse.json()
-          console.log('Report generation started:', generateResult)
-
-          // Set the redirect path to the team analysis result page
-          redirectPath = `/dashboard/integrations/${selectedIntegration}/team-analysis/${report.id}`
-        } catch (error) {
-          console.error('Error creating multi-channel report:', error)
-          throw error
-        }
+      if (result.is_unified_report) {
+        // For multi-channel reports
+        redirectPath = result.report_path || `/dashboard/integrations/${selectedIntegration}/team-analysis/${result.id}`
       } else {
-        // Use the single channel analysis for just one channel
-        result = await integrationService.analyzeResource(
-          selectedIntegration,
-          primaryChannel,
-          analysisOptions
-        )
-
-        // Check if the result is an error
-        if (integrationService.isApiError(result)) {
-          const errorMessage = `Analysis failed: ${result.message}${result.detail ? `\nDetail: ${result.detail}` : ''}`
-          console.error(errorMessage)
-          throw new Error(errorMessage)
-        }
-
+        // For single channel analysis
         redirectPath = `/dashboard/integrations/${selectedIntegration}/channels/${primaryChannel}/analysis/${result.analysis_id}`
       }
 

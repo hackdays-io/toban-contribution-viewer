@@ -451,7 +451,9 @@ class IntegrationService {
       const resource = resources.find((res) => res.id === resourceId)
 
       if (!resource) {
-        console.error(`Resource ${resourceId} not found in integration ${integrationId}`)
+        console.error(
+          `Resource ${resourceId} not found in integration ${integrationId}`
+        )
         throw new Error(`Resource ${resourceId} not found`)
       }
       return resource
@@ -469,8 +471,12 @@ class IntegrationService {
   ): Promise<Record<string, unknown> | ApiError> {
     try {
       // Basic logging for sync request
-      console.log(`Syncing resources for integration ${integrationId}`, 
-        resourceTypes && resourceTypes.length > 0 ? resourceTypes : 'all resource types')
+      console.log(
+        `Syncing resources for integration ${integrationId}`,
+        resourceTypes && resourceTypes.length > 0
+          ? resourceTypes
+          : 'all resource types'
+      )
 
       const headers = await this.getAuthHeaders()
       let url = `${this.apiUrl}/${integrationId}/sync`
@@ -494,7 +500,7 @@ class IntegrationService {
       let result: Record<string, unknown>
       try {
         const text = await response.text()
-        
+
         try {
           result = text ? JSON.parse(text) : {}
         } catch (jsonError) {
@@ -711,7 +717,9 @@ class IntegrationService {
         )
       })
 
-      console.log(`Found ${selectedChannels.length} channels selected for analysis out of ${resources.length} total channels`)
+      console.log(
+        `Found ${selectedChannels.length} channels selected for analysis out of ${resources.length} total channels`
+      )
 
       return selectedChannels
     } catch (error) {
@@ -770,6 +778,184 @@ class IntegrationService {
       return await response.json()
     } catch (error) {
       return this.handleError(error, 'Failed to analyze resource')
+    }
+  }
+  
+  /**
+   * Create a cross-resource report for multiple channels or a single channel
+   * This function can be used for both single and multi-channel analyses
+   * @param teamId Team UUID
+   * @param channels Array of channel resources to include in the report
+   * @param options Analysis options
+   * @param title Custom title for the report (optional)
+   * @param description Custom description for the report (optional)
+   */
+  async createChannelReport(
+    teamId: string,
+    channels: { id: string, name: string, integration_id: string }[],
+    options: {
+      start_date?: string,
+      end_date?: string,
+      include_threads?: boolean,
+      include_reactions?: boolean,
+      analysis_type?: string
+    },
+    title?: string,
+    description?: string
+  ): Promise<Record<string, unknown> | ApiError> {
+    try {
+      // Validate required parameters
+      if (!teamId) {
+        throw new Error('Team ID is required')
+      }
+      
+      if (!channels || channels.length === 0) {
+        throw new Error('At least one channel is required')
+      }
+      
+      // Get the integration ID (all channels should be from the same integration)
+      const integrationId = channels[0].integration_id
+      
+      // Get auth headers
+      const headers = await this.getAuthHeaders()
+      
+      // If there's only one channel, use the single channel analysis endpoint
+      if (channels.length === 1) {
+        const channelId = channels[0].id
+        
+        // For single channel, just use the analyzeResource method
+        const analysisOptions = {
+          analysis_type: options.analysis_type || 'contribution',
+          start_date: options.start_date,
+          end_date: options.end_date,
+          include_threads: options.include_threads,
+          include_reactions: options.include_reactions,
+        }
+        
+        return await this.analyzeResource(integrationId, channelId, analysisOptions)
+      } 
+      // For multiple channels, create a cross-resource report
+      else {
+        // Create resource analysis data for each channel
+        const resourceAnalyses = channels.map((channel) => {
+          return {
+            integration_id: channel.integration_id,
+            resource_id: channel.id,
+            resource_type: 'SLACK_CHANNEL',
+            analysis_type: options.analysis_type || 'CONTRIBUTION',
+            period_start: options.start_date,
+            period_end: options.end_date,
+            analysis_parameters: {
+              include_threads: options.include_threads,
+              include_reactions: options.include_reactions,
+            },
+          }
+        })
+        
+        // Default title and description if not provided
+        const reportTitle = title || 
+          channels.length > 1 
+            ? `Multi-channel Analysis (${channels.length} channels)`
+            : `Analysis of ${channels[0].name}`
+        
+        const reportDescription = description ||
+          channels.length > 1
+            ? `Analysis of ${channels.length} Slack channels`
+            : `Analysis of Slack channel #${channels[0].name}`
+        
+        // Create the cross-resource report data
+        const reportData = {
+          title: reportTitle,
+          description: reportDescription,
+          date_range_start: options.start_date,
+          date_range_end: options.end_date,
+          report_parameters: {
+            include_threads: options.include_threads,
+            include_reactions: options.include_reactions,
+          },
+          resource_analyses: resourceAnalyses,
+        }
+        
+        // Create the cross-resource report
+        const reportResponse = await fetch(
+          `${env.apiUrl}/reports/${teamId}/cross-resource-reports`,
+          {
+            method: 'POST',
+            headers: {
+              ...headers,
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify(reportData),
+          }
+        )
+        
+        if (!reportResponse.ok) {
+          let errorDetail = ''
+          try {
+            const errorText = await reportResponse.text()
+            try {
+              const errorJson = JSON.parse(errorText)
+              errorDetail = errorJson.detail || errorJson.message || errorText
+            } catch {
+              errorDetail = errorText
+            }
+          } catch {
+            errorDetail = reportResponse.statusText
+          }
+          
+          return {
+            status: reportResponse.status,
+            message: `Failed to create report: ${reportResponse.status} ${reportResponse.statusText}`,
+            detail: errorDetail,
+          }
+        }
+        
+        // Parse the report response
+        const report = await reportResponse.json()
+        
+        // Generate the report
+        const generateResponse = await fetch(
+          `${env.apiUrl}/reports/${teamId}/cross-resource-reports/${report.id}/generate`,
+          {
+            method: 'POST',
+            headers,
+            credentials: 'include',
+          }
+        )
+        
+        if (!generateResponse.ok) {
+          let errorDetail = ''
+          try {
+            const errorText = await generateResponse.text()
+            try {
+              const errorJson = JSON.parse(errorText)
+              errorDetail = errorJson.detail || errorJson.message || errorText
+            } catch {
+              errorDetail = errorText
+            }
+          } catch {
+            errorDetail = generateResponse.statusText
+          }
+          
+          return {
+            status: generateResponse.status,
+            message: `Failed to generate report: ${generateResponse.status} ${generateResponse.statusText}`,
+            detail: errorDetail,
+          }
+        }
+        
+        // Return the report with generation info
+        const generateResult = await generateResponse.json()
+        return {
+          ...report,
+          generation: generateResult,
+          is_unified_report: true,
+          report_path: `/dashboard/integrations/${integrationId}/team-analysis/${report.id}`
+        }
+      }
+    } catch (error) {
+      return this.handleError(error, 'Failed to create channel report')
     }
   }
 
