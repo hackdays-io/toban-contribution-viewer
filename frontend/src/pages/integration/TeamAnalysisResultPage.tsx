@@ -72,7 +72,7 @@ interface AnalysisResponse {
   team_id?: string // Team ID for the analysis
   report_id?: string // CrossResourceReport ID for unified flow
   is_unified_report?: boolean // Flag indicating this uses the unified report system
-  
+
   // Added properties for handling JSON extraction
   fixedChannelSummary?: string
   fixedTopicAnalysis?: string
@@ -271,8 +271,9 @@ const ChannelAnalysisList: FC<ChannelAnalysisListProps> = ({
   }
 
   // Filter analyses using the provided filter function
-  const filteredAnalyses = 
-    reportResult?.resource_analyses && Array.isArray(reportResult.resource_analyses)
+  const filteredAnalyses =
+    reportResult?.resource_analyses &&
+    Array.isArray(reportResult.resource_analyses)
       ? reportResult.resource_analyses.filter(filterFn)
       : []
 
@@ -410,7 +411,9 @@ const TeamAnalysisResultPage: React.FC = () => {
   const highlightBg = useColorModeValue('purple.50', 'purple.800')
 
   // Check if this is a team analysis by URL pattern
-  const isTeamAnalysis = window.location.pathname.includes('/team-analysis/')
+  // Fix for multi-channel analysis - also check if analysisId is a cross-resource report ID
+  const isTeamAnalysis = window.location.pathname.includes('/team-analysis/') || 
+    (analysisId && !channelId) // If we have an analysisId but no channelId, it's likely a team analysis
 
   // Create share URL for the current analysis based on URL type
   const shareUrl = isTeamAnalysis
@@ -459,8 +462,9 @@ const TeamAnalysisResultPage: React.FC = () => {
       teamId = currentIntegration.owner_team.id
     } else {
       // If context doesn't have it yet, get it directly
-      const integrationResult =
-        await integrationService.getIntegration(integrationId ?? '')
+      const integrationResult = await integrationService.getIntegration(
+        integrationId ?? ''
+      )
 
       if (!integrationService.isApiError(integrationResult)) {
         directIntegration = integrationResult
@@ -507,12 +511,15 @@ const TeamAnalysisResultPage: React.FC = () => {
     // Extract data from the report to match our Analysis interface format
     // This is a temporary solution until we implement proper cross-resource report handling
     if (
-      crossResourceReport.resource_analyses && 
+      crossResourceReport.resource_analyses &&
       Array.isArray(crossResourceReport.resource_analyses) &&
       crossResourceReport.resource_analyses.length > 0
     ) {
       // Use the first resource analysis as a template
-      const firstAnalysis = crossResourceReport.resource_analyses[0] as Record<string, unknown>
+      const firstAnalysis = crossResourceReport.resource_analyses[0] as Record<
+        string,
+        unknown
+      >
 
       // Get the report description for the channel_summary field, with fallbacks
       const reportDescription =
@@ -523,13 +530,19 @@ const TeamAnalysisResultPage: React.FC = () => {
       const adaptedAnalysis: AnalysisResponse = {
         id: String(crossResourceReport.id || ''),
         channel_id: String(firstAnalysis.resource_id || ''),
-        channel_name: String(crossResourceReport.title || 'Cross-resource Report'),
-        start_date: String(crossResourceReport.date_range_start || new Date().toISOString()),
-        end_date: String(crossResourceReport.date_range_end || new Date().toISOString()),
+        channel_name: String(
+          crossResourceReport.title || 'Cross-resource Report'
+        ),
+        start_date: String(
+          crossResourceReport.date_range_start || new Date().toISOString()
+        ),
+        end_date: String(
+          crossResourceReport.date_range_end || new Date().toISOString()
+        ),
         message_count: Number(crossResourceReport.total_resources || 0),
         participant_count: Number(crossResourceReport.completed_analyses || 0),
-        thread_count: Array.isArray(crossResourceReport.resource_analyses) 
-          ? crossResourceReport.resource_analyses.length 
+        thread_count: Array.isArray(crossResourceReport.resource_analyses)
+          ? crossResourceReport.resource_analyses.length
           : 0,
         reaction_count: 0,
         // Always set channel_summary, which is important for UI rendering
@@ -541,8 +554,9 @@ const TeamAnalysisResultPage: React.FC = () => {
         key_highlights:
           'Multiple resource analysis - see individual analyses for details',
         model_used: String(firstAnalysis.model_used || 'N/A'),
-        generated_at:
-          String(crossResourceReport.created_at || new Date().toISOString()),
+        generated_at: String(
+          crossResourceReport.created_at || new Date().toISOString()
+        ),
         workspace_id: directIntegration
           ? directIntegration.id
           : currentIntegration?.id || '', // Use integration ID as workspace ID for display
@@ -564,7 +578,9 @@ const TeamAnalysisResultPage: React.FC = () => {
       const emptyAnalysis: AnalysisResponse = {
         id: String(crossResourceReport.id || analysisId || ''),
         channel_id: '',
-        channel_name: String(crossResourceReport.title || 'Cross-resource Report'),
+        channel_name: String(
+          crossResourceReport.title || 'Cross-resource Report'
+        ),
         start_date: String(
           crossResourceReport.date_range_start || new Date().toISOString()
         ),
@@ -607,11 +623,23 @@ const TeamAnalysisResultPage: React.FC = () => {
       }
     }
 
+    // Make sure we have a valid analysis ID before making the API call
+    if (!analysisId || analysisId === 'undefined') {
+      console.error('Invalid or undefined analysis ID:', analysisId)
+      throw new Error('Invalid analysis ID')
+    }
+    
+    // For channel analysis, make sure we have a valid channel ID 
+    if (!isTeamAnalysis && (!channelId || channelId === 'undefined')) {
+      console.error('Invalid or undefined channel ID for channel analysis:', channelId)
+      throw new Error('Invalid channel ID for channel analysis')
+    }
+
     // Fetch the specific analysis using the integration service
     const analysisResult = await integrationService.getResourceAnalysis(
       integrationId || '',
       channelId || '',
-      analysisId || ''
+      analysisId
     )
 
     // Check if the result is an API error
@@ -734,8 +762,8 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
    * Enhanced to handle more JSON formats and provide better error recovery
    * @deprecated This function is kept for reference but is no longer used directly
    */
-  // Function completely removed to avoid TypeScript/ESLint warnings 
-  
+  // Function completely removed to avoid TypeScript/ESLint warnings
+
   /* Original function for reference:
   const formatTextLegacy = (text: string, sectionType?: string) => {
     if (!text) return null
@@ -947,7 +975,7 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
    * @deprecated This function is kept for reference but is no longer used directly
    */
   // Function completely removed to avoid TypeScript/ESLint warnings
-  
+
   /* Original function for reference:
   const extractChannelSummaryContentLegacy = (text: string): string => {
     if (!text || text.trim().length === 0) {
@@ -1145,7 +1173,7 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
    * Render structured content from parsed JSON or manually extracted object
    * Function has been removed and all calls replaced with renderPlainText to fix ESLint/TypeScript issues
    */
-  
+
   // Note: renderSection functionality has been integrated into renderPlainText for simplicity
 
   // Try to get the workspace ID from different sources
@@ -1905,7 +1933,8 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
                   currentResources={currentResources}
                   integrationId={integrationId || ''}
                   filterFn={(analysis) =>
-                    analysis.status === 'COMPLETED' && Boolean(analysis.topic_analysis)
+                    analysis.status === 'COMPLETED' &&
+                    Boolean(analysis.topic_analysis)
                   }
                   contentField="topic_analysis"
                   emptyMessage="No topic analysis available for this channel."
@@ -2043,7 +2072,8 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
                   currentResources={currentResources}
                   integrationId={integrationId || ''}
                   filterFn={(analysis) =>
-                    analysis.status === 'COMPLETED' && Boolean(analysis.key_highlights)
+                    analysis.status === 'COMPLETED' &&
+                    Boolean(analysis.key_highlights)
                   }
                   contentField="key_highlights"
                   emptyMessage="No key highlights available for this channel."

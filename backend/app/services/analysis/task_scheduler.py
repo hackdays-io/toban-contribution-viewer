@@ -7,7 +7,7 @@ import logging
 from typing import Dict, List, Optional, Union
 from uuid import UUID
 
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_async_db
@@ -208,10 +208,6 @@ class ResourceAnalysisTaskScheduler:
             db: Database session
             report_id: ID of the CrossResourceReport to check
         """
-        from sqlalchemy import func, update
-
-        from app.models.reports import CrossResourceReport
-
         try:
             # Count the analyses for this report by status
             analyses_result = await db.execute(
@@ -324,36 +320,119 @@ class ResourceAnalysisTaskScheduler:
                     )
                 )
                 report = report_result.scalar_one_or_none()
-                
+
                 # For issue #238 - log report details to trace data consistency problems
                 if report:
                     logger.info(
                         f"Analysis {analysis_id} is part of report {report.id} "
                         f"with period {report.date_range_start} to {report.date_range_end}"
                     )
-                
+
                     # If it's multi-channel, check how many resources are in the report
                     resource_count_result = await db.execute(
-                        select(func.count()).select_from(ResourceAnalysis).where(
-                            ResourceAnalysis.cross_resource_report_id == report.id
-                        )
+                        select(func.count())
+                        .select_from(ResourceAnalysis)
+                        .where(ResourceAnalysis.cross_resource_report_id == report.id)
                     )
                     resource_count = resource_count_result.scalar_one() or 0
-                    
+
                     if resource_count > 1:
-                        logger.info(f"Report contains {resource_count} resources (multi-channel analysis)")
+                        logger.info(
+                            f"Report contains {resource_count} resources (multi-channel analysis)"
+                        )
                     else:
-                        logger.info("Report contains only one resource (single-channel analysis)")
+                        logger.info(
+                            "Report contains only one resource (single-channel analysis)"
+                        )
 
             # Run the analysis
-            logger.info(f"Running analysis {analysis_id} for resource {analysis.resource_id}")
-            
+            logger.info(
+                f"Running analysis {analysis_id} for resource {analysis.resource_id}"
+            )
+
             # For issue #238 - log the period dates
             logger.info(
                 f"Analysis period: {analysis.period_start} to {analysis.period_end} "
                 f"(types: {type(analysis.period_start).__name__}, {type(analysis.period_end).__name__})"
             )
-            
+
+            # MULTI-CHANNEL DEBUG: For multi-channel reports, sync messages only if needed
+            if report and resource_count > 1:
+                try:
+                    # Import the message service
+                    from app.services.slack.messages import SlackMessageService
+
+                    # Create a new message service - without passing db
+                    message_service = SlackMessageService()
+
+                    # Get the channel
+                    from app.models.slack import SlackChannel
+
+                    # Find the channel
+                    channel_result = await db.execute(
+                        select(SlackChannel).where(
+                            SlackChannel.id == analysis.resource_id
+                        )
+                    )
+                    channel = channel_result.scalar_one_or_none()
+
+                    if channel:
+                        # Check when channel was last synced
+                        from datetime import datetime
+
+                        current_time = datetime.utcnow()
+                        sync_threshold = 24  # Hours before we need to sync again
+                        needs_sync = True
+
+                        if channel.last_sync_at:
+                            hours_since_sync = (
+                                current_time - channel.last_sync_at
+                            ).total_seconds() / 3600
+                            needs_sync = hours_since_sync > sync_threshold
+
+                            if needs_sync:
+                                logger.info(
+                                    f"Channel {channel.name} was last synced {hours_since_sync:.1f} hours ago, exceeding threshold of {sync_threshold} hours"
+                                )
+                            else:
+                                logger.info(
+                                    f"Channel {channel.name} was synced recently ({hours_since_sync:.1f} hours ago), skipping sync"
+                                )
+                        else:
+                            logger.info(
+                                f"Channel {channel.name} has never been synced, performing initial sync"
+                            )
+
+                        if needs_sync:
+                            logger.info(
+                                f"Multi-channel report: Syncing messages for channel {channel.name} ({channel.id})"
+                            )
+
+                            # Sync messages for this channel with the date range
+                            sync_result = await message_service.sync_channel_messages(
+                                channel_id=str(channel.id),
+                                start_date=analysis.period_start,
+                                end_date=analysis.period_end,
+                                include_replies=True,
+                            )
+
+                            logger.info(f"Message sync result: {sync_result}")
+                        else:
+                            logger.info(
+                                f"Skipping message sync for channel {channel.name} (synced within {sync_threshold} hours)"
+                            )
+                    else:
+                        logger.warning(
+                            f"Could not find channel {analysis.resource_id} for syncing"
+                        )
+
+                except Exception as sync_error:
+                    logger.error(
+                        f"Error syncing messages for multi-channel report: {str(sync_error)}"
+                    )
+                    # Continue with analysis even if sync fails
+
+            # Run the actual analysis
             analysis_result = await service.run_analysis(
                 analysis_id=analysis.id,
                 resource_id=analysis.resource_id,
@@ -385,8 +464,6 @@ class ResourceAnalysisTaskScheduler:
             )
 
             # Update the analysis status to FAILED
-            from sqlalchemy import update
-
             try:
                 await db.execute(
                     update(ResourceAnalysis)
