@@ -571,22 +571,13 @@ const CreateAnalysisPage: React.FC = () => {
         throw new Error(errorMessage)
       }
 
-      // Determine the redirect path based on number of selected channels
-      let redirectPath
-      // Check if this is a multi-channel report (either has is_unified_report flag or has report_id)
-      if (result.is_unified_report || result.report_id || selectedChannels.length > 1) {
-        // For multi-channel reports
-        const reportId = result.report_id || result.id
-        redirectPath = `/dashboard/integrations/${selectedIntegration}/team-analysis/${reportId}`
-      } else {
-        // For single channel analysis
-        const analysisId = result.analysis_id || result.id
-        redirectPath = `/dashboard/integrations/${selectedIntegration}/channels/${primaryChannel}/analysis/${analysisId}`
-      }
+      // Always go to team-analysis page
+      const reportId = result.report_id || result.id
+      const redirectPath = `/dashboard/integrations/${selectedIntegration}/team-analysis/${reportId}`
 
       // Notify user and redirect
       toast({
-        title: 'Report Generation Process Is Started Successfully',
+        title: 'Report generation process was started successfully',
         description: 'Redirecting to the detailed report page...',
         status: 'success',
         duration: 3000,
