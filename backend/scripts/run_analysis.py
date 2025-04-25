@@ -9,14 +9,14 @@ import json
 import logging
 import os
 import sys
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 from uuid import UUID, uuid4
 
 import uvloop
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import selectinload, sessionmaker
 
 # Add the backend directory to the Python path
 backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -32,9 +32,9 @@ os.environ["OPENAI_API_KEY"] = "debug_openai_key"
 os.environ["OPENROUTER_API_KEY"] = "debug_openrouter_key"
 
 from app.models.integration import Integration
-from app.models.reports import AnalysisType
 from app.models.reports.cross_resource_report import CrossResourceReport, ResourceAnalysis
-from app.models.slack import SlackChannel, SlackWorkspace
+from app.models.reports import AnalysisType
+from app.models.slack import SlackChannel, SlackMessage, SlackUser, SlackWorkspace
 from app.services.analysis.slack_channel import SlackChannelAnalysisService
 from app.services.llm.openrouter import OpenRouterService
 
@@ -157,6 +157,7 @@ async def run_debug_analysis(
         logger.debug(f"Sample messages: {json.dumps(sample_messages, indent=2)}")
         
         # Count messages with system text
+        system_count = 0
         join_count = 0
         empty_count = 0
         for msg in messages:

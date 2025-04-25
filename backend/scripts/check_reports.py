@@ -17,8 +17,8 @@ import asyncio
 import logging
 import os
 import sys
-from datetime import datetime
-from typing import Dict, List, Optional
+from datetime import datetime, timedelta
+from typing import Dict, List, Optional, Set, Tuple
 from uuid import UUID
 
 # Add the backend directory to the Python path
@@ -26,6 +26,7 @@ backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, backend_dir)
 
 import sqlalchemy as sa
+from sqlalchemy import func
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -237,6 +238,18 @@ async def check_report_consistency(db: AsyncSession, report_id: UUID) -> Dict[st
         
         # Calculate the difference
         diff = db_count - analysis_count
+        if diff != 0:
+            logger.warning(
+                f"Discrepancy in channel {channel_name}: "
+                f"Missing {diff} messages in analysis"
+            )
+            
+            # Check for resource_summary in results
+            if analysis.results and "resource_summary" in analysis.results:
+                summary = analysis.results["resource_summary"]
+                if "no actual channel messages" in summary.lower():
+                    logger.error(f"LLM reports 'no actual channel messages' despite having {db_count} messages in DB")
+                    logger.info(f"Resource summary: {summary[:200]}...")
         
         # Get some sample messages to understand content
         sample_messages = await get_sample_messages(db, channel_id, start_date, end_date)
