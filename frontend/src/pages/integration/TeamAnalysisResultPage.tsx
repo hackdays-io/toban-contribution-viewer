@@ -1,4 +1,4 @@
-import React, { useEffect, useState, FC } from 'react'
+import React, { useEffect, useState, FC, useCallback } from 'react'
 import {
   Badge,
   Box,
@@ -322,7 +322,14 @@ const ChannelAnalysisList: FC<ChannelAnalysisListProps> = ({
                         : 'yellow'
                   }
                 >
-                  {channelAnalysis.status}
+                  {channelAnalysis.status === 'PENDING' ? (
+                    <HStack spacing={1}>
+                      <Text>PENDING</Text>
+                      <Spinner size="xs" />
+                    </HStack>
+                  ) : (
+                    channelAnalysis.status
+                  )}
                 </Badge>
               </Flex>
             </CardHeader>
@@ -408,11 +415,14 @@ const TeamAnalysisResultPage: React.FC = () => {
     string,
     unknown
   > | null>(null)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [pendingAnalyses, setPendingAnalyses] = useState<number>(0)
   const highlightBg = useColorModeValue('purple.50', 'purple.800')
 
   // Check if this is a team analysis by URL pattern
   // Fix for multi-channel analysis - also check if analysisId is a cross-resource report ID
-  const isTeamAnalysis = window.location.pathname.includes('/team-analysis/') || 
+  const isTeamAnalysis =
+    window.location.pathname.includes('/team-analysis/') ||
     (analysisId && !channelId) // If we have an analysisId but no channelId, it's likely a team analysis
 
   // Create share URL for the current analysis based on URL type
@@ -427,6 +437,9 @@ const TeamAnalysisResultPage: React.FC = () => {
       // For team analysis, we only need integrationId and analysisId
       if (integrationId && analysisId) {
         fetchData()
+        // Start checking for pending analyses after initial data load
+        setIsRefreshing(true)
+        checkReportStatus()
       }
     } else {
       // For channel analysis, we need all three IDs
@@ -452,7 +465,7 @@ const TeamAnalysisResultPage: React.FC = () => {
   /**
    * Handle team analysis (cross-resource report)
    */
-  const handleTeamAnalysis = async () => {
+  const handleTeamAnalysis = useCallback(async () => {
     // Try to get integration data through context or direct API call
     let teamId
     let directIntegration = null
@@ -606,12 +619,12 @@ const TeamAnalysisResultPage: React.FC = () => {
 
       setAnalysis(emptyAnalysis)
     }
-  }
+  }, [analysisId, currentIntegration, integrationId, toast])
 
   /**
    * Handle channel analysis flow
    */
-  const handleChannelAnalysis = async () => {
+  const handleChannelAnalysis = useCallback(async () => {
     // Fetch channel from resource list
     if (integrationId && channelId) {
       await fetchResources(integrationId)
@@ -628,10 +641,13 @@ const TeamAnalysisResultPage: React.FC = () => {
       console.error('Invalid or undefined analysis ID:', analysisId)
       throw new Error('Invalid analysis ID')
     }
-    
-    // For channel analysis, make sure we have a valid channel ID 
+
+    // For channel analysis, make sure we have a valid channel ID
     if (!isTeamAnalysis && (!channelId || channelId === 'undefined')) {
-      console.error('Invalid or undefined channel ID for channel analysis:', channelId)
+      console.error(
+        'Invalid or undefined channel ID for channel analysis:',
+        channelId
+      )
       throw new Error('Invalid channel ID for channel analysis')
     }
 
@@ -649,12 +665,19 @@ const TeamAnalysisResultPage: React.FC = () => {
 
     // Set the analysis data, casting it to the expected type
     setAnalysis(analysisResult as unknown as AnalysisResponse)
-  }
+  }, [
+    analysisId,
+    channelId,
+    currentResources,
+    fetchResources,
+    integrationId,
+    isTeamAnalysis,
+  ])
 
   /**
    * Fetch analysis data from API
    */
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setIsLoading(true)
 
     try {
@@ -689,7 +712,14 @@ const TeamAnalysisResultPage: React.FC = () => {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [
+    integrationId,
+    isTeamAnalysis,
+    fetchIntegration,
+    handleTeamAnalysis,
+    handleChannelAnalysis,
+    toast,
+  ])
 
   /**
    * Handle share button click
@@ -1175,6 +1205,84 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
    */
 
   // Note: renderSection functionality has been integrated into renderPlainText for simplicity
+
+  /**
+   * Checks the status of a cross-resource report and counts pending analyses
+   */
+  const checkReportStatus = useCallback(async () => {
+    if (!analysisId || !isTeamAnalysis) return
+
+    try {
+      // Get the team ID from the current integration or direct API call
+      let teamId = currentIntegration?.owner_team?.id
+
+      if (!teamId) {
+        // Try to get it directly if not available in context
+        const integrationResult = await integrationService.getIntegration(
+          integrationId ?? ''
+        )
+
+        if (!integrationService.isApiError(integrationResult)) {
+          teamId = integrationResult.owner_team.id
+        } else {
+          console.error(
+            'Could not get team ID for status check',
+            integrationResult
+          )
+          return
+        }
+      }
+
+      // Get the latest report status
+      const reportStatus = await integrationService.getCrossResourceReport(
+        teamId,
+        analysisId,
+        true // includeAnalyses=true to check individual resource analyses
+      )
+
+      if (integrationService.isApiError(reportStatus)) {
+        console.error('Error checking report status:', reportStatus)
+        return
+      }
+
+      // Update the report result state
+      setReportResult(reportStatus)
+
+      // Count pending analyses
+      let pendingCount = 0
+      if (
+        reportStatus.resource_analyses &&
+        Array.isArray(reportStatus.resource_analyses)
+      ) {
+        pendingCount = reportStatus.resource_analyses.filter(
+          (analysis: Record<string, unknown>) => analysis.status === 'PENDING'
+        ).length
+      }
+
+      // Update the pending count
+      setPendingAnalyses(pendingCount)
+
+      // If there are still pending analyses, check again after a delay
+      if (pendingCount > 0) {
+        setTimeout(() => {
+          checkReportStatus()
+        }, 5000) // Check every 5 seconds
+      } else if (isRefreshing) {
+        // If we were refreshing and now all analyses are complete, refresh the data
+        setIsRefreshing(false)
+        fetchData()
+      }
+    } catch (error) {
+      console.error('Error checking report status:', error)
+    }
+  }, [
+    analysisId,
+    currentIntegration?.owner_team?.id,
+    integrationId,
+    isRefreshing,
+    isTeamAnalysis,
+    fetchData,
+  ])
 
   // Try to get the workspace ID from different sources
   const workspaceId = analysis?.workspace_id || currentIntegration?.id
@@ -1705,10 +1813,19 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
                   {formatDate(analysis.start_date)} -{' '}
                   {formatDate(analysis.end_date)}
                 </Badge>
+                {pendingAnalyses > 0 && (
+                  <Badge colorScheme="yellow" ml={2}>
+                    <HStack spacing={1}>
+                      <Text>{pendingAnalyses} pending</Text>
+                      <Spinner size="xs" />
+                    </HStack>
+                  </Badge>
+                )}
               </HStack>
               <Text color="gray.600">
                 {currentIntegration?.name || 'Workspace'} • Generated on{' '}
                 {formatDateTime(analysis.generated_at)}
+                {pendingAnalyses > 0 && ' • Analysis in progress'}
               </Text>
             </Flex>
           </GridItem>
@@ -1763,6 +1880,31 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
                     onClick={handleExport}
                   />
                 </Tooltip>
+                {isTeamAnalysis && (
+                  <Tooltip
+                    label={isRefreshing ? 'Refreshing...' : 'Refresh status'}
+                    hasArrow
+                  >
+                    <IconButton
+                      aria-label="Refresh analysis status"
+                      icon={
+                        isRefreshing ? (
+                          <Spinner size="sm" />
+                        ) : (
+                          <Icon as={FiClock} />
+                        )
+                      }
+                      variant="outline"
+                      size="sm"
+                      colorScheme={pendingAnalyses > 0 ? 'yellow' : 'gray'}
+                      onClick={() => {
+                        setIsRefreshing(true)
+                        checkReportStatus()
+                      }}
+                      isDisabled={isRefreshing}
+                    />
+                  </Tooltip>
+                )}
               </HStack>
             </Flex>
           </GridItem>
