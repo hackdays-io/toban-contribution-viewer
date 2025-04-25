@@ -196,7 +196,44 @@ class SlackChannelAnalysisService(ResourceAnalysisService):
             Processed data ready for LLM analysis
         """
         logger.info(f"Preparing Slack channel data for {analysis_type} analysis")
-
+        
+        # Filter out system messages before processing
+        # Issue #238: Many channels only contain system messages which aren't useful for analysis
+        filtered_messages = []
+        system_message_count = 0
+        empty_message_count = 0
+        join_message_count = 0
+        
+        for msg in data["messages"]:
+            # Skip messages about users joining channels
+            if "さんがチャンネルに参加しました" in msg["text"]:
+                join_message_count += 1
+                continue
+                
+            # Skip empty messages
+            if not msg["text"].strip():
+                empty_message_count += 1
+                continue
+                
+            # Skip system messages without user_id
+            if not msg["user_id"]:
+                system_message_count += 1
+                continue
+                
+            filtered_messages.append(msg)
+        
+        # Log filtering results for debugging
+        original_count = len(data["messages"])
+        filtered_count = len(filtered_messages)
+        logger.info(f"Filtered messages: {original_count} → {filtered_count} "
+                   f"(removed {join_message_count} join messages, "
+                   f"{empty_message_count} empty messages, "
+                   f"{system_message_count} system messages)")
+        
+        # Update the messages and counts in the data
+        data["messages"] = filtered_messages
+        data["metadata"]["message_count"] = filtered_count
+        
         # Basic channel info is always included
         prepared_data = {
             "channel_name": data["channel"]["name"],
@@ -338,7 +375,7 @@ class SlackChannelAnalysisService(ResourceAnalysisService):
             logger.warning(f"No messages found for analysis in {channel_name}")
             # Return empty analysis with explanation
             return {
-                "resource_summary": "No messages were found in this channel during the specified time period. This could be because the channel is inactive, or because the date range was too narrow.",
+                "resource_summary": "No messages were found in this channel during the specified time period. This could be because the channel is inactive, or because the date range was too narrow. Note that system messages like 'user joined the channel' notifications are filtered out automatically.",
                 "key_highlights": "No activity to highlight in this time period.",
                 "contributor_insights": "No user activity to analyze in this time period.",
                 "topic_analysis": "No discussion topics found in this time period.",

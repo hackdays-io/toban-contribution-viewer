@@ -1,647 +1,429 @@
+#!/usr/bin/env python3
 """
-End-to-end test script for the unified analysis flow.
-
-This script tests both the single-channel and multi-channel analysis flows to ensure they
-work consistently with the new unified approach using CrossResourceReport records.
+Script to run an analysis on a specific channel or set of channels.
+This helps diagnose issues with the analysis pipeline, particularly for issue #238.
 """
 
 import asyncio
 import json
 import logging
+import os
 import sys
-import uuid
-from datetime import datetime, timedelta
-from typing import Any, Dict, Optional
+from datetime import datetime, timedelta, timezone
+from typing import List, Optional
+from uuid import UUID, uuid4
+
+import uvloop
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import selectinload, sessionmaker
+
+# Add the backend directory to the Python path
+backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, backend_dir)
+
+# Mock the settings to avoid configuration errors
+import os
+os.environ["SECRET_KEY"] = "debug_secret_key"
+os.environ["DATABASE_URL"] = "postgresql+asyncpg://toban_admin:postgres@localhost:5432/tobancv"
+os.environ["SUPABASE_URL"] = "https://example.supabase.co"
+os.environ["SUPABASE_KEY"] = "debug_key"
+os.environ["SUPABASE_JWT_SECRET"] = "debug_jwt_secret"
+os.environ["OPENAI_API_KEY"] = "debug_openai_key"
+os.environ["OPENROUTER_API_KEY"] = "debug_openrouter_key"
+
+from app.models.integration import Integration
+from app.models.reports.cross_resource_report import CrossResourceReport, ResourceAnalysis
+from app.models.reports import AnalysisType
+from app.models.slack import SlackChannel, SlackMessage, SlackUser, SlackWorkspace
+from app.services.analysis.slack_channel import SlackChannelAnalysisService
+from app.services.llm.openrouter import OpenRouterService
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    level=logging.DEBUG,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[
+        logging.StreamHandler(sys.stdout),
+        logging.FileHandler("debug_analysis.log")
+    ]
 )
+
+# Set up module-specific loggers
 logger = logging.getLogger(__name__)
+slack_logger = logging.getLogger("app.services.slack.messages")
+analysis_logger = logging.getLogger("app.services.analysis.slack_channel")
+llm_logger = logging.getLogger("app.services.llm.openrouter")
 
-# We need to add the parent directory to the path to import the app modules
-sys.path.insert(0, ".")
+# Set all loggers to DEBUG
+for module_logger in [slack_logger, analysis_logger, llm_logger]:
+    module_logger.setLevel(logging.DEBUG)
 
-from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
+# Database connection - hardcoded for local development
+DATABASE_URL = "postgresql+asyncpg://toban_admin:postgres@localhost:5432/tobancv"
 
-from app.db.session import AsyncSessionLocal
-from app.models.integration import (
-    Integration,
-    IntegrationType,
-    ResourceType,
-    ServiceResource,
+# Create async database engine
+engine = create_async_engine(
+    DATABASE_URL,
+    echo=False,  # Set to True for SQL debugging
+    pool_pre_ping=True,
 )
-from app.models.reports import (
-    AnalysisResourceType,
-    AnalysisType,
-    CrossResourceReport,
-    ReportStatus,
-    ResourceAnalysis,
+
+# Create async session factory
+async_session = sessionmaker(
+    engine, class_=AsyncSession, expire_on_commit=False, autoflush=False
 )
-from app.models.slack import SlackChannel, SlackWorkspace
 
 
-async def get_test_integration(db: AsyncSession) -> Optional[Dict[str, Any]]:
-    """
-    Find a suitable Slack integration for testing.
-    """
-    stmt = (
-        select(Integration)
-        .where(
-            Integration.service_type == IntegrationType.SLACK,
-            Integration.status == "active",
-        )
-        .limit(1)
+async def get_channel_by_name(db: AsyncSession, channel_name: str) -> Optional[SlackChannel]:
+    """Get a Slack channel by name."""
+    result = await db.execute(
+        select(SlackChannel).where(SlackChannel.name == channel_name)
     )
+    return result.scalar_one_or_none()
 
-    result = await db.execute(stmt)
-    integration = result.scalar_one_or_none()
 
-    if not integration:
-        logger.error("No active Slack integration found for testing")
-        return None
-
-    # Get related workspace
-    metadata = integration.integration_metadata or {}
-    slack_workspace_id = metadata.get("slack_id")
-
-    if not slack_workspace_id:
-        logger.error(f"Integration {integration.id} has no Slack workspace ID")
-        return None
-
-    workspace_stmt = select(SlackWorkspace).where(
-        SlackWorkspace.slack_id == slack_workspace_id
+async def get_workspace_for_channel(db: AsyncSession, channel_id: UUID) -> Optional[SlackWorkspace]:
+    """Get the workspace for a channel."""
+    result = await db.execute(
+        select(SlackChannel).where(SlackChannel.id == channel_id)
     )
-    workspace_result = await db.execute(workspace_stmt)
-    workspace = workspace_result.scalar_one_or_none()
-
-    if not workspace:
-        logger.error(f"No workspace found for Slack ID {slack_workspace_id}")
+    channel = result.scalar_one_or_none()
+    if not channel or not channel.workspace_id:
         return None
-
-    # Find a channel that's suitable for testing
-    resource_stmt = (
-        select(ServiceResource)
-        .where(
-            ServiceResource.integration_id == integration.id,
-            ServiceResource.resource_type == ResourceType.SLACK_CHANNEL,
-        )
-        .order_by(ServiceResource.created_at.desc())
-        .limit(1)
+    
+    result = await db.execute(
+        select(SlackWorkspace).where(SlackWorkspace.id == channel.workspace_id)
     )
+    return result.scalar_one_or_none()
 
-    resource_result = await db.execute(resource_stmt)
-    channel_resource = resource_result.scalar_one_or_none()
 
-    if not channel_resource:
-        logger.error(f"No channel resources found for integration {integration.id}")
-        return None
+async def get_integration_for_workspace(db: AsyncSession, workspace_slack_id: str) -> Optional[Integration]:
+    """Get the integration for a workspace by Slack ID."""
+    result = await db.execute(
+        select(Integration).where(Integration.workspace_id == workspace_slack_id)
+    )
+    return result.scalar_one_or_none()
 
-    # Find the corresponding SlackChannel
-    channel_stmt = select(SlackChannel).where(SlackChannel.id == channel_resource.id)
-    channel_result = await db.execute(channel_stmt)
-    channel = channel_result.scalar_one_or_none()
 
+async def run_debug_analysis(
+    db: AsyncSession,
+    channel_name: str,
+    start_date: datetime,
+    end_date: datetime,
+    analysis_type: str = AnalysisType.ACTIVITY,  # Changed from GENERAL to ACTIVITY
+    include_threads: bool = True,
+    message_limit: int = 0,  # 0 means no limit
+    dry_run: bool = False,
+) -> None:
+    """Run a debug analysis on a channel."""
+    logger.info(f"Running debug analysis for channel {channel_name}")
+    logger.info(f"Date range: {start_date} to {end_date}")
+    logger.info(f"Analysis type: {analysis_type}")
+    
+    # Get the channel
+    channel = await get_channel_by_name(db, channel_name)
     if not channel:
-        # Create a new SlackChannel from the resource
-        logger.info(f"Creating SlackChannel for resource {channel_resource.id}")
-        channel = SlackChannel(
-            id=channel_resource.id,
-            workspace_id=workspace.id,
-            slack_id=channel_resource.external_id,
-            name=channel_resource.name.lstrip("#"),
-            type="public",
-            is_selected_for_analysis=True,
-            is_supported=True,
-            last_sync_at=datetime.utcnow(),
-        )
-        db.add(channel)
-        await db.commit()
-
-    return {
-        "integration": integration,
-        "workspace": workspace,
-        "channel_resource": channel_resource,
-        "channel": channel,
+        logger.error(f"Channel {channel_name} not found")
+        return
+    
+    logger.info(f"Found channel: {channel.name} (ID: {channel.id}, Slack ID: {channel.slack_id})")
+    
+    # Get the workspace
+    workspace = await get_workspace_for_channel(db, channel.id)
+    if not workspace:
+        logger.error(f"Workspace not found for channel {channel_name}")
+        return
+    
+    logger.info(f"Workspace: {workspace.name} (ID: {workspace.id}, Slack ID: {workspace.slack_id})")
+    
+    # Get the integration
+    integration = await get_integration_for_workspace(db, workspace.slack_id)
+    if not integration:
+        logger.error(f"Integration not found for workspace {workspace.name}")
+        return
+    
+    logger.info(f"Integration: {integration.name} (ID: {integration.id})")
+    
+    # Debug patch: Add proper monkeypatch logging to the OpenRouterService
+    original_format_messages = OpenRouterService._format_messages
+    
+    def debug_format_messages(self, messages_data, max_tokens=None):
+        """Debug wrapper for _format_messages to log the message processing."""
+        # Check if messages_data is a dict or a list (handle both formats)
+        if isinstance(messages_data, dict):
+            messages = messages_data.get('messages', [])
+            logger.debug(f"_format_messages called with {len(messages)} messages (dict format)")
+            sample_messages = messages[:5]
+        else:
+            # If it's a list, it's already the messages
+            messages = messages_data
+            logger.debug(f"_format_messages called with {len(messages)} messages (list format)")
+            sample_messages = messages[:5] if messages else []
+            
+        logger.debug(f"Sample messages: {json.dumps(sample_messages, indent=2)}")
+        
+        # Count messages with system text
+        system_count = 0
+        join_count = 0
+        empty_count = 0
+        for msg in messages:
+            if "さんがチャンネルに参加しました" in msg.get("text", ""):
+                join_count += 1
+            if not msg.get("text"):
+                empty_count += 1
+                
+        if join_count > 0:
+            logger.warning(f"Found {join_count} join messages out of {len(messages)} total messages")
+        if empty_count > 0:
+            logger.warning(f"Found {empty_count} empty messages out of {len(messages)} total messages")
+        
+        # Call the original function
+        result = original_format_messages(self, messages_data, max_tokens)
+        logger.debug(f"_format_messages result content length: {len(result) if result else 0}")
+        return result
+    
+    # Apply the monkeypatch
+    OpenRouterService._format_messages = debug_format_messages
+    
+    # Debug patch for analyze_channel_messages to avoid making the actual API call
+    original_analyze = OpenRouterService.analyze_channel_messages
+    
+    async def debug_analyze_channel_messages(self, channel_name, messages_data, start_date=None, end_date=None, model=None):
+        """Debug wrapper to skip the actual LLM API call."""
+        logger.debug(f"analyze_channel_messages called for {channel_name}")
+        
+        # Format the messages to check for content
+        message_content = self._format_messages(messages_data.get("messages", []) if isinstance(messages_data, dict) else messages_data)
+        
+        logger.debug(f"Message content preview: {message_content[:100]} (length: {len(message_content)})")
+        
+        # Count types of messages
+        messages_list = messages_data.get("messages", []) if isinstance(messages_data, dict) else messages_data
+        user_messages = [msg for msg in messages_list if msg.get("user") != "System" and "さんがチャンネルに参加しました" not in msg.get("text", "")]
+        system_messages = [msg for msg in messages_list if msg.get("user") == "System" or "さんがチャンネルに参加しました" in msg.get("text", "")]
+        
+        logger.debug(f"Message counts: {len(user_messages)} user messages, {len(system_messages)} system messages")
+        
+        if len(user_messages) == 0:
+            logger.warning("No user messages found - LLM will likely report 'no actual channel messages'")
+        
+        if dry_run:
+            # Return mock response for dry run
+            return {
+                "channel_summary": "Debug run - no API call made",
+                "key_highlights": "This is a debug dry run to check message processing",
+                "contributor_insights": f"Found {len(user_messages)} user messages out of {len(messages_list)} total messages",
+                "topic_analysis": "Debug run",
+            }
+        else:
+            # Call the original method for real runs
+            return await original_analyze(self, channel_name, messages_data, start_date, end_date, model)
+    
+    # Apply the second monkeypatch
+    OpenRouterService.analyze_channel_messages = debug_analyze_channel_messages
+    
+    # Initialize the analysis service
+    llm_client = OpenRouterService()
+    analysis_service = SlackChannelAnalysisService(db, llm_client)
+    
+    # Set up parameters
+    parameters = {
+        "include_threads": include_threads,
+        "message_limit": message_limit,
+        "dry_run": dry_run,
     }
-
-
-async def test_unified_single_channel_analysis(
-    db: AsyncSession, test_data: Dict[str, Any]
-) -> bool:
-    """
-    Test creating a single-channel analysis using the unified approach.
-    """
-    logger.info("=== Testing Unified Single-Channel Analysis ===")
-
-    integration = test_data["integration"]
-    workspace = test_data["workspace"]
-    channel = test_data["channel"]
-
-    # Create a CrossResourceReport
-    report_uuid = uuid.uuid4()
-
-    # Log the workspace and team_id status for debugging
-    logger.info(f"Creating CrossResourceReport with workspace ID: {workspace.id}")
-
-    # Check if workspace.team_id is None and handle it gracefully
-    team_id = workspace.team_id
-    if team_id is None:
-        # If workspace.team_id is None, try to get it from the integration's owner_team_id
-        logger.warning(
-            f"Workspace {workspace.id} has null team_id, using integration.owner_team_id instead"
-        )
-        team_id = integration.owner_team_id
-
-        if team_id is None:
-            # If still no team_id, log error and raise exception
-            logger.error(
-                f"Cannot create CrossResourceReport: No valid team_id found in workspace {workspace.id} or integration {integration.id}"
-            )
-            raise ValueError(
-                "Could not determine team_id for CrossResourceReport. Please check workspace and integration configuration."
-            )
-
-        logger.info(
-            f"Using integration.owner_team_id: {team_id} for CrossResourceReport"
-        )
-    else:
-        logger.info(f"Using workspace.team_id: {team_id} for CrossResourceReport")
-
-    # Define date range for analysis
-    end_date = datetime.utcnow()
-    start_date = end_date - timedelta(days=7)
-
-    # Create the CrossResourceReport
-    cross_report = CrossResourceReport(
-        id=report_uuid,
-        team_id=team_id,
-        title=f"Test Analysis of {channel.name}",
-        description=f"Single-channel analysis of {channel.name} from {start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}",
-        status=ReportStatus.COMPLETED,
-        date_range_start=start_date,
-        date_range_end=end_date,
-        report_parameters={
-            "include_threads": True,
-            "include_reactions": True,
-            "model": "claude-3-haiku-20240307",
-            "single_channel_analysis": True,
-            "channel_id": str(channel.id),
-            "channel_name": channel.name,
-        },
-        comprehensive_analysis="Test analysis summary",
-        comprehensive_analysis_generated_at=datetime.utcnow(),
-        model_used="claude-3-haiku-20240307",
-    )
-    db.add(cross_report)
-
-    # Create the ResourceAnalysis
-    analysis_uuid = uuid.uuid4()
-    resource_analysis = ResourceAnalysis(
-        id=analysis_uuid,
-        cross_resource_report_id=report_uuid,
-        integration_id=integration.id,
-        resource_id=channel.id,
-        resource_type=AnalysisResourceType.SLACK_CHANNEL,
-        analysis_type=AnalysisType.CONTRIBUTION,
-        status=ReportStatus.COMPLETED,
-        period_start=start_date,
-        period_end=end_date,
-        analysis_parameters={
-            "include_threads": True,
-            "include_reactions": True,
-            "model": "claude-3-haiku-20240307",
-            "channel_name": channel.name,
-        },
-        results={
-            "message_count": 100,
-            "participant_count": 10,
-            "thread_count": 5,
-            "reaction_count": 20,
-        },
-        resource_summary="Test channel summary",
-        topic_analysis="Test topic analysis",
-        contributor_insights="Test contributor insights",
-        key_highlights="Test key highlights",
-        model_used="claude-3-haiku-20240307",
-        analysis_generated_at=datetime.utcnow(),
-    )
-    db.add(resource_analysis)
-
+    
     try:
-        await db.commit()
-        logger.info(
-            f"Successfully created test single-channel analysis with report ID {report_uuid} and analysis ID {analysis_uuid}"
-        )
-
-        # Verify that we can retrieve the analysis
-        stmt = select(ResourceAnalysis).where(ResourceAnalysis.id == analysis_uuid)
-        result = await db.execute(stmt)
-        saved_analysis = result.scalar_one_or_none()
-
-        if not saved_analysis:
-            logger.error(f"Could not retrieve saved analysis with ID {analysis_uuid}")
-            return False
-
-        logger.info(f"Successfully retrieved saved analysis: {saved_analysis.id}")
-
-        # Verify that we can retrieve the report
-        stmt = select(CrossResourceReport).where(CrossResourceReport.id == report_uuid)
-        result = await db.execute(stmt)
-        saved_report = result.scalar_one_or_none()
-
-        if not saved_report:
-            logger.error(f"Could not retrieve saved report with ID {report_uuid}")
-            return False
-
-        logger.info(f"Successfully retrieved saved report: {saved_report.id}")
-
-        # Record test IDs for cleanup
-        test_data["single_channel_report_id"] = report_uuid
-        test_data["single_channel_analysis_id"] = analysis_uuid
-
-        return True
-
-    except Exception as e:
-        logger.error(
-            f"Error creating test single-channel analysis: {str(e)}", exc_info=True
-        )
-        await db.rollback()
-        return False
-
-
-async def test_multi_channel_analysis(
-    db: AsyncSession, test_data: Dict[str, Any]
-) -> bool:
-    """
-    Test creating a multi-channel analysis (CrossResourceReport with multiple ResourceAnalysis records).
-    """
-    logger.info("=== Testing Multi-Channel Analysis ===")
-
-    integration = test_data["integration"]
-    workspace = test_data["workspace"]
-
-    # Get multiple channels for this integration
-    resource_stmt = (
-        select(ServiceResource)
-        .where(
-            ServiceResource.integration_id == integration.id,
-            ServiceResource.resource_type == ResourceType.SLACK_CHANNEL,
-        )
-        .limit(3)
-    )
-
-    resource_result = await db.execute(resource_stmt)
-    channels = []
-
-    for resource in resource_result.scalars().all():
-        # Find or create SlackChannel
-        channel_stmt = select(SlackChannel).where(SlackChannel.id == resource.id)
-        channel_result = await db.execute(channel_stmt)
-        channel = channel_result.scalar_one_or_none()
-
-        if not channel:
-            # Create a new SlackChannel from the resource
-            logger.info(f"Creating SlackChannel for resource {resource.id}")
-            channel = SlackChannel(
-                id=resource.id,
-                workspace_id=workspace.id,
-                slack_id=resource.external_id,
-                name=resource.name.lstrip("#"),
-                type="public",
-                is_selected_for_analysis=True,
-                is_supported=True,
-                last_sync_at=datetime.utcnow(),
-            )
-            db.add(channel)
-            await db.commit()
-
-        channels.append({"resource": resource, "channel": channel})
-
-    if len(channels) < 1:
-        logger.error(f"Not enough channels found for integration {integration.id}")
-        return False
-
-    # Check if workspace.team_id is None and handle it gracefully
-    team_id = workspace.team_id
-    if team_id is None:
-        # If workspace.team_id is None, try to get it from the integration's owner_team_id
-        logger.warning(
-            f"Workspace {workspace.id} has null team_id, using integration.owner_team_id instead"
-        )
-        team_id = integration.owner_team_id
-
-        if team_id is None:
-            # If still no team_id, log error and raise exception
-            logger.error(
-                f"Cannot create CrossResourceReport: No valid team_id found in workspace {workspace.id} or integration {integration.id}"
-            )
-            raise ValueError(
-                "Could not determine team_id for CrossResourceReport. Please check workspace and integration configuration."
-            )
-
-        logger.info(
-            f"Using integration.owner_team_id: {team_id} for CrossResourceReport"
-        )
-    else:
-        logger.info(f"Using workspace.team_id: {team_id} for CrossResourceReport")
-
-    # Define date range for analysis
-    end_date = datetime.utcnow()
-    start_date = end_date - timedelta(days=7)
-
-    # Create the CrossResourceReport for multiple channels
-    report_uuid = uuid.uuid4()
-    channel_names = ", ".join([c["channel"].name for c in channels])
-
-    multi_report = CrossResourceReport(
-        id=report_uuid,
-        team_id=team_id,
-        title="Test Multi-Channel Analysis",
-        description=f"Multi-channel analysis of {channel_names} from {start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}",
-        status=ReportStatus.COMPLETED,
-        date_range_start=start_date,
-        date_range_end=end_date,
-        report_parameters={
-            "include_threads": True,
-            "include_reactions": True,
-            "model": "claude-3-haiku-20240307",
-            "single_channel_analysis": False,
-            "channel_ids": [str(c["channel"].id) for c in channels],
-            "channel_names": [c["channel"].name for c in channels],
-        },
-        comprehensive_analysis="Test multi-channel analysis summary",
-        comprehensive_analysis_generated_at=datetime.utcnow(),
-        model_used="claude-3-haiku-20240307",
-    )
-    db.add(multi_report)
-
-    # Create a ResourceAnalysis for each channel
-    analysis_ids = []
-    for channel_data in channels:
-        channel = channel_data["channel"]
-        analysis_uuid = uuid.uuid4()
-        analysis_ids.append(analysis_uuid)
-
-        resource_analysis = ResourceAnalysis(
-            id=analysis_uuid,
-            cross_resource_report_id=report_uuid,
-            integration_id=integration.id,
+        # Fetch data
+        logger.info("Fetching channel data...")
+        data = await analysis_service.fetch_data(
             resource_id=channel.id,
-            resource_type=AnalysisResourceType.SLACK_CHANNEL,
-            analysis_type=AnalysisType.CONTRIBUTION,
-            status=ReportStatus.COMPLETED,
-            period_start=start_date,
-            period_end=end_date,
-            analysis_parameters={
-                "include_threads": True,
-                "include_reactions": True,
-                "model": "claude-3-haiku-20240307",
-                "channel_name": channel.name,
-            },
-            results={
-                "message_count": 50,
-                "participant_count": 5,
-                "thread_count": 3,
-                "reaction_count": 10,
-            },
-            resource_summary=f"Test summary for {channel.name}",
-            topic_analysis=f"Test topic analysis for {channel.name}",
-            contributor_insights=f"Test contributor insights for {channel.name}",
-            key_highlights=f"Test key highlights for {channel.name}",
-            model_used="claude-3-haiku-20240307",
-            analysis_generated_at=datetime.utcnow(),
+            start_date=start_date,
+            end_date=end_date,
+            integration_id=integration.id,
+            parameters=parameters,
         )
-        db.add(resource_analysis)
-
-    try:
-        await db.commit()
-        logger.info(
-            f"Successfully created test multi-channel analysis with report ID {report_uuid} and {len(analysis_ids)} analysis records"
+        
+        # Log statistics
+        logger.info(f"Retrieved {len(data['messages'])} messages")
+        logger.info(f"User count: {len(data['users'])}")
+        logger.info(f"Thread count: {data['metadata']['thread_count']}")
+        
+        # Debug check: Let's look at a few message samples
+        logger.info("Sample messages:")
+        for i, msg in enumerate(data["messages"][:5]):
+            logger.info(f"  {i+1}. {msg['timestamp']} | User: {msg['user_id']} | Text: '{msg['text'][:100]}...'")
+            logger.info(f"     Thread info: parent={msg['is_thread_parent']}, reply={msg['is_thread_reply']}, replies={msg['reply_count']}")
+        
+        # Prepare data for analysis
+        logger.info("Preparing data for analysis...")
+        prepared_data = await analysis_service.prepare_data_for_analysis(data, analysis_type)
+        
+        # Log prepared data statistics
+        logger.info(f"Prepared data: {prepared_data['total_messages']} total messages")
+        
+        if analysis_type == AnalysisType.ACTIVITY:
+            logger.info(f"Prepared {len(prepared_data.get('messages', []))} messages for LLM")
+            sample_prepared = prepared_data.get('messages', [])[:3]
+            logger.info(f"Sample prepared messages: {json.dumps(sample_prepared, indent=2)}")
+        
+        # Run the analysis
+        logger.info("Running analysis...")
+        analysis_results = await analysis_service.analyze_data(
+            data=prepared_data,
+            analysis_type=analysis_type,
+            parameters=parameters,
         )
-
-        # Verify that we can retrieve the multi-channel report
-        stmt = select(CrossResourceReport).where(CrossResourceReport.id == report_uuid)
-        result = await db.execute(stmt)
-        saved_report = result.scalar_one_or_none()
-
-        if not saved_report:
-            logger.error(
-                f"Could not retrieve saved multi-channel report with ID {report_uuid}"
-            )
-            return False
-
-        logger.info(
-            f"Successfully retrieved saved multi-channel report: {saved_report.id}"
-        )
-
-        # Verify that all ResourceAnalysis records are properly associated with the report
-        stmt = select(ResourceAnalysis).where(
-            ResourceAnalysis.cross_resource_report_id == report_uuid
-        )
-        result = await db.execute(stmt)
-        analyses = result.scalars().all()
-
-        if len(analyses) != len(analysis_ids):
-            logger.error(
-                f"Expected {len(analysis_ids)} analyses, but found {len(analyses)}"
-            )
-            return False
-
-        logger.info(
-            f"Successfully retrieved all {len(analyses)} analyses associated with report {report_uuid}"
-        )
-
-        # Record test IDs for cleanup
-        test_data["multi_channel_report_id"] = report_uuid
-        test_data["multi_channel_analysis_ids"] = analysis_ids
-
-        return True
-
+        
+        # Log results
+        if dry_run:
+            logger.info("Dry run completed - No LLM call made")
+        else:
+            logger.info("Analysis completed")
+            logger.info(f"Resource summary: {analysis_results.get('resource_summary', '')[:200]}...")
+            logger.info(f"Key highlights: {analysis_results.get('key_highlights', '')[:200]}...")
+            
+            # Check for no_data flag
+            if analysis_results.get("no_data", False):
+                logger.error("LLM reported no_data=True despite having messages in the data")
+        
     except Exception as e:
-        logger.error(
-            f"Error creating test multi-channel analysis: {str(e)}", exc_info=True
+        logger.error(f"Error running analysis: {str(e)}")
+        import traceback
+        traceback.print_exc()
+
+
+async def create_debug_cross_report(
+    db: AsyncSession,
+    channel_names: List[str],
+    start_date: datetime,
+    end_date: datetime,
+    analysis_type: str = AnalysisType.ACTIVITY,
+    title: str = None,
+) -> Optional[UUID]:
+    """Create a cross-resource report for debugging."""
+    logger.info(f"Creating cross-resource report for channels: {', '.join(channel_names)}")
+    logger.info(f"Date range: {start_date} to {end_date}")
+    
+    # Get the channels
+    channels = []
+    for name in channel_names:
+        channel = await get_channel_by_name(db, name)
+        if not channel:
+            logger.error(f"Channel {name} not found")
+            continue
+        channels.append(channel)
+    
+    if not channels:
+        logger.error("No valid channels found")
+        return None
+    
+    # Generate a title if not provided
+    if not title:
+        title = f"Debug Multi-channel Analysis ({len(channels)} channels)"
+    
+    # Create the report
+    report = CrossResourceReport(
+        id=uuid4(),
+        title=title,
+        date_range_start=start_date,
+        date_range_end=end_date,
+        created_at=datetime.now(timezone.utc),
+        status="pending",
+    )
+    
+    db.add(report)
+    
+    # Create resource analyses
+    for channel in channels:
+        # Get the workspace
+        workspace = await get_workspace_for_channel(db, channel.id)
+        if not workspace:
+            logger.error(f"Workspace not found for channel {channel.name}")
+            continue
+        
+        # Get the integration
+        integration = await get_integration_for_workspace(db, workspace.slack_id)
+        if not integration:
+            logger.error(f"Integration not found for workspace {workspace.name}")
+            continue
+        
+        analysis = ResourceAnalysis(
+            id=uuid4(),
+            cross_resource_report_id=report.id,
+            resource_id=channel.id,
+            resource_type=AnalysisType.SLACK_CHANNEL,
+            integration_id=integration.id,
+            analysis_type=analysis_type,
+            created_at=datetime.now(timezone.utc),
+            status="pending",
         )
-        await db.rollback()
-        return False
-
-
-async def cleanup_test_data(db: AsyncSession, test_data: Dict[str, Any]) -> None:
-    """
-    Clean up test data created during tests.
-    """
-    logger.info("=== Cleaning Up Test Data ===")
-
-    # Delete single-channel test data
-    single_channel_analysis_id = test_data.get("single_channel_analysis_id")
-    if single_channel_analysis_id:
-        try:
-            stmt = select(ResourceAnalysis).where(
-                ResourceAnalysis.id == single_channel_analysis_id
-            )
-            result = await db.execute(stmt)
-            analysis = result.scalar_one_or_none()
-
-            if analysis:
-                await db.delete(analysis)
-                logger.info(f"Deleted test analysis {single_channel_analysis_id}")
-        except Exception as e:
-            logger.error(
-                f"Error deleting test analysis {single_channel_analysis_id}: {str(e)}"
-            )
-
-    single_channel_report_id = test_data.get("single_channel_report_id")
-    if single_channel_report_id:
-        try:
-            stmt = select(CrossResourceReport).where(
-                CrossResourceReport.id == single_channel_report_id
-            )
-            result = await db.execute(stmt)
-            report = result.scalar_one_or_none()
-
-            if report:
-                await db.delete(report)
-                logger.info(f"Deleted test report {single_channel_report_id}")
-        except Exception as e:
-            logger.error(
-                f"Error deleting test report {single_channel_report_id}: {str(e)}"
-            )
-
-    # Delete multi-channel test data
-    multi_channel_analysis_ids = test_data.get("multi_channel_analysis_ids", [])
-    for analysis_id in multi_channel_analysis_ids:
-        try:
-            stmt = select(ResourceAnalysis).where(ResourceAnalysis.id == analysis_id)
-            result = await db.execute(stmt)
-            analysis = result.scalar_one_or_none()
-
-            if analysis:
-                await db.delete(analysis)
-                logger.info(f"Deleted test analysis {analysis_id}")
-        except Exception as e:
-            logger.error(f"Error deleting test analysis {analysis_id}: {str(e)}")
-
-    multi_channel_report_id = test_data.get("multi_channel_report_id")
-    if multi_channel_report_id:
-        try:
-            stmt = select(CrossResourceReport).where(
-                CrossResourceReport.id == multi_channel_report_id
-            )
-            result = await db.execute(stmt)
-            report = result.scalar_one_or_none()
-
-            if report:
-                await db.delete(report)
-                logger.info(f"Deleted test report {multi_channel_report_id}")
-        except Exception as e:
-            logger.error(
-                f"Error deleting test report {multi_channel_report_id}: {str(e)}"
-            )
-
+        
+        db.add(analysis)
+    
     await db.commit()
-    logger.info("Cleanup completed")
-
-
-async def validate_unified_reports_status(db: AsyncSession) -> Dict[str, int]:
-    """
-    Validate the current status of the database regarding unified reports.
-    """
-    logger.info("=== Validating Unified Reports Status ===")
-
-    # Count CrossResourceReports
-    stmt = select(func.count()).select_from(CrossResourceReport)
-    result = await db.execute(stmt)
-    report_count = result.scalar_one_or_none() or 0
-
-    # Count ResourceAnalysis records
-    stmt = select(func.count()).select_from(ResourceAnalysis)
-    result = await db.execute(stmt)
-    analysis_count = result.scalar_one_or_none() or 0
-
-    # Count ResourceAnalysis records with valid CrossResourceReport links
-    stmt = (
-        select(func.count())
-        .select_from(ResourceAnalysis)
-        .where(
-            ResourceAnalysis.cross_resource_report_id.in_(
-                select(CrossResourceReport.id).select_from(CrossResourceReport)
-            )
-        )
-    )
-    result = await db.execute(stmt)
-    valid_link_count = result.scalar_one_or_none() or 0
-
-    # Identify ResourceAnalysis records with team_id issues
-    stmt = (
-        select(func.count())
-        .select_from(CrossResourceReport)
-        .where(CrossResourceReport.team_id.is_(None))
-    )
-    result = await db.execute(stmt)
-    null_team_id_count = result.scalar_one_or_none() or 0
-
-    results = {
-        "total_reports": report_count,
-        "total_analyses": analysis_count,
-        "valid_links": valid_link_count,
-        "null_team_id_reports": null_team_id_count,
-    }
-
-    logger.info(f"Database status: {json.dumps(results, indent=2)}")
-    return results
+    logger.info(f"Created cross-resource report {report.id}")
+    return report.id
 
 
 async def main():
-    """
-    Main function to run the tests.
-    """
-    logger.info("Starting unified analysis flow end-to-end tests")
-
-    db = AsyncSessionLocal()
-    test_data = {}
-    success = False
-
-    try:
-        # First, validate the current state of the database
-        await validate_unified_reports_status(db)
-
-        # Get test data
-        test_data = await get_test_integration(db)
-
-        if not test_data:
-            logger.error("Could not find suitable test data")
-            return
-
-        # Run tests
-        single_channel_success = await test_unified_single_channel_analysis(
-            db, test_data
-        )
-
-        if single_channel_success:
-            multi_channel_success = await test_multi_channel_analysis(db, test_data)
-            success = single_channel_success and multi_channel_success
-
-        # Validate status after tests
-        await validate_unified_reports_status(db)
-
-    except Exception as e:
-        logger.error(f"Error running tests: {str(e)}", exc_info=True)
-    finally:
-        # Clean up test data
-        if test_data:
-            await cleanup_test_data(db, test_data)
-
-        await db.close()
-
-    # Report test results
-    if success:
-        logger.info("All tests PASSED! ✅")
-        logger.info("The unified analysis flow is working correctly.")
-    else:
-        logger.error("Tests FAILED! ❌")
-        logger.error("Check logs for details on issues with the unified analysis flow.")
+    """Main entry point for the script."""
+    if len(sys.argv) < 2:
+        print("Usage: python run_analysis.py <command> [args]")
+        print()
+        print("Commands:")
+        print("  analyze <channel_name> <start_date> <end_date> [analysis_type]")
+        print("    Run analysis on a single channel")
+        print()
+        print("  create-report <channel1,channel2,...> <start_date> <end_date> [analysis_type]")
+        print("    Create a cross-resource report for multiple channels")
+        print()
+        print("Examples:")
+        print("  python run_analysis.py analyze proj-oss-boardgame 2024-11-01 2025-04-24 general")
+        print("  python run_analysis.py create-report 'proj-oss-boardgame,02_introduction' 2024-11-01 2025-04-24")
+        return
+    
+    command = sys.argv[1]
+    
+    async with async_session() as db:
+        if command == "analyze" and len(sys.argv) >= 5:
+            channel_name = sys.argv[2]
+            start_date = datetime.fromisoformat(sys.argv[3])
+            end_date = datetime.fromisoformat(sys.argv[4])
+            analysis_type = sys.argv[5] if len(sys.argv) > 5 else AnalysisType.ACTIVITY
+            
+            await run_debug_analysis(
+                db=db,
+                channel_name=channel_name,
+                start_date=start_date,
+                end_date=end_date,
+                analysis_type=analysis_type,
+            )
+            
+        elif command == "create-report" and len(sys.argv) >= 5:
+            channel_names = sys.argv[2].split(",")
+            start_date = datetime.fromisoformat(sys.argv[3])
+            end_date = datetime.fromisoformat(sys.argv[4])
+            analysis_type = sys.argv[5] if len(sys.argv) > 5 else AnalysisType.ACTIVITY
+            
+            report_id = await create_debug_cross_report(
+                db=db,
+                channel_names=channel_names,
+                start_date=start_date,
+                end_date=end_date,
+                analysis_type=analysis_type,
+            )
+            
+            if report_id:
+                logger.info(f"Created cross-resource report with ID: {report_id}")
+                logger.info(f"Use this ID to monitor the report status and results")
+        
+        else:
+            logger.error(f"Unknown command: {command}")
+            logger.info("Use 'python run_analysis.py' without arguments to see usage")
 
 
 if __name__ == "__main__":
+    uvloop.install()
     asyncio.run(main())
