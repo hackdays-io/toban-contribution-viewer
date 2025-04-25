@@ -94,6 +94,9 @@ class OpenRouterService:
         use_json_mode: bool = True,
     ) -> Dict[str, str]:
         """
+        Fix for issue #238: Ensure that multi-channel reports properly format message data
+        """
+        """
         Send channel messages to LLM for analysis and get structured insights.
 
         Args:
@@ -134,8 +137,29 @@ class OpenRouterService:
         if not messages_list:
             logger.warning(f"No messages provided for analysis of channel {channel_name}")
             
+        # Fix for issue #238: Ensure message data is correctly structured for the LLM
+        # Sometimes in multi-channel reports, messages_data has different structure than in single-channel reports
+        # Make sure the messages list is properly filtered and contains meaningful data
+        
         # Format message content for the LLM - handle potential large message counts
-        message_content = self._format_messages(messages_list)
+        # IMPORTANT: Make a deep copy to avoid modifying the original data
+        import copy
+        messages_for_formatting = copy.deepcopy(messages_list)
+        
+        # Fix issue #238: Filter non-text messages directly in the formatter
+        if messages_for_formatting:
+            # Only include messages that have both user and text content
+            meaningful_messages = []
+            for msg in messages_for_formatting:
+                if msg.get("user_id") and msg.get("text", "").strip():
+                    meaningful_messages.append(msg)
+                    
+            # If we have meaningful messages after filtering, use those
+            if meaningful_messages:
+                logger.info(f"Found {len(meaningful_messages)} meaningful messages after extra filtering")
+                messages_for_formatting = meaningful_messages
+        
+        message_content = self._format_messages(messages_for_formatting)
         
         # Check if the formatted content is meaningful
         if not message_content.strip():
@@ -166,16 +190,37 @@ Your response must be a valid JSON object with these keys:
 - key_highlights: Notable discussions or interactions worth attention
 """
 
+        # Fix for issue #238: Ensure we provide clear indicators when messages have been filtered
         # Build the user prompt with the template
+        filtered_message_count = len(messages_for_formatting)
+        
+        # Add a warning if there are significantly fewer messages after filtering
+        message_content_prefix = ""
+        if filtered_message_count < message_count * 0.8 and message_count > 0:
+            message_content_prefix = f"""
+IMPORTANT: This analysis includes {filtered_message_count} meaningful messages out of {message_count} total messages.
+The remaining messages were system notifications or empty messages that were filtered out.
+"""
+        
+        # Ensure Japanese messages are properly handled
+        if any(all(ord(c) > 127 for c in msg.get("text", "").strip()) for msg in messages_for_formatting[:20]):
+            message_content_prefix += """
+IMPORTANT: Some messages in this channel are in Japanese. Please analyze them as best you can.
+Do not respond that there are "no actual channel messages" just because you see Japanese text.
+"""
+        
+        # Combine the prefix with the message content
+        final_message_content = message_content_prefix + message_content
+        
         user_prompt = CHANNEL_ANALYSIS_PROMPT.format(
             channel_name=channel_name,
             start_date=start_date_str,
             end_date=end_date_str,
-            message_count=message_count,
+            message_count=filtered_message_count,  # Use the filtered count
             participant_count=participant_count,
             thread_count=thread_count,
             reaction_count=reaction_count,
-            message_content=message_content,
+            message_content=final_message_content,
         )
 
         # Add specific instructions for JSON response if needed

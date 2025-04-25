@@ -706,11 +706,22 @@ class SlackChannelAnalysisService(ResourceAnalysisService):
         Returns:
             Parsed response data
         """
+        # Fix for issue #238: Handle case where the LLM response has empty sections
+        # or indicates no messages were found despite messages being in the database
+        
         # With OpenRouterService, the response is already partially structured
         # We'll adapt it to our expected format
 
         # Get the full response text for fallback parsing if needed
         content = response.get("channel_summary", "")
+        
+        # Check if the response mentions "no actual channel messages"
+        if "no actual channel messages" in content.lower():
+            logger.warning("LLM reported 'no actual channel messages' despite data being sent")
+            logger.info("This may indicate a problem with message formatting or content")
+            
+            # Add a debug flag to the response to help troubleshoot
+            response["_debug_no_messages_reported"] = True
 
         # Map the OpenRouterService response keys to our expected output
         result = {}
