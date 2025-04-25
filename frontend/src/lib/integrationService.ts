@@ -583,6 +583,71 @@ class IntegrationService {
       return this.handleError(error, 'Failed to share integration')
     }
   }
+  
+  /**
+   * Sync messages for a specific channel
+   * @param integrationId Integration UUID
+   * @param channelId Channel UUID
+   * @param options Options for syncing including date range and thread inclusion
+   */
+  async syncChannelMessages(
+    integrationId: string,
+    channelId: string,
+    options: {
+      start_date?: string
+      end_date?: string
+      include_replies?: boolean
+    }
+  ): Promise<Record<string, unknown> | ApiError> {
+    try {
+      const headers = await this.getAuthHeaders()
+      const syncChannelEndpoint = `${this.apiUrl}/${integrationId}/resources/${channelId}/sync-messages`
+      
+      // Build the request URL with query parameters
+      const url = new URL(syncChannelEndpoint)
+      if (options.start_date) {
+        url.searchParams.append('start_date', options.start_date)
+      }
+      if (options.end_date) {
+        url.searchParams.append('end_date', options.end_date)
+      }
+      if (options.include_replies !== undefined) {
+        url.searchParams.append('include_replies', options.include_replies.toString())
+      }
+      
+      // Make the channel messages sync request
+      const response = await fetch(url.toString(), {
+        method: 'POST',
+        headers,
+        credentials: 'include',
+      })
+      
+      if (!response.ok) {
+        let errorDetail = ''
+        try {
+          const responseText = await response.text()
+          try {
+            const errorData = JSON.parse(responseText)
+            errorDetail = errorData.detail || errorData.message || responseText
+          } catch {
+            errorDetail = responseText || response.statusText
+          }
+        } catch {
+          // Ignore response reading errors
+        }
+        
+        return {
+          status: response.status,
+          message: `Channel sync failed: ${errorDetail}`,
+          detail: errorDetail,
+        }
+      }
+      
+      return await response.json()
+    } catch (error) {
+      return this.handleError(error, 'Failed to sync channel messages')
+    }
+  }
 
   /**
    * Revoke an integration share

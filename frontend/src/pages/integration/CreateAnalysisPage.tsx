@@ -46,10 +46,8 @@ import useAuth from '../../context/useAuth'
 import useIntegration from '../../context/useIntegration'
 import integrationService, {
   ServiceResource,
-  AnalysisOptions,
   ResourceType,
 } from '../../lib/integrationService'
-import env from '../../config/env'
 import TeamChannelSelector from '../../components/integration/TeamChannelSelector'
 
 interface ChannelResource extends ServiceResource {
@@ -453,61 +451,34 @@ const CreateAnalysisPage: React.FC = () => {
 
       // First - sync the channel data to ensure we have the latest messages
       try {
-        // Step 1: Sync general integration resources
-        console.log('Syncing general integration data first...')
-        await integrationService.syncResources(selectedIntegration)
-
-        // Step 2: Specifically sync messages for this channel
+        // Specifically sync messages for this channel
         console.log(`Syncing messages for channel ${primaryChannel}...`)
-        const syncChannelEndpoint = `${env.apiUrl}/integrations/${selectedIntegration}/resources/${primaryChannel}/sync-messages`
-
-        // Build the request URL with query parameters
-        const url = new URL(syncChannelEndpoint)
-        url.searchParams.append(
-          'start_date',
-          startDateParam ||
-            formatDateWithoutTimezone(
-              new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString()
-            )
+        
+        // Use the integrationService method for channel sync
+        const syncOptions = {
+          start_date: startDateParam || formatDateWithoutTimezone(
+            new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString()
+          ),
+          end_date: endDateParam || formatDateWithoutTimezone(new Date().toISOString()),
+          include_replies: includeThreads
+        }
+        
+        const channelSyncResult = await integrationService.syncChannelMessages(
+          selectedIntegration,
+          primaryChannel,
+          syncOptions
         )
-        url.searchParams.append(
-          'end_date',
-          endDateParam || formatDateWithoutTimezone(new Date().toISOString())
-        )
-        url.searchParams.append('include_replies', includeThreads.toString())
-
-        // Make the channel messages sync request
-        const headers = await integrationService.getAuthHeaders()
-        const channelSyncResponse = await fetch(url.toString(), {
-          method: 'POST',
-          headers,
-          credentials: 'include',
-        })
-
-        if (!channelSyncResponse.ok) {
-          let errorDetail = ''
-          try {
-            const responseText = await channelSyncResponse.text()
-            try {
-              const errorData = JSON.parse(responseText)
-              errorDetail =
-                errorData.detail || errorData.message || responseText
-            } catch {
-              errorDetail = responseText || channelSyncResponse.statusText
-            }
-          } catch {
-            // Ignore response reading errors
-          }
-
+        
+        // Check if the result is an error
+        if (integrationService.isApiError(channelSyncResult)) {
           toast({
             title: 'Channel Sync Warning',
-            description: `Channel sync was not fully successful: ${errorDetail}. Analysis may not include the latest messages.`,
+            description: `Channel sync was not fully successful: ${channelSyncResult.message}. Analysis may not include the latest messages.`,
             status: 'warning',
             duration: 7000,
             isClosable: true,
           })
         } else {
-          const channelSyncResult = await channelSyncResponse.json()
           console.log('Channel messages sync successful:', channelSyncResult)
 
           // Extract sync statistics from the response
@@ -555,15 +526,15 @@ const CreateAnalysisPage: React.FC = () => {
       }
 
       // Prepare channel data for the unified createChannelReport method
-      const channelsForReport = selectedChannels.map(channelId => {
-        const channel = allChannelResources.find(r => r.id === channelId)
+      const channelsForReport = selectedChannels.map((channelId) => {
+        const channel = allChannelResources.find((r) => r.id === channelId)
         if (!channel) {
           console.warn(`Could not find details for channel ${channelId}`)
         }
         return {
           id: channelId,
           name: channel?.name || 'Unknown Channel',
-          integration_id: selectedIntegration
+          integration_id: selectedIntegration,
         }
       })
 
@@ -604,7 +575,9 @@ const CreateAnalysisPage: React.FC = () => {
       let redirectPath
       if (result.is_unified_report) {
         // For multi-channel reports
-        redirectPath = result.report_path || `/dashboard/integrations/${selectedIntegration}/team-analysis/${result.id}`
+        redirectPath =
+          result.report_path ||
+          `/dashboard/integrations/${selectedIntegration}/team-analysis/${result.id}`
       } else {
         // For single channel analysis
         redirectPath = `/dashboard/integrations/${selectedIntegration}/channels/${primaryChannel}/analysis/${result.analysis_id}`
@@ -1309,7 +1282,7 @@ const CreateAnalysisPage: React.FC = () => {
               isLoading={isAnalyzing}
               loadingText="Running Analysis..."
             >
-              Run Analysis
+              Run Analysis!
             </Button>
           </CardFooter>
         </Card>
