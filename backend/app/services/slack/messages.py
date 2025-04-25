@@ -74,26 +74,29 @@ async def get_channel_messages(
     if not include_replies:
         query = query.where(SlackMessage.is_thread_reply.is_(False))
 
-    # Apply date filtering if specified
+    # Apply date filtering if specified - with improved logging for debugging Issue #238
     if start_date:
         if hasattr(start_date, "tzinfo") and start_date.tzinfo:
             start_date = start_date.replace(tzinfo=None)
-        # Log the start date when filtering is applied
-        logger.info(f"Filtering messages with start_date: {start_date}")
+        # Log the start date with type information
+        logger.info(f"Filtering messages with start_date: {start_date} (type: {type(start_date).__name__})")
         query = query.where(SlackMessage.message_datetime >= start_date)
 
     if end_date:
         if hasattr(end_date, "tzinfo") and end_date.tzinfo:
             end_date = end_date.replace(tzinfo=None)
-        # Log the end date when filtering is applied
-        logger.info(f"Filtering messages with end_date: {end_date}")
+        # Log the end date with type information
+        logger.info(f"Filtering messages with end_date: {end_date} (type: {type(end_date).__name__})")
         query = query.where(SlackMessage.message_datetime <= end_date)
 
     # Sort by datetime (oldest first for analysis)
     query = query.order_by(SlackMessage.message_datetime.asc())
 
-    # Apply limit
-    query = query.limit(limit)
+    # We need to fetch all messages within the date range
+    # For multi-channel analysis, limit applies to the total across all channels
+    # Don't apply limit at the query level for multi-channel report
+    if limit > 0:
+        query = query.limit(limit)
 
     # Execute query
     result = await db.execute(query)
@@ -1051,14 +1054,18 @@ class SlackMessageService:
         result = await db.execute(query)
         messages = result.scalars().all()
 
-        # Count total messages for pagination
-        count_query = select(SlackMessage).where(
+        # Count total messages for pagination - but more efficiently using COUNT()
+        from sqlalchemy import func
+        count_query = select(func.count()).select_from(SlackMessage).where(
             SlackMessage.channel_id.in_(channel_ids),
             SlackMessage.message_datetime >= naive_start_date,
             SlackMessage.message_datetime <= naive_end_date,
         )
         count_result = await db.execute(count_query)
-        total_count = len(count_result.scalars().all())
+        total_count = count_result.scalar() or 0
+        
+        # Log message counts for debugging Issue #238
+        logger.info(f"Total messages found for channels {channel_ids}: {total_count}")
 
         # Calculate pagination info
         total_pages = (total_count + page_size - 1) // page_size

@@ -7,11 +7,11 @@ import logging
 from typing import Dict, List, Optional, Union
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_async_db
-from app.models.reports import ReportStatus, ResourceAnalysis
+from app.models.reports import CrossResourceReport, ReportStatus, ResourceAnalysis
 from app.services.analysis.factory import ResourceAnalysisServiceFactory
 
 logger = logging.getLogger(__name__)
@@ -315,7 +315,45 @@ class ResourceAnalysisTaskScheduler:
                 await db.commit()
                 return
 
+            # Get the report if this is part of a multi-channel report
+            report = None
+            if analysis.cross_resource_report_id:
+                report_result = await db.execute(
+                    select(CrossResourceReport).where(
+                        CrossResourceReport.id == analysis.cross_resource_report_id
+                    )
+                )
+                report = report_result.scalar_one_or_none()
+                
+                # For issue #238 - log report details to trace data consistency problems
+                if report:
+                    logger.info(
+                        f"Analysis {analysis_id} is part of report {report.id} "
+                        f"with period {report.date_range_start} to {report.date_range_end}"
+                    )
+                
+                    # If it's multi-channel, check how many resources are in the report
+                    resource_count_result = await db.execute(
+                        select(func.count()).select_from(ResourceAnalysis).where(
+                            ResourceAnalysis.cross_resource_report_id == report.id
+                        )
+                    )
+                    resource_count = resource_count_result.scalar_one() or 0
+                    
+                    if resource_count > 1:
+                        logger.info(f"Report contains {resource_count} resources (multi-channel analysis)")
+                    else:
+                        logger.info("Report contains only one resource (single-channel analysis)")
+
             # Run the analysis
+            logger.info(f"Running analysis {analysis_id} for resource {analysis.resource_id}")
+            
+            # For issue #238 - log the period dates
+            logger.info(
+                f"Analysis period: {analysis.period_start} to {analysis.period_end} "
+                f"(types: {type(analysis.period_start).__name__}, {type(analysis.period_end).__name__})"
+            )
+            
             analysis_result = await service.run_analysis(
                 analysis_id=analysis.id,
                 resource_id=analysis.resource_id,
