@@ -238,3 +238,30 @@ class ReportGenerationResponse(BaseModel):
         ..., description="Number of resource analyses created"
     )
     message: str = Field(..., description="Status message")
+
+
+# Schema for creating a new report from channels
+class ChannelReportCreate(BaseModel):
+    """Schema for creating a new channel-based report."""
+
+    team_id: UUID = Field(..., description="Team ID")
+    channels: List[Dict[str, str]] = Field(
+        ...,
+        description="List of channels to include in the report",
+        example=[
+            {
+                "id": "uuid-here",
+                "name": "general",
+                "integration_id": "integration-uuid-here",
+            }
+        ],
+    )
+    title: Optional[str] = Field(None, description="Custom report title")
+    description: Optional[str] = Field(None, description="Custom report description")
+    start_date: datetime = Field(..., description="Start date for analysis period")
+    end_date: datetime = Field(..., description="End date for analysis period")
+    include_threads: bool = Field(True, description="Whether to include thread replies")
+    include_reactions: bool = Field(True, description="Whether to include reactions")
+    analysis_type: str = Field(
+        "CONTRIBUTION", description="Type of analysis to perform"
+    )
