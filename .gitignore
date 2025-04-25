@@ -63,4 +63,7 @@ temp-ngrok.yml
 # TEST
 frontend/coverage
 
+# Logs
+backend/logs/
+
 **/CLAUDE.local.md
