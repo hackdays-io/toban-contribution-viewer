@@ -539,6 +539,41 @@ const TeamAnalysisResultPage: React.FC = () => {
         crossResourceReport.description ||
         `Team analysis of ${crossResourceReport.resource_analyses.length} channels from ${crossResourceReport.date_range_start} to ${crossResourceReport.date_range_end}`
 
+      // Calculate aggregate statistics
+      let totalMessages = 0;
+      let totalParticipants = new Set();
+      let totalThreads = 0;
+      let totalReactions = 0;
+      
+      // Process each analysis to collect statistics
+      if (Array.isArray(crossResourceReport.resource_analyses)) {
+        crossResourceReport.resource_analyses.forEach(analysis => {
+          if (analysis.status === 'COMPLETED') {
+            // Add message count
+            totalMessages += Number(analysis.message_count || 0);
+            
+            // Add threads count
+            totalThreads += Number(analysis.thread_count || 0);
+            
+            // Add reactions count
+            totalReactions += Number(analysis.reaction_count || 0);
+            
+            // Add participant data (if available)
+            if (analysis.participants && Array.isArray(analysis.participants)) {
+              analysis.participants.forEach(participant => {
+                if (participant.id) {
+                  totalParticipants.add(participant.id);
+                }
+              });
+            } else if (analysis.participant_count) {
+              // If we don't have participant data but have a count, use it as a fallback
+              // This is less accurate but better than showing 0
+              totalParticipants.add(`channel-${analysis.resource_id}-participant`);
+            }
+          }
+        });
+      }
+
       // Construct an analysis object using data from the report and first resource analysis
       const adaptedAnalysis: AnalysisResponse = {
         id: String(crossResourceReport.id || ''),
@@ -552,12 +587,12 @@ const TeamAnalysisResultPage: React.FC = () => {
         end_date: String(
           crossResourceReport.date_range_end || new Date().toISOString()
         ),
-        message_count: Number(crossResourceReport.total_resources || 0),
-        participant_count: Number(crossResourceReport.completed_analyses || 0),
-        thread_count: Array.isArray(crossResourceReport.resource_analyses)
+        message_count: totalMessages || Number(crossResourceReport.total_resources || 0),
+        participant_count: totalParticipants.size || Number(crossResourceReport.completed_analyses || 0),
+        thread_count: totalThreads || (Array.isArray(crossResourceReport.resource_analyses)
           ? crossResourceReport.resource_analyses.length
-          : 0,
-        reaction_count: 0,
+          : 0),
+        reaction_count: totalReactions || 0,
         // Always set channel_summary, which is important for UI rendering
         channel_summary: String(reportDescription || ''),
         topic_analysis:
@@ -587,6 +622,110 @@ const TeamAnalysisResultPage: React.FC = () => {
         isClosable: true,
       })
 
+      // Calculate statistics based on any data we might have in the report
+      let totalMessages = 0;
+      let totalParticipants = new Set<string>();
+      let totalThreads = 0;
+      let totalReactions = 0;
+      
+      // Even if no completed analyses, try to extract counts from pending ones
+      if (Array.isArray(crossResourceReport.resource_analyses)) {
+        crossResourceReport.resource_analyses.forEach(analysis => {
+          // Add message count
+          totalMessages += Number(analysis.message_count || 0);
+          
+          // Add threads count if available
+          totalThreads += Number(analysis.thread_count || 0);
+          
+          // Add reactions count if available
+          totalReactions += Number(analysis.reaction_count || 0);
+          
+          // Extract all possible user data
+          try {
+            // Look for detailed result data first
+            if (analysis.results && typeof analysis.results === 'object') {
+              const results = analysis.results as Record<string, unknown>;
+              
+              // Extract users from the results field if available
+              if (results.users && Array.isArray(results.users)) {
+                results.users.forEach((user: any) => {
+                  if (user && user.id) totalParticipants.add(String(user.id));
+                });
+              }
+              
+              // Try participants field within results
+              if (results.participants && Array.isArray(results.participants)) {
+                results.participants.forEach((participant: any) => {
+                  if (participant && participant.id) totalParticipants.add(String(participant.id));
+                });
+              }
+              
+              // Check messages data for user references
+              if (results.messageData && typeof results.messageData === 'object') {
+                const msgData = results.messageData as Record<string, unknown>;
+                
+                // Look for users in messageData
+                if (msgData.userData && Array.isArray(msgData.userData)) {
+                  msgData.userData.forEach((user: any) => {
+                    if (user && user.id) totalParticipants.add(String(user.id));
+                  });
+                }
+                
+                // Look for distinct users in messages
+                if (msgData.messages && Array.isArray(msgData.messages)) {
+                  msgData.messages.forEach((msg: any) => {
+                    if (msg && msg.user) totalParticipants.add(String(msg.user));
+                  });
+                }
+              }
+            }
+            
+            // If still no users found, try participants array at the top level
+            if (analysis.participants && Array.isArray(analysis.participants)) {
+              analysis.participants.forEach((participant: any) => {
+                if (participant && participant.id) totalParticipants.add(String(participant.id));
+              });
+            }
+            
+            // If that fails, try to locate users in message_data
+            if (analysis.message_data && typeof analysis.message_data === 'object') {
+              const msgData = analysis.message_data as Record<string, unknown>;
+              
+              if (msgData.users && Array.isArray(msgData.users)) {
+                msgData.users.forEach((user: any) => {
+                  if (user && user.id) totalParticipants.add(String(user.id));
+                });
+              }
+              
+              // Check messages for user IDs
+              if (msgData.messages && Array.isArray(msgData.messages)) {
+                // Extract unique user IDs from messages
+                msgData.messages.forEach((msg: any) => {
+                  if (msg && msg.user) totalParticipants.add(String(msg.user));
+                });
+              }
+            }
+            
+            // If we still don't have users and there's a participant_count, use it as a fallback
+            if (totalParticipants.size === 0 && analysis.participant_count) {
+              // Add at least placeholder entries to represent the count
+              for (let i = 0; i < Number(analysis.participant_count); i++) {
+                totalParticipants.add(`user-${String(analysis.id)}-${i}`);
+              }
+            }
+          } catch (error) {
+            console.error('Error extracting participant data:', error);
+            
+            // Fallback to participant_count for safety
+            if (analysis.participant_count) {
+              for (let i = 0; i < Number(analysis.participant_count); i++) {
+                totalParticipants.add(`fallback-user-${String(analysis.id)}-${i}`);
+              }
+            }
+          }
+        });
+      }
+
       // Create a minimal analysis object so the UI doesn't break
       const emptyAnalysis: AnalysisResponse = {
         id: String(crossResourceReport.id || analysisId || ''),
@@ -600,10 +739,12 @@ const TeamAnalysisResultPage: React.FC = () => {
         end_date: String(
           crossResourceReport.date_range_end || new Date().toISOString()
         ),
-        message_count: 0,
-        participant_count: 0,
-        thread_count: 0,
-        reaction_count: 0,
+        message_count: totalMessages || Number(crossResourceReport.total_resources || 0),
+        participant_count: totalParticipants.size || 0,
+        thread_count: totalThreads || (Array.isArray(crossResourceReport.resource_analyses) 
+            ? crossResourceReport.resource_analyses.length 
+            : 0),
+        reaction_count: totalReactions || 0,
         channel_summary: 'No analyses found for this team report.',
         topic_analysis: '',
         contributor_insights: '',
@@ -1248,17 +1389,152 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
       // Update the report result state
       setReportResult(reportStatus)
 
-      // Count pending analyses
-      let pendingCount = 0
+      // Count pending analyses and update statistics
+      let pendingCount = 0;
+      let completedCount = 0;
+      let totalMessages = 0;
+      let totalParticipants = new Set();
+      let totalThreads = 0;
+      let totalReactions = 0;
+      
       if (
         reportStatus.resource_analyses &&
         Array.isArray(reportStatus.resource_analyses)
       ) {
+        // Count pending analyses
         pendingCount = reportStatus.resource_analyses.filter(
           (analysis: Record<string, unknown>) => analysis.status === 'PENDING'
-        ).length
+        ).length;
+        
+        // Count completed analyses and gather statistics
+        reportStatus.resource_analyses.forEach((analysis: Record<string, unknown>) => {
+          if (analysis.status === 'COMPLETED') {
+            completedCount++;
+            
+            // Add message count
+            totalMessages += Number(analysis.message_count || 0);
+            
+            // Add threads count
+            totalThreads += Number(analysis.thread_count || 0);
+            
+            // Add reactions count
+            totalReactions += Number(analysis.reaction_count || 0);
+            
+            // Extract participants using multiple methods to find all possible users
+            try {
+              // Look for detailed result data first
+              if (analysis.results && typeof analysis.results === 'object') {
+                const results = analysis.results as Record<string, unknown>;
+                
+                // Extract users from the results field if available
+                if (results.users && Array.isArray(results.users)) {
+                  results.users.forEach((user: any) => {
+                    if (user && user.id) totalParticipants.add(String(user.id));
+                  });
+                }
+                
+                // Try participants field within results
+                if (results.participants && Array.isArray(results.participants)) {
+                  results.participants.forEach((participant: any) => {
+                    if (participant && participant.id) totalParticipants.add(String(participant.id));
+                  });
+                }
+                
+                // Check messages data for user references
+                if (results.messageData && typeof results.messageData === 'object') {
+                  const msgData = results.messageData as Record<string, unknown>;
+                  
+                  // Look for users in messageData
+                  if (msgData.userData && Array.isArray(msgData.userData)) {
+                    msgData.userData.forEach((user: any) => {
+                      if (user && user.id) totalParticipants.add(String(user.id));
+                    });
+                  }
+                  
+                  // Look for distinct users in messages
+                  if (msgData.messages && Array.isArray(msgData.messages)) {
+                    msgData.messages.forEach((msg: any) => {
+                      if (msg && msg.user) totalParticipants.add(String(msg.user));
+                    });
+                  }
+                }
+              }
+              
+              // If still no users found, try participants array at the top level
+              if (analysis.participants && Array.isArray(analysis.participants)) {
+                analysis.participants.forEach((participant: any) => {
+                  if (participant && participant.id) totalParticipants.add(String(participant.id));
+                });
+              }
+              
+              // If that fails, try to locate users in message_data
+              if (analysis.message_data && typeof analysis.message_data === 'object') {
+                const msgData = analysis.message_data as Record<string, unknown>;
+                
+                if (msgData.users && Array.isArray(msgData.users)) {
+                  msgData.users.forEach((user: any) => {
+                    if (user && user.id) totalParticipants.add(String(user.id));
+                  });
+                }
+                
+                // Check messages for user IDs
+                if (msgData.messages && Array.isArray(msgData.messages)) {
+                  // Extract unique user IDs from messages
+                  const userIds = new Set<string>();
+                  msgData.messages.forEach((msg: any) => {
+                    if (msg && msg.user) userIds.add(String(msg.user));
+                  });
+                  
+                  // Add all user IDs to participants
+                  userIds.forEach(id => totalParticipants.add(id));
+                }
+              }
+              
+              // If we still don't have users, try getting them from structured fields
+              if (analysis.user_count) {
+                totalParticipants.add(`fixed-count-${String(analysis.resource_id)}`);
+              }
+              
+              // As a last resort, use the participant_count field
+              if (totalParticipants.size === 0 && analysis.participant_count) {
+                // Add at least placeholder entries to represent the count
+                for (let i = 0; i < Number(analysis.participant_count); i++) {
+                  totalParticipants.add(`user-${String(analysis.resource_id)}-${i}`);
+                }
+              }
+            } catch (error) {
+              console.error('Error extracting participant data:', error);
+              
+              // Fallback to participant_count for safety
+              if (analysis.participant_count) {
+                for (let i = 0; i < Number(analysis.participant_count); i++) {
+                  totalParticipants.add(`fallback-user-${String(analysis.resource_id)}-${i}`);
+                }
+              }
+            }
+          }
+        });
+        
+        // Log information about the participant data we found
+        console.log('Participant statistics:', {
+          totalUniqueParticipants: totalParticipants.size,
+          someParticipantIds: Array.from(totalParticipants).slice(0, 5), // Show first 5 for debugging
+          messageCount: totalMessages,
+          threadCount: totalThreads,
+          reactionCount: totalReactions
+        });
+        
+        // Update analysis statistics if we have completed analyses and current analysis data
+        if (completedCount > 0 && analysis) {
+          const updatedAnalysis = { ...analysis };
+          updatedAnalysis.message_count = totalMessages || analysis.message_count;
+          updatedAnalysis.participant_count = totalParticipants.size || analysis.participant_count;
+          updatedAnalysis.thread_count = totalThreads || analysis.thread_count;
+          updatedAnalysis.reaction_count = totalReactions || analysis.reaction_count;
+          setAnalysis(updatedAnalysis);
+        }
       }
-
+      
       // Update the pending count
       setPendingAnalyses(pendingCount)
 
