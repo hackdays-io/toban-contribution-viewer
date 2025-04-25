@@ -1267,10 +1267,14 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
         setTimeout(() => {
           checkReportStatus()
         }, 5000) // Check every 5 seconds
-      } else if (isRefreshing) {
-        // If we were refreshing and now all analyses are complete, refresh the data
+      } else {
+        // No more pending analyses, stop refreshing
         setIsRefreshing(false)
-        fetchData()
+        
+        // If we were explicitly refreshing, reload the data to get final results
+        if (isRefreshing) {
+          fetchData()
+        }
       }
     } catch (error) {
       console.error('Error checking report status:', error)
