@@ -660,6 +660,32 @@ const TeamAnalysisResultPage: React.FC = () => {
                 });
               }
               
+              // Try metadata field which often contains the real analysis details
+              if (results.metadata && typeof results.metadata === 'object') {
+                const metadata = results.metadata as Record<string, unknown>;
+                console.log('FOUND METADATA:', metadata);
+                
+                // Look for users in metadata
+                if (metadata.users && Array.isArray(metadata.users)) {
+                  metadata.users.forEach((user: any) => {
+                    if (user && user.id) totalParticipants.add(String(user.id));
+                  });
+                }
+                
+                // Try user_stats which maps user IDs to their activity
+                if (metadata.user_stats && typeof metadata.user_stats === 'object') {
+                  // Extract keys as user IDs
+                  Object.keys(metadata.user_stats).forEach(userId => {
+                    if (userId) totalParticipants.add(userId);
+                  });
+                }
+                
+                // Try participant_count
+                if (metadata.user_count) {
+                  console.log('FOUND USER COUNT IN METADATA:', metadata.user_count);
+                }
+              }
+              
               // Check messages data for user references
               if (results.messageData && typeof results.messageData === 'object') {
                 const msgData = results.messageData as Record<string, unknown>;
@@ -726,6 +752,12 @@ const TeamAnalysisResultPage: React.FC = () => {
         });
       }
 
+      // Log the actual participant data found
+      console.log('Empty analysis - participant data:', {
+        uniqueParticipants: totalParticipants.size,
+        participantIds: Array.from(totalParticipants).slice(0, 10) // Show first 10 for debugging
+      });
+      
       // Create a minimal analysis object so the UI doesn't break
       const emptyAnalysis: AnalysisResponse = {
         id: String(crossResourceReport.id || analysisId || ''),
@@ -1385,6 +1417,28 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
         console.error('Error checking report status:', reportStatus)
         return
       }
+      
+      // Add detailed logging to understand the report structure
+      console.log('REPORT STRUCTURE DEBUG:', {
+        reportId: reportStatus.id,
+        totalResources: reportStatus.total_resources,
+        completedAnalyses: reportStatus.completed_analyses,
+        resourceCount: reportStatus.resource_analyses?.length || 0,
+        firstAnalysis: reportStatus.resource_analyses?.[0]
+      });
+      
+      // Inspect the first analysis for debugging
+      if (reportStatus.resource_analyses && 
+          Array.isArray(reportStatus.resource_analyses) && 
+          reportStatus.resource_analyses.length > 0) {
+        
+        const firstAnalysis = reportStatus.resource_analyses[0];
+        console.log('FIRST ANALYSIS FIELD KEYS:', Object.keys(firstAnalysis));
+        
+        if (firstAnalysis.results) {
+          console.log('RESULTS FIELD KEYS:', Object.keys(firstAnalysis.results));
+        }
+      }
 
       // Update the report result state
       setReportResult(reportStatus)
@@ -1407,7 +1461,23 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
         ).length;
         
         // Count completed analyses and gather statistics
-        reportStatus.resource_analyses.forEach((analysis: Record<string, unknown>) => {
+        reportStatus.resource_analyses.forEach((analysis: Record<string, unknown>, index: number) => {
+          // Log detailed information about each analysis
+          if (index === 0) {
+            console.log('ANALYSIS DETAILS:', {
+              id: analysis.id,
+              resourceId: analysis.resource_id,
+              resourceName: analysis.resource_name,
+              status: analysis.status,
+              hasParticipantCount: Boolean(analysis.participant_count),
+              participantCount: analysis.participant_count,
+              hasParticipants: Boolean(analysis.participants),
+              participantsIsArray: analysis.participants && Array.isArray(analysis.participants),
+              participantsLength: analysis.participants && Array.isArray(analysis.participants) ? analysis.participants.length : 0,
+              keys: Object.keys(analysis)
+            });
+          }
+            
           if (analysis.status === 'COMPLETED') {
             completedCount++;
             
@@ -1515,15 +1585,24 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
           }
         });
         
-        // Log information about the participant data we found
-        console.log('Participant statistics:', {
-          totalUniqueParticipants: totalParticipants.size,
-          someParticipantIds: Array.from(totalParticipants).slice(0, 5), // Show first 5 for debugging
+        // Log comprehensive information about the data we found
+        console.log('TEAM ANALYSIS DEBUG - Participant statistics:', {
+          uniqueParticipantCount: totalParticipants.size,
+          participantSample: Array.from(totalParticipants).slice(0, 10), // Show first 10 for debugging
           messageCount: totalMessages,
           threadCount: totalThreads,
-          reactionCount: totalReactions
+          reactionCount: totalReactions,
+          completedAnalyses: reportStatus.resource_analyses
+            .filter((a: Record<string, unknown>) => a.status === 'COMPLETED')
+            .map((a: Record<string, unknown>) => ({
+              id: a.id,
+              resource_id: a.resource_id,
+              resource_name: a.resource_name,
+              participant_count: a.participant_count,
+              message_count: a.message_count
+            }))
         });
-        
+
         // Update analysis statistics if we have completed analyses and current analysis data
         if (completedCount > 0 && analysis) {
           const updatedAnalysis = { ...analysis };
