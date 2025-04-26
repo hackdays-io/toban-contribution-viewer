@@ -1166,6 +1166,9 @@ class SlackMessageService:
     ) -> Dict[str, Any]:
         """
         Sync messages and thread replies from a Slack channel to the database.
+        
+        Important: After successful sync, this method invalidates any cached data
+        for this channel to ensure fresh data is used for analysis.
 
         This method fetches all normal messages and their thread replies in a single operation.
 
@@ -1291,6 +1294,14 @@ class SlackMessageService:
         # Update channel sync status
         channel.last_sync_at = datetime.utcnow()
         await db.commit()
+        
+        # Invalidate cache after sync
+        try:
+            from app.services.analysis.data_cache import ChannelDataCache
+            ChannelDataCache.invalidate(channel_id)
+            logger.info(f"Invalidated data cache for channel {channel_id} after sync")
+        except ImportError:
+            logger.warning("Could not import ChannelDataCache to invalidate channel cache")
 
         # Try to fix any messages that might be missing user_id references
         try:

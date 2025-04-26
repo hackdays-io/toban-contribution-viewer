@@ -12,6 +12,7 @@ from app.models.integration import Integration
 from app.models.reports import AnalysisType
 from app.models.slack import SlackChannel, SlackUser
 from app.services.analysis.base import ResourceAnalysisService
+from app.services.analysis.data_cache import ChannelDataCache
 from app.services.llm.openrouter import OpenRouterService
 from app.services.slack.messages import SlackMessageService, get_channel_messages
 
@@ -60,8 +61,23 @@ class SlackChannelAnalysisService(ResourceAnalysisService):
         Returns:
             Dictionary containing channel data, messages, and users
         """
-        logger.info(f"Fetching data for Slack channel {resource_id}")
-
+        resource_id_str = str(resource_id)
+        logger.info(f"Fetching data for Slack channel {resource_id_str}")
+        
+        # OPTIMIZATION: Check cache first
+        include_threads = parameters.get("include_threads", True) if parameters else True
+        cached_data = ChannelDataCache.get(
+            channel_id=resource_id_str,
+            start_date=start_date,
+            end_date=end_date,
+            include_threads=include_threads
+        )
+        
+        if cached_data:
+            logger.info(f"Using cached data for channel {resource_id_str}")
+            return cached_data
+            
+        # Not in cache, need to fetch data from database
         # Get the Slack channel
         channel_result = await self.db.execute(
             select(SlackChannel).where(SlackChannel.id == resource_id)
@@ -82,10 +98,7 @@ class SlackChannelAnalysisService(ResourceAnalysisService):
             logger.error(f"Integration {integration_id} not found")
             raise ValueError(f"Integration {integration_id} not found")
 
-        # Extract parameters
-        include_threads = (
-            parameters.get("include_threads", True) if parameters else True
-        )
+        # Extract parameters 
         message_limit = parameters.get("message_limit", 1000) if parameters else 1000
 
         # Get messages within the date range
@@ -125,7 +138,7 @@ class SlackChannelAnalysisService(ResourceAnalysisService):
         messages = await get_channel_messages(
             db=self.db,
             workspace_id=workspace_id,
-            channel_id=str(resource_id),
+            channel_id=resource_id_str,
             start_date=start_date,
             end_date=end_date,
             include_replies=include_threads,
@@ -142,9 +155,9 @@ class SlackChannelAnalysisService(ResourceAnalysisService):
         users = users_result.scalars().all()
 
         # Compile all data
-        return {
+        channel_data = {
             "channel": {
-                "id": str(channel.id),
+                "id": resource_id_str,
                 "name": channel.name,
                 "slack_id": channel.slack_id,
                 "type": channel.type,
@@ -187,9 +200,21 @@ class SlackChannelAnalysisService(ResourceAnalysisService):
                 "message_count": len(messages),
                 "user_count": len(users),
                 "thread_count": sum(1 for msg in messages if msg.is_thread_parent),
+                "reaction_count": sum(msg.reaction_count or 0 for msg in messages),
                 "parameters": parameters or {},
             },
         }
+        
+        # Store in cache for future use
+        ChannelDataCache.set(
+            channel_id=resource_id_str,
+            data=channel_data,
+            start_date=start_date,
+            end_date=end_date,
+            include_threads=include_threads
+        )
+        
+        return channel_data
 
     async def prepare_data_for_analysis(
         self, data: Dict[str, Any], analysis_type: str
@@ -440,6 +465,7 @@ class SlackChannelAnalysisService(ResourceAnalysisService):
 
         # For debugging issue with multi-channel reports
         logger.info(f"ANALYSIS DEBUG: Data keys in analyze_data: {list(data.keys())}")
+        logger.info(f"    total_messages:{data.get('total_messages')}")
         logger.info(f"ANALYSIS DEBUG: Has messages key? {'messages' in data}")
         logger.info(f"ANALYSIS DEBUG: Messages count: {len(data.get('messages', []))}")
 
@@ -666,6 +692,10 @@ class SlackChannelAnalysisService(ResourceAnalysisService):
         parsed_response["analysis_type"] = analysis_type
         parsed_response["channel_name"] = data.get("channel_name", "Unknown channel")
         parsed_response["timestamp"] = datetime.utcnow().isoformat()
+        parsed_response["message_count"] = message_data.get("message_count")
+        parsed_response["participant_count"] = message_data.get("participant_count")
+        parsed_response["thread_count"] = message_data.get("thread_count")
+        parsed_response["reaction_count"] = message_data.get("reaction_count")
 
         return parsed_response
 

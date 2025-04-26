@@ -381,29 +381,44 @@ class ResourceAnalysisTaskScheduler:
                         from datetime import datetime
 
                         current_time = datetime.utcnow()
-                        sync_threshold = 24  # Hours before we need to sync again
+                        sync_threshold = 6  # OPTIMIZED: Reduced from 24 to 6 hours to avoid duplicating frontend sync
                         needs_sync = True
 
+                        # OPTIMIZATION: Check if frontend already synced recently - we can detect this by 
+                        # checking if last_sync_at is very recent (within the last 10 minutes)
+                        recently_synced_by_frontend = False
                         if channel.last_sync_at:
-                            hours_since_sync = (
+                            minutes_since_sync = (
                                 current_time - channel.last_sync_at
-                            ).total_seconds() / 3600
-                            needs_sync = hours_since_sync > sync_threshold
+                            ).total_seconds() / 60
+                            
+                            # If synced in the last 10 minutes, frontend probably triggered this
+                            if minutes_since_sync < 10:
+                                recently_synced_by_frontend = True
+                                logger.info(
+                                    f"Channel {channel.name} was just synced {minutes_since_sync:.1f} minutes ago, "
+                                    f"likely by frontend. Skipping redundant sync."
+                                )
+                            
+                            # Regular sync threshold check if not recently synced
+                            if not recently_synced_by_frontend:
+                                hours_since_sync = minutes_since_sync / 60
+                                needs_sync = hours_since_sync > sync_threshold
 
-                            if needs_sync:
-                                logger.info(
-                                    f"Channel {channel.name} was last synced {hours_since_sync:.1f} hours ago, exceeding threshold of {sync_threshold} hours"
-                                )
-                            else:
-                                logger.info(
-                                    f"Channel {channel.name} was synced recently ({hours_since_sync:.1f} hours ago), skipping sync"
-                                )
+                                if needs_sync:
+                                    logger.info(
+                                        f"Channel {channel.name} was last synced {hours_since_sync:.1f} hours ago, exceeding threshold of {sync_threshold} hours"
+                                    )
+                                else:
+                                    logger.info(
+                                        f"Channel {channel.name} was synced recently ({hours_since_sync:.1f} hours ago), skipping sync"
+                                    )
                         else:
                             logger.info(
                                 f"Channel {channel.name} has never been synced, performing initial sync"
                             )
 
-                        if needs_sync:
+                        if needs_sync and not recently_synced_by_frontend:
                             logger.info(
                                 f"Multi-channel report: Syncing messages for channel {channel.name} ({channel.id})"
                             )
@@ -419,7 +434,7 @@ class ResourceAnalysisTaskScheduler:
                             logger.info(f"Message sync result: {sync_result}")
                         else:
                             logger.info(
-                                f"Skipping message sync for channel {channel.name} (synced within {sync_threshold} hours)"
+                                f"Skipping message sync for channel {channel.name} (synced recently)"
                             )
                     else:
                         logger.warning(
