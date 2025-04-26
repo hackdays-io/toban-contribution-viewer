@@ -10,6 +10,8 @@ from sqlalchemy import and_, case, desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.services.slack.utils import get_channel_message_stats
+
 from app.api.v1.reports.schemas import (
     ChannelReportCreate,
     CrossResourceReportCreate,
@@ -1075,7 +1077,23 @@ async def create_channel_report(
                 detail=f"Invalid channel data: {str(e)}",
             )
 
-        # Create the resource analysis record
+        # Get initial message statistics for the channel
+        channel_stats = await get_channel_message_stats(
+            db=db, 
+            channel_id=channel_id,
+            start_date=start_date,
+            end_date=end_date
+        )
+        
+        logger.info(
+            f"Initial stats for channel {channel.get('name')}: "
+            f"messages={channel_stats['message_count']}, "
+            f"participants={channel_stats['participant_count']}, "
+            f"threads={channel_stats['thread_count']}, "
+            f"reactions={channel_stats['reaction_count']}"
+        )
+        
+        # Create the resource analysis record with initial statistics
         analysis = ResourceAnalysis(
             id=uuid4(),  # Generate a new UUID for each analysis
             cross_resource_report_id=new_report.id,
@@ -1086,6 +1104,11 @@ async def create_channel_report(
             status=ReportStatus.PENDING,
             period_start=start_date,
             period_end=end_date,
+            # Include statistics from database
+            message_count=channel_stats["message_count"],
+            participant_count=channel_stats["participant_count"],
+            thread_count=channel_stats["thread_count"],
+            reaction_count=channel_stats["reaction_count"],
             analysis_parameters={
                 "include_threads": report_data.include_threads,
                 "include_reactions": report_data.include_reactions,
@@ -1128,6 +1151,11 @@ async def create_channel_report(
             func.sum(
                 case((ResourceAnalysis.status == ReportStatus.FAILED, 1), else_=0)
             ).label("failed"),
+            # Add aggregated stats across all channels
+            func.sum(ResourceAnalysis.message_count).label("total_messages"),
+            func.sum(ResourceAnalysis.participant_count).label("total_participants"),
+            func.sum(ResourceAnalysis.thread_count).label("total_threads"),
+            func.sum(ResourceAnalysis.reaction_count).label("total_reactions"),
         ).where(ResourceAnalysis.cross_resource_report_id == new_report.id)
     )
     stats = analysis_stats.one()
@@ -1139,6 +1167,17 @@ async def create_channel_report(
         .where(ResourceAnalysis.cross_resource_report_id == new_report.id)
     )
     resource_types = [rt[0] for rt in resource_types_query.all()]
+    
+    # Add summary message counts to report parameters
+    updated_params = new_report.report_parameters.copy() if new_report.report_parameters else {}
+    updated_params.update({
+        "total_messages": stats.total_messages or 0,
+        "total_participants": stats.total_participants or 0,
+        "total_threads": stats.total_threads or 0,
+        "total_reactions": stats.total_reactions or 0,
+    })
+    new_report.report_parameters = updated_params
+    await db.commit()
 
     # Prepare the response
     response_dict = new_report.__dict__.copy()
@@ -1147,5 +1186,10 @@ async def create_channel_report(
     response_dict["pending_analyses"] = stats.pending
     response_dict["failed_analyses"] = stats.failed
     response_dict["resource_types"] = resource_types
+    # Include the counts in the response
+    response_dict["total_messages"] = stats.total_messages or 0
+    response_dict["total_participants"] = stats.total_participants or 0
+    response_dict["total_threads"] = stats.total_threads or 0
+    response_dict["total_reactions"] = stats.total_reactions or 0
 
     return response_dict

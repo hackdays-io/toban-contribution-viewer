@@ -198,6 +198,19 @@ class CrossResourceReportResponse(CrossResourceReportBase):
     resource_types: Optional[List[str]] = Field(
         None, description="Types of resources included"
     )
+    # Message statistics
+    total_messages: Optional[int] = Field(
+        None, description="Total number of messages across all resources"
+    )
+    total_participants: Optional[int] = Field(
+        None, description="Total number of unique participants across all resources"
+    )
+    total_threads: Optional[int] = Field(
+        None, description="Total number of threads across all resources"
+    )
+    total_reactions: Optional[int] = Field(
+        None, description="Total number of reactions across all resources"
+    )
 
     class Config:
         """Pydantic configuration."""
