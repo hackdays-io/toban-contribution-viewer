@@ -13,6 +13,7 @@ from sqlalchemy import (
     Index,
     String,
     Text,
+    Integer,
 )
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, relationship
@@ -137,6 +138,12 @@ class ResourceAnalysis(Base, BaseModel):
     key_highlights = Column(Text, nullable=True)
     model_used = Column(String(100), nullable=True)
     analysis_generated_at = Column(DateTime, nullable=True)
+    
+    # Statistics fields
+    message_count = Column(Integer, nullable=True)
+    participant_count = Column(Integer, nullable=True)
+    thread_count = Column(Integer, nullable=True)
+    reaction_count = Column(Integer, nullable=True)
 
     # Relationships
     cross_resource_report = relationship(

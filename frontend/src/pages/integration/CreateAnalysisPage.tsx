@@ -453,22 +453,25 @@ const CreateAnalysisPage: React.FC = () => {
       try {
         // Specifically sync messages for this channel
         console.log(`Syncing messages for channel ${primaryChannel}...`)
-        
+
         // Use the integrationService method for channel sync
         const syncOptions = {
-          start_date: startDateParam || formatDateWithoutTimezone(
-            new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString()
-          ),
-          end_date: endDateParam || formatDateWithoutTimezone(new Date().toISOString()),
-          include_replies: includeThreads
+          start_date:
+            startDateParam ||
+            formatDateWithoutTimezone(
+              new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString()
+            ),
+          end_date:
+            endDateParam || formatDateWithoutTimezone(new Date().toISOString()),
+          include_replies: includeThreads,
         }
-        
+
         const channelSyncResult = await integrationService.syncChannelMessages(
           selectedIntegration,
           primaryChannel,
           syncOptions
         )
-        
+
         // Check if the result is an error
         if (integrationService.isApiError(channelSyncResult)) {
           toast({

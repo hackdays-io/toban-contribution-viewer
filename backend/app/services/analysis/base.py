@@ -132,6 +132,10 @@ class ResourceAnalysisService(abc.ABC):
         resource_summary: Optional[str] = None,
         key_highlights: Optional[str] = None,
         model_used: Optional[str] = None,
+        message_count: Optional[int] = None,
+        participant_count: Optional[int] = None,
+        thread_count: Optional[int] = None,
+        reaction_count: Optional[int] = None,
     ) -> ResourceAnalysis:
         """
         Store analysis results in the database.
@@ -151,6 +155,7 @@ class ResourceAnalysisService(abc.ABC):
         from sqlalchemy import select, update
 
         logger.info(f"Storing analysis results for {analysis_id}")
+        logger.info(f"Message_count: {message_count}")
 
         update_values = {
             "results": results,
@@ -169,6 +174,14 @@ class ResourceAnalysisService(abc.ABC):
             update_values["key_highlights"] = key_highlights
         if model_used is not None:
             update_values["model_used"] = model_used
+        if message_count is not None:
+            update_values["message_count"] = message_count
+        if participant_count is not None:
+            update_values["participant_count"] = participant_count
+        if thread_count is not None:
+            update_values["thread_count"] = thread_count
+        if reaction_count is not None:
+            update_values["reaction_count"] = reaction_count
 
         # Update the analysis
         await self.db.execute(
@@ -298,6 +311,8 @@ class ResourceAnalysisService(abc.ABC):
                 integration_id=integration_id,
                 parameters=parameters or {},
             )
+            logger.debug(f"******Fetched data for analysis {analysis_id}: {data}")
+            logger.debug(f"Message metadata: {data.get('metadata')}")
 
             # Process the data for analysis
             processed_data = await self.prepare_data_for_analysis(
@@ -317,7 +332,11 @@ class ResourceAnalysisService(abc.ABC):
             resource_summary = results.get("resource_summary")
             key_highlights = results.get("key_highlights")
             model_used = results.get("model_used")
-
+            message_count = results.get("message_count")
+            participant_count = results.get("participant_count")
+            thread_count = results.get("thread_count")
+            reaction_count = results.get("reaction_count")
+            logger.info(f"participant_count: {participant_count}")
             # Store the results
             analysis = await self.store_analysis_results(
                 analysis_id=analysis_id,
@@ -327,6 +346,10 @@ class ResourceAnalysisService(abc.ABC):
                 resource_summary=resource_summary,
                 key_highlights=key_highlights,
                 model_used=model_used,
+                message_count=message_count,
+                participant_count=participant_count,
+                thread_count=thread_count,
+                reaction_count=reaction_count,
             )
 
             logger.info(f"Analysis {analysis_id} completed successfully")
