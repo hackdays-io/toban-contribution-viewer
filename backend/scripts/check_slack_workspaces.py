@@ -369,7 +369,7 @@ async def main():
         # Print workspace usage statistics
         logger.info("\n=== Workspace Usage Statistics ===")
 
-        for workspace_id, stats in usage_stats.items():
+        for _workspace_id, stats in usage_stats.items():
             logger.info(f"Workspace: {stats['name']} ({stats['slack_id']})")
             logger.info(
                 f"  Channels: {stats['channel_count']} (Selected: {stats['selected_channel_count']})"

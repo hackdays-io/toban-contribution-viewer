@@ -552,14 +552,10 @@ const TeamAnalysisResultPage: React.FC = () => {
         end_date: String(
           crossResourceReport.date_range_end || new Date().toISOString()
         ),
-        message_count:
-          Number(crossResourceReport.total_messages || 0),
-        participant_count:
-          Number(crossResourceReport.total_participants || 0),
-        thread_count:
-          Number(crossResourceReport.total_threads || 0),
-        reaction_count: 
-          Number(crossResourceReport.total_reactions || 0),
+        message_count: Number(crossResourceReport.total_messages || 0),
+        participant_count: Number(crossResourceReport.total_participants || 0),
+        thread_count: Number(crossResourceReport.total_threads || 0),
+        reaction_count: Number(crossResourceReport.total_reactions || 0),
         // Always set channel_summary, which is important for UI rendering
         channel_summary: String(reportDescription || ''),
         topic_analysis:
@@ -589,7 +585,6 @@ const TeamAnalysisResultPage: React.FC = () => {
         isClosable: true,
       })
 
-
       // Create a minimal analysis object so the UI doesn't break
       const emptyAnalysis: AnalysisResponse = {
         id: String(crossResourceReport.id || analysisId || ''),
@@ -603,14 +598,10 @@ const TeamAnalysisResultPage: React.FC = () => {
         end_date: String(
           crossResourceReport.date_range_end || new Date().toISOString()
         ),
-        message_count:
-          Number(crossResourceReport.total_messages || 0),
-        participant_count: 
-          Number(crossResourceReport.total_participants || 0),
-        thread_count:
-          Number(crossResourceReport.total_threads || 0),
-        reaction_count: 
-          Number(crossResourceReport.total_reactions || 0),
+        message_count: Number(crossResourceReport.total_messages || 0),
+        participant_count: Number(crossResourceReport.total_participants || 0),
+        thread_count: Number(crossResourceReport.total_threads || 0),
+        reaction_count: Number(crossResourceReport.total_reactions || 0),
         channel_summary: 'No analyses found for this team report.',
         topic_analysis: '',
         contributor_insights: '',
@@ -1001,7 +992,6 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
         return
       }
 
-
       // Inspect the first analysis for debugging
       if (
         reportStatus.resource_analyses &&
@@ -1061,7 +1051,6 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
           }
         )
 
-
         // Update analysis statistics if we have completed analyses and current analysis data
         if (completedCount > 0 && analysis) {
           const updatedAnalysis = { ...analysis }
@@ -1071,7 +1060,6 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
             (a: Record<string, unknown>) => a.status === 'COMPLETED'
           )
 
-
           // Look for counts in the results field (where they're actually stored in database)
           completedAnalyses.forEach((a, index) => {
             // Log the first analysis record structure for debugging
@@ -1080,14 +1068,26 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
                 'RESOURCE ANALYSIS DEBUG - First analysis structure:',
                 {
                   hasResults: Boolean(a.results),
-                  resultsKeys: a.results
-                    ? Object.keys(a.results as object)
-                    : [],
+                  resultsKeys:
+                    a.results && typeof a.results === 'object'
+                      ? Object.keys(a.results as Record<string, unknown>)
+                      : [],
                   hasMetadata:
-                    a.results && (a.results as any).metadata ? true : false,
+                    a.results &&
+                    typeof a.results === 'object' &&
+                    (a.results as Record<string, unknown>).metadata
+                      ? true
+                      : false,
                   metadataKeys:
-                    a.results && (a.results as any).metadata
-                      ? Object.keys((a.results as any).metadata)
+                    a.results &&
+                    typeof a.results === 'object' &&
+                    (a.results as Record<string, unknown>).metadata &&
+                    typeof (a.results as Record<string, unknown>).metadata ===
+                      'object'
+                      ? Object.keys(
+                          (a.results as Record<string, unknown>)
+                            .metadata as Record<string, unknown>
+                        )
                       : [],
                   hasMessageCount: Boolean(a.message_count),
                   hasParticipantCount: Boolean(a.participant_count),
@@ -1127,6 +1127,7 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
     isRefreshing,
     isTeamAnalysis,
     fetchData,
+    analysis,
   ])
 
   // Try to get the workspace ID from different sources
@@ -1772,19 +1773,25 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
 
               <Stat>
                 <StatLabel>Participants</StatLabel>
-                <StatNumber>{analysis.participant_count.toLocaleString()}</StatNumber>
+                <StatNumber>
+                  {analysis.participant_count.toLocaleString()}
+                </StatNumber>
                 <StatHelpText>Active contributors</StatHelpText>
               </Stat>
 
               <Stat>
                 <StatLabel>Threads</StatLabel>
-                <StatNumber>{analysis.thread_count.toLocaleString()}</StatNumber>
+                <StatNumber>
+                  {analysis.thread_count.toLocaleString()}
+                </StatNumber>
                 <StatHelpText>Discussion threads</StatHelpText>
               </Stat>
 
               <Stat>
                 <StatLabel>Reactions</StatLabel>
-                <StatNumber>{analysis.reaction_count.toLocaleString()}</StatNumber>
+                <StatNumber>
+                  {analysis.reaction_count.toLocaleString()}
+                </StatNumber>
                 <StatHelpText>Emoji reactions</StatHelpText>
               </Stat>
             </SimpleGrid>
@@ -2085,8 +2092,9 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
               <HStack>
                 <Icon as={FiUsers} size="sm" color="gray.500" />
                 <Text fontSize="sm" color="gray.600">
-                  Analysis includes {analysis.message_count.toLocaleString()} messages from{' '}
-                  {analysis.participant_count.toLocaleString()} participants
+                  Analysis includes {analysis.message_count.toLocaleString()}{' '}
+                  messages from {analysis.participant_count.toLocaleString()}{' '}
+                  participants
                 </Text>
               </HStack>
             </VStack>

@@ -486,8 +486,12 @@ const CreateAnalysisPage: React.FC = () => {
 
           // Extract sync statistics from the response
           const syncStats = channelSyncResult.sync_results || {}
-          const newMessages = syncStats.new_message_count || 0
-          const repliesCount = syncStats.replies_synced || 0
+          const newMessages =
+            ((syncStats as Record<string, unknown>)
+              .new_message_count as number) || 0
+          const repliesCount =
+            ((syncStats as Record<string, unknown>).replies_synced as number) ||
+            0
 
           // Only show the sync message if there are actual messages synced
           if (newMessages > 0 || repliesCount > 0) {

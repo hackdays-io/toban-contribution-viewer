@@ -63,20 +63,22 @@ class SlackChannelAnalysisService(ResourceAnalysisService):
         """
         resource_id_str = str(resource_id)
         logger.info(f"Fetching data for Slack channel {resource_id_str}")
-        
+
         # OPTIMIZATION: Check cache first
-        include_threads = parameters.get("include_threads", True) if parameters else True
+        include_threads = (
+            parameters.get("include_threads", True) if parameters else True
+        )
         cached_data = ChannelDataCache.get(
             channel_id=resource_id_str,
             start_date=start_date,
             end_date=end_date,
-            include_threads=include_threads
+            include_threads=include_threads,
         )
-        
+
         if cached_data:
             logger.info(f"Using cached data for channel {resource_id_str}")
             return cached_data
-            
+
         # Not in cache, need to fetch data from database
         # Get the Slack channel
         channel_result = await self.db.execute(
@@ -98,7 +100,7 @@ class SlackChannelAnalysisService(ResourceAnalysisService):
             logger.error(f"Integration {integration_id} not found")
             raise ValueError(f"Integration {integration_id} not found")
 
-        # Extract parameters 
+        # Extract parameters
         message_limit = parameters.get("message_limit", 1000) if parameters else 1000
 
         # Get messages within the date range
@@ -204,16 +206,16 @@ class SlackChannelAnalysisService(ResourceAnalysisService):
                 "parameters": parameters or {},
             },
         }
-        
+
         # Store in cache for future use
         ChannelDataCache.set(
             channel_id=resource_id_str,
             data=channel_data,
             start_date=start_date,
             end_date=end_date,
-            include_threads=include_threads
+            include_threads=include_threads,
         )
-        
+
         return channel_data
 
     async def prepare_data_for_analysis(
@@ -668,13 +670,13 @@ class SlackChannelAnalysisService(ResourceAnalysisService):
                 f"LLM reports 'no actual channel messages' despite {total_messages} messages being sent"
             )
             logger.info(
-                f"This indicates the LLM doesn't recognize the message content as meaningful conversation"
+                "This indicates the LLM doesn't recognize the message content as meaningful conversation"
             )
 
             # Check the first few messages to see what might be wrong
             messages_list = data.get("messages", [])
             if messages_list:
-                logger.info(f"Sample of messages being sent to LLM:")
+                logger.info("Sample of messages being sent to LLM:")
                 for i, msg in enumerate(messages_list[:5]):
                     logger.info(
                         f"  {i+1}. User: {msg.get('user', 'Unknown')} | Text: {msg.get('text', '')[:100]}"
@@ -954,7 +956,9 @@ class SlackChannelAnalysisService(ResourceAnalysisService):
                 "contributor_insights": response.get("contributor_insights", ""),
                 "key_highlights": response.get("key_highlights", ""),
                 "resource_summary": response.get("channel_summary", ""),
-                "topic_analysis": response.get("topic_analysis", ""),  # Added topic analysis for all analysis types
+                "topic_analysis": response.get(
+                    "topic_analysis", ""
+                ),  # Added topic analysis for all analysis types
                 "full_response": content,
             }
         elif analysis_type == AnalysisType.TOPICS:

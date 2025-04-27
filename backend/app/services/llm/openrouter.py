@@ -112,14 +112,12 @@ class OpenRouterService:
         """
         # Import datetime for type checking
         from datetime import datetime as dt
-        
+
         # Convert datetime to ISO string if needed
         start_date_str = (
             start_date.isoformat() if isinstance(start_date, dt) else start_date
         )
-        end_date_str = (
-            end_date.isoformat() if isinstance(end_date, dt) else end_date
-        )
+        end_date_str = end_date.isoformat() if isinstance(end_date, dt) else end_date
 
         # Prepare the context for the LLM
         message_count = messages_data.get("message_count", 0)
@@ -272,8 +270,7 @@ CRITICAL: In your JSON response, you MUST include substantial, relevant content 
 - contributor_insights: Analyze key contributors, their participation patterns, and interaction styles
 - key_highlights: Identify notable moments, decisions, or interactions worth highlighting
 
-Do not leave any of these fields empty, too short, or with placeholder text. Each field should contain 
-substantive insights based on the actual message content provided."""
+Do not leave any of these fields empty, too short, or with placeholder text. Each field should contain substantive insights based on the actual message content provided."""
 
         if use_json_mode:
             system_prompt += """
@@ -451,10 +448,10 @@ Keep them intact exactly as they appear in the original messages.
                 # Check for "no actual channel messages" pattern explicitly
                 if "no actual channel messages" in llm_response.lower():
                     logger.error(
-                        f"CRITICAL ISSUE #238: LLM responded with 'no actual channel messages'"
+                        "CRITICAL ISSUE #238: LLM responded with 'no actual channel messages'"
                     )
                     logger.error(
-                        f"This indicates the message formatting or filtering is removing all valid messages"
+                        "This indicates the message formatting or filtering is removing all valid messages"
                     )
 
                 # Try to parse JSON response directly first if we're using JSON mode
@@ -467,10 +464,11 @@ Keep them intact exactly as they appear in the original messages.
                         logger.info(
                             f"Raw LLM response (first 300 chars): {llm_response[:300]}..."
                         )
-                        
+
                         # For debugging, save the entire response to a log file
                         import os
                         from datetime import datetime as dt_
+
                         log_dir = "/tmp/openrouter_logs"
                         os.makedirs(log_dir, exist_ok=True)
                         timestamp = dt_.now().strftime("%Y%m%d_%H%M%S")
@@ -482,13 +480,15 @@ Keep them intact exactly as they appear in the original messages.
                         # Check if response mentions "no actual channel messages"
                         if "no actual channel messages" in llm_response.lower():
                             logger.error(
-                                f"LLM response mentions 'no actual channel messages' - message format may be unrecognized"
+                                "LLM response mentions 'no actual channel messages' - message format may be unrecognized"
                             )
 
                         # Handle potential JSON formatting in text response
                         json_content = llm_response.strip()
-                        logger.info(f"Initial JSON processing - Content type: {type(json_content)}, Length: {len(json_content)}")
-                        
+                        logger.info(
+                            f"Initial JSON processing - Content type: {type(json_content)}, Length: {len(json_content)}"
+                        )
+
                         # Check for markdown code blocks
                         if json_content.startswith("```json"):
                             logger.info("Detected markdown JSON code block")
@@ -496,85 +496,121 @@ Keep them intact exactly as they appear in the original messages.
                         elif json_content.startswith("```"):
                             logger.info("Detected generic markdown code block")
                             json_content = json_content.split("```", 1)[1]
-                            
+
                         if json_content.endswith("```"):
                             logger.info("Removing trailing markdown code block markers")
                             json_content = json_content.rsplit("```", 1)[0]
-                        
+
                         # Log intermediate state
-                        logger.info(f"After markdown removal - Content length: {len(json_content)}")
+                        logger.info(
+                            f"After markdown removal - Content length: {len(json_content)}"
+                        )
                         logger.info(f"Content starts with: {json_content[:50]}...")
                         logger.info(f"Content ends with: ...{json_content[-50:]}")
-                            
+
                         # Sanitize the JSON content by removing any control characters
                         # Control characters can cause JSON parsing errors
                         import re
+
                         original_length = len(json_content)
-                        json_content = re.sub(r'[\x00-\x1F\x7F]', '', json_content.strip())
+                        json_content = re.sub(
+                            r"[\x00-\x1F\x7F]", "", json_content.strip()
+                        )
                         sanitized_length = len(json_content)
-                        
+
                         if original_length != sanitized_length:
-                            logger.info(f"Removed {original_length - sanitized_length} control characters from JSON")
-                        
+                            logger.info(
+                                f"Removed {original_length - sanitized_length} control characters from JSON"
+                            )
+
                         # Make sure the content starts with a curly brace for JSON object
-                        if not json_content.startswith('{'):
-                            logger.warning(f"JSON content doesn't start with '{{', current start: {json_content[:10]}")
+                        if not json_content.startswith("{"):
+                            logger.warning(
+                                f"JSON content doesn't start with '{{', current start: {json_content[:10]}"
+                            )
                             # Try to find the first opening curly brace
-                            first_brace_pos = json_content.find('{')
+                            first_brace_pos = json_content.find("{")
                             if first_brace_pos >= 0:
-                                logger.info(f"Found opening brace at position {first_brace_pos}, trimming content")
+                                logger.info(
+                                    f"Found opening brace at position {first_brace_pos}, trimming content"
+                                )
                                 json_content = json_content[first_brace_pos:]
-                        
+
                         # Make sure the content ends with a curly brace for JSON object
-                        if not json_content.endswith('}'):
-                            logger.warning(f"JSON content doesn't end with '}}', current end: {json_content[-10:]}")
+                        if not json_content.endswith("}"):
+                            logger.warning(
+                                f"JSON content doesn't end with '}}', current end: {json_content[-10:]}"
+                            )
                             # Try to find the last closing curly brace
-                            last_brace_pos = json_content.rfind('}')
+                            last_brace_pos = json_content.rfind("}")
                             if last_brace_pos >= 0:
-                                logger.info(f"Found closing brace at position {last_brace_pos}, trimming content")
-                                json_content = json_content[:last_brace_pos+1]
-                        
+                                logger.info(
+                                    f"Found closing brace at position {last_brace_pos}, trimming content"
+                                )
+                                json_content = json_content[: last_brace_pos + 1]
+
                         # Write the sanitized content to a file for debugging
-                        sanitized_log_path = f"{log_dir}/sanitized_json_{timestamp}.json"
+                        sanitized_log_path = (
+                            f"{log_dir}/sanitized_json_{timestamp}.json"
+                        )
                         with open(sanitized_log_path, "w") as f:
                             f.write(json_content)
-                        logger.info(f"Sanitized JSON content saved to {sanitized_log_path}")
-                        
+                        logger.info(
+                            f"Sanitized JSON content saved to {sanitized_log_path}"
+                        )
+
                         # Multiple parsing attempts with progressively more aggressive fixing
                         try:
                             # First attempt: basic parsing
                             parsed_json = json.loads(json_content)
                             logger.info("JSON parsing succeeded on first attempt")
                         except json.JSONDecodeError as json_err:
-                            logger.warning(f"First JSON parsing attempt failed at char {json_err.pos}: {str(json_err)}")
+                            logger.warning(
+                                f"First JSON parsing attempt failed at char {json_err.pos}: {str(json_err)}"
+                            )
                             # Show the problematic part of the JSON
                             error_context_start = max(0, json_err.pos - 20)
-                            error_context_end = min(len(json_content), json_err.pos + 20)
-                            error_context = json_content[error_context_start:error_context_end]
+                            error_context_end = min(
+                                len(json_content), json_err.pos + 20
+                            )
+                            error_context = json_content[
+                                error_context_start:error_context_end
+                            ]
                             logger.warning(f"Error context: ...{error_context}...")
-                            
+
                             try:
                                 # Second attempt: fix unescaped quotes in values
                                 logger.info("Attempting to fix unescaped quotes")
-                                fixed_content = re.sub(r'(?<!\\)"(?=(.*?".*?"))', r'\"', json_content)
+                                fixed_content = re.sub(
+                                    r'(?<!\\)"(?=(.*?".*?"))', r"\"", json_content
+                                )
                                 parsed_json = json.loads(fixed_content)
-                                logger.info("JSON parsing succeeded after fixing unescaped quotes")
+                                logger.info(
+                                    "JSON parsing succeeded after fixing unescaped quotes"
+                                )
                             except json.JSONDecodeError as json_err2:
-                                logger.warning(f"Second JSON parsing attempt failed at char {json_err2.pos}: {str(json_err2)}")
-                                
+                                logger.warning(
+                                    f"Second JSON parsing attempt failed at char {json_err2.pos}: {str(json_err2)}"
+                                )
+
                                 try:
                                     # Third attempt: try using a more lenient JSON parser or validator library
-                                    import jsonschema
                                     from json5 import loads as json5_loads
-                                    
-                                    logger.info("Trying JSON5 parser for more lenient parsing")
+
+                                    logger.info(
+                                        "Trying JSON5 parser for more lenient parsing"
+                                    )
                                     parsed_json = json5_loads(json_content)
                                     logger.info("JSON5 parsing succeeded")
                                 except ImportError:
-                                    logger.warning("JSON5 or jsonschema library not available, skipping third attempt")
+                                    logger.warning(
+                                        "JSON5 or jsonschema library not available, skipping third attempt"
+                                    )
                                     raise json_err2
                                 except Exception as e:
-                                    logger.warning(f"Third JSON parsing attempt failed: {str(e)}")
+                                    logger.warning(
+                                        f"Third JSON parsing attempt failed: {str(e)}"
+                                    )
                                     raise json_err2
 
                         # Log successful parsing
@@ -605,13 +641,22 @@ Keep them intact exactly as they appear in the original messages.
 
                 # Fall back to extracting sections from text if JSON parsing failed or not used
                 if not any(sections.values()):
-                    logger.info("No valid JSON parsed - attempting to extract sections from text")
+                    logger.info(
+                        "No valid JSON parsed - attempting to extract sections from text"
+                    )
                     sections = self._extract_sections(llm_response)
-                    
+
                 # Ensure all required sections are present - if not, use the raw llm_response
-                for key in ["channel_summary", "topic_analysis", "contributor_insights", "key_highlights"]:
+                for key in [
+                    "channel_summary",
+                    "topic_analysis",
+                    "contributor_insights",
+                    "key_highlights",
+                ]:
                     if key not in sections or not sections[key]:
-                        logger.info(f"Using raw LLM response for missing section: {key}")
+                        logger.info(
+                            f"Using raw LLM response for missing section: {key}"
+                        )
                         # Get directly from the raw text response
                         sections[key] = llm_response
 
