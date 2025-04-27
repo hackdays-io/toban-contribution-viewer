@@ -10,8 +10,6 @@ from sqlalchemy import and_, case, desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.services.slack.utils import get_channel_message_stats
-
 from app.api.v1.reports.schemas import (
     ChannelReportCreate,
     CrossResourceReportCreate,
@@ -34,6 +32,7 @@ from app.models.reports import (
     ResourceAnalysis,
 )
 from app.models.team import Team, TeamMemberRole
+from app.services.slack.utils import get_channel_message_stats
 
 logger = logging.getLogger(__name__)
 
@@ -395,7 +394,7 @@ async def get_team_report(
     response_dict["pending_analyses"] = stats.pending
     response_dict["failed_analyses"] = stats.failed
     response_dict["resource_types"] = resource_types
-    
+
     # Include aggregated statistics in the response
     response_dict["total_messages"] = stats.total_messages or 0
     response_dict["total_participants"] = stats.total_participants or 0
@@ -1100,12 +1099,9 @@ async def create_channel_report(
 
         # Get initial message statistics for the channel
         channel_stats = await get_channel_message_stats(
-            db=db, 
-            channel_id=channel_id,
-            start_date=start_date,
-            end_date=end_date
+            db=db, channel_id=channel_id, start_date=start_date, end_date=end_date
         )
-        
+
         logger.info(
             f"Initial stats for channel {channel.get('name')}: "
             f"messages={channel_stats['message_count']}, "
@@ -1113,7 +1109,7 @@ async def create_channel_report(
             f"threads={channel_stats['thread_count']}, "
             f"reactions={channel_stats['reaction_count']}"
         )
-        
+
         # Create the resource analysis record with initial statistics
         analysis = ResourceAnalysis(
             id=uuid4(),  # Generate a new UUID for each analysis
@@ -1188,15 +1184,19 @@ async def create_channel_report(
         .where(ResourceAnalysis.cross_resource_report_id == new_report.id)
     )
     resource_types = [rt[0] for rt in resource_types_query.all()]
-    
+
     # Add summary message counts to report parameters
-    updated_params = new_report.report_parameters.copy() if new_report.report_parameters else {}
-    updated_params.update({
-        "total_messages": stats.total_messages or 0,
-        "total_participants": stats.total_participants or 0,
-        "total_threads": stats.total_threads or 0,
-        "total_reactions": stats.total_reactions or 0,
-    })
+    updated_params = (
+        new_report.report_parameters.copy() if new_report.report_parameters else {}
+    )
+    updated_params.update(
+        {
+            "total_messages": stats.total_messages or 0,
+            "total_participants": stats.total_participants or 0,
+            "total_threads": stats.total_threads or 0,
+            "total_reactions": stats.total_reactions or 0,
+        }
+    )
     new_report.report_parameters = updated_params
     await db.commit()
 
