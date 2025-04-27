@@ -553,7 +553,7 @@ const TeamAnalysisResultPage: React.FC = () => {
           crossResourceReport.date_range_end || new Date().toISOString()
         ),
         message_count:
-          Number(crossResourceReport.total_resources || 0),
+          Number(crossResourceReport.total_messages || 0),
         participant_count:
           Number(crossResourceReport.total_participants || 0),
         thread_count:
@@ -604,7 +604,7 @@ const TeamAnalysisResultPage: React.FC = () => {
           crossResourceReport.date_range_end || new Date().toISOString()
         ),
         message_count:
-          Number(crossResourceReport.total_resources || 0),
+          Number(crossResourceReport.total_messages || 0),
         participant_count: 
           Number(crossResourceReport.total_participants || 0),
         thread_count:
@@ -1001,14 +1001,6 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
         return
       }
 
-      // Add detailed logging to understand the report structure
-      console.log('REPORT STRUCTURE DEBUG:', {
-        reportId: reportStatus.id,
-        totalResources: reportStatus.total_resources,
-        completedAnalyses: reportStatus.completed_analyses,
-        resourceCount: reportStatus.resource_analyses?.length || 0,
-        firstAnalysis: reportStatus.resource_analyses?.[0],
-      })
 
       // Inspect the first analysis for debugging
       if (
