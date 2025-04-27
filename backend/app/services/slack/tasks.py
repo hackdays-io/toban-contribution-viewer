@@ -25,9 +25,7 @@ async def verify_all_tokens(db: AsyncSession) -> None:
     logger.info("Starting background token verification task")
     try:
         # Query for workspaces that need verification
-        result = await db.execute(
-            select(SlackWorkspace).where(SlackWorkspace.is_connected.is_(True))
-        )
+        result = await db.execute(select(SlackWorkspace).where(SlackWorkspace.is_connected.is_(True)))
         workspaces = result.scalars().all()
 
         if not workspaces:
@@ -40,13 +38,9 @@ async def verify_all_tokens(db: AsyncSession) -> None:
         for workspace in workspaces:
             try:
                 await WorkspaceService.verify_workspace_tokens(db, str(workspace.id))
-                logger.info(
-                    f"Verified token for workspace {workspace.name} ({workspace.id})"
-                )
+                logger.info(f"Verified token for workspace {workspace.name} ({workspace.id})")
             except Exception as e:
-                logger.error(
-                    f"Error verifying token for workspace {workspace.id}: {str(e)}"
-                )
+                logger.error(f"Error verifying token for workspace {workspace.id}: {str(e)}")
 
         logger.info("Completed token verification task")
 
@@ -64,9 +58,7 @@ async def update_all_workspace_metadata(db: AsyncSession) -> None:
     logger.info("Starting background workspace metadata update task")
     try:
         # Query for connected workspaces
-        result = await db.execute(
-            select(SlackWorkspace).where(SlackWorkspace.is_connected.is_(True))
-        )
+        result = await db.execute(select(SlackWorkspace).where(SlackWorkspace.is_connected.is_(True)))
         workspaces = result.scalars().all()
 
         if not workspaces:
@@ -79,13 +71,9 @@ async def update_all_workspace_metadata(db: AsyncSession) -> None:
         for workspace in workspaces:
             try:
                 await WorkspaceService.update_workspace_metadata(db, workspace)
-                logger.info(
-                    f"Updated metadata for workspace {workspace.name} ({workspace.id})"
-                )
+                logger.info(f"Updated metadata for workspace {workspace.name} ({workspace.id})")
             except Exception as e:
-                logger.error(
-                    f"Error updating metadata for workspace {workspace.id}: {str(e)}"
-                )
+                logger.error(f"Error updating metadata for workspace {workspace.id}: {str(e)}")
 
         logger.info("Completed workspace metadata update task")
 

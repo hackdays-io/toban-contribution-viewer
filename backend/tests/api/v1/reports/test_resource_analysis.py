@@ -24,9 +24,7 @@ from app.models.team import Team
 from app.services.analysis.task_scheduler import ResourceAnalysisTaskScheduler
 
 
-@pytest.mark.skip(
-    reason="Integration test needs to be set up with appropriate fixtures"
-)
+@pytest.mark.skip(reason="Integration test needs to be set up with appropriate fixtures")
 @pytest.mark.asyncio
 async def test_trigger_resource_analysis(
     async_client: AsyncClient,
@@ -131,9 +129,7 @@ async def test_trigger_resource_analysis(
         ResourceAnalysisTaskScheduler.schedule_analysis = original_schedule
 
 
-@pytest.mark.skip(
-    reason="Integration test needs to be set up with appropriate fixtures"
-)
+@pytest.mark.skip(reason="Integration test needs to be set up with appropriate fixtures")
 @pytest.mark.asyncio
 async def test_get_resource_analyses(
     async_client: AsyncClient,
@@ -212,9 +208,7 @@ async def test_get_resource_analyses(
         assert data[i]["status"] == analysis.status.value
 
 
-@pytest.mark.skip(
-    reason="Integration test needs to be set up with appropriate fixtures"
-)
+@pytest.mark.skip(reason="Integration test needs to be set up with appropriate fixtures")
 @pytest.mark.asyncio
 async def test_get_resource_analysis_detail(
     async_client: AsyncClient,
@@ -279,9 +273,7 @@ async def test_get_resource_analysis_detail(
     assert data["results"]["test"] == "results"
 
 
-@pytest.mark.skip(
-    reason="Integration test needs to be set up with appropriate fixtures"
-)
+@pytest.mark.skip(reason="Integration test needs to be set up with appropriate fixtures")
 @pytest.mark.asyncio
 async def test_retry_resource_analysis(
     async_client: AsyncClient,
@@ -361,9 +353,7 @@ async def test_retry_resource_analysis(
         ResourceAnalysisTaskScheduler.schedule_analysis = original_schedule
 
 
-@pytest.mark.skip(
-    reason="Integration test needs to be set up with appropriate fixtures"
-)
+@pytest.mark.skip(reason="Integration test needs to be set up with appropriate fixtures")
 @pytest.mark.asyncio
 async def test_get_task_status(
     async_client: AsyncClient,

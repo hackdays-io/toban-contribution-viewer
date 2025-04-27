@@ -71,9 +71,7 @@ def test_integration(test_team):
 class TestIntegrationService:
     """Tests for the IntegrationService class."""
 
-    async def test_get_integration_owner(
-        self, mock_db, test_integration, test_team, test_user_id
-    ):
+    async def test_get_integration_owner(self, mock_db, test_integration, test_team, test_user_id):
         """Test getting an integration as the owner."""
         # Setup
         mock_db.get.return_value = test_integration
@@ -152,9 +150,7 @@ class TestIntegrationService:
         assert result.integration_metadata["new_key"] == "new_value"
         mock_db.add.assert_called_once()  # Event record
 
-    async def test_share_integration(
-        self, mock_db, test_integration, test_team, test_user_id
-    ):
+    async def test_share_integration(self, mock_db, test_integration, test_team, test_user_id):
         """Test sharing an integration with another team."""
         # Setup
         mock_db.get.return_value = test_integration
@@ -183,9 +179,7 @@ class TestIntegrationService:
         assert result.share_level == share_level
         assert mock_db.add.call_count == 2  # Share and event
 
-    async def test_revoke_integration_share(
-        self, mock_db, test_integration, test_team, test_user_id
-    ):
+    async def test_revoke_integration_share(self, mock_db, test_integration, test_team, test_user_id):
         """Test revoking an integration share."""
         # Setup
         target_team_id = uuid.uuid4()
@@ -218,9 +212,7 @@ class TestIntegrationService:
         assert mock_share.revoked_at is not None
         mock_db.add.assert_called_once()  # Event record
 
-    async def test_grant_resource_access(
-        self, mock_db, test_integration, test_team, test_user_id
-    ):
+    async def test_grant_resource_access(self, mock_db, test_integration, test_team, test_user_id):
         """Test granting access to a resource."""
         # Setup
         resource_id = uuid.uuid4()

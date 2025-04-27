@@ -53,11 +53,7 @@ class OpenRouterService:
 
     def __init__(self):
         """Initialize the OpenRouter service with configuration from settings."""
-        self.api_key = (
-            settings.OPENROUTER_API_KEY.get_secret_value()
-            if settings.OPENROUTER_API_KEY
-            else None
-        )
+        self.api_key = settings.OPENROUTER_API_KEY.get_secret_value() if settings.OPENROUTER_API_KEY else None
         if not self.api_key:
             logger.warning("OPENROUTER_API_KEY not set in environment variables")
 
@@ -68,9 +64,7 @@ class OpenRouterService:
 
         # App info for OpenRouter headers
         self.app_name = "Toban Contribution Viewer"
-        self.app_site = os.environ.get(
-            "SITE_DOMAIN", "toban-contribution-viewer.example.com"
-        )
+        self.app_site = os.environ.get("SITE_DOMAIN", "toban-contribution-viewer.example.com")
 
     def _model_supports_json_mode(self, model: str) -> bool:
         """
@@ -82,10 +76,7 @@ class OpenRouterService:
         Returns:
             True if the model supports JSON mode, False otherwise
         """
-        return any(
-            model.startswith(supported_model)
-            for supported_model in self.JSON_MODE_SUPPORTED_MODELS
-        )
+        return any(model.startswith(supported_model) for supported_model in self.JSON_MODE_SUPPORTED_MODELS)
 
     async def analyze_channel_messages(
         self,
@@ -114,9 +105,7 @@ class OpenRouterService:
         from datetime import datetime as dt
 
         # Convert datetime to ISO string if needed
-        start_date_str = (
-            start_date.isoformat() if isinstance(start_date, dt) else start_date
-        )
+        start_date_str = start_date.isoformat() if isinstance(start_date, dt) else start_date
         end_date_str = end_date.isoformat() if isinstance(end_date, dt) else end_date
 
         # Prepare the context for the LLM
@@ -126,23 +115,17 @@ class OpenRouterService:
         reaction_count = messages_data.get("reaction_count", 0)
 
         # Add detailed logging for issue #238
-        logger.info(
-            f"Analyzing channel {channel_name} with {message_count} messages, {participant_count} participants"
-        )
+        logger.info(f"Analyzing channel {channel_name} with {message_count} messages, {participant_count} participants")
         logger.info(f"Analysis period: {start_date} to {end_date}")
 
         # Check if the messages list matches the reported count
         messages_list = messages_data.get("messages", [])
         if len(messages_list) != message_count:
-            logger.warning(
-                f"Message count mismatch: reported {message_count} but list has {len(messages_list)}"
-            )
+            logger.warning(f"Message count mismatch: reported {message_count} but list has {len(messages_list)}")
 
         # Check if we have actual messages to analyze after filtering
         if not messages_list:
-            logger.warning(
-                f"No messages provided for analysis of channel {channel_name}"
-            )
+            logger.warning(f"No messages provided for analysis of channel {channel_name}")
 
         # Fix for issue #238: Ensure message data is correctly structured for the LLM
         # Sometimes in multi-channel reports, messages_data has different structure than in single-channel reports
@@ -168,9 +151,7 @@ class OpenRouterService:
 
                 # Log some sample messages to understand what we're filtering
                 if len(meaningful_messages) < 3 and text and user_id:
-                    logger.info(
-                        f"Sample valid message - User: {user_id}, Text: '{text[:100]}'"
-                    )
+                    logger.info(f"Sample valid message - User: {user_id}, Text: '{text[:100]}'")
 
                 # Check for join/leave messages
                 is_join_leave = any(
@@ -201,15 +182,11 @@ class OpenRouterService:
 
             # If we have meaningful messages after filtering, use those
             if meaningful_messages:
-                logger.info(
-                    f"Using {len(meaningful_messages)} meaningful messages for analysis"
-                )
+                logger.info(f"Using {len(meaningful_messages)} meaningful messages for analysis")
                 messages_for_formatting = meaningful_messages
             else:
                 # CRITICAL FIX FOR ISSUE #238: If NO meaningful messages found, try to be more lenient
-                logger.warning(
-                    "No meaningful messages found with strict filtering! Trying more lenient approach..."
-                )
+                logger.warning("No meaningful messages found with strict filtering! Trying more lenient approach...")
 
                 # If no meaningful messages with both user_id and text, try including messages with just text
                 lenient_messages = [
@@ -227,24 +204,18 @@ class OpenRouterService:
                 ]
 
                 if lenient_messages:
-                    logger.info(
-                        f"Using {len(lenient_messages)} messages with lenient filtering"
-                    )
+                    logger.info(f"Using {len(lenient_messages)} messages with lenient filtering")
                     messages_for_formatting = lenient_messages
                 else:
                     # Last resort - just keep the original messages but log a warning
-                    logger.error(
-                        "CRITICAL: No valid messages found even with lenient filtering!"
-                    )
+                    logger.error("CRITICAL: No valid messages found even with lenient filtering!")
                     # Keep original messages_for_formatting, but log this issue
 
         message_content = self._format_messages(messages_for_formatting)
 
         # Check if the formatted content is meaningful
         if not message_content.strip():
-            logger.error(
-                "Formatted message content is empty - LLM will report 'no actual channel messages'"
-            )
+            logger.error("Formatted message content is empty - LLM will report 'no actual channel messages'")
         elif len(message_content) < 100:
             logger.warning(
                 f"Formatted message content is very short ({len(message_content)} chars) - may lead to poor analysis"
@@ -294,10 +265,7 @@ The remaining messages were system notifications or empty messages that were fil
 """
 
         # Ensure Japanese messages are properly handled
-        if any(
-            all(ord(c) > 127 for c in msg.get("text", "").strip())
-            for msg in messages_for_formatting[:20]
-        ):
+        if any(all(ord(c) > 127 for c in msg.get("text", "").strip()) for msg in messages_for_formatting[:20]):
             message_content_prefix += """
 IMPORTANT: Some messages in this channel are in Japanese. Please analyze them as best you can.
 Do not respond that there are "no actual channel messages" just because you see Japanese text.
@@ -378,9 +346,7 @@ Keep them intact exactly as they appear in the original messages.
                 json.dump(request_payload, f, indent=2)
 
             # Log the key information to the console
-            logger.info(
-                f"OpenRouter API request for channel {channel_name}, saved to {payload_log_path}"
-            )
+            logger.info(f"OpenRouter API request for channel {channel_name}, saved to {payload_log_path}")
             logger.info(f"Request model: {request_payload['model']}")
             logger.info(f"Request has {len(request_payload['messages'])} messages")
 
@@ -395,12 +361,8 @@ Keep them intact exactly as they appear in the original messages.
                 elif role == "user":
                     # Count actual user messages in the content
                     message_lines = msg["content"].split("\n")
-                    user_message_count = sum(
-                        1 for line in message_lines if "]" in line and ":" in line
-                    )
-                    logger.info(
-                        f"User prompt has {user_message_count} messages. Preview: {msg['content'][:150]}..."
-                    )
+                    user_message_count = sum(1 for line in message_lines if "]" in line and ":" in line)
+                    logger.info(f"User prompt has {user_message_count} messages. Preview: {msg['content'][:150]}...")
 
                     # CRITICAL DEBUG for Issue #238: Log full content to understand what's happening
                     debug_log_path = f"/tmp/openrouter_user_content_{timestamp}.txt"
@@ -438,21 +400,15 @@ Keep them intact exactly as they appear in the original messages.
                 logger.info(f"OpenRouter API response saved to {response_log_path}")
 
                 # Process the response
-                llm_response = (
-                    result.get("choices", [{}])[0].get("message", {}).get("content", "")
-                )
+                llm_response = result.get("choices", [{}])[0].get("message", {}).get("content", "")
 
                 # Log response preview
                 logger.info(f"Response content preview: {llm_response[:200]}...")
 
                 # Check for "no actual channel messages" pattern explicitly
                 if "no actual channel messages" in llm_response.lower():
-                    logger.error(
-                        "CRITICAL ISSUE #238: LLM responded with 'no actual channel messages'"
-                    )
-                    logger.error(
-                        "This indicates the message formatting or filtering is removing all valid messages"
-                    )
+                    logger.error("CRITICAL ISSUE #238: LLM responded with 'no actual channel messages'")
+                    logger.error("This indicates the message formatting or filtering is removing all valid messages")
 
                 # Try to parse JSON response directly first if we're using JSON mode
                 sections = {}
@@ -461,9 +417,7 @@ Keep them intact exactly as they appear in the original messages.
                         import json
 
                         # Log more detailed raw response for debugging
-                        logger.info(
-                            f"Raw LLM response (first 300 chars): {llm_response[:300]}..."
-                        )
+                        logger.info(f"Raw LLM response (first 300 chars): {llm_response[:300]}...")
 
                         # For debugging, save the entire response to a log file
                         import os
@@ -502,9 +456,7 @@ Keep them intact exactly as they appear in the original messages.
                             json_content = json_content.rsplit("```", 1)[0]
 
                         # Log intermediate state
-                        logger.info(
-                            f"After markdown removal - Content length: {len(json_content)}"
-                        )
+                        logger.info(f"After markdown removal - Content length: {len(json_content)}")
                         logger.info(f"Content starts with: {json_content[:50]}...")
                         logger.info(f"Content ends with: ...{json_content[-50:]}")
 
@@ -513,51 +465,35 @@ Keep them intact exactly as they appear in the original messages.
                         import re
 
                         original_length = len(json_content)
-                        json_content = re.sub(
-                            r"[\x00-\x1F\x7F]", "", json_content.strip()
-                        )
+                        json_content = re.sub(r"[\x00-\x1F\x7F]", "", json_content.strip())
                         sanitized_length = len(json_content)
 
                         if original_length != sanitized_length:
-                            logger.info(
-                                f"Removed {original_length - sanitized_length} control characters from JSON"
-                            )
+                            logger.info(f"Removed {original_length - sanitized_length} control characters from JSON")
 
                         # Make sure the content starts with a curly brace for JSON object
                         if not json_content.startswith("{"):
-                            logger.warning(
-                                f"JSON content doesn't start with '{{', current start: {json_content[:10]}"
-                            )
+                            logger.warning(f"JSON content doesn't start with '{{', current start: {json_content[:10]}")
                             # Try to find the first opening curly brace
                             first_brace_pos = json_content.find("{")
                             if first_brace_pos >= 0:
-                                logger.info(
-                                    f"Found opening brace at position {first_brace_pos}, trimming content"
-                                )
+                                logger.info(f"Found opening brace at position {first_brace_pos}, trimming content")
                                 json_content = json_content[first_brace_pos:]
 
                         # Make sure the content ends with a curly brace for JSON object
                         if not json_content.endswith("}"):
-                            logger.warning(
-                                f"JSON content doesn't end with '}}', current end: {json_content[-10:]}"
-                            )
+                            logger.warning(f"JSON content doesn't end with '}}', current end: {json_content[-10:]}")
                             # Try to find the last closing curly brace
                             last_brace_pos = json_content.rfind("}")
                             if last_brace_pos >= 0:
-                                logger.info(
-                                    f"Found closing brace at position {last_brace_pos}, trimming content"
-                                )
+                                logger.info(f"Found closing brace at position {last_brace_pos}, trimming content")
                                 json_content = json_content[: last_brace_pos + 1]
 
                         # Write the sanitized content to a file for debugging
-                        sanitized_log_path = (
-                            f"{log_dir}/sanitized_json_{timestamp}.json"
-                        )
+                        sanitized_log_path = f"{log_dir}/sanitized_json_{timestamp}.json"
                         with open(sanitized_log_path, "w") as f:
                             f.write(json_content)
-                        logger.info(
-                            f"Sanitized JSON content saved to {sanitized_log_path}"
-                        )
+                        logger.info(f"Sanitized JSON content saved to {sanitized_log_path}")
 
                         # Multiple parsing attempts with progressively more aggressive fixing
                         try:
@@ -565,29 +501,19 @@ Keep them intact exactly as they appear in the original messages.
                             parsed_json = json.loads(json_content)
                             logger.info("JSON parsing succeeded on first attempt")
                         except json.JSONDecodeError as json_err:
-                            logger.warning(
-                                f"First JSON parsing attempt failed at char {json_err.pos}: {str(json_err)}"
-                            )
+                            logger.warning(f"First JSON parsing attempt failed at char {json_err.pos}: {str(json_err)}")
                             # Show the problematic part of the JSON
                             error_context_start = max(0, json_err.pos - 20)
-                            error_context_end = min(
-                                len(json_content), json_err.pos + 20
-                            )
-                            error_context = json_content[
-                                error_context_start:error_context_end
-                            ]
+                            error_context_end = min(len(json_content), json_err.pos + 20)
+                            error_context = json_content[error_context_start:error_context_end]
                             logger.warning(f"Error context: ...{error_context}...")
 
                             try:
                                 # Second attempt: fix unescaped quotes in values
                                 logger.info("Attempting to fix unescaped quotes")
-                                fixed_content = re.sub(
-                                    r'(?<!\\)"(?=(.*?".*?"))', r"\"", json_content
-                                )
+                                fixed_content = re.sub(r'(?<!\\)"(?=(.*?".*?"))', r"\"", json_content)
                                 parsed_json = json.loads(fixed_content)
-                                logger.info(
-                                    "JSON parsing succeeded after fixing unescaped quotes"
-                                )
+                                logger.info("JSON parsing succeeded after fixing unescaped quotes")
                             except json.JSONDecodeError as json_err2:
                                 logger.warning(
                                     f"Second JSON parsing attempt failed at char {json_err2.pos}: {str(json_err2)}"
@@ -597,26 +523,18 @@ Keep them intact exactly as they appear in the original messages.
                                     # Third attempt: try using a more lenient JSON parser or validator library
                                     from json5 import loads as json5_loads
 
-                                    logger.info(
-                                        "Trying JSON5 parser for more lenient parsing"
-                                    )
+                                    logger.info("Trying JSON5 parser for more lenient parsing")
                                     parsed_json = json5_loads(json_content)
                                     logger.info("JSON5 parsing succeeded")
                                 except ImportError:
-                                    logger.warning(
-                                        "JSON5 or jsonschema library not available, skipping third attempt"
-                                    )
+                                    logger.warning("JSON5 or jsonschema library not available, skipping third attempt")
                                     raise json_err2
                                 except Exception as e:
-                                    logger.warning(
-                                        f"Third JSON parsing attempt failed: {str(e)}"
-                                    )
+                                    logger.warning(f"Third JSON parsing attempt failed: {str(e)}")
                                     raise json_err2
 
                         # Log successful parsing
-                        logger.info(
-                            f"Successfully parsed JSON response with keys: {', '.join(parsed_json.keys())}"
-                        )
+                        logger.info(f"Successfully parsed JSON response with keys: {', '.join(parsed_json.keys())}")
 
                         # Map expected fields from JSON response and ensure none are missing
                         required_keys = [
@@ -635,15 +553,11 @@ Keep them intact exactly as they appear in the original messages.
                                 # Don't add generic fallback content - instead try to use the raw LLM output
                                 # We'll get the content directly from llm_response later if needed
                     except (json.JSONDecodeError, ValueError, KeyError) as e:
-                        logger.warning(
-                            f"Failed to parse JSON response: {str(e)}. Falling back to text extraction."
-                        )
+                        logger.warning(f"Failed to parse JSON response: {str(e)}. Falling back to text extraction.")
 
                 # Fall back to extracting sections from text if JSON parsing failed or not used
                 if not any(sections.values()):
-                    logger.info(
-                        "No valid JSON parsed - attempting to extract sections from text"
-                    )
+                    logger.info("No valid JSON parsed - attempting to extract sections from text")
                     sections = self._extract_sections(llm_response)
 
                 # Ensure all required sections are present - if not, use the raw llm_response
@@ -654,16 +568,12 @@ Keep them intact exactly as they appear in the original messages.
                     "key_highlights",
                 ]:
                     if key not in sections or not sections[key]:
-                        logger.info(
-                            f"Using raw LLM response for missing section: {key}"
-                        )
+                        logger.info(f"Using raw LLM response for missing section: {key}")
                         # Get directly from the raw text response
                         sections[key] = llm_response
 
                 # Add the model used to the response
-                sections["model_used"] = result.get(
-                    "model", model or self.default_model
-                )
+                sections["model_used"] = result.get("model", model or self.default_model)
 
                 return sections
 
@@ -691,11 +601,7 @@ Keep them intact exactly as they appear in the original messages.
 
         # Check content characteristics for debugging
         if messages:
-            join_messages = sum(
-                1
-                for m in messages
-                if "さんがチャンネルに参加しました" in m.get("text", "")
-            )
+            join_messages = sum(1 for m in messages if "さんがチャンネルに参加しました" in m.get("text", ""))
             empty_messages = sum(1 for m in messages if not m.get("text", "").strip())
             system_messages = sum(1 for m in messages if not m.get("user_id"))
 
@@ -728,24 +634,18 @@ Keep them intact exactly as they appear in the original messages.
                 return f"[{timestamp}] <@{user_id}>: {text}"
             else:
                 # Fallback to user_name but avoid "Unknown User" label
-                user = msg.get("user_name", "Participant") or msg.get(
-                    "user", "Participant"
-                )
+                user = msg.get("user_name", "Participant") or msg.get("user", "Participant")
                 return f"[{timestamp}] {user}: {text}"
 
         # Determine if we need to sample
         if len(messages) > 200:
             # With larger datasets, we take samples from beginning, middle and end
-            sample_size = min(
-                50, len(messages) // 4
-            )  # Adjust based on your token budget
+            sample_size = min(50, len(messages) // 4)  # Adjust based on your token budget
 
             # Get samples from beginning, middle, and end
             start_sample = messages[:sample_size]
             middle_idx = len(messages) // 2
-            middle_sample = messages[
-                middle_idx - sample_size // 2 : middle_idx + sample_size // 2
-            ]
+            middle_sample = messages[middle_idx - sample_size // 2 : middle_idx + sample_size // 2]
             end_sample = messages[-sample_size:]
 
             # Combine samples
@@ -853,9 +753,7 @@ Keep them intact exactly as they appear in the original messages.
         # Check for missing sections and provide fallback content
         for key in sections:
             if not sections[key]:
-                logger.warning(
-                    f"Failed to extract '{key}' section from text response - adding fallback content"
-                )
+                logger.warning(f"Failed to extract '{key}' section from text response - adding fallback content")
                 if key == "channel_summary":
                     sections[key] = (
                         "This channel contains team discussions and collaboration. The messages show interactions between multiple participants on work-related topics."
@@ -875,9 +773,7 @@ Keep them intact exactly as they appear in the original messages.
 
         # Fallback: If we couldn't extract any sections, use the whole response for all sections
         if all(not v for v in sections.values()):
-            logger.warning(
-                "Couldn't extract any sections from text response - using full response for all sections"
-            )
+            logger.warning("Couldn't extract any sections from text response - using full response for all sections")
             # Use the full LLM response for all sections rather than generic text
             sections["channel_summary"] = llm_response
             sections["topic_analysis"] = llm_response

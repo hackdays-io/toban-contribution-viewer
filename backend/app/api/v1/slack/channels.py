@@ -45,18 +45,14 @@ async def get_sync_status(
     """
     try:
         # Get workspace
-        result = await db.execute(
-            select(SlackWorkspace).where(SlackWorkspace.id == workspace_id)
-        )
+        result = await db.execute(select(SlackWorkspace).where(SlackWorkspace.id == workspace_id))
         workspace = result.scalars().first()
 
         if not workspace:
             raise HTTPException(status_code=404, detail="Workspace not found")
 
         # Get channel count
-        channel_count_result = await db.execute(
-            select(SlackChannel).where(SlackChannel.workspace_id == workspace_id)
-        )
+        channel_count_result = await db.execute(select(SlackChannel).where(SlackChannel.workspace_id == workspace_id))
         channels = channel_count_result.scalars().all()
         channel_count = len(channels)
 
@@ -64,9 +60,7 @@ async def get_sync_status(
         recent_channel_sync = None
         if channels:
             recent_channel_sync_times = [
-                channel.last_sync_at
-                for channel in channels
-                if channel.last_sync_at is not None
+                channel.last_sync_at for channel in channels if channel.last_sync_at is not None
             ]
             if recent_channel_sync_times:
                 recent_channel_sync = max(recent_channel_sync_times)
@@ -82,9 +76,7 @@ async def get_sync_status(
             # Calculate time since last sync - if > 5 minutes and status is still "syncing",
             # it's probably stuck
             sync_timeout_minutes = 5  # Consider sync complete or failed after 5 minutes
-            time_since_last_sync = (
-                datetime.utcnow() - workspace.last_sync_at
-            ).total_seconds() / 60
+            time_since_last_sync = (datetime.utcnow() - workspace.last_sync_at).total_seconds() / 60
 
             if time_since_last_sync > sync_timeout_minutes:
                 is_syncing = False
@@ -101,9 +93,7 @@ async def get_sync_status(
                         .values(connection_status="active")
                     )
                     await db.commit()
-                    logger.info(
-                        f"Updated workspace {workspace_id} status from 'syncing' to 'active' due to timeout"
-                    )
+                    logger.info(f"Updated workspace {workspace_id} status from 'syncing' to 'active' due to timeout")
                 except Exception as e:
                     logger.error(f"Error updating workspace status: {str(e)}")
                     await db.rollback()
@@ -122,27 +112,19 @@ async def get_sync_status(
         raise
     except Exception as e:
         logger.error(f"Error getting sync status: {str(e)}")
-        raise HTTPException(
-            status_code=500, detail="An error occurred while retrieving sync status"
-        )
+        raise HTTPException(status_code=500, detail="An error occurred while retrieving sync status")
 
 
 @router.get("/workspaces/{workspace_id}/channels")
 async def list_channels(
     workspace_id: str,
     db: AsyncSession = Depends(get_async_db),
-    types: Optional[List[str]] = Query(
-        None, description="Filter by channel types (public, private, mpim, im)"
-    ),
+    types: Optional[List[str]] = Query(None, description="Filter by channel types (public, private, mpim, im)"),
     include_archived: bool = Query(False, description="Include archived channels"),
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(100, ge=1, le=1000, description="Number of items per page"),
-    bot_installed_only: bool = Query(
-        False, description="Only include channels where the bot is installed"
-    ),
-    selected_for_analysis_only: bool = Query(
-        False, description="Only include channels selected for analysis"
-    ),
+    bot_installed_only: bool = Query(False, description="Only include channels where the bot is installed"),
+    selected_for_analysis_only: bool = Query(False, description="Only include channels selected for analysis"),
 ) -> Dict[str, Any]:
     """
     List channels for a workspace with pagination.
@@ -174,17 +156,13 @@ async def list_channels(
             selected_for_analysis_only=selected_for_analysis_only,
         )
 
-        logger.info(
-            f"Retrieved {len(result.get('channels', []))} channels for workspace {workspace_id}"
-        )
+        logger.info(f"Retrieved {len(result.get('channels', []))} channels for workspace {workspace_id}")
         return result
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Error listing channels: {str(e)}")
-        raise HTTPException(
-            status_code=500, detail="An error occurred while retrieving channel list"
-        )
+        raise HTTPException(status_code=500, detail="An error occurred while retrieving channel list")
 
 
 @router.post("/workspaces/{workspace_id}/channels/sync")
@@ -192,18 +170,14 @@ async def sync_channels(
     workspace_id: str,
     background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_async_db),
-    limit: int = Query(
-        1000, ge=100, le=1000, description="Max channels per page to fetch"
-    ),
+    limit: int = Query(1000, ge=100, le=1000, description="Max channels per page to fetch"),
     sync_all_pages: int = Query(
         1,
         ge=0,
         le=1,
         description="Whether to sync all pages (1) or just the first page (0)",
     ),
-    batch_size: int = Query(
-        200, ge=50, le=1000, description="Number of channels to process in each batch"
-    ),
+    batch_size: int = Query(200, ge=50, le=1000, description="Number of channels to process in each batch"),
 ) -> Dict[str, Any]:
     """
     Sync channels from Slack API to database.
@@ -227,9 +201,7 @@ async def sync_channels(
         sync_all = bool(sync_all_pages)
 
         # Verify the workspace exists and has a valid token
-        result = await db.execute(
-            select(SlackWorkspace).where(SlackWorkspace.id == workspace_id)
-        )
+        result = await db.execute(select(SlackWorkspace).where(SlackWorkspace.id == workspace_id))
         workspace = result.scalars().first()
 
         if not workspace:
@@ -238,9 +210,7 @@ async def sync_channels(
 
         if not workspace.access_token:
             logger.error(f"Workspace has no access token: {workspace_id}")
-            raise HTTPException(
-                status_code=400, detail="Workspace is not properly connected"
-            )
+            raise HTTPException(status_code=400, detail="Workspace is not properly connected")
 
         logger.info(
             f"Initiating background channel sync for workspace {workspace_id} with limit={limit}, sync_all_pages={sync_all}, batch_size={batch_size}"
@@ -265,9 +235,7 @@ async def sync_channels(
         raise
     except Exception as e:
         logger.error(f"Error initiating channel sync: {str(e)}")
-        raise HTTPException(
-            status_code=500, detail="An error occurred while initiating channel sync"
-        )
+        raise HTTPException(status_code=500, detail="An error occurred while initiating channel sync")
 
 
 @router.post("/workspaces/{workspace_id}/channels/select")

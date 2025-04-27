@@ -14,9 +14,7 @@ logger = logging.getLogger(__name__)
 class SlackApiError(Exception):
     """Base exception for Slack API errors."""
 
-    def __init__(
-        self, message: str, error_code: str, response_data: Dict[str, Any]
-    ) -> None:
+    def __init__(self, message: str, error_code: str, response_data: Dict[str, Any]) -> None:
         self.message = message
         self.error_code = error_code
         self.response_data = response_data
@@ -93,9 +91,7 @@ class SlackApiClient:
         if params:
             # Filter out None values and convert booleans to strings
             params = {
-                k: ("true" if v is True else "false" if v is False else v)
-                for k, v in params.items()
-                if v is not None
+                k: ("true" if v is True else "false" if v is False else v) for k, v in params.items() if v is not None
             }
 
         # Build full URL
@@ -105,10 +101,7 @@ class SlackApiClient:
         logger.info(f"Request params: {params}")
 
         # Redact token information from logs but show format
-        headers_log = {
-            k: (v[:10] + "..." + v[-4:] if k == "Authorization" else v)
-            for k, v in request_headers.items()
-        }
+        headers_log = {k: (v[:10] + "..." + v[-4:] if k == "Authorization" else v) for k, v in request_headers.items()}
         logger.info(f"Headers: {headers_log}")
 
         try:
@@ -131,9 +124,7 @@ class SlackApiClient:
                     # Check for rate limiting
                     if response.status == 429:
                         retry_after = int(response.headers.get("Retry-After", 60))
-                        logger.warning(
-                            f"Rate limited by Slack API. Retry after {retry_after} seconds."
-                        )
+                        logger.warning(f"Rate limited by Slack API. Retry after {retry_after} seconds.")
 
                         # Try to parse response data for error details
                         try:
@@ -155,12 +146,8 @@ class SlackApiClient:
                         except Exception:
                             response_data = {"error": f"HTTP error {response.status}"}
 
-                        error_code = response_data.get(
-                            "error", f"http_{response.status}"
-                        )
-                        error_message = response_data.get(
-                            "error_description", f"HTTP error {response.status}"
-                        )
+                        error_code = response_data.get("error", f"http_{response.status}")
+                        error_message = response_data.get("error_description", f"HTTP error {response.status}")
 
                         raise SlackApiError(
                             message=f"Slack API error: {error_message}",
@@ -189,19 +176,13 @@ class SlackApiClient:
                     # If we have messages, log some details about them
                     if has_messages and msg_count > 0:
                         messages = response_data.get("messages", [])
-                        logger.info(
-                            f"First message type: {messages[0].get('type', 'unknown')}"
-                        )
-                        logger.info(
-                            f"Message timestamps: {[msg.get('ts') for msg in messages[:3]]}"
-                        )
+                        logger.info(f"First message type: {messages[0].get('type', 'unknown')}")
+                        logger.info(f"Message timestamps: {[msg.get('ts') for msg in messages[:3]]}")
 
                     # Check for API errors in response data
                     if not response_data.get("ok", False):
                         error_code = response_data.get("error", "unknown_error")
-                        error_message = response_data.get(
-                            "error_description", f"Slack API error: {error_code}"
-                        )
+                        error_message = response_data.get("error_description", f"Slack API error: {error_code}")
                         logger.error(f"Slack API error: {error_code} - {error_message}")
                         logger.error(f"Full error response: {response_data}")
 
@@ -236,9 +217,7 @@ class SlackApiClient:
                 response_data={},
             )
 
-    async def exchange_code(
-        self, code: str, redirect_uri: str, client_id: str, client_secret: str
-    ) -> Dict[str, Any]:
+    async def exchange_code(self, code: str, redirect_uri: str, client_id: str, client_secret: str) -> Dict[str, Any]:
         """
         Exchange OAuth code for access token.
 
@@ -265,9 +244,7 @@ class SlackApiClient:
             "Content-Type": "application/x-www-form-urlencoded",
         }
 
-        response = await self._make_request(
-            "POST", "oauth.v2.access", data=data, headers=headers
-        )
+        response = await self._make_request("POST", "oauth.v2.access", data=data, headers=headers)
         return response
 
     async def get_workspace_info(self) -> Dict[str, Any]:
@@ -368,9 +345,7 @@ class SlackApiClient:
             # Remove None values and convert boolean values to strings to avoid URL encoding errors
             params = {
                 "limit": page_limit,
-                "include_locale": (
-                    "true" if include_locale else "false"
-                ),  # Convert bool to string
+                "include_locale": ("true" if include_locale else "false"),  # Convert bool to string
             }
             if cursor:
                 params["cursor"] = cursor
@@ -434,9 +409,7 @@ class SlackApiClient:
         Returns:
             Channel information
         """
-        return await self._make_request(
-            "GET", "conversations.info", params={"channel": channel_id}
-        )
+        return await self._make_request("GET", "conversations.info", params={"channel": channel_id})
 
     async def check_bot_in_channel(self, channel_id: str) -> bool:
         """
@@ -473,9 +446,7 @@ class SlackApiClient:
             True if joined successfully, False otherwise
         """
         try:
-            response = await self._make_request(
-                "POST", "conversations.join", json_data={"channel": channel_id}
-            )
+            response = await self._make_request("POST", "conversations.join", json_data={"channel": channel_id})
             return response.get("ok", False)
         except SlackApiError:
             return False
@@ -520,9 +491,7 @@ class SlackApiClient:
         Raises:
             SlackApiError: If the API returns an error
         """
-        logger.debug(
-            f"Fetching thread replies for ts: {thread_ts} in channel: {channel_id}"
-        )
+        logger.debug(f"Fetching thread replies for ts: {thread_ts} in channel: {channel_id}")
 
         params = {
             "channel": channel_id,

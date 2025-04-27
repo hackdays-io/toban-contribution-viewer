@@ -113,9 +113,7 @@ class ChannelDataCache:
         # Simple cache size management - keep only the most recent 50 entries
         if len(cls._cache) > 50:
             # Sort by timestamp and remove oldest entries
-            sorted_keys = sorted(
-                cls._cache.keys(), key=lambda k: cls._cache[k]["timestamp"]
-            )
+            sorted_keys = sorted(cls._cache.keys(), key=lambda k: cls._cache[k]["timestamp"])
 
             # Remove oldest entries to keep cache size at 50
             for old_key in sorted_keys[: len(cls._cache) - 50]:
@@ -129,13 +127,9 @@ class ChannelDataCache:
         Args:
             channel_id: Channel ID to invalidate
         """
-        keys_to_remove = [
-            k for k in cls._cache.keys() if k.startswith(f"{channel_id}:")
-        ]
+        keys_to_remove = [k for k in cls._cache.keys() if k.startswith(f"{channel_id}:")]
 
         for key in keys_to_remove:
             del cls._cache[key]
 
-        logger.info(
-            f"Invalidated {len(keys_to_remove)} cache entries for channel {channel_id}"
-        )
+        logger.info(f"Invalidated {len(keys_to_remove)} cache entries for channel {channel_id}")

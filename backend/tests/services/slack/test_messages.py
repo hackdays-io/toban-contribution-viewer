@@ -62,9 +62,7 @@ def mock_message_data() -> List[Dict[str, Any]]:
             "user": "U12345",
             "ts": "1617184800.000100",
             "team": "T12345",
-            "reactions": [
-                {"name": "thumbsup", "count": 2, "users": ["U12345", "U67890"]}
-            ],
+            "reactions": [{"name": "thumbsup", "count": 2, "users": ["U12345", "U67890"]}],
         },
         {
             "client_msg_id": "msg2",
@@ -101,9 +99,7 @@ def mock_message_response() -> Dict[str, Any]:
                 "user": "U12345",
                 "ts": "1617184800.000100",
                 "team": "T12345",
-                "reactions": [
-                    {"name": "thumbsup", "count": 2, "users": ["U12345", "U67890"]}
-                ],
+                "reactions": [{"name": "thumbsup", "count": 2, "users": ["U12345", "U67890"]}],
             },
             {
                 "client_msg_id": "msg2",
@@ -269,9 +265,7 @@ async def test_get_channel_messages_from_database(mock_workspace, mock_channel):
 
 
 @pytest.mark.asyncio
-async def test_get_channel_messages_from_api(
-    mock_workspace, mock_channel, mock_message_response
-):
+async def test_get_channel_messages_from_api(mock_workspace, mock_channel, mock_message_response):
     """Test get_channel_messages fetching from Slack API."""
     # Create a mock session
     mock_session = AsyncMock(spec=AsyncSession)
@@ -318,9 +312,7 @@ async def test_get_channel_messages_from_api(
     ) as mock_fetch:
 
         # Mock store_messages
-        with patch.object(
-            SlackMessageService, "_store_messages", new_callable=AsyncMock
-        ) as mock_store:
+        with patch.object(SlackMessageService, "_store_messages", new_callable=AsyncMock) as mock_store:
 
             # Mock message_to_dict
             with patch.object(
@@ -354,10 +346,8 @@ async def test_fetch_messages_from_api_success(mock_message_response):
     mock_api_client = MagicMock()
     mock_api_client._make_request = AsyncMock(return_value=mock_message_response)
 
-    messages, has_more, next_cursor = (
-        await SlackMessageService._fetch_messages_from_api(
-            api_client=mock_api_client, channel_id="C12345", limit=10
-        )
+    messages, has_more, next_cursor = await SlackMessageService._fetch_messages_from_api(
+        api_client=mock_api_client, channel_id="C12345", limit=10
     )
 
     # Verify API call parameters
@@ -415,10 +405,8 @@ async def test_fetch_messages_from_api_rate_limit_error():
         )
     )
 
-    messages, has_more, next_cursor = (
-        await SlackMessageService._fetch_messages_from_api(
-            api_client=mock_api_client, channel_id="C12345", limit=10
-        )
+    messages, has_more, next_cursor = await SlackMessageService._fetch_messages_from_api(
+        api_client=mock_api_client, channel_id="C12345", limit=10
     )
 
     # Verify empty results and no continuation
@@ -440,10 +428,8 @@ async def test_fetch_messages_from_api_general_error():
         )
     )
 
-    messages, has_more, next_cursor = (
-        await SlackMessageService._fetch_messages_from_api(
-            api_client=mock_api_client, channel_id="C12345", limit=10
-        )
+    messages, has_more, next_cursor = await SlackMessageService._fetch_messages_from_api(
+        api_client=mock_api_client, channel_id="C12345", limit=10
     )
 
     # Verify empty results and no continuation
@@ -456,9 +442,7 @@ async def test_fetch_messages_from_api_general_error():
 async def test_store_messages(mock_workspace, mock_channel, mock_message_data):
     """Test storing messages in the database."""
     # Create a complete mock for the entire function
-    with patch.object(
-        SlackMessageService, "_store_messages", new_callable=AsyncMock
-    ) as mock_store:
+    with patch.object(SlackMessageService, "_store_messages", new_callable=AsyncMock) as mock_store:
         # Call the store_messages function
         await SlackMessageService._store_messages(
             db=AsyncMock(),
@@ -489,9 +473,7 @@ async def test_sync_channel_messages(mock_workspace, mock_channel, mock_message_
     mock_channel_result.scalars.return_value.first.return_value = mock_channel
 
     mock_new_messages_result = MagicMock()
-    mock_new_messages_result.scalars.return_value.all.return_value = [
-        MagicMock(spec=SlackMessage) for _ in range(3)
-    ]
+    mock_new_messages_result.scalars.return_value.all.return_value = [MagicMock(spec=SlackMessage) for _ in range(3)]
 
     mock_session.execute.side_effect = [
         mock_workspace_result,
@@ -512,9 +494,7 @@ async def test_sync_channel_messages(mock_workspace, mock_channel, mock_message_
     ) as mock_fetch:
 
         # Mock store_messages
-        with patch.object(
-            SlackMessageService, "_store_messages", new_callable=AsyncMock
-        ) as mock_store:
+        with patch.object(SlackMessageService, "_store_messages", new_callable=AsyncMock) as mock_store:
 
             # Sleep to avoid rate limiting
             with patch("time.sleep", return_value=None):

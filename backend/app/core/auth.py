@@ -188,9 +188,7 @@ async def get_user_team_context(
             first_team = current_user["teams"][0]
             current_user["current_team_id"] = first_team["id"]
             current_user["current_team_role"] = first_team["role"]
-            logger.info(
-                f"Setting default team for user {current_user['id']}: {first_team['id']}"
-            )
+            logger.info(f"Setting default team for user {current_user['id']}: {first_team['id']}")
 
         return current_user
 
@@ -215,10 +213,7 @@ async def get_user_team_context(
                 # Find the user's role in this team
                 user_role = None
                 for member in team.members:
-                    if (
-                        member.user_id == current_user["id"]
-                        and member.invitation_status == "active"
-                    ):
+                    if member.user_id == current_user["id"] and member.invitation_status == "active":
                         user_role = member.role
                         break
 
@@ -237,15 +232,11 @@ async def get_user_team_context(
         if team_list and not current_user.get("current_team_id"):
             current_user["current_team_id"] = team_list[0]["id"]
             current_user["current_team_role"] = team_list[0]["role"]
-            logger.info(
-                f"Setting default team for user {current_user['id']}: {team_list[0]['id']}"
-            )
+            logger.info(f"Setting default team for user {current_user['id']}: {team_list[0]['id']}")
 
         return current_user
     except Exception as e:
-        logger.error(
-            f"Error loading team context for user {current_user['id']}: {str(e)}"
-        )
+        logger.error(f"Error loading team context for user {current_user['id']}: {str(e)}")
         # Return user without team context if there's an error
         return current_user
 
@@ -293,9 +284,7 @@ async def switch_team_context(
             from app.services.team.permissions import get_team_member
 
             # Only allow switching to teams with active membership
-            member = await get_team_member(
-                db, team_id, current_user["id"], include_all_statuses=False
-            )
+            member = await get_team_member(db, team_id, current_user["id"], include_all_statuses=False)
             if member:
                 team_found = True
                 new_role = member.role
@@ -305,9 +294,7 @@ async def switch_team_context(
                     detail="You don't have access to this team",
                 )
         except Exception as e:
-            logger.error(
-                f"Error checking team access for user {current_user['id']}: {str(e)}"
-            )
+            logger.error(f"Error checking team access for user {current_user['id']}: {str(e)}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Error checking team access",
@@ -320,9 +307,7 @@ async def switch_team_context(
         logger.info(f"User {current_user['id']} switched to team {team_id}")
         return user_with_teams
     else:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Team not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Team not found")
 
 
 def create_token_with_team_context(
@@ -430,10 +415,7 @@ class TeamRequiredAuth:
             )
 
         # Check if role requirements are met
-        if (
-            self.required_roles
-            and user.get("current_team_role") not in self.required_roles
-        ):
+        if self.required_roles and user.get("current_team_role") not in self.required_roles:
             logger.warning(
                 f"User {user['id']} has insufficient role for team {user['current_team_id']}: "
                 f"has {user.get('current_team_role')}, needs one of {self.required_roles}"

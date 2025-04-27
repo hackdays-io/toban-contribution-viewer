@@ -13,18 +13,12 @@ logger = logging.getLogger(__name__)
 class Settings(BaseSettings):
     # API Settings
     PROJECT_NAME: str = "Toban Contribution Viewer API"
-    PROJECT_DESCRIPTION: str = (
-        "API for tracking and visualizing contributions across various platforms"
-    )
+    PROJECT_DESCRIPTION: str = "API for tracking and visualizing contributions across various platforms"
     PROJECT_VERSION: str = "0.1.0"
     API_PREFIX: str = "/api/v1"
     DEBUG: bool = False
-    API_URL: Optional[str] = (
-        None  # Base URL for the API, used for constructing callback URLs (e.g., ngrok URL)
-    )
-    FRONTEND_URL: Optional[str] = (
-        None  # Base URL for the frontend, used for redirects (e.g., ngrok app URL)
-    )
+    API_URL: Optional[str] = None  # Base URL for the API, used for constructing callback URLs (e.g., ngrok URL)
+    FRONTEND_URL: Optional[str] = None  # Base URL for the frontend, used for redirects (e.g., ngrok app URL)
     ADDITIONAL_CORS_ORIGINS: str = ""  # Comma-separated list of additional CORS origins
     ALLOWED_HOSTS: List[str] = [
         "http://localhost:5173",
@@ -55,11 +49,7 @@ class Settings(BaseSettings):
         # Add additional CORS origins
         if additional_cors:
             # Split by comma and filter out empty strings
-            origins = [
-                origin.strip()
-                for origin in additional_cors.split(",")
-                if origin.strip()
-            ]
+            origins = [origin.strip() for origin in additional_cors.split(",") if origin.strip()]
             for origin in origins:
                 unique_hosts.add(origin)
 

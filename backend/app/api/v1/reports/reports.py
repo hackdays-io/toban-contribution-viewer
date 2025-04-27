@@ -61,14 +61,10 @@ async def get_team_reports(
     Returns:
         List of cross-resource reports
     """
-    logger.debug(
-        f"Getting cross-resource reports for team {team_id}, user {current_user['id']}"
-    )
+    logger.debug(f"Getting cross-resource reports for team {team_id}, user {current_user['id']}")
 
     # Check if user has access to this team
-    has_access = await check_team_access(
-        team_id=team_id, user_id=current_user["id"], db=db
-    )
+    has_access = await check_team_access(team_id=team_id, user_id=current_user["id"], db=db)
 
     if not has_access:
         raise HTTPException(
@@ -84,14 +80,10 @@ async def get_team_reports(
         query = query.where(CrossResourceReport.status == filter_params.status.value)
 
     if filter_params.start_date:
-        query = query.where(
-            CrossResourceReport.date_range_start >= filter_params.start_date
-        )
+        query = query.where(CrossResourceReport.date_range_start >= filter_params.start_date)
 
     if filter_params.end_date:
-        query = query.where(
-            CrossResourceReport.date_range_end <= filter_params.end_date
-        )
+        query = query.where(CrossResourceReport.date_range_end <= filter_params.end_date)
 
     # For resource type filtering, we need to join with ResourceAnalysis
     if filter_params.resource_type:
@@ -101,8 +93,7 @@ async def get_team_reports(
             CrossResourceReport.id.in_(
                 select(ResourceAnalysis.cross_resource_report_id).where(
                     and_(
-                        ResourceAnalysis.cross_resource_report_id
-                        == CrossResourceReport.id,
+                        ResourceAnalysis.cross_resource_report_id == CrossResourceReport.id,
                         ResourceAnalysis.resource_type == resource_type_value,
                     )
                 )
@@ -111,9 +102,7 @@ async def get_team_reports(
 
     # Sort the results
     if filter_params.sort_order == "desc":
-        query = query.order_by(
-            desc(getattr(CrossResourceReport, filter_params.sort_by))
-        )
+        query = query.order_by(desc(getattr(CrossResourceReport, filter_params.sort_by)))
     else:
         query = query.order_by(getattr(CrossResourceReport, filter_params.sort_by))
 
@@ -135,17 +124,9 @@ async def get_team_reports(
         analysis_stats = await db.execute(
             select(
                 func.count().label("total"),
-                func.sum(
-                    case(
-                        (ResourceAnalysis.status == ReportStatus.COMPLETED, 1), else_=0
-                    )
-                ).label("completed"),
-                func.sum(
-                    case((ResourceAnalysis.status == ReportStatus.PENDING, 1), else_=0)
-                ).label("pending"),
-                func.sum(
-                    case((ResourceAnalysis.status == ReportStatus.FAILED, 1), else_=0)
-                ).label("failed"),
+                func.sum(case((ResourceAnalysis.status == ReportStatus.COMPLETED, 1), else_=0)).label("completed"),
+                func.sum(case((ResourceAnalysis.status == ReportStatus.PENDING, 1), else_=0)).label("pending"),
+                func.sum(case((ResourceAnalysis.status == ReportStatus.FAILED, 1), else_=0)).label("failed"),
             ).where(ResourceAnalysis.cross_resource_report_id == report.id)
         )
         stats = analysis_stats.one()
@@ -192,9 +173,7 @@ async def create_team_report(
     Returns:
         Newly created report
     """
-    logger.debug(
-        f"Creating cross-resource report for team {team_id}, user {current_user['id']}"
-    )
+    logger.debug(f"Creating cross-resource report for team {team_id}, user {current_user['id']}")
 
     # Check if user has admin or owner access to this team
     has_access = await check_team_access(
@@ -236,9 +215,7 @@ async def create_team_report(
     if report.resource_analyses:
         for analysis_data in report.resource_analyses:
             # Convert enum values to the internal enum classes
-            resource_type = getattr(
-                AnalysisResourceType, analysis_data.resource_type.name
-            )
+            resource_type = getattr(AnalysisResourceType, analysis_data.resource_type.name)
             analysis_type = getattr(AnalysisType, analysis_data.analysis_type.name)
 
             # Create the resource analysis
@@ -262,15 +239,9 @@ async def create_team_report(
     analysis_stats = await db.execute(
         select(
             func.count().label("total"),
-            func.sum(
-                case((ResourceAnalysis.status == ReportStatus.COMPLETED, 1), else_=0)
-            ).label("completed"),
-            func.sum(
-                case((ResourceAnalysis.status == ReportStatus.PENDING, 1), else_=0)
-            ).label("pending"),
-            func.sum(
-                case((ResourceAnalysis.status == ReportStatus.FAILED, 1), else_=0)
-            ).label("failed"),
+            func.sum(case((ResourceAnalysis.status == ReportStatus.COMPLETED, 1), else_=0)).label("completed"),
+            func.sum(case((ResourceAnalysis.status == ReportStatus.PENDING, 1), else_=0)).label("pending"),
+            func.sum(case((ResourceAnalysis.status == ReportStatus.FAILED, 1), else_=0)).label("failed"),
         ).where(ResourceAnalysis.cross_resource_report_id == new_report.id)
     )
     stats = analysis_stats.one()
@@ -301,9 +272,7 @@ async def create_team_report(
 async def get_team_report(
     team_id: UUID,
     report_id: UUID,
-    include_analyses: bool = Query(
-        False, description="Include resource analyses in response"
-    ),
+    include_analyses: bool = Query(False, description="Include resource analyses in response"),
     db: AsyncSession = Depends(get_async_db),
     current_user: Dict = Depends(get_current_user),
 ):
@@ -320,14 +289,10 @@ async def get_team_report(
     Returns:
         Report details
     """
-    logger.debug(
-        f"Getting report {report_id} for team {team_id}, user {current_user['id']}"
-    )
+    logger.debug(f"Getting report {report_id} for team {team_id}, user {current_user['id']}")
 
     # Check if user has access to this team
-    has_access = await check_team_access(
-        team_id=team_id, user_id=current_user["id"], db=db
-    )
+    has_access = await check_team_access(team_id=team_id, user_id=current_user["id"], db=db)
 
     if not has_access:
         raise HTTPException(
@@ -361,15 +326,9 @@ async def get_team_report(
     analysis_stats = await db.execute(
         select(
             func.count().label("total"),
-            func.sum(
-                case((ResourceAnalysis.status == ReportStatus.COMPLETED, 1), else_=0)
-            ).label("completed"),
-            func.sum(
-                case((ResourceAnalysis.status == ReportStatus.PENDING, 1), else_=0)
-            ).label("pending"),
-            func.sum(
-                case((ResourceAnalysis.status == ReportStatus.FAILED, 1), else_=0)
-            ).label("failed"),
+            func.sum(case((ResourceAnalysis.status == ReportStatus.COMPLETED, 1), else_=0)).label("completed"),
+            func.sum(case((ResourceAnalysis.status == ReportStatus.PENDING, 1), else_=0)).label("pending"),
+            func.sum(case((ResourceAnalysis.status == ReportStatus.FAILED, 1), else_=0)).label("failed"),
             # Add aggregated message statistics
             func.sum(ResourceAnalysis.message_count).label("total_messages"),
             func.sum(ResourceAnalysis.participant_count).label("total_participants"),
@@ -381,9 +340,7 @@ async def get_team_report(
 
     # Get types of resources
     resource_types_query = await db.execute(
-        select(ResourceAnalysis.resource_type)
-        .distinct()
-        .where(ResourceAnalysis.cross_resource_report_id == report.id)
+        select(ResourceAnalysis.resource_type).distinct().where(ResourceAnalysis.cross_resource_report_id == report.id)
     )
     resource_types = [rt[0] for rt in resource_types_query.all()]
 
@@ -428,9 +385,7 @@ async def update_team_report(
     Returns:
         Updated report data
     """
-    logger.debug(
-        f"Updating report {report_id} for team {team_id}, user {current_user['id']}"
-    )
+    logger.debug(f"Updating report {report_id} for team {team_id}, user {current_user['id']}")
 
     # Check if user has admin or owner access to this team
     has_access = await check_team_access(
@@ -482,15 +437,9 @@ async def update_team_report(
     analysis_stats = await db.execute(
         select(
             func.count().label("total"),
-            func.sum(
-                case((ResourceAnalysis.status == ReportStatus.COMPLETED, 1), else_=0)
-            ).label("completed"),
-            func.sum(
-                case((ResourceAnalysis.status == ReportStatus.PENDING, 1), else_=0)
-            ).label("pending"),
-            func.sum(
-                case((ResourceAnalysis.status == ReportStatus.FAILED, 1), else_=0)
-            ).label("failed"),
+            func.sum(case((ResourceAnalysis.status == ReportStatus.COMPLETED, 1), else_=0)).label("completed"),
+            func.sum(case((ResourceAnalysis.status == ReportStatus.PENDING, 1), else_=0)).label("pending"),
+            func.sum(case((ResourceAnalysis.status == ReportStatus.FAILED, 1), else_=0)).label("failed"),
             # Add aggregated message statistics
             func.sum(ResourceAnalysis.message_count).label("total_messages"),
             func.sum(ResourceAnalysis.participant_count).label("total_participants"),
@@ -502,9 +451,7 @@ async def update_team_report(
 
     # Get types of resources
     resource_types_query = await db.execute(
-        select(ResourceAnalysis.resource_type)
-        .distinct()
-        .where(ResourceAnalysis.cross_resource_report_id == report.id)
+        select(ResourceAnalysis.resource_type).distinct().where(ResourceAnalysis.cross_resource_report_id == report.id)
     )
     resource_types = [rt[0] for rt in resource_types_query.all()]
 
@@ -543,9 +490,7 @@ async def delete_team_report(
     Returns:
         Success message
     """
-    logger.debug(
-        f"Deleting report {report_id} for team {team_id}, user {current_user['id']}"
-    )
+    logger.debug(f"Deleting report {report_id} for team {team_id}, user {current_user['id']}")
 
     # Check if user has admin or owner access to this team
     has_access = await check_team_access(
@@ -609,14 +554,10 @@ async def get_resource_analyses(
     Returns:
         List of resource analyses
     """
-    logger.debug(
-        f"Getting resource analyses for report {report_id}, team {team_id}, user {current_user['id']}"
-    )
+    logger.debug(f"Getting resource analyses for report {report_id}, team {team_id}, user {current_user['id']}")
 
     # Check if user has access to this team
-    has_access = await check_team_access(
-        team_id=team_id, user_id=current_user["id"], db=db
-    )
+    has_access = await check_team_access(team_id=team_id, user_id=current_user["id"], db=db)
 
     if not has_access:
         raise HTTPException(
@@ -642,23 +583,17 @@ async def get_resource_analyses(
         )
 
     # Build the query
-    query = select(ResourceAnalysis).where(
-        ResourceAnalysis.cross_resource_report_id == report_id
-    )
+    query = select(ResourceAnalysis).where(ResourceAnalysis.cross_resource_report_id == report_id)
 
     # Apply filters
     if filter_params.status:
         query = query.where(ResourceAnalysis.status == filter_params.status.value)
 
     if filter_params.resource_type:
-        query = query.where(
-            ResourceAnalysis.resource_type == filter_params.resource_type.value
-        )
+        query = query.where(ResourceAnalysis.resource_type == filter_params.resource_type.value)
 
     if filter_params.analysis_type:
-        query = query.where(
-            ResourceAnalysis.analysis_type == filter_params.analysis_type.value
-        )
+        query = query.where(ResourceAnalysis.analysis_type == filter_params.analysis_type.value)
 
     # Apply pagination
     offset = (filter_params.page - 1) * filter_params.page_size
@@ -695,14 +630,10 @@ async def get_resource_analysis(
     Returns:
         Resource analysis details
     """
-    logger.debug(
-        f"Getting analysis {analysis_id} for report {report_id}, team {team_id}, user {current_user['id']}"
-    )
+    logger.debug(f"Getting analysis {analysis_id} for report {report_id}, team {team_id}, user {current_user['id']}")
 
     # Check if user has access to this team
-    has_access = await check_team_access(
-        team_id=team_id, user_id=current_user["id"], db=db
-    )
+    has_access = await check_team_access(team_id=team_id, user_id=current_user["id"], db=db)
 
     if not has_access:
         raise HTTPException(
@@ -775,9 +706,7 @@ async def get_resource_analysis_task_status(
     )
 
     # Check if user has access to this team
-    has_access = await check_team_access(
-        team_id=team_id, user_id=current_user["id"], db=db
-    )
+    has_access = await check_team_access(team_id=team_id, user_id=current_user["id"], db=db)
 
     if not has_access:
         raise HTTPException(
@@ -830,9 +759,7 @@ async def get_resource_analysis_task_status(
         "database_status": analysis.status,
         "task_status": task_status,
         "is_running": task_status == "RUNNING",
-        "last_updated": (
-            analysis.updated_at.isoformat() if analysis.updated_at else None
-        ),
+        "last_updated": (analysis.updated_at.isoformat() if analysis.updated_at else None),
     }
 
 
@@ -858,9 +785,7 @@ async def generate_report(
     Returns:
         Status of the report generation request
     """
-    logger.debug(
-        f"Generating report {report_id} for team {team_id}, user {current_user['id']}"
-    )
+    logger.debug(f"Generating report {report_id} for team {team_id}, user {current_user['id']}")
 
     # Check if user has admin or owner access to this team
     has_access = await check_team_access(
@@ -937,10 +862,7 @@ async def generate_report(
     else:
         # If analyses already exist, just update their status
         for analysis in report.resource_analyses:
-            if (
-                analysis.status == ReportStatus.PENDING
-                or analysis.status == ReportStatus.FAILED
-            ):
+            if analysis.status == ReportStatus.PENDING or analysis.status == ReportStatus.FAILED:
                 analysis.status = ReportStatus.PENDING
 
         response = ReportGenerationResponse(
@@ -955,9 +877,7 @@ async def generate_report(
     # Trigger background tasks
     from app.services.analysis.task_scheduler import ResourceAnalysisTaskScheduler
 
-    scheduled_count = await ResourceAnalysisTaskScheduler.schedule_analyses_for_report(
-        report_id=report_id, db=db
-    )
+    scheduled_count = await ResourceAnalysisTaskScheduler.schedule_analyses_for_report(report_id=report_id, db=db)
 
     # Update the response message
     response.message += f" Scheduled {scheduled_count} analysis tasks."
@@ -1078,9 +998,7 @@ async def create_channel_report(
         # Verify it's a valid analysis type
         analysis_type = getattr(AnalysisType, analysis_type_str)
     except (AttributeError, ValueError):
-        logger.warning(
-            f"Invalid analysis type: {report_data.analysis_type}. Using CONTRIBUTION."
-        )
+        logger.warning(f"Invalid analysis type: {report_data.analysis_type}. Using CONTRIBUTION.")
         analysis_type = AnalysisType.CONTRIBUTION
 
     # Create ResourceAnalysis entries for each channel
@@ -1140,34 +1058,22 @@ async def create_channel_report(
     await db.refresh(new_report)
 
     # Log what was created
-    logger.info(
-        f"Created report {new_report.id} with {len(resource_analyses)} channel analyses"
-    )
+    logger.info(f"Created report {new_report.id} with {len(resource_analyses)} channel analyses")
 
     # Trigger background task to start the analysis process
     from app.services.analysis.task_scheduler import ResourceAnalysisTaskScheduler
 
-    scheduled_count = await ResourceAnalysisTaskScheduler.schedule_analyses_for_report(
-        report_id=new_report.id, db=db
-    )
+    scheduled_count = await ResourceAnalysisTaskScheduler.schedule_analyses_for_report(report_id=new_report.id, db=db)
 
-    logger.info(
-        f"Scheduled {scheduled_count} analysis tasks for report {new_report.id}"
-    )
+    logger.info(f"Scheduled {scheduled_count} analysis tasks for report {new_report.id}")
 
     # Get summary statistics for the response
     analysis_stats = await db.execute(
         select(
             func.count().label("total"),
-            func.sum(
-                case((ResourceAnalysis.status == ReportStatus.COMPLETED, 1), else_=0)
-            ).label("completed"),
-            func.sum(
-                case((ResourceAnalysis.status == ReportStatus.PENDING, 1), else_=0)
-            ).label("pending"),
-            func.sum(
-                case((ResourceAnalysis.status == ReportStatus.FAILED, 1), else_=0)
-            ).label("failed"),
+            func.sum(case((ResourceAnalysis.status == ReportStatus.COMPLETED, 1), else_=0)).label("completed"),
+            func.sum(case((ResourceAnalysis.status == ReportStatus.PENDING, 1), else_=0)).label("pending"),
+            func.sum(case((ResourceAnalysis.status == ReportStatus.FAILED, 1), else_=0)).label("failed"),
             # Add aggregated stats across all channels
             func.sum(ResourceAnalysis.message_count).label("total_messages"),
             func.sum(ResourceAnalysis.participant_count).label("total_participants"),
@@ -1186,9 +1092,7 @@ async def create_channel_report(
     resource_types = [rt[0] for rt in resource_types_query.all()]
 
     # Add summary message counts to report parameters
-    updated_params = (
-        new_report.report_parameters.copy() if new_report.report_parameters else {}
-    )
+    updated_params = new_report.report_parameters.copy() if new_report.report_parameters else {}
     updated_params.update(
         {
             "total_messages": stats.total_messages or 0,

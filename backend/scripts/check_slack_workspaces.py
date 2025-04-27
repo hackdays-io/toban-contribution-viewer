@@ -16,9 +16,7 @@ from datetime import datetime, timedelta
 from typing import Dict, List
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 # We need to add the parent directory to the path to import the app modules
@@ -47,21 +45,13 @@ async def check_workspace_counts(db: AsyncSession) -> Dict[str, int]:
     total_workspaces = result.scalar_one_or_none() or 0
 
     # Count workspaces with null team_id
-    stmt = (
-        select(func.count())
-        .select_from(SlackWorkspace)
-        .where(SlackWorkspace.team_id.is_(None))
-    )
+    stmt = select(func.count()).select_from(SlackWorkspace).where(SlackWorkspace.team_id.is_(None))
     result = await db.execute(stmt)
     null_team_id_count = result.scalar_one_or_none() or 0
 
     # Count workspaces created in the last 30 days
     thirty_days_ago = datetime.utcnow() - timedelta(days=30)
-    stmt = (
-        select(func.count())
-        .select_from(SlackWorkspace)
-        .where(SlackWorkspace.created_at >= thirty_days_ago)
-    )
+    stmt = select(func.count()).select_from(SlackWorkspace).where(SlackWorkspace.created_at >= thirty_days_ago)
     result = await db.execute(stmt)
     recent_count = result.scalar_one_or_none() or 0
 
@@ -71,9 +61,9 @@ async def check_workspace_counts(db: AsyncSession) -> Dict[str, int]:
         .distinct()
         .where(
             SlackWorkspace.slack_id.in_(
-                select(
-                    func.json_extract(Integration.integration_metadata, "$.slack_id")
-                ).where(Integration.service_type == IntegrationType.SLACK)
+                select(func.json_extract(Integration.integration_metadata, "$.slack_id")).where(
+                    Integration.service_type == IntegrationType.SLACK
+                )
             )
         )
     )
@@ -111,11 +101,7 @@ async def check_workspace_usage(db: AsyncSession) -> Dict[str, Dict]:
 
     for workspace in workspaces:
         # Count channels
-        channel_stmt = (
-            select(func.count())
-            .select_from(SlackChannel)
-            .where(SlackChannel.workspace_id == workspace.id)
-        )
+        channel_stmt = select(func.count()).select_from(SlackChannel).where(SlackChannel.workspace_id == workspace.id)
         result = await db.execute(channel_stmt)
         channel_count = result.scalar_one_or_none() or 0
 
@@ -136,11 +122,7 @@ async def check_workspace_usage(db: AsyncSession) -> Dict[str, Dict]:
             select(func.count())
             .select_from(SlackMessage)
             .where(
-                SlackMessage.channel_id.in_(
-                    select(SlackChannel.id).where(
-                        SlackChannel.workspace_id == workspace.id
-                    )
-                )
+                SlackMessage.channel_id.in_(select(SlackChannel.id).where(SlackChannel.workspace_id == workspace.id))
             )
         )
         result = await db.execute(message_stmt)
@@ -150,11 +132,7 @@ async def check_workspace_usage(db: AsyncSession) -> Dict[str, Dict]:
         last_message_stmt = (
             select(SlackMessage.message_datetime)
             .where(
-                SlackMessage.channel_id.in_(
-                    select(SlackChannel.id).where(
-                        SlackChannel.workspace_id == workspace.id
-                    )
-                )
+                SlackMessage.channel_id.in_(select(SlackChannel.id).where(SlackChannel.workspace_id == workspace.id))
             )
             .order_by(desc(SlackMessage.message_datetime))
             .limit(1)
@@ -186,15 +164,11 @@ async def check_workspace_usage(db: AsyncSession) -> Dict[str, Dict]:
             "channel_count": channel_count,
             "selected_channel_count": selected_channel_count,
             "message_count": message_count,
-            "last_message_date": (
-                last_message_date.isoformat() if last_message_date else None
-            ),
+            "last_message_date": (last_message_date.isoformat() if last_message_date else None),
             "integration_id": str(integration_id) if integration_id else None,
             "integration_name": integration_name,
             "team_id": str(team_id) if team_id else None,
-            "created_at": (
-                workspace.created_at.isoformat() if workspace.created_at else None
-            ),
+            "created_at": (workspace.created_at.isoformat() if workspace.created_at else None),
         }
 
     logger.info(f"Analyzed usage statistics for {len(workspaces)} workspaces")
@@ -214,9 +188,9 @@ async def check_orphaned_workspaces(db: AsyncSession) -> List[Dict]:
     workspaces = result.scalars().all()
 
     # Get all Slack integrations' workspace IDs
-    integration_stmt = select(
-        func.json_extract(Integration.integration_metadata, "$.slack_id")
-    ).where(Integration.service_type == IntegrationType.SLACK)
+    integration_stmt = select(func.json_extract(Integration.integration_metadata, "$.slack_id")).where(
+        Integration.service_type == IntegrationType.SLACK
+    )
     result = await db.execute(integration_stmt)
     integration_slack_ids = [row[0] for row in result.fetchall() if row[0]]
 
@@ -230,11 +204,7 @@ async def check_orphaned_workspaces(db: AsyncSession) -> List[Dict]:
                     "id": str(workspace.id),
                     "name": workspace.name,
                     "slack_id": workspace.slack_id,
-                    "created_at": (
-                        workspace.created_at.isoformat()
-                        if workspace.created_at
-                        else None
-                    ),
+                    "created_at": (workspace.created_at.isoformat() if workspace.created_at else None),
                     "team_id": str(workspace.team_id) if workspace.team_id else None,
                 }
             )
@@ -276,11 +246,7 @@ async def check_workspace_consistency(db: AsyncSession) -> List[Dict]:
             issues.append("Missing team_id")
 
         # Check for related data consistency
-        channel_stmt = (
-            select(func.count())
-            .select_from(SlackChannel)
-            .where(SlackChannel.workspace_id == workspace.id)
-        )
+        channel_stmt = select(func.count()).select_from(SlackChannel).where(SlackChannel.workspace_id == workspace.id)
         result = await db.execute(channel_stmt)
         channel_count = result.scalar_one_or_none() or 0
 
@@ -299,16 +265,12 @@ async def check_workspace_consistency(db: AsyncSession) -> List[Dict]:
                 }
             )
 
-    logger.info(
-        f"Found {len(inconsistent_workspaces)} workspaces with consistency issues"
-    )
+    logger.info(f"Found {len(inconsistent_workspaces)} workspaces with consistency issues")
 
     if inconsistent_workspaces:
         logger.info("Workspaces with consistency issues:")
         for workspace in inconsistent_workspaces:
-            logger.info(
-                f"  {workspace['name']} ({workspace['slack_id']}): {', '.join(workspace['issues'])}"
-            )
+            logger.info(f"  {workspace['name']} ({workspace['slack_id']}): {', '.join(workspace['issues'])}")
 
     return inconsistent_workspaces
 
@@ -335,50 +297,34 @@ async def main():
 
         if counts["null_team_id_count"] > 0:
             issues_found += 1
-            logger.warning(
-                f"⚠️ {counts['null_team_id_count']} workspaces have missing team_id values"
-            )
+            logger.warning(f"⚠️ {counts['null_team_id_count']} workspaces have missing team_id values")
 
         if counts["orphaned_count"] > 0:
             issues_found += 1
-            logger.warning(
-                f"⚠️ {counts['orphaned_count']} workspaces are orphaned (not associated with an integration)"
-            )
+            logger.warning(f"⚠️ {counts['orphaned_count']} workspaces are orphaned (not associated with an integration)")
 
         if inconsistent:
             issues_found += 1
-            logger.warning(
-                f"⚠️ {len(inconsistent)} workspaces have data consistency issues"
-            )
+            logger.warning(f"⚠️ {len(inconsistent)} workspaces have data consistency issues")
 
         if issues_found == 0:
             logger.info("✅ No issues found! All Slack workspaces appear healthy.")
         else:
-            logger.warning(
-                f"⚠️ Found {issues_found} potential issues with Slack workspaces."
-            )
-            logger.info(
-                "It's recommended to fix these issues for optimal system performance."
-            )
+            logger.warning(f"⚠️ Found {issues_found} potential issues with Slack workspaces.")
+            logger.info("It's recommended to fix these issues for optimal system performance.")
 
             if counts["null_team_id_count"] > 0:
-                logger.info(
-                    "To fix missing team_id values, run the check_slack_mapping.py script."
-                )
+                logger.info("To fix missing team_id values, run the check_slack_mapping.py script.")
 
         # Print workspace usage statistics
         logger.info("\n=== Workspace Usage Statistics ===")
 
         for _workspace_id, stats in usage_stats.items():
             logger.info(f"Workspace: {stats['name']} ({stats['slack_id']})")
-            logger.info(
-                f"  Channels: {stats['channel_count']} (Selected: {stats['selected_channel_count']})"
-            )
+            logger.info(f"  Channels: {stats['channel_count']} (Selected: {stats['selected_channel_count']})")
             logger.info(f"  Messages: {stats['message_count']}")
             logger.info(f"  Last message: {stats['last_message_date'] or 'None'}")
-            logger.info(
-                f"  Integration: {stats['integration_name'] or 'None'} ({stats['integration_id'] or 'None'})"
-            )
+            logger.info(f"  Integration: {stats['integration_name'] or 'None'} ({stats['integration_id'] or 'None'})")
             logger.info(f"  Team ID: {stats['team_id'] or 'None'}")
 
     except Exception as e:

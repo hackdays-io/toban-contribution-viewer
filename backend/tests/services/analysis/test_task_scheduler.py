@@ -19,13 +19,9 @@ async def test_schedule_analysis():
     analysis_id = uuid.uuid4()
 
     # Mock the _run_analysis method
-    with patch.object(
-        ResourceAnalysisTaskScheduler, "_run_analysis", return_value=None
-    ) as mock_run:
+    with patch.object(ResourceAnalysisTaskScheduler, "_run_analysis", return_value=None) as mock_run:
         # Schedule the analysis
-        result = await ResourceAnalysisTaskScheduler.schedule_analysis(
-            analysis_id=analysis_id
-        )
+        result = await ResourceAnalysisTaskScheduler.schedule_analysis(analysis_id=analysis_id)
 
         # Verify result
         assert result is True
@@ -59,9 +55,7 @@ async def test_schedule_already_running_analysis():
 
     try:
         # Schedule the analysis again
-        result = await ResourceAnalysisTaskScheduler.schedule_analysis(
-            analysis_id=analysis_id
-        )
+        result = await ResourceAnalysisTaskScheduler.schedule_analysis(analysis_id=analysis_id)
 
         # Verify result
         assert result is False
@@ -109,18 +103,14 @@ async def test_schedule_analyses_for_report():
     get_db_mock.__anext__.return_value = db
 
     # Mock the schedule_analysis method
-    with patch.object(
-        ResourceAnalysisTaskScheduler, "schedule_analysis", return_value=True
-    ) as mock_schedule:
+    with patch.object(ResourceAnalysisTaskScheduler, "schedule_analysis", return_value=True) as mock_schedule:
         # Mock the get_async_db function
         with patch(
             "app.services.analysis.task_scheduler.get_async_db",
             return_value=get_db_mock,
         ):
             # Schedule analyses for the report
-            result = await ResourceAnalysisTaskScheduler.schedule_analyses_for_report(
-                report_id=report_id
-            )
+            result = await ResourceAnalysisTaskScheduler.schedule_analyses_for_report(report_id=report_id)
 
             # Verify result
             assert result == 2  # Two analyses scheduled

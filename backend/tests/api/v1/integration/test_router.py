@@ -104,14 +104,10 @@ class TestIntegrationAPI:
             updated_at=datetime.utcnow(),
         )
 
-        with patch(
-            "app.api.v1.integration.router.has_team_permission", return_value=True
-        ), patch(
+        with patch("app.api.v1.integration.router.has_team_permission", return_value=True), patch(
             "app.api.v1.integration.router.get_current_user",
             return_value=mock_current_user,
-        ), patch(
-            "app.api.v1.integration.router.get_async_db", return_value=mock_db
-        ):
+        ), patch("app.api.v1.integration.router.get_async_db", return_value=mock_db):
             mock_get_team_integrations.return_value = [test_integration]
 
             # Execute
@@ -148,14 +144,10 @@ class TestIntegrationAPI:
             updated_at=datetime.utcnow(),
         )
 
-        with patch(
-            "app.api.v1.integration.router.has_team_permission", return_value=True
-        ), patch(
+        with patch("app.api.v1.integration.router.has_team_permission", return_value=True), patch(
             "app.api.v1.integration.router.get_current_user",
             return_value=mock_current_user,
-        ), patch(
-            "app.api.v1.integration.router.get_async_db", return_value=mock_db
-        ):
+        ), patch("app.api.v1.integration.router.get_async_db", return_value=mock_db):
             mock_create_integration.return_value = test_integration
 
             # Execute
@@ -204,14 +196,10 @@ class TestIntegrationAPI:
             }
         }
 
-        with patch(
-            "app.api.v1.integration.router.has_team_permission", return_value=True
-        ), patch(
+        with patch("app.api.v1.integration.router.has_team_permission", return_value=True), patch(
             "app.api.v1.integration.router.get_current_user",
             return_value=mock_current_user,
-        ), patch(
-            "app.api.v1.integration.router.get_async_db", return_value=mock_db
-        ):
+        ), patch("app.api.v1.integration.router.get_async_db", return_value=mock_db):
             mock_create_from_oauth.return_value = (test_integration, workspace_info)
 
             # Execute

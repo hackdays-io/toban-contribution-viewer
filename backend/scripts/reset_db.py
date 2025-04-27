@@ -3,9 +3,7 @@ import os
 from sqlalchemy import create_engine, text
 
 # Get database URL from environment, or use a default for development
-database_url = os.environ.get(
-    "DATABASE_URL", "postgresql://toban_admin:postgres@postgres/tobancv"
-)
+database_url = os.environ.get("DATABASE_URL", "postgresql://toban_admin:postgres@postgres/tobancv")
 
 # Create engine
 engine = create_engine(database_url)

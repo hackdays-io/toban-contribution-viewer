@@ -24,9 +24,7 @@ class SlackChannelAnalysisService(ResourceAnalysisService):
     Service for analyzing Slack channels.
     """
 
-    def __init__(
-        self, db: AsyncSession, llm_client: Optional[OpenRouterService] = None
-    ):
+    def __init__(self, db: AsyncSession, llm_client: Optional[OpenRouterService] = None):
         """
         Initialize with a database session and optional LLM client.
 
@@ -65,9 +63,7 @@ class SlackChannelAnalysisService(ResourceAnalysisService):
         logger.info(f"Fetching data for Slack channel {resource_id_str}")
 
         # OPTIMIZATION: Check cache first
-        include_threads = (
-            parameters.get("include_threads", True) if parameters else True
-        )
+        include_threads = parameters.get("include_threads", True) if parameters else True
         cached_data = ChannelDataCache.get(
             channel_id=resource_id_str,
             start_date=start_date,
@@ -81,9 +77,7 @@ class SlackChannelAnalysisService(ResourceAnalysisService):
 
         # Not in cache, need to fetch data from database
         # Get the Slack channel
-        channel_result = await self.db.execute(
-            select(SlackChannel).where(SlackChannel.id == resource_id)
-        )
+        channel_result = await self.db.execute(select(SlackChannel).where(SlackChannel.id == resource_id))
         channel = channel_result.scalar_one_or_none()
 
         if not channel:
@@ -91,9 +85,7 @@ class SlackChannelAnalysisService(ResourceAnalysisService):
             raise ValueError(f"Channel {resource_id} not found")
 
         # Get the integration (Slack workspace)
-        integration_result = await self.db.execute(
-            select(Integration).where(Integration.id == integration_id)
-        )
+        integration_result = await self.db.execute(select(Integration).where(Integration.id == integration_id))
         integration = integration_result.scalar_one_or_none()
 
         if not integration:
@@ -113,19 +105,13 @@ class SlackChannelAnalysisService(ResourceAnalysisService):
         from app.models.slack import SlackWorkspace
 
         workspace_result = await self.db.execute(
-            select(SlackWorkspace).where(
-                SlackWorkspace.slack_id == integration.workspace_id
-            )
+            select(SlackWorkspace).where(SlackWorkspace.slack_id == integration.workspace_id)
         )
         workspace = workspace_result.scalar_one_or_none()
 
         if not workspace:
-            logger.error(
-                f"SlackWorkspace not found with slack_id={integration.workspace_id}"
-            )
-            raise ValueError(
-                f"SlackWorkspace not found with slack_id={integration.workspace_id}"
-            )
+            logger.error(f"SlackWorkspace not found with slack_id={integration.workspace_id}")
+            raise ValueError(f"SlackWorkspace not found with slack_id={integration.workspace_id}")
 
         # Now we have the correct workspace ID (UUID) to use with get_channel_messages
         workspace_id = str(workspace.id)
@@ -151,9 +137,7 @@ class SlackChannelAnalysisService(ResourceAnalysisService):
 
         # Get users who have sent messages in this channel
         user_ids = list(set(msg.user_id for msg in messages if msg.user_id))
-        users_result = await self.db.execute(
-            select(SlackUser).where(SlackUser.id.in_(user_ids))
-        )
+        users_result = await self.db.execute(select(SlackUser).where(SlackUser.id.in_(user_ids)))
         users = users_result.scalars().all()
 
         # Compile all data
@@ -218,9 +202,7 @@ class SlackChannelAnalysisService(ResourceAnalysisService):
 
         return channel_data
 
-    async def prepare_data_for_analysis(
-        self, data: Dict[str, Any], analysis_type: str
-    ) -> Dict[str, Any]:
+    async def prepare_data_for_analysis(self, data: Dict[str, Any], analysis_type: str) -> Dict[str, Any]:
         """
         Process raw Slack channel data into a format suitable for LLM analysis.
 
@@ -246,18 +228,12 @@ class SlackChannelAnalysisService(ResourceAnalysisService):
             has_user_id = bool(msg["user_id"])
 
             # Skip messages about users joining channels or other system notifications
-            if (
-                "さんがチャンネルに参加しました" in text
-                or "has joined the channel" in text
-            ):
+            if "さんがチャンネルに参加しました" in text or "has joined the channel" in text:
                 join_message_count += 1
                 continue
 
             # Skip system notifications about users leaving
-            if (
-                "さんがチャンネルから退出しました" in text
-                or "has left the channel" in text
-            ):
+            if "さんがチャンネルから退出しました" in text or "has left the channel" in text:
                 join_message_count += 1  # Count under the same category
                 continue
 
@@ -294,7 +270,7 @@ class SlackChannelAnalysisService(ResourceAnalysisService):
         data["messages"] = filtered_messages
         data["metadata"]["message_count"] = filtered_count
 
-       # Basic channel info is always included
+        # Basic channel info is always included
         prepared_data = {
             "channel_name": data["channel"]["name"],
             "channel_purpose": data["channel"]["purpose"],
@@ -327,9 +303,7 @@ class SlackChannelAnalysisService(ResourceAnalysisService):
                         "thread_replies": 0,
                         "thread_parents": 0,
                         "reactions_received": 0,
-                        "user_info": user_lookup.get(
-                            user_id, {"name": "Unknown", "is_bot": False}
-                        ),
+                        "user_info": user_lookup.get(user_id, {"name": "Unknown", "is_bot": False}),
                     }
 
                 # Update stats
@@ -347,9 +321,7 @@ class SlackChannelAnalysisService(ResourceAnalysisService):
             for msg in data["messages"]:
                 user_id = msg["user_id"]
                 if user_id:
-                    user_name = user_lookup.get(user_id, {}).get(
-                        "display_name", "Unknown"
-                    )
+                    user_name = user_lookup.get(user_id, {}).get("display_name", "Unknown")
                 else:
                     user_name = "System"
 
@@ -372,20 +344,12 @@ class SlackChannelAnalysisService(ResourceAnalysisService):
             messages_for_analysis = []
             for msg in data["messages"]:
                 user_id = msg["user_id"]
-                is_bot = (
-                    user_lookup.get(user_id, {}).get("is_bot", False)
-                    if user_id
-                    else False
-                )
+                is_bot = user_lookup.get(user_id, {}).get("is_bot", False) if user_id else False
 
                 if not is_bot:  # Skip bot messages for topic analysis
                     message_data = {
                         "text": msg["text"],
-                        "user": (
-                            user_lookup.get(user_id, {}).get("display_name", "Unknown")
-                            if user_id
-                            else "Unknown"
-                        ),
+                        "user": (user_lookup.get(user_id, {}).get("display_name", "Unknown") if user_id else "Unknown"),
                         "timestamp": msg["timestamp"],
                         "is_thread": msg["is_thread_parent"] or msg["is_thread_reply"],
                     }
@@ -411,9 +375,7 @@ class SlackChannelAnalysisService(ResourceAnalysisService):
             for msg in data["messages"]:
                 user_id = msg["user_id"]
                 if user_id:
-                    user_name = user_lookup.get(user_id, {}).get(
-                        "display_name", "Unknown"
-                    )
+                    user_name = user_lookup.get(user_id, {}).get("display_name", "Unknown")
                 else:
                     user_name = "System"
 
@@ -431,9 +393,7 @@ class SlackChannelAnalysisService(ResourceAnalysisService):
             prepared_data["messages"] = messages_for_analysis
 
         # FIX FOR ISSUE #238: Log the prepared data to ensure messages are included
-        logger.info(
-            f"Prepared data includes 'messages' key: {'messages' in prepared_data}"
-        )
+        logger.info(f"Prepared data includes 'messages' key: {'messages' in prepared_data}")
         if "messages" in prepared_data:
             logger.info(f"Prepared message count: {len(prepared_data['messages'])}")
 
@@ -475,20 +435,12 @@ class SlackChannelAnalysisService(ResourceAnalysisService):
         if "messages" in data and len(data.get("messages", [])) > 0:
             logger.info("Sample of first 3 messages in data:")
             for i, msg in enumerate(data["messages"][:3]):
-                logger.info(
-                    f"  Message {i + 1}: User={msg.get('user', 'Unknown')}, Text={msg.get('text', '')[:50]}"
-                )
+                logger.info(f"  Message {i + 1}: User={msg.get('user', 'Unknown')}, Text={msg.get('text', '')[:50]}")
 
         # Check for the specific case where we have messages in the data but total_messages is 0
         # This can happen if prepare_data_for_analysis wasn't called correctly
-        if (
-            total_messages == 0
-            and "messages" in data
-            and len(data.get("messages", [])) > 0
-        ):
-            logger.warning(
-                f"ANALYSIS ERROR: total_messages is 0 but messages array has {len(data['messages'])} items"
-            )
+        if total_messages == 0 and "messages" in data and len(data.get("messages", [])) > 0:
+            logger.warning(f"ANALYSIS ERROR: total_messages is 0 but messages array has {len(data['messages'])} items")
             # Fix the total_messages count to match the actual message count
             total_messages = len(data["messages"])
             data["total_messages"] = total_messages
@@ -534,19 +486,11 @@ class SlackChannelAnalysisService(ResourceAnalysisService):
                 total_messages=context.get("total_messages", 0),
                 total_users=context.get("total_users", 0),
                 total_threads=context.get("total_threads", 0),
-                user_contributions_text=context.get(
-                    "user_contributions_text", "No user contributions data available."
-                ),
-                messages_by_date_text=context.get(
-                    "messages_by_date_text", "No messages data available."
-                ),
-                messages_sample_text=context.get(
-                    "messages_sample_text", "No message samples available."
-                ),
+                user_contributions_text=context.get("user_contributions_text", "No user contributions data available."),
+                messages_by_date_text=context.get("messages_by_date_text", "No messages data available."),
+                messages_sample_text=context.get("messages_sample_text", "No message samples available."),
             )
-            logger.info(
-                f"Successfully formatted prompt template for {analysis_type} analysis"
-            )
+            logger.info(f"Successfully formatted prompt template for {analysis_type} analysis")
         except KeyError as e:
             logger.error(f"KeyError formatting prompt template: {e}")
             # Fall back to a simpler prompt with just the available information
@@ -570,9 +514,7 @@ class SlackChannelAnalysisService(ResourceAnalysisService):
         # Prepare message data for the LLM
         if "messages" in data and len(data["messages"]) > 0:
             # If we have actual messages in the data, include them
-            logger.info(
-                f"Including {len(data['messages'])} actual messages in the LLM request"
-            )
+            logger.info(f"Including {len(data['messages'])} actual messages in the LLM request")
 
             # First add the system prompt as a message
             message_data = {
@@ -612,14 +554,10 @@ class SlackChannelAnalysisService(ResourceAnalysisService):
             for i, msg in enumerate(
                 message_data["messages"][1:4]
             ):  # Skip system message, show first 3 channel messages
-                logger.info(
-                    f"  {i + 1}. User: {msg.get('user', 'Unknown')} | Text: {msg.get('text', '')[:50]}"
-                )
+                logger.info(f"  {i + 1}. User: {msg.get('user', 'Unknown')} | Text: {msg.get('text', '')[:50]}")
         else:
             # Fallback to just the system prompt if no messages are available
-            logger.warning(
-                "No actual messages found in data - LLM will only receive system prompt"
-            )
+            logger.warning("No actual messages found in data - LLM will only receive system prompt")
             message_data = {
                 "messages": [
                     {
@@ -666,21 +604,15 @@ class SlackChannelAnalysisService(ResourceAnalysisService):
 
         # Check if the response mentions "no actual channel messages"
         if "no actual channel messages" in response.get("channel_summary", "").lower():
-            logger.error(
-                f"LLM reports 'no actual channel messages' despite {total_messages} messages being sent"
-            )
-            logger.info(
-                "This indicates the LLM doesn't recognize the message content as meaningful conversation"
-            )
+            logger.error(f"LLM reports 'no actual channel messages' despite {total_messages} messages being sent")
+            logger.info("This indicates the LLM doesn't recognize the message content as meaningful conversation")
 
             # Check the first few messages to see what might be wrong
             messages_list = data.get("messages", [])
             if messages_list:
                 logger.info("Sample of messages being sent to LLM:")
                 for i, msg in enumerate(messages_list[:5]):
-                    logger.info(
-                        f"  {i + 1}. User: {msg.get('user', 'Unknown')} | Text: {msg.get('text', '')[:100]}"
-                    )
+                    logger.info(f"  {i + 1}. User: {msg.get('user', 'Unknown')} | Text: {msg.get('text', '')[:100]}")
 
             # Add debugging info to the response
             parsed_response["debug_info"] = {
@@ -791,9 +723,7 @@ class SlackChannelAnalysisService(ResourceAnalysisService):
             Format your response as a JSON object with these exact keys: "resource_summary", "key_highlights", "contributor_insights", and "topic_analysis".
             """
 
-    def create_context_for_llm(
-        self, data: Dict[str, Any], analysis_type: str
-    ) -> Dict[str, Any]:
+    def create_context_for_llm(self, data: Dict[str, Any], analysis_type: str) -> Dict[str, Any]:
         """
         Create a context dictionary for the LLM prompt.
 
@@ -846,9 +776,7 @@ class SlackChannelAnalysisService(ResourceAnalysisService):
                 for _, msg in enumerate(messages[:sample_size]):
                     date_lines.append(f"  {msg['user']}: {msg['text']}")
                 if len(messages) > sample_size:
-                    date_lines.append(
-                        f"  ... and {len(messages) - sample_size} more messages"
-                    )
+                    date_lines.append(f"  ... and {len(messages) - sample_size} more messages")
                 date_lines.append("")  # Add a blank line between dates
 
             context["messages_by_date_text"] = "\n".join(date_lines)
@@ -857,23 +785,16 @@ class SlackChannelAnalysisService(ResourceAnalysisService):
             # For general analysis, include a sample of messages
             messages = data.get("messages", [])
             sample_size = min(50, len(messages))
-            message_lines = [
-                f"{msg['user']} ({msg['timestamp']}): {msg['text']}"
-                for msg in messages[:sample_size]
-            ]
+            message_lines = [f"{msg['user']} ({msg['timestamp']}): {msg['text']}" for msg in messages[:sample_size]]
 
             if len(messages) > sample_size:
-                message_lines.append(
-                    f"... and {len(messages) - sample_size} more messages"
-                )
+                message_lines.append(f"... and {len(messages) - sample_size} more messages")
 
             context["messages_sample_text"] = "\n".join(message_lines)
 
         return context
 
-    def parse_llm_response(
-        self, response: Dict[str, Any], analysis_type: str
-    ) -> Dict[str, Any]:
+    def parse_llm_response(self, response: Dict[str, Any], analysis_type: str) -> Dict[str, Any]:
         """
         Parse the LLM response into structured data.
 
@@ -895,12 +816,8 @@ class SlackChannelAnalysisService(ResourceAnalysisService):
 
         # Check if the response mentions "no actual channel messages"
         if "no actual channel messages" in content.lower():
-            logger.warning(
-                "LLM reported 'no actual channel messages' despite data being sent"
-            )
-            logger.info(
-                "This may indicate a problem with message formatting or content"
-            )
+            logger.warning("LLM reported 'no actual channel messages' despite data being sent")
+            logger.info("This may indicate a problem with message formatting or content")
 
             # CRITICAL FIX FOR ISSUE #238: Instead of just flagging it,
             # provide a more useful response when the LLM doesn't recognize messages
@@ -922,27 +839,21 @@ class SlackChannelAnalysisService(ResourceAnalysisService):
             and response.get("channel_summary")
             and response.get("topic_analysis")
         ):
-            logger.warning(
-                "LLM response missing contributor_insights despite having other sections"
-            )
+            logger.warning("LLM response missing contributor_insights despite having other sections")
             # Add fallback content for missing sections
             response["contributor_insights"] = (
                 "Based on message activity patterns, several users contributed to discussions in this channel. Some users were more active in starting threads, while others primarily responded to existing threads. The detailed contribution patterns couldn't be fully analyzed."
             )
 
         if not response.get("key_highlights") and response.get("channel_summary"):
-            logger.warning(
-                "LLM response missing key_highlights despite having other sections"
-            )
+            logger.warning("LLM response missing key_highlights despite having other sections")
             # Add fallback content for missing sections
             response["key_highlights"] = (
                 "The channel had active discussions on various topics during the analyzed period. While specific highlights couldn't be fully extracted, the overall message patterns suggest focused team collaboration."
             )
 
         if not response.get("topic_analysis") and response.get("channel_summary"):
-            logger.warning(
-                "LLM response missing topic_analysis despite having other sections"
-            )
+            logger.warning("LLM response missing topic_analysis despite having other sections")
             # Add fallback content for missing sections
             response["topic_analysis"] = (
                 "The channel contained discussions on multiple topics related to the team's work. The specific topics couldn't be fully categorized, but the message content suggests collaboration on shared projects."
@@ -956,9 +867,7 @@ class SlackChannelAnalysisService(ResourceAnalysisService):
                 "contributor_insights": response.get("contributor_insights", ""),
                 "key_highlights": response.get("key_highlights", ""),
                 "resource_summary": response.get("channel_summary", ""),
-                "topic_analysis": response.get(
-                    "topic_analysis", ""
-                ),  # Added topic analysis for all analysis types
+                "topic_analysis": response.get("topic_analysis", ""),  # Added topic analysis for all analysis types
                 "full_response": content,
             }
         elif analysis_type == AnalysisType.TOPICS:

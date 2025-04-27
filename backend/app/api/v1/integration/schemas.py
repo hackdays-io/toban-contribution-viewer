@@ -123,9 +123,7 @@ class IntegrationCreate(BaseModel):
     service_type: IntegrationTypeEnum
     description: Optional[str] = None
     team_id: UUID
-    workspace_id: Optional[str] = (
-        None  # External workspace identifier for uniqueness constraints
-    )
+    workspace_id: Optional[str] = None  # External workspace identifier for uniqueness constraints
     metadata: Optional[Dict] = None
 
 
@@ -198,21 +196,11 @@ class ChannelSelectionRequest(BaseModel):
 class AnalysisOptions(BaseModel):
     """Schema for analysis options when analyzing a channel."""
 
-    analysis_type: Optional[str] = Field(
-        "contribution", description="The type of analysis to perform"
-    )
-    start_date: Optional[datetime] = Field(
-        None, description="Start date for analysis period"
-    )
-    end_date: Optional[datetime] = Field(
-        None, description="End date for analysis period"
-    )
-    include_threads: bool = Field(
-        True, description="Whether to include thread replies in the analysis"
-    )
-    include_reactions: bool = Field(
-        True, description="Whether to include reactions data in the analysis"
-    )
+    analysis_type: Optional[str] = Field("contribution", description="The type of analysis to perform")
+    start_date: Optional[datetime] = Field(None, description="Start date for analysis period")
+    end_date: Optional[datetime] = Field(None, description="End date for analysis period")
+    include_threads: bool = Field(True, description="Whether to include thread replies in the analysis")
+    include_reactions: bool = Field(True, description="Whether to include reactions data in the analysis")
     model: Optional[str] = Field(None, description="Specific LLM model to use")
 
 
@@ -241,9 +229,7 @@ class ServiceResourceResponse(ServiceResourceBase):
     last_synced_at: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
-    is_selected_for_analysis: Optional[bool] = (
-        None  # Added for channel selection support
-    )
+    is_selected_for_analysis: Optional[bool] = None  # Added for channel selection support
 
 
 class IntegrationShareResponse(IntegrationShareBase):
@@ -301,9 +287,7 @@ class IntegrationResponse(BaseModel):
     description: Optional[str] = None
     service_type: IntegrationTypeEnum
     status: IntegrationStatusEnum
-    metadata: Dict = Field(
-        default_factory=dict
-    )  # Maps to integration_metadata in the model
+    metadata: Dict = Field(default_factory=dict)  # Maps to integration_metadata in the model
     last_used_at: Optional[datetime] = None
 
     owner_team: TeamInfo

@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 class AnalysisStoreService:
     """
     Service for storing and retrieving LLM analysis results.
-    
+
     DEPRECATED: This service has been deprecated in favor of the ResourceAnalysis system.
     """
 
@@ -27,8 +27,7 @@ class AnalysisStoreService:
         Please use ResourceAnalysisService instead.
         """
         logger.warning(
-            "AnalysisStoreService.store_channel_analysis is deprecated. "
-            "Use ResourceAnalysisService instead."
+            "AnalysisStoreService.store_channel_analysis is deprecated. " "Use ResourceAnalysisService instead."
         )
         return None
 
@@ -47,15 +46,12 @@ class AnalysisStoreService:
         return []
 
     @staticmethod
-    async def get_latest_channel_analysis(
-        db: AsyncSession, channel_id: str
-    ) -> Optional[None]:
+    async def get_latest_channel_analysis(db: AsyncSession, channel_id: str) -> Optional[None]:
         """
         DEPRECATED: This method has been removed.
         Please use ResourceAnalysisService instead.
         """
         logger.warning(
-            "AnalysisStoreService.get_latest_channel_analysis is deprecated. "
-            "Use ResourceAnalysisService instead."
+            "AnalysisStoreService.get_latest_channel_analysis is deprecated. " "Use ResourceAnalysisService instead."
         )
         return None

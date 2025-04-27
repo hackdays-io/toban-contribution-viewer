@@ -148,9 +148,7 @@ async def test_prepare_data_for_analysis_contribution(_mock_openrouter):
     service = SlackChannelAnalysisService(db)
 
     # Call the method
-    prepared_data = await service.prepare_data_for_analysis(
-        data=test_data, analysis_type=AnalysisType.CONTRIBUTION
-    )
+    prepared_data = await service.prepare_data_for_analysis(data=test_data, analysis_type=AnalysisType.CONTRIBUTION)
 
     # Verify results
     assert "channel_name" in prepared_data
@@ -217,9 +215,7 @@ async def test_prepare_data_for_analysis_topics(_mock_openrouter):
     service = SlackChannelAnalysisService(db)
 
     # Call the method
-    prepared_data = await service.prepare_data_for_analysis(
-        data=test_data, analysis_type=AnalysisType.TOPICS
-    )
+    prepared_data = await service.prepare_data_for_analysis(data=test_data, analysis_type=AnalysisType.TOPICS)
 
     # Verify results
     assert "channel_name" in prepared_data
@@ -264,9 +260,7 @@ async def test_analyze_data(_mock_openrouter):
         ):
             # Call the method
             test_data = {"channel_name": "test-channel"}
-            results = await service.analyze_data(
-                data=test_data, analysis_type=AnalysisType.CONTRIBUTION
-            )
+            results = await service.analyze_data(data=test_data, analysis_type=AnalysisType.CONTRIBUTION)
 
             # Verify results
             assert "contributor_insights" in results

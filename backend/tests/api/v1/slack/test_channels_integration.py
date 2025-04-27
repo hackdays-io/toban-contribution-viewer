@@ -22,9 +22,7 @@ from unittest.mock import patch
 
 if "DATABASE_URL" in os.environ and "postgres" in os.environ["DATABASE_URL"]:
     # Replace internal Docker hostname with localhost
-    os.environ["DATABASE_URL"] = os.environ["DATABASE_URL"].replace(
-        "postgres", "localhost"
-    )
+    os.environ["DATABASE_URL"] = os.environ["DATABASE_URL"].replace("postgres", "localhost")
 
 import pytest
 from fastapi import FastAPI
@@ -36,9 +34,7 @@ from app.models.slack import SlackWorkspace
 from app.services.slack.channels import ChannelService
 
 # Flag to control real API usage - set to True to use actual Slack API
-USE_REAL_SLACK_API = (
-    os.environ.get("TEST_USE_REAL_SLACK_API", "false").lower() == "true"
-)
+USE_REAL_SLACK_API = os.environ.get("TEST_USE_REAL_SLACK_API", "false").lower() == "true"
 # Flag to control real database usage - set to True to use actual database
 USE_REAL_DATABASE = os.environ.get("TEST_USE_REAL_DATABASE", "false").lower() == "true"
 
@@ -83,15 +79,11 @@ async def setup_test_db(test_workspace):
         # Just verify the workspace exists
         from sqlalchemy import select
 
-        workspace_result = await session.execute(
-            select(SlackWorkspace).where(SlackWorkspace.id == TEST_WORKSPACE_ID)
-        )
+        workspace_result = await session.execute(select(SlackWorkspace).where(SlackWorkspace.id == TEST_WORKSPACE_ID))
         workspace = workspace_result.scalars().first()
 
         if not workspace:
-            pytest.skip(
-                f"Test workspace with ID {TEST_WORKSPACE_ID} not found in database"
-            )
+            pytest.skip(f"Test workspace with ID {TEST_WORKSPACE_ID} not found in database")
     else:
         # Create a test workspace
         workspace = SlackWorkspace(
@@ -113,13 +105,9 @@ async def setup_test_db(test_workspace):
     # Clean up if we created a test workspace and not using a predefined one
     if not TEST_WORKSPACE_ID:
         # Delete any channels associated with this workspace
-        await session.execute(
-            f"DELETE FROM slackchannel WHERE workspace_id = '{test_workspace['id']}'"
-        )
+        await session.execute(f"DELETE FROM slackchannel WHERE workspace_id = '{test_workspace['id']}'")
         # Delete the workspace
-        await session.execute(
-            f"DELETE FROM slackworkspace WHERE id = '{test_workspace['id']}'"
-        )
+        await session.execute(f"DELETE FROM slackworkspace WHERE id = '{test_workspace['id']}'")
         await session.commit()
 
     await session.close()
@@ -152,12 +140,7 @@ def api_client():
 
 @pytest.mark.asyncio
 @pytest.mark.skipif(
-    not (
-        USE_REAL_SLACK_API
-        and USE_REAL_DATABASE
-        and TEST_WORKSPACE_ID
-        and TEST_SLACK_TOKEN
-    ),
+    not (USE_REAL_SLACK_API and USE_REAL_DATABASE and TEST_WORKSPACE_ID and TEST_SLACK_TOKEN),
     reason="Skipping real API test. Set env vars to run.",
 )
 async def test_list_channels_integration(api_client, setup_test_db, test_workspace):
@@ -184,12 +167,7 @@ async def test_list_channels_integration(api_client, setup_test_db, test_workspa
 
 @pytest.mark.asyncio
 @pytest.mark.skipif(
-    not (
-        USE_REAL_SLACK_API
-        and USE_REAL_DATABASE
-        and TEST_WORKSPACE_ID
-        and TEST_SLACK_TOKEN
-    ),
+    not (USE_REAL_SLACK_API and USE_REAL_DATABASE and TEST_WORKSPACE_ID and TEST_SLACK_TOKEN),
     reason="Skipping real API test. Set env vars to run.",
 )
 async def test_sync_channels_integration(api_client, setup_test_db, test_workspace):
@@ -215,20 +193,13 @@ async def test_sync_channels_integration(api_client, setup_test_db, test_workspa
 
 @pytest.mark.asyncio
 @pytest.mark.skipif(
-    not (
-        USE_REAL_SLACK_API
-        and USE_REAL_DATABASE
-        and TEST_WORKSPACE_ID
-        and TEST_SLACK_TOKEN
-    ),
+    not (USE_REAL_SLACK_API and USE_REAL_DATABASE and TEST_WORKSPACE_ID and TEST_SLACK_TOKEN),
     reason="Skipping real API test. Set env vars to run.",
 )
 async def test_select_channels_integration(api_client, setup_test_db, test_workspace):
     """Integration test for selecting channels with real API and database."""
     # First, get some channel IDs from the list endpoint
-    list_response = api_client.get(
-        f"/workspaces/{test_workspace['id']}/channels", params={"page_size": 5}
-    )
+    list_response = api_client.get(f"/workspaces/{test_workspace['id']}/channels", params={"page_size": 5})
     assert list_response.status_code == 200
 
     channels = list_response.json()["channels"]
@@ -279,9 +250,7 @@ async def test_channel_service_direct(setup_test_db, test_workspace):
             sync_all_pages=False,  # Just sync first page for speed
         )
 
-        print(
-            f"Service test - Synced channels: {total} total, {created} created, {updated} updated"
-        )
+        print(f"Service test - Synced channels: {total} total, {created} created, {updated} updated")
 
         # Now get the list of channels
         result = await ChannelService.get_channels_for_workspace(

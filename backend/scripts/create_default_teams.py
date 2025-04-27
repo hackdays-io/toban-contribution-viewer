@@ -94,13 +94,9 @@ def create_default_teams(session: Session, dry_run: bool = False) -> Dict[str, i
 
     if not dry_run and workspaces_processed > 0:
         session.commit()
-        logger.info(
-            f"Committed changes: {teams_created} teams created for {workspaces_processed} workspaces"
-        )
+        logger.info(f"Committed changes: {teams_created} teams created for {workspaces_processed} workspaces")
     else:
-        logger.info(
-            f"Dry run: would create {teams_created} teams for {workspaces_processed} workspaces"
-        )
+        logger.info(f"Dry run: would create {teams_created} teams for {workspaces_processed} workspaces")
 
     return {
         "workspaces_processed": workspaces_processed,
@@ -183,9 +179,7 @@ def main():
             test_user_id = user_id_arg or "auth0|user1234"
             test_email = user_email_arg or "test@example.com"
 
-            logger.info(
-                f"Creating test team for user ID: {test_user_id}, email: {test_email}"
-            )
+            logger.info(f"Creating test team for user ID: {test_user_id}, email: {test_email}")
             create_test_user_team(session, test_user_id, test_email)
             logger.info(f"Test team created for user {test_user_id}")
         else:

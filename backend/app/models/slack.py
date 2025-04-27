@@ -42,9 +42,7 @@ class SlackWorkspace(Base, BaseModel):
     # Workspace metadata
     icon_url = Column(String(1024), nullable=True)
     team_size = Column(Integer, nullable=True)
-    workspace_metadata = Column(
-        JSONB, nullable=True
-    )  # Renamed from metadata (reserved name)
+    workspace_metadata = Column(JSONB, nullable=True)  # Renamed from metadata (reserved name)
 
     # Connection status
     is_connected = Column(Boolean, default=True, nullable=False)
@@ -58,18 +56,12 @@ class SlackWorkspace(Base, BaseModel):
     token_expires_at = Column(DateTime, nullable=True)
 
     # Team association
-    team_id = Column(
-        UUID(as_uuid=True), ForeignKey("team.id"), nullable=True, index=True
-    )
+    team_id = Column(UUID(as_uuid=True), ForeignKey("team.id"), nullable=True, index=True)
 
     # Relationships
     team: Mapped["Team"] = relationship("Team", back_populates="slack_workspaces")
-    channels: Mapped[List["SlackChannel"]] = relationship(
-        "SlackChannel", back_populates="workspace"
-    )
-    users: Mapped[List["SlackUser"]] = relationship(
-        "SlackUser", back_populates="workspace"
-    )
+    channels: Mapped[List["SlackChannel"]] = relationship("SlackChannel", back_populates="workspace")
+    users: Mapped[List["SlackUser"]] = relationship("SlackUser", back_populates="workspace")
     # Legacy SlackAnalysis relationship removed
 
     def __repr__(self) -> str:
@@ -94,9 +86,7 @@ class SlackChannel(Base, BaseModel):
     created_at_ts = Column(String(50), nullable=True)  # Slack timestamp
 
     # Bot status
-    has_bot = Column(
-        Boolean, default=False, nullable=False
-    )  # Renamed from is_bot_member for clarity
+    has_bot = Column(Boolean, default=False, nullable=False)  # Renamed from is_bot_member for clarity
     bot_joined_at = Column(DateTime, nullable=True)
 
     # Analysis flags
@@ -109,17 +99,11 @@ class SlackChannel(Base, BaseModel):
     latest_synced_ts = Column(String(50), nullable=True)  # Slack timestamp
 
     # Foreign keys
-    workspace_id = Column(
-        UUID(as_uuid=True), ForeignKey("slackworkspace.id"), nullable=False
-    )
+    workspace_id = Column(UUID(as_uuid=True), ForeignKey("slackworkspace.id"), nullable=False)
 
     # Relationships
-    workspace: Mapped["SlackWorkspace"] = relationship(
-        "SlackWorkspace", back_populates="channels"
-    )
-    messages: Mapped[List["SlackMessage"]] = relationship(
-        "SlackMessage", back_populates="channel"
-    )
+    workspace: Mapped["SlackWorkspace"] = relationship("SlackWorkspace", back_populates="channels")
+    messages: Mapped[List["SlackMessage"]] = relationship("SlackMessage", back_populates="channel")
     # Legacy SlackAnalysis relationship removed
 
     # Ensure uniqueness of channels per workspace
@@ -164,20 +148,12 @@ class SlackUser(Base, BaseModel):
     profile_data = Column(JSONB, nullable=True)
 
     # Foreign keys
-    workspace_id = Column(
-        UUID(as_uuid=True), ForeignKey("slackworkspace.id"), nullable=False
-    )
+    workspace_id = Column(UUID(as_uuid=True), ForeignKey("slackworkspace.id"), nullable=False)
 
     # Relationships
-    workspace: Mapped["SlackWorkspace"] = relationship(
-        "SlackWorkspace", back_populates="users"
-    )
-    messages: Mapped[List["SlackMessage"]] = relationship(
-        "SlackMessage", back_populates="user"
-    )
-    reactions: Mapped[List["SlackReaction"]] = relationship(
-        "SlackReaction", back_populates="user"
-    )
+    workspace: Mapped["SlackWorkspace"] = relationship("SlackWorkspace", back_populates="users")
+    messages: Mapped[List["SlackMessage"]] = relationship("SlackMessage", back_populates="user")
+    reactions: Mapped[List["SlackReaction"]] = relationship("SlackReaction", back_populates="user")
     # Legacy SlackContribution relationship removed
 
     # Ensure uniqueness of users per workspace
@@ -208,9 +184,7 @@ class SlackMessage(Base, BaseModel):
     processed_text = Column(Text, nullable=True)  # Text after resolving mentions, etc.
 
     # Message metadata
-    message_type = Column(
-        String(50), default="message", nullable=False
-    )  # 'message', 'bot_message', etc.
+    message_type = Column(String(50), default="message", nullable=False)  # 'message', 'bot_message', etc.
     subtype = Column(String(50), nullable=True)  # Slack message subtype
     is_edited = Column(Boolean, default=False, nullable=False)
     edited_ts = Column(String(50), nullable=True)  # Slack timestamp
@@ -238,26 +212,14 @@ class SlackMessage(Base, BaseModel):
     analysis_data = Column(JSONB, nullable=True)
 
     # Foreign keys
-    channel_id = Column(
-        UUID(as_uuid=True), ForeignKey("slackchannel.id"), nullable=False
-    )
-    user_id = Column(
-        UUID(as_uuid=True), ForeignKey("slackuser.id"), nullable=True
-    )  # Null for system messages
-    parent_id = Column(
-        UUID(as_uuid=True), ForeignKey("slackmessage.id"), nullable=True
-    )  # For thread replies
+    channel_id = Column(UUID(as_uuid=True), ForeignKey("slackchannel.id"), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("slackuser.id"), nullable=True)  # Null for system messages
+    parent_id = Column(UUID(as_uuid=True), ForeignKey("slackmessage.id"), nullable=True)  # For thread replies
 
     # Relationships
-    channel: Mapped["SlackChannel"] = relationship(
-        "SlackChannel", back_populates="messages"
-    )
-    user: Mapped[Optional["SlackUser"]] = relationship(
-        "SlackUser", back_populates="messages"
-    )
-    reactions: Mapped[List["SlackReaction"]] = relationship(
-        "SlackReaction", back_populates="message"
-    )
+    channel: Mapped["SlackChannel"] = relationship("SlackChannel", back_populates="messages")
+    user: Mapped[Optional["SlackUser"]] = relationship("SlackUser", back_populates="messages")
+    reactions: Mapped[List["SlackReaction"]] = relationship("SlackReaction", back_populates="message")
     # Self-referential relationship for threading
     parent: Mapped[Optional["SlackMessage"]] = relationship(
         "SlackMessage",
@@ -288,15 +250,11 @@ class SlackReaction(Base, BaseModel):
     reaction_ts = Column(String(50), nullable=True)  # Slack timestamp
 
     # Foreign keys
-    message_id = Column(
-        UUID(as_uuid=True), ForeignKey("slackmessage.id"), nullable=False
-    )
+    message_id = Column(UUID(as_uuid=True), ForeignKey("slackmessage.id"), nullable=False)
     user_id = Column(UUID(as_uuid=True), ForeignKey("slackuser.id"), nullable=False)
 
     # Relationships
-    message: Mapped["SlackMessage"] = relationship(
-        "SlackMessage", back_populates="reactions"
-    )
+    message: Mapped["SlackMessage"] = relationship("SlackMessage", back_populates="reactions")
     user: Mapped["SlackUser"] = relationship("SlackUser", back_populates="reactions")
 
     # Ensure uniqueness of reactions per message and user

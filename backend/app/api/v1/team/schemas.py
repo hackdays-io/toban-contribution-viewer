@@ -29,9 +29,7 @@ class TeamUpdate(BaseModel):
     """Schema for updating an existing team."""
 
     name: Optional[str] = Field(None, description="Team name", max_length=255)
-    slug: Optional[str] = Field(
-        None, description="URL-friendly team identifier", max_length=255
-    )
+    slug: Optional[str] = Field(None, description="URL-friendly team identifier", max_length=255)
     description: Optional[str] = Field(None, description="Team description")
     avatar_url: Optional[str] = Field(None, description="URL for team avatar/logo")
     team_metadata: Optional[Dict] = Field(None, description="Additional team metadata")
@@ -74,9 +72,7 @@ class TeamMemberResponse(TeamMemberBase):
     team_id: UUID = Field(..., description="Team ID")
     invitation_status: str = Field(..., description="Invitation status")
     created_at: datetime = Field(..., description="Time when the member was added")
-    last_active_at: Optional[datetime] = Field(
-        None, description="Time of last activity"
-    )
+    last_active_at: Optional[datetime] = Field(None, description="Time of last activity")
 
     class Config:
         """Pydantic configuration."""
@@ -93,9 +89,7 @@ class TeamResponse(TeamBase):
     created_at: datetime = Field(..., description="Creation timestamp")
     updated_at: datetime = Field(..., description="Last update timestamp")
     team_size: int = Field(0, description="Number of team members")
-    members: Optional[List[TeamMemberResponse]] = Field(
-        None, description="Team members"
-    )
+    members: Optional[List[TeamMemberResponse]] = Field(None, description="Team members")
 
     class Config:
         """Pydantic configuration."""

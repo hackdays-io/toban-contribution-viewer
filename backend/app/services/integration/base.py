@@ -41,9 +41,7 @@ class IntegrationService:
     """
 
     @staticmethod
-    async def get_integration(
-        db: AsyncSession, integration_id: uuid.UUID, user_id: str
-    ) -> Optional[Integration]:
+    async def get_integration(db: AsyncSession, integration_id: uuid.UUID, user_id: str) -> Optional[Integration]:
         """
         Get an integration by ID.
 
@@ -74,9 +72,7 @@ class IntegrationService:
             return None
 
         # Get the teams the user is a member of
-        result = await db.execute(
-            select(Team).join(Team.members).where(Team.members.any(user_id=user_id))
-        )
+        result = await db.execute(select(Team).join(Team.members).where(Team.members.any(user_id=user_id)))
         user_teams = result.scalars().all()
         user_team_ids = [team.id for team in user_teams]
 
@@ -144,9 +140,7 @@ class IntegrationService:
             # Get integrations shared with this team
             shared_query = (
                 select(Integration)
-                .join(
-                    IntegrationShare, Integration.id == IntegrationShare.integration_id
-                )
+                .join(IntegrationShare, Integration.id == IntegrationShare.integration_id)
                 .where(
                     IntegrationShare.team_id == team_id,
                     IntegrationShare.status == "active",
@@ -162,9 +156,7 @@ class IntegrationService:
 
             # Add service type filter if provided
             if service_type:
-                shared_query = shared_query.where(
-                    Integration.service_type == service_type
-                )
+                shared_query = shared_query.where(Integration.service_type == service_type)
 
             # Execute the query
             result = await db.execute(shared_query)
@@ -172,9 +164,7 @@ class IntegrationService:
 
             # Combine the results, ensuring no duplicates
             owned_ids = {i.id for i in owned_integrations}
-            all_integrations = owned_integrations + [
-                i for i in shared_integrations if i.id not in owned_ids
-            ]
+            all_integrations = owned_integrations + [i for i in shared_integrations if i.id not in owned_ids]
             return all_integrations
 
         return owned_integrations
@@ -225,10 +215,7 @@ class IntegrationService:
             metadata = integration.integration_metadata or {}
             # Check for service-specific IDs in metadata
             service_id_key = f"{service_type.value.lower()}_id"
-            if (
-                metadata.get(service_id_key) == workspace_id
-                or metadata.get("slack_id") == workspace_id
-            ):
+            if metadata.get(service_id_key) == workspace_id or metadata.get("slack_id") == workspace_id:
                 # Update the workspace_id field for future queries
                 integration.workspace_id = workspace_id
                 return integration
@@ -282,8 +269,7 @@ class IntegrationService:
             result = await db.execute(
                 select(IntegrationCredential).where(
                     IntegrationCredential.integration_id == integration.id,
-                    IntegrationCredential.credential_type
-                    == credential_data.get("credential_type"),
+                    IntegrationCredential.credential_type == credential_data.get("credential_type"),
                 )
             )
             credential = result.scalar_one_or_none()
@@ -376,10 +362,8 @@ class IntegrationService:
         """
         # If workspace_id is provided, check for existing integration
         if workspace_id:
-            existing_integration = (
-                await IntegrationService.find_integration_by_workspace_id(
-                    db, team_id, workspace_id, service_type
-                )
+            existing_integration = await IntegrationService.find_integration_by_workspace_id(
+                db, team_id, workspace_id, service_type
             )
 
             if existing_integration:
@@ -691,9 +675,7 @@ class IntegrationService:
             List of ServiceResource objects
         """
         # Build the query
-        query = select(ServiceResource).where(
-            ServiceResource.integration_id == integration_id
-        )
+        query = select(ServiceResource).where(ServiceResource.integration_id == integration_id)
 
         # Add resource type filter if provided
         if resource_types:

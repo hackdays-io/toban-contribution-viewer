@@ -124,9 +124,7 @@ async def reset_thread_data(channel_id=None):
         from app.models.slack import SlackMessage
 
         # Build the query to find thread parent messages
-        query = select(SlackMessage).where(
-            SlackMessage.is_thread_parent.is_(True), SlackMessage.reply_count > 0
-        )
+        query = select(SlackMessage).where(SlackMessage.is_thread_parent.is_(True), SlackMessage.reply_count > 0)
 
         # If channel_id is provided, limit to that channel
         if channel_id:
@@ -146,9 +144,7 @@ async def reset_thread_data(channel_id=None):
 
         for parent in parent_messages:
             threads_processed += 1
-            logger.info(
-                f"Processing thread {threads_processed}/{len(parent_messages)}: {parent.slack_ts}"
-            )
+            logger.info(f"Processing thread {threads_processed}/{len(parent_messages)}: {parent.slack_ts}")
 
             # Get the channel info for this message
             channel_result = await db.execute(
@@ -163,9 +159,7 @@ async def reset_thread_data(channel_id=None):
                 continue
 
             if not channel.workspace.access_token:
-                logger.warning(
-                    f"No access token for workspace {channel.workspace.id}, skipping"
-                )
+                logger.warning(f"No access token for workspace {channel.workspace.id}, skipping")
                 continue
 
             # Fetch thread replies from Slack API
@@ -178,9 +172,7 @@ async def reset_thread_data(channel_id=None):
                     max_pages=20,  # Maximum 20 pages (10,000 replies should be enough)
                 )
 
-                logger.info(
-                    f"Fetched {len(thread_replies)} replies for thread {parent.slack_ts}"
-                )
+                logger.info(f"Fetched {len(thread_replies)} replies for thread {parent.slack_ts}")
 
                 # Process and store each reply
                 replies_added = 0
@@ -208,17 +200,13 @@ async def reset_thread_data(channel_id=None):
                     replies_added += 1
 
                 # Update parent message with reply count
-                parent.reply_count = (
-                    len(thread_replies) - 1
-                )  # Subtract 1 for parent message
+                parent.reply_count = len(thread_replies) - 1  # Subtract 1 for parent message
 
                 # Commit changes for this thread
                 if replies_added > 0:
                     await db.commit()
                     total_replies_added += replies_added
-                    logger.info(
-                        f"Added {replies_added} replies for thread {parent.slack_ts}"
-                    )
+                    logger.info(f"Added {replies_added} replies for thread {parent.slack_ts}")
 
             except Exception as e:
                 logger.error(f"Error processing thread {parent.slack_ts}: {e}")
@@ -249,9 +237,7 @@ async def main():
         # Parse command line arguments for channel_id
         import argparse
 
-        parser = argparse.ArgumentParser(
-            description="Reset thread data in the database"
-        )
+        parser = argparse.ArgumentParser(description="Reset thread data in the database")
         parser.add_argument("--channel", help="Channel ID to process (optional)")
         args = parser.parse_args()
 

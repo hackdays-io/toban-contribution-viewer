@@ -111,8 +111,7 @@ class SlackIntegrationService(IntegrationService):
             "encrypted_value": oauth_response["access_token"],
             "refresh_token": oauth_response.get("refresh_token"),
             "expires_at": (
-                datetime.utcnow()
-                + timedelta(seconds=oauth_response.get("expires_in", 86400))
+                datetime.utcnow() + timedelta(seconds=oauth_response.get("expires_in", 86400))
                 if "expires_in" in oauth_response
                 else None
             ),
@@ -165,9 +164,7 @@ class SlackIntegrationService(IntegrationService):
             return credential.encrypted_value  # In production, this would be decrypted
 
         # If not found in credentials, check metadata (for backward compatibility)
-        integration_result = await db.execute(
-            select(Integration).where(Integration.id == integration_id)
-        )
+        integration_result = await db.execute(select(Integration).where(Integration.id == integration_id))
         integration = integration_result.scalar_one_or_none()
 
         if integration and integration.integration_metadata:

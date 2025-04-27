@@ -31,9 +31,7 @@ def check_environment() -> None:
     is_production = os.environ.get("ENVIRONMENT") == "production"
     if is_production:
         print("WARNING: This script should NOT be run in production!")
-        response = input(
-            "Are you sure you want to continue? This will DESTROY ALL DATA! (yes/no): "
-        )
+        response = input("Are you sure you want to continue? This will DESTROY ALL DATA! (yes/no): ")
         if response.lower() != "yes":
             print("Operation cancelled.")
             sys.exit(1)
@@ -42,9 +40,7 @@ def check_environment() -> None:
 
 def get_database_url() -> str:
     """Get the database URL from environment variables or use default."""
-    return os.environ.get(
-        "DATABASE_URL", "postgresql://toban_admin:postgres@postgres/tobancv"
-    )
+    return os.environ.get("DATABASE_URL", "postgresql://toban_admin:postgres@postgres/tobancv")
 
 
 def reset_database(db_engine: engine.Engine) -> None:
@@ -120,9 +116,7 @@ def run_alembic_migrations() -> None:
         print(stdout)
         return
     else:
-        print(
-            "Consolidated migration had issues, will try regular migration sequence..."
-        )
+        print("Consolidated migration had issues, will try regular migration sequence...")
         print(stdout)
         print(stderr)
 
@@ -229,12 +223,8 @@ def create_test_data(db_engine: engine.Engine) -> None:
 
 def main() -> None:
     """Initialize and set up the database."""
-    parser = argparse.ArgumentParser(
-        description="Setup database for Toban Contribution Viewer"
-    )
-    parser.add_argument(
-        "--reset", action="store_true", help="Reset the database to a clean state"
-    )
+    parser = argparse.ArgumentParser(description="Setup database for Toban Contribution Viewer")
+    parser.add_argument("--reset", action="store_true", help="Reset the database to a clean state")
     args = parser.parse_args()
 
     # Check environment

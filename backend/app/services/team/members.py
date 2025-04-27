@@ -52,9 +52,7 @@ class TeamMemberService:
 
         if not team:
             logger.warning(f"Team with ID {team_id} not found during member lookup")
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Team not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Team not found")
 
         # Check if the user is a member of the team (any role can view members)
         await ensure_team_permission(
@@ -75,9 +73,7 @@ class TeamMemberService:
             query = (
                 select(TeamMember)
                 .where(TeamMember.team_id == team_id)
-                .order_by(
-                    TeamMember.invitation_status, TeamMember.role, TeamMember.created_at
-                )
+                .order_by(TeamMember.invitation_status, TeamMember.role, TeamMember.created_at)
             )
         else:
             # Get members with the specified status
@@ -93,15 +89,11 @@ class TeamMemberService:
         result = await db.execute(query)
         members = result.scalars().all()
 
-        logger.info(
-            f"Found {len(members)} members with status '{status or 'all'}' for team {team_id}"
-        )
+        logger.info(f"Found {len(members)} members with status '{status or 'all'}' for team {team_id}")
         return members
 
     @staticmethod
-    async def get_team_members(
-        db: AsyncSession, team_id: UUID, user_id: str
-    ) -> List[TeamMember]:
+    async def get_team_members(db: AsyncSession, team_id: UUID, user_id: str) -> List[TeamMember]:
         """
         Get active members of a team.
 
@@ -184,9 +176,7 @@ class TeamMemberService:
         return member
 
     @staticmethod
-    async def add_team_member(
-        db: AsyncSession, team_id: UUID, member_data: Dict, user_id: str
-    ) -> TeamMember:
+    async def add_team_member(db: AsyncSession, team_id: UUID, member_data: Dict, user_id: str) -> TeamMember:
         """
         Add a new member to a team.
 
@@ -205,27 +195,19 @@ class TeamMemberService:
         logger.info(f"Adding new member to team {team_id}: {member_data}")
 
         # Check permissions (must be owner or admin to add members)
-        await ensure_team_permission(
-            db, team_id, user_id, [TeamMemberRole.OWNER, TeamMemberRole.ADMIN]
-        )
+        await ensure_team_permission(db, team_id, user_id, [TeamMemberRole.OWNER, TeamMemberRole.ADMIN])
 
         # Check if the user is already a member (with any status)
-        existing_member = await get_team_member(
-            db, team_id, member_data.get("user_id"), include_all_statuses=True
-        )
+        existing_member = await get_team_member(db, team_id, member_data.get("user_id"), include_all_statuses=True)
         if existing_member:
             if existing_member.invitation_status == "active":
-                logger.warning(
-                    f"User {member_data.get('user_id')} is already an active member of team {team_id}"
-                )
+                logger.warning(f"User {member_data.get('user_id')} is already an active member of team {team_id}")
                 raise HTTPException(
                     status_code=status.HTTP_409_CONFLICT,
                     detail="User is already a member of this team",
                 )
             elif existing_member.invitation_status == "pending":
-                logger.warning(
-                    f"User {member_data.get('user_id')} already has a pending invitation to team {team_id}"
-                )
+                logger.warning(f"User {member_data.get('user_id')} already has a pending invitation to team {team_id}")
                 raise HTTPException(
                     status_code=status.HTTP_409_CONFLICT,
                     detail="User already has a pending invitation to this team",
@@ -238,16 +220,12 @@ class TeamMemberService:
             pending_user_id = f"pending_{email.replace('@', '_at_')}"
 
             # Query the database directly since we're checking for a different user_id than provided
-            query = select(TeamMember).where(
-                TeamMember.team_id == team_id, TeamMember.user_id == pending_user_id
-            )
+            query = select(TeamMember).where(TeamMember.team_id == team_id, TeamMember.user_id == pending_user_id)
             result = await db.execute(query)
             pending_invitation = result.scalars().first()
 
             if pending_invitation:
-                logger.warning(
-                    f"Email {email} already has a pending invitation to team {team_id}"
-                )
+                logger.warning(f"Email {email} already has a pending invitation to team {team_id}")
                 raise HTTPException(
                     status_code=status.HTTP_409_CONFLICT,
                     detail="This email already has a pending invitation to this team",
@@ -275,14 +253,9 @@ class TeamMemberService:
 
             # If invitation is pending, generate a token and set expiry
             if team_member.invitation_status == "pending":
-                token = "".join(
-                    secrets.choice(string.ascii_letters + string.digits)
-                    for _ in range(32)
-                )
+                token = "".join(secrets.choice(string.ascii_letters + string.digits) for _ in range(32))
                 team_member.invitation_token = token
-                team_member.invitation_expires_at = datetime.utcnow() + timedelta(
-                    days=7
-                )
+                team_member.invitation_expires_at = datetime.utcnow() + timedelta(days=7)
 
             db.add(team_member)
             await db.commit()
@@ -339,14 +312,10 @@ class TeamMemberService:
         logger.info(f"Updating team member {member_id} in team {team_id}")
 
         # Get the member to update
-        member = await TeamMemberService.get_team_member_by_id(
-            db, team_id, member_id, user_id
-        )
+        member = await TeamMemberService.get_team_member_by_id(db, team_id, member_id, user_id)
         if not member:
             logger.warning(f"Member {member_id} not found during update")
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Team member not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Team member not found")
 
         # Owners can update any member; admins can update members and viewers but not owners or other admins
         requester_member = await get_team_member(db, team_id, user_id)
@@ -363,12 +332,9 @@ class TeamMemberService:
             if requester_member.role == TeamMemberRole.ADMIN and (
                 member.role == TeamMemberRole.OWNER
                 or member.role == TeamMemberRole.ADMIN
-                or member_data.get("role")
-                in [TeamMemberRole.OWNER.value, TeamMemberRole.ADMIN.value]
+                or member_data.get("role") in [TeamMemberRole.OWNER.value, TeamMemberRole.ADMIN.value]
             ):
-                logger.warning(
-                    f"Admin {user_id} tried to update owner/admin {member_id}"
-                )
+                logger.warning(f"Admin {user_id} tried to update owner/admin {member_id}")
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="Admins cannot modify owners or other admins",
@@ -378,9 +344,7 @@ class TeamMemberService:
             if requester_member.role in [TeamMemberRole.MEMBER, TeamMemberRole.VIEWER]:
                 # Members can only update themselves and only certain fields
                 if member.user_id != user_id:
-                    logger.warning(
-                        f"Member {user_id} tried to update another member {member_id}"
-                    )
+                    logger.warning(f"Member {user_id} tried to update another member {member_id}")
                     raise HTTPException(
                         status_code=status.HTTP_403_FORBIDDEN,
                         detail="You can only update your own profile",
@@ -390,9 +354,7 @@ class TeamMemberService:
                 allowed_fields = ["display_name"]
                 for field in member_data:
                     if field not in allowed_fields:
-                        logger.warning(
-                            f"Member {user_id} tried to update restricted field: {field}"
-                        )
+                        logger.warning(f"Member {user_id} tried to update restricted field: {field}")
                         raise HTTPException(
                             status_code=status.HTTP_403_FORBIDDEN,
                             detail=f"You can only update these fields: {allowed_fields}",
@@ -400,9 +362,7 @@ class TeamMemberService:
 
         try:
             # Update allowed fields
-            if "role" in member_data and member_data["role"] in [
-                r.value for r in TeamMemberRole
-            ]:
+            if "role" in member_data and member_data["role"] in [r.value for r in TeamMemberRole]:
                 member.role = member_data["role"]
 
             if "display_name" in member_data:
@@ -412,22 +372,13 @@ class TeamMemberService:
                 member.invitation_status = member_data["invitation_status"]
 
                 # If changing to active from pending, clear invitation data
-                if (
-                    member_data["invitation_status"] == "active"
-                    and member.invitation_token
-                ):
+                if member_data["invitation_status"] == "active" and member.invitation_token:
                     member.invitation_token = None
                     member.invitation_expires_at = None
 
                 # If changing to pending from something else, generate invitation data
-                elif (
-                    member_data["invitation_status"] == "pending"
-                    and not member.invitation_token
-                ):
-                    token = "".join(
-                        secrets.choice(string.ascii_letters + string.digits)
-                        for _ in range(32)
-                    )
+                elif member_data["invitation_status"] == "pending" and not member.invitation_token:
+                    token = "".join(secrets.choice(string.ascii_letters + string.digits) for _ in range(32))
                     member.invitation_token = token
                     member.invitation_expires_at = datetime.utcnow() + timedelta(days=7)
 
@@ -447,9 +398,7 @@ class TeamMemberService:
             )
 
     @staticmethod
-    async def remove_team_member(
-        db: AsyncSession, team_id: UUID, member_id: UUID, user_id: str
-    ) -> Dict:
+    async def remove_team_member(db: AsyncSession, team_id: UUID, member_id: UUID, user_id: str) -> Dict:
         """
         Remove (deactivate) a team member.
 
@@ -468,14 +417,10 @@ class TeamMemberService:
         logger.info(f"Removing team member {member_id} from team {team_id}")
 
         # Get the member to remove
-        member = await TeamMemberService.get_team_member_by_id(
-            db, team_id, member_id, user_id
-        )
+        member = await TeamMemberService.get_team_member_by_id(db, team_id, member_id, user_id)
         if not member:
             logger.warning(f"Member {member_id} not found during removal")
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Team member not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Team member not found")
 
         # Get the requester's role
         requester_member = await get_team_member(db, team_id, user_id)
@@ -490,12 +435,9 @@ class TeamMemberService:
         if requester_member.role != TeamMemberRole.OWNER:
             # Admins can't remove owners or other admins
             if requester_member.role == TeamMemberRole.ADMIN and (
-                member.role == TeamMemberRole.OWNER
-                or member.role == TeamMemberRole.ADMIN
+                member.role == TeamMemberRole.OWNER or member.role == TeamMemberRole.ADMIN
             ):
-                logger.warning(
-                    f"Admin {user_id} tried to remove owner/admin {member_id}"
-                )
+                logger.warning(f"Admin {user_id} tried to remove owner/admin {member_id}")
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="Admins cannot remove owners or other admins",
@@ -504,9 +446,7 @@ class TeamMemberService:
             # Regular members and viewers can only remove themselves (leave team)
             if requester_member.role in [TeamMemberRole.MEMBER, TeamMemberRole.VIEWER]:
                 if member.user_id != user_id:
-                    logger.warning(
-                        f"Member {user_id} tried to remove another member {member_id}"
-                    )
+                    logger.warning(f"Member {user_id} tried to remove another member {member_id}")
                     raise HTTPException(
                         status_code=status.HTTP_403_FORBIDDEN,
                         detail="You can only remove yourself from the team",
@@ -529,9 +469,7 @@ class TeamMemberService:
             owner_count = result.scalar_one()
 
             if owner_count <= 1:
-                logger.warning(
-                    f"Attempted to remove the last owner from team {team_id}"
-                )
+                logger.warning(f"Attempted to remove the last owner from team {team_id}")
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail="Cannot remove the last owner of the team",
@@ -548,11 +486,7 @@ class TeamMemberService:
             await TeamMemberService.update_team_size(db, team_id)
 
             # User removing themselves (leaving) vs admin/owner removing someone
-            message = (
-                "You have left the team"
-                if member.user_id == user_id
-                else "Member has been removed from the team"
-            )
+            message = "You have left the team" if member.user_id == user_id else "Member has been removed from the team"
 
             logger.info(f"Removed team member {member_id} from team {team_id}")
             return {"status": "success", "message": message}
@@ -589,31 +523,21 @@ class TeamMemberService:
         Raises:
             HTTPException: If team or member doesn't exist, user lacks permission, or other error
         """
-        logger.info(
-            f"Resending invitation to team member {member_id} for team {team_id}"
-        )
+        logger.info(f"Resending invitation to team member {member_id} for team {team_id}")
 
         # Check permissions (must be owner or admin to resend invitations)
-        await ensure_team_permission(
-            db, team_id, user_id, [TeamMemberRole.OWNER, TeamMemberRole.ADMIN]
-        )
+        await ensure_team_permission(db, team_id, user_id, [TeamMemberRole.OWNER, TeamMemberRole.ADMIN])
 
         # Get the member to resend invitation to
-        member = await TeamMemberService.get_team_member_by_id(
-            db, team_id, member_id, user_id, include_inactive=True
-        )
+        member = await TeamMemberService.get_team_member_by_id(db, team_id, member_id, user_id, include_inactive=True)
 
         if not member:
             logger.warning(f"Member {member_id} not found when resending invitation")
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Team member not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Team member not found")
 
         # Check if member has a pending or expired invitation
         if member.invitation_status not in ["pending", "expired"]:
-            logger.warning(
-                f"Cannot resend invitation to member {member_id} with status {member.invitation_status}"
-            )
+            logger.warning(f"Cannot resend invitation to member {member_id} with status {member.invitation_status}")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Cannot resend invitation to member with status: {member.invitation_status}",
@@ -621,15 +545,11 @@ class TeamMemberService:
 
         try:
             # Generate a new invitation token
-            token = "".join(
-                secrets.choice(string.ascii_letters + string.digits) for _ in range(32)
-            )
+            token = "".join(secrets.choice(string.ascii_letters + string.digits) for _ in range(32))
 
             # Update the invitation
             member.invitation_token = token
-            member.invitation_status = (
-                "pending"  # Ensure status is pending even if it was expired
-            )
+            member.invitation_status = "pending"  # Ensure status is pending even if it was expired
             member.invitation_expires_at = datetime.utcnow() + timedelta(days=7)
 
             # Save changes
@@ -677,9 +597,7 @@ class TeamMemberService:
             member_count = result.scalar_one()
 
             # Update the team size
-            await db.execute(
-                update(Team).where(Team.id == team_id).values(team_size=member_count)
-            )
+            await db.execute(update(Team).where(Team.id == team_id).values(team_size=member_count))
 
             await db.commit()
             logger.info(f"Updated team {team_id} size to {member_count}")

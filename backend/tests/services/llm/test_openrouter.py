@@ -29,15 +29,9 @@ def mock_openrouter_service():
 def test_model_supports_json_mode(mock_openrouter_service):
     """Test the model support detection for JSON mode."""
     # Test models that should support JSON mode
-    assert mock_openrouter_service._model_supports_json_mode(
-        "anthropic/claude-3-opus:20240229"
-    )
-    assert mock_openrouter_service._model_supports_json_mode(
-        "anthropic/claude-3-sonnet:20240229"
-    )
-    assert mock_openrouter_service._model_supports_json_mode(
-        "anthropic/claude-3-haiku:20240307"
-    )
+    assert mock_openrouter_service._model_supports_json_mode("anthropic/claude-3-opus:20240229")
+    assert mock_openrouter_service._model_supports_json_mode("anthropic/claude-3-sonnet:20240229")
+    assert mock_openrouter_service._model_supports_json_mode("anthropic/claude-3-haiku:20240307")
     assert mock_openrouter_service._model_supports_json_mode("openai/gpt-4-turbo")
     assert mock_openrouter_service._model_supports_json_mode("openai/gpt-3.5-turbo")
     assert mock_openrouter_service._model_supports_json_mode("mistralai/mistral-large")
@@ -46,9 +40,7 @@ def test_model_supports_json_mode(mock_openrouter_service):
     # Test models that should not support JSON mode
     assert not mock_openrouter_service._model_supports_json_mode("anthropic/claude-2")
     assert not mock_openrouter_service._model_supports_json_mode("cohere/command")
-    assert not mock_openrouter_service._model_supports_json_mode(
-        "meta-llama/llama-2-70b"
-    )
+    assert not mock_openrouter_service._model_supports_json_mode("meta-llama/llama-2-70b")
     assert not mock_openrouter_service._model_supports_json_mode("unknown/model")
 
 
@@ -216,7 +208,7 @@ Key Highlights: These are the highlights."""
         }
         mock_extract.return_value = mock_fallback
         sections_missing = mock_extract(llm_response_missing)
-        
+
         assert sections_missing["channel_summary"] == "This is only a summary."
         assert sections_missing["topic_analysis"] == "Fallback topic content"
         assert sections_missing["contributor_insights"] == "Fallback contributor content"
@@ -225,9 +217,7 @@ Key Highlights: These are the highlights."""
 
 @pytest.mark.asyncio
 @pytest.mark.skip(reason="Need to update test for JSON mode changes")
-async def test_analyze_channel_messages_success(
-    mock_openrouter_service, mock_messages_data, mock_openrouter_response
-):
+async def test_analyze_channel_messages_success(mock_openrouter_service, mock_messages_data, mock_openrouter_response):
     """Test successful analysis of channel messages."""
     # Mock the httpx client
     mock_post = AsyncMock(
@@ -261,9 +251,7 @@ async def test_analyze_channel_messages_success(
 
 
 @pytest.mark.asyncio
-async def test_analyze_channel_messages_http_error(
-    mock_openrouter_service, mock_messages_data
-):
+async def test_analyze_channel_messages_http_error(mock_openrouter_service, mock_messages_data):
     """Test handling of HTTP errors."""
     # Mock an HTTP error response
     mock_response = MagicMock(
@@ -274,18 +262,14 @@ async def test_analyze_channel_messages_http_error(
                 request=MagicMock(),
                 response=MagicMock(
                     status_code=400,
-                    json=MagicMock(
-                        return_value={"error": {"message": "Invalid request"}}
-                    ),
+                    json=MagicMock(return_value={"error": {"message": "Invalid request"}}),
                 ),
             )
         ),
     )
 
     with patch("httpx.AsyncClient") as mock_client:
-        mock_client.return_value.__aenter__.return_value.post = AsyncMock(
-            return_value=mock_response
-        )
+        mock_client.return_value.__aenter__.return_value.post = AsyncMock(return_value=mock_response)
 
         # Call the function and expect an error
         with pytest.raises(ValueError) as excinfo:
@@ -301,9 +285,7 @@ async def test_analyze_channel_messages_http_error(
 
 
 @pytest.mark.asyncio
-async def test_analyze_channel_messages_request_error(
-    mock_openrouter_service, mock_messages_data
-):
+async def test_analyze_channel_messages_request_error(mock_openrouter_service, mock_messages_data):
     """Test handling of request errors."""
     # Mock a connection error
     with patch("httpx.AsyncClient") as mock_client:
@@ -326,9 +308,7 @@ async def test_analyze_channel_messages_request_error(
 
 
 @pytest.mark.asyncio
-async def test_analyze_channel_messages_with_json_mode(
-    mock_openrouter_service, mock_messages_data
-):
+async def test_analyze_channel_messages_with_json_mode(mock_openrouter_service, mock_messages_data):
     """Test analysis with JSON mode enabled."""
     # Create a mock JSON response
     json_response = {
@@ -366,9 +346,7 @@ async def test_analyze_channel_messages_with_json_mode(
     )
 
     # Patch the _model_supports_json_mode method to return True
-    with patch.object(
-        mock_openrouter_service, "_model_supports_json_mode", return_value=True
-    ):
+    with patch.object(mock_openrouter_service, "_model_supports_json_mode", return_value=True):
         with patch("httpx.AsyncClient") as mock_client:
             mock_client.return_value.__aenter__.return_value.post = mock_post
 

@@ -78,9 +78,7 @@ if ngrok_url and ngrok_url not in allowed_origins:
 additional_hosts = os.environ.get("VITE_ADDITIONAL_ALLOWED_HOSTS")
 if additional_hosts and additional_hosts not in allowed_origins:
     allowed_origins.append(additional_hosts)
-    logger.info(
-        f"Added additional host from VITE_ADDITIONAL_ALLOWED_HOSTS: {additional_hosts}"
-    )
+    logger.info(f"Added additional host from VITE_ADDITIONAL_ALLOWED_HOSTS: {additional_hosts}")
 
 # Let's print the exact allowed origins for debugging
 logger.info(f"CORS allowed origins (exact list): {allowed_origins}")
@@ -216,12 +214,8 @@ async def add_cors_headers(request, call_next):
         # Add CORS headers
         response.headers["Access-Control-Allow-Origin"] = origin
         response.headers["Access-Control-Allow-Credentials"] = "true"
-        response.headers["Access-Control-Allow-Methods"] = (
-            "GET, POST, PUT, DELETE, OPTIONS, PATCH"
-        )
-        response.headers["Access-Control-Allow-Headers"] = (
-            "Content-Type, Authorization, X-Requested-With, Accept"
-        )
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With, Accept"
 
     return response
 

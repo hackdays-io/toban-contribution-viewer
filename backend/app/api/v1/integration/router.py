@@ -114,11 +114,7 @@ def prepare_integration_response(integration) -> IntegrationResponse:
     created_by = UserInfo(id=integration.created_by_user_id)
 
     # Convert integration_metadata to metadata and ensure it's a dict
-    metadata = (
-        integration.integration_metadata
-        if integration.integration_metadata is not None
-        else {}
-    )
+    metadata = integration.integration_metadata if integration.integration_metadata is not None else {}
 
     # Convert credentials to the proper format
     credentials_list = []
@@ -138,9 +134,7 @@ def prepare_integration_response(integration) -> IntegrationResponse:
     # Convert resources to the proper format
     resource_list = []
     if hasattr(integration, "resources") and integration.resources:
-        resource_list = [
-            convert_resource_to_response(resource) for resource in integration.resources
-        ]
+        resource_list = [convert_resource_to_response(resource) for resource in integration.resources]
 
     # Convert shared_with to the proper format
     shares_list = []
@@ -251,9 +245,7 @@ async def get_integrations(
     return [prepare_integration_response(integration) for integration in integrations]
 
 
-@router.post(
-    "", response_model=IntegrationResponse, status_code=status.HTTP_201_CREATED
-)
+@router.post("", response_model=IntegrationResponse, status_code=status.HTTP_201_CREATED)
 async def create_integration(
     integration: IntegrationCreate,
     db: AsyncSession = Depends(get_async_db),
@@ -271,9 +263,7 @@ async def create_integration(
         Newly created integration
     """
     # Verify the user has permission to create integrations for this team
-    if not await has_team_permission(
-        db, integration.team_id, current_user["id"], "admin"
-    ):
+    if not await has_team_permission(db, integration.team_id, current_user["id"], "admin"):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You don't have permission to create integrations for this team",
@@ -322,9 +312,7 @@ async def create_integration(
     response_dict = response_data.dict()
     response_dict["updated"] = was_updated
 
-    return JSONResponse(
-        content=jsonable_encoder(response_dict), status_code=status.HTTP_201_CREATED
-    )
+    return JSONResponse(content=jsonable_encoder(response_dict), status_code=status.HTTP_201_CREATED)
 
 
 @router.post("/slack", response_model=IntegrationResponse)
@@ -350,9 +338,7 @@ async def create_slack_integration(
         Created or updated integration
     """
     # Verify the user has permission to create integrations for this team
-    if not await has_team_permission(
-        db, integration.team_id, current_user["id"], "admin"
-    ):
+    if not await has_team_permission(db, integration.team_id, current_user["id"], "admin"):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You don't have permission to create integrations for this team",
@@ -368,25 +354,22 @@ async def create_slack_integration(
             raise ValueError("Slack client ID and client secret are required")
 
         # Use the OAuth flow handler to create or update the integration
-        integration_result, workspace_info = (
-            await SlackIntegrationService.handle_oauth_flow(
-                db=db,
-                team_id=integration.team_id,
-                user_id=current_user["id"],
-                auth_code=integration.code,
-                redirect_uri=integration.redirect_uri,
-                client_id=client_id,
-                client_secret=client_secret,
-                name=integration.name,
-                description=integration.description,
-            )
+        integration_result, workspace_info = await SlackIntegrationService.handle_oauth_flow(
+            db=db,
+            team_id=integration.team_id,
+            user_id=current_user["id"],
+            auth_code=integration.code,
+            redirect_uri=integration.redirect_uri,
+            client_id=client_id,
+            client_secret=client_secret,
+            name=integration.name,
+            description=integration.description,
         )
 
         # Determine if this was a new integration or an update to an existing one
         # We'll use this to set the appropriate status code
         is_new = not integration_result.created_at or (
-            integration_result.created_at
-            and (datetime.utcnow() - integration_result.created_at).total_seconds() < 60
+            integration_result.created_at and (datetime.utcnow() - integration_result.created_at).total_seconds() < 60
         )
 
         # Commit the transaction
@@ -403,18 +386,14 @@ async def create_slack_integration(
 
         # Set the correct status code
         status_code = status.HTTP_201_CREATED if is_new else status.HTTP_200_OK
-        return JSONResponse(
-            content=jsonable_encoder(response_dict), status_code=status_code
-        )
+        return JSONResponse(content=jsonable_encoder(response_dict), status_code=status_code)
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
         )
     except Exception as e:
-        logger.error(
-            f"Error creating/updating Slack integration: {str(e)}", exc_info=True
-        )
+        logger.error(f"Error creating/updating Slack integration: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An error occurred while processing the integration",
@@ -487,9 +466,7 @@ async def update_integration(
         )
 
     # Verify the user has permission to update this integration
-    if not await has_team_permission(
-        db, integration.owner_team_id, current_user["id"], "admin"
-    ):
+    if not await has_team_permission(db, integration.owner_team_id, current_user["id"], "admin"):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You don't have permission to update this integration",
@@ -556,9 +533,7 @@ async def get_integration_resources(
     )
 
     # Convert SQLAlchemy model objects to Pydantic schema objects with basic info
-    response_resources = [
-        convert_resource_to_response(resource) for resource in resources
-    ]
+    response_resources = [convert_resource_to_response(resource) for resource in resources]
 
     # If we have Slack channels, we need to add the selection status from SlackChannel table
     if integration.service_type == IntegrationType.SLACK and any(
@@ -571,9 +546,7 @@ async def get_integration_resources(
         if slack_workspace_id:
             # Find the workspace in the database to get its UUID
             workspace_result = await db.execute(
-                select(SlackWorkspace).where(
-                    SlackWorkspace.slack_id == slack_workspace_id
-                )
+                select(SlackWorkspace).where(SlackWorkspace.slack_id == slack_workspace_id)
             )
             workspace = workspace_result.scalars().first()
 
@@ -585,9 +558,7 @@ async def get_integration_resources(
                         SlackChannel.is_selected_for_analysis.is_(True),
                     )
                 )
-                selected_channels = [
-                    row[0] for row in selected_channels_result.fetchall()
-                ]
+                selected_channels = [row[0] for row in selected_channels_result.fetchall()]
                 logger.debug(
                     f"Found {len(selected_channels)} selected channels in SlackChannel table for workspace {workspace.id}"
                 )
@@ -596,9 +567,7 @@ async def get_integration_resources(
                 if not selected_channels:
                     # Count how many SlackChannel records exist for this workspace
                     channel_count_result = await db.execute(
-                        select(func.count()).where(
-                            SlackChannel.workspace_id == workspace.id
-                        )
+                        select(func.count()).where(SlackChannel.workspace_id == workspace.id)
                     )
                     channel_count = channel_count_result.scalar_one_or_none() or 0
 
@@ -611,8 +580,7 @@ async def get_integration_resources(
                         channel_resources_result = await db.execute(
                             select(ServiceResource).where(
                                 ServiceResource.integration_id == integration_id,
-                                ServiceResource.resource_type
-                                == ResourceType.SLACK_CHANNEL,
+                                ServiceResource.resource_type == ResourceType.SLACK_CHANNEL,
                             )
                         )
                         channel_resources = channel_resources_result.scalars().all()
@@ -627,9 +595,7 @@ async def get_integration_resources(
                                 id=resource.id,  # Use the same ID as the resource
                                 workspace_id=workspace.id,
                                 slack_id=resource.external_id,
-                                name=resource.name.lstrip(
-                                    "#"
-                                ),  # Remove the # prefix if present
+                                name=resource.name.lstrip("#"),  # Remove the # prefix if present
                                 type=metadata.get("type", "public"),
                                 is_selected_for_analysis=False,  # Default to not selected
                                 is_supported=True,
@@ -642,9 +608,7 @@ async def get_integration_resources(
                             db.add(new_channel)
                             created_count += 1
 
-                        logger.info(
-                            f"Created {created_count} new SlackChannel records from resources"
-                        )
+                        logger.info(f"Created {created_count} new SlackChannel records from resources")
                         if created_count > 0:
                             await db.commit()
 
@@ -655,9 +619,7 @@ async def get_integration_resources(
                                     SlackChannel.is_selected_for_analysis.is_(True),
                                 )
                             )
-                            selected_channels = [
-                                row[0] for row in selected_channels_result.fetchall()
-                            ]
+                            selected_channels = [row[0] for row in selected_channels_result.fetchall()]
                             logger.info(
                                 f"After migration, found {len(selected_channels)} selected channels in workspace {workspace.id}"
                             )
@@ -733,9 +695,7 @@ async def sync_integration_resources(
         )
 
     # Verify the user has permission to sync this integration
-    if not await has_team_permission(
-        db, integration.owner_team_id, current_user["id"], "admin"
-    ):
+    if not await has_team_permission(db, integration.owner_team_id, current_user["id"], "admin"):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You don't have permission to sync this integration",
@@ -750,9 +710,7 @@ async def sync_integration_resources(
 
                 if not token:
                     # Check if we can get the token from credentials associated with this integration
-                    logger.info(
-                        f"No token found in database for integration {integration_id}, checking credentials"
-                    )
+                    logger.info(f"No token found in database for integration {integration_id}, checking credentials")
 
                     # Get the credential if it exists
                     stmt = select(IntegrationCredential).where(
@@ -764,17 +722,13 @@ async def sync_integration_resources(
 
                     if credential and credential.encrypted_value:
                         token = credential.encrypted_value
-                        logger.info(
-                            f"Found token in credentials for integration {integration_id}"
-                        )
+                        logger.info(f"Found token in credentials for integration {integration_id}")
                     else:
                         # Check if token exists in metadata (for backward compatibility)
                         metadata = integration.integration_metadata or {}
                         if metadata.get("access_token"):
                             token = metadata["access_token"]
-                            logger.info(
-                                f"Found token in metadata for integration {integration_id}"
-                            )
+                            logger.info(f"Found token in metadata for integration {integration_id}")
                         else:
                             raise ValueError(
                                 "No access token found for this integration. Please reconnect your Slack workspace."
@@ -800,9 +754,7 @@ async def sync_integration_resources(
 
             except ValueError as e:
                 # For all ValueError types, re-raise
-                logger.error(
-                    f"Error syncing resources for integration {integration_id}: {str(e)}"
-                )
+                logger.error(f"Error syncing resources for integration {integration_id}: {str(e)}")
                 raise
 
             return {
@@ -831,21 +783,15 @@ async def sync_integration_resources(
         )
 
 
-@router.post(
-    "/{integration_id}/resources/{resource_id}/sync-messages", response_model=Dict
-)
+@router.post("/{integration_id}/resources/{resource_id}/sync-messages", response_model=Dict)
 async def sync_resource_messages(
     integration_id: uuid.UUID,
     resource_id: uuid.UUID,
     start_date: Optional[datetime] = Query(
         None, description="Start date for messages to sync (defaults to 30 days ago)"
     ),
-    end_date: Optional[datetime] = Query(
-        None, description="End date for messages to sync (defaults to current date)"
-    ),
-    include_replies: bool = Query(
-        True, description="Whether to include thread replies in the sync"
-    ),
+    end_date: Optional[datetime] = Query(None, description="End date for messages to sync (defaults to current date)"),
+    include_replies: bool = Query(True, description="Whether to include thread replies in the sync"),
     db: AsyncSession = Depends(get_async_db),
     current_user: Dict = Depends(get_current_user),
 ):
@@ -921,9 +867,7 @@ async def sync_resource_messages(
             )
 
         # Get the workspace from the database
-        workspace_result = await db.execute(
-            select(SlackWorkspace).where(SlackWorkspace.slack_id == slack_workspace_id)
-        )
+        workspace_result = await db.execute(select(SlackWorkspace).where(SlackWorkspace.slack_id == slack_workspace_id))
         workspace = workspace_result.scalars().first()
 
         if not workspace:
@@ -934,9 +878,7 @@ async def sync_resource_messages(
 
         # Get the channel from the database
         # First, try to get the SlackChannel record
-        channel_result = await db.execute(
-            select(SlackChannel).where(SlackChannel.id == resource_id)
-        )
+        channel_result = await db.execute(select(SlackChannel).where(SlackChannel.id == resource_id))
         channel = channel_result.scalars().first()
 
         # If no SlackChannel record exists, try to create one from the resource
@@ -948,41 +890,21 @@ async def sync_resource_messages(
                 workspace_id=workspace.id,
                 slack_id=resource.external_id,
                 name=resource.name.lstrip("#"),  # Remove # prefix if present
-                type=(
-                    resource.resource_metadata.get("type", "public")
-                    if resource.resource_metadata
-                    else "public"
-                ),
+                type=(resource.resource_metadata.get("type", "public") if resource.resource_metadata else "public"),
                 is_selected_for_analysis=True,  # Mark as selected since we're analyzing it
                 is_supported=True,
-                purpose=(
-                    resource.resource_metadata.get("purpose", "")
-                    if resource.resource_metadata
-                    else ""
-                ),
-                topic=(
-                    resource.resource_metadata.get("topic", "")
-                    if resource.resource_metadata
-                    else ""
-                ),
-                member_count=(
-                    resource.resource_metadata.get("member_count", 0)
-                    if resource.resource_metadata
-                    else 0
-                ),
+                purpose=(resource.resource_metadata.get("purpose", "") if resource.resource_metadata else ""),
+                topic=(resource.resource_metadata.get("topic", "") if resource.resource_metadata else ""),
+                member_count=(resource.resource_metadata.get("member_count", 0) if resource.resource_metadata else 0),
                 is_archived=(
-                    resource.resource_metadata.get("is_archived", False)
-                    if resource.resource_metadata
-                    else False
+                    resource.resource_metadata.get("is_archived", False) if resource.resource_metadata else False
                 ),
                 last_sync_at=datetime.utcnow(),
             )
             db.add(channel)
             await db.commit()
             await db.refresh(channel)
-            logger.info(
-                f"Created new SlackChannel record: {channel.id} - {channel.name}"
-            )
+            logger.info(f"Created new SlackChannel record: {channel.id} - {channel.name}")
 
         # Sync channel messages using the SlackMessageService
         sync_results = await SlackMessageService.sync_channel_messages(
@@ -1054,9 +976,7 @@ async def share_integration(
         )
 
     # Verify the user has permission to share this integration
-    if not await has_team_permission(
-        db, integration.owner_team_id, current_user["id"], "admin"
-    ):
+    if not await has_team_permission(db, integration.owner_team_id, current_user["id"], "admin"):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You don't have permission to share this integration",
@@ -1119,12 +1039,8 @@ async def revoke_integration_share(
         )
 
     # Verify the user has permission to revoke sharing for this integration
-    has_owner_permission = await has_team_permission(
-        db, integration.owner_team_id, current_user["id"], "admin"
-    )
-    has_target_permission = await has_team_permission(
-        db, team_id, current_user["id"], "admin"
-    )
+    has_owner_permission = await has_team_permission(db, integration.owner_team_id, current_user["id"], "admin")
+    has_target_permission = await has_team_permission(db, team_id, current_user["id"], "admin")
 
     if not (has_owner_permission or has_target_permission):
         raise HTTPException(
@@ -1204,9 +1120,7 @@ async def grant_resource_access(
         )
 
     # Verify the user has permission to manage resource access
-    if not await has_team_permission(
-        db, integration.owner_team_id, current_user["id"], "admin"
-    ):
+    if not await has_team_permission(db, integration.owner_team_id, current_user["id"], "admin"):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You don't have permission to manage resource access",
@@ -1280,9 +1194,7 @@ async def select_channels_for_integration(
             )
 
         # Get the workspace from the database using slack_id
-        workspace_result = await db.execute(
-            select(SlackWorkspace).where(SlackWorkspace.slack_id == slack_workspace_id)
-        )
+        workspace_result = await db.execute(select(SlackWorkspace).where(SlackWorkspace.slack_id == slack_workspace_id))
         workspace = workspace_result.scalars().first()
 
         if not workspace:
@@ -1296,9 +1208,7 @@ async def select_channels_for_integration(
         missing_channel_count = 0
         for channel_id in selection.channel_ids:
             # Check if a SlackChannel record exists for this channel
-            slack_channel_result = await db.execute(
-                select(SlackChannel).where(SlackChannel.id == channel_id)
-            )
+            slack_channel_result = await db.execute(select(SlackChannel).where(SlackChannel.id == channel_id))
             slack_channel = slack_channel_result.scalars().first()
 
             if not slack_channel:
@@ -1313,18 +1223,14 @@ async def select_channels_for_integration(
 
                 if resource:
                     # Create a new SlackChannel record from the ServiceResource
-                    logger.debug(
-                        f"Creating new SlackChannel record for {resource.name} (id={resource.id})"
-                    )
+                    logger.debug(f"Creating new SlackChannel record for {resource.name} (id={resource.id})")
                     metadata = resource.resource_metadata or {}
 
                     new_channel = SlackChannel(
                         id=resource.id,  # Use the same ID as the resource
                         workspace_id=workspace.id,
                         slack_id=resource.external_id,
-                        name=resource.name.lstrip(
-                            "#"
-                        ),  # Remove the # prefix if present
+                        name=resource.name.lstrip("#"),  # Remove the # prefix if present
                         type=metadata.get("type", "public"),
                         is_selected_for_analysis=selection.for_analysis,
                         is_supported=True,
@@ -1382,18 +1288,10 @@ async def sync_integration_resource_messages(
     start_date: Optional[datetime] = Query(
         None, description="Start date for syncing messages (defaults to 30 days ago)"
     ),
-    end_date: Optional[datetime] = Query(
-        None, description="End date for syncing messages (defaults to current date)"
-    ),
-    include_replies: bool = Query(
-        True, description="Whether to include thread replies in the sync"
-    ),
-    sync_threads: bool = Query(
-        True, description="Whether to explicitly sync thread replies after message sync"
-    ),
-    thread_days: int = Query(
-        30, ge=1, le=90, description="Number of days of thread messages to sync"
-    ),
+    end_date: Optional[datetime] = Query(None, description="End date for syncing messages (defaults to current date)"),
+    include_replies: bool = Query(True, description="Whether to include thread replies in the sync"),
+    sync_threads: bool = Query(True, description="Whether to explicitly sync thread replies after message sync"),
+    thread_days: int = Query(30, ge=1, le=90, description="Number of days of thread messages to sync"),
     db: AsyncSession = Depends(get_async_db),
     current_user: Dict = Depends(get_current_user),
 ):
@@ -1406,9 +1304,7 @@ async def sync_integration_resource_messages(
     3. Returns synchronization statistics
     """
     # Log basic request information
-    logger.info(
-        f"Received sync-messages request: integration_id={integration_id}, resource_id={resource_id}"
-    )
+    logger.info(f"Received sync-messages request: integration_id={integration_id}, resource_id={resource_id}")
 
     # Initialize variables outside the try block for error handling
     workspace = None
@@ -1462,9 +1358,7 @@ async def sync_integration_resource_messages(
             )
 
         # Get the workspace from the database
-        workspace_result = await db.execute(
-            select(SlackWorkspace).where(SlackWorkspace.slack_id == slack_workspace_id)
-        )
+        workspace_result = await db.execute(select(SlackWorkspace).where(SlackWorkspace.slack_id == slack_workspace_id))
         workspace = workspace_result.scalars().first()
 
         if not workspace:
@@ -1475,9 +1369,7 @@ async def sync_integration_resource_messages(
 
         # Get the channel from the database
         # First, try to get the SlackChannel record
-        channel_result = await db.execute(
-            select(SlackChannel).where(SlackChannel.id == resource_id)
-        )
+        channel_result = await db.execute(select(SlackChannel).where(SlackChannel.id == resource_id))
         channel = channel_result.scalars().first()
 
         # If no direct SlackChannel record, try to create one from the resource
@@ -1488,32 +1380,14 @@ async def sync_integration_resource_messages(
                 workspace_id=workspace.id,
                 slack_id=resource.external_id,
                 name=resource.name.lstrip("#"),  # Remove # prefix if present
-                type=(
-                    resource.resource_metadata.get("type", "public")
-                    if resource.resource_metadata
-                    else "public"
-                ),
+                type=(resource.resource_metadata.get("type", "public") if resource.resource_metadata else "public"),
                 is_selected_for_analysis=True,  # Assume selected since we're analyzing it
                 is_supported=True,
-                purpose=(
-                    resource.resource_metadata.get("purpose", "")
-                    if resource.resource_metadata
-                    else ""
-                ),
-                topic=(
-                    resource.resource_metadata.get("topic", "")
-                    if resource.resource_metadata
-                    else ""
-                ),
-                member_count=(
-                    resource.resource_metadata.get("member_count", 0)
-                    if resource.resource_metadata
-                    else 0
-                ),
+                purpose=(resource.resource_metadata.get("purpose", "") if resource.resource_metadata else ""),
+                topic=(resource.resource_metadata.get("topic", "") if resource.resource_metadata else ""),
+                member_count=(resource.resource_metadata.get("member_count", 0) if resource.resource_metadata else 0),
                 is_archived=(
-                    resource.resource_metadata.get("is_archived", False)
-                    if resource.resource_metadata
-                    else False
+                    resource.resource_metadata.get("is_archived", False) if resource.resource_metadata else False
                 ),
                 last_sync_at=resource.last_synced_at,
             )
@@ -1527,9 +1401,7 @@ async def sync_integration_resource_messages(
             start_date = end_date - timedelta(days=30)
 
         # Log basic operation
-        logger.info(
-            f"Syncing messages for channel {channel.name} ({channel.slack_id}) in workspace {workspace.name}"
-        )
+        logger.info(f"Syncing messages for channel {channel.name} ({channel.slack_id}) in workspace {workspace.name}")
 
         # Use SlackMessageService to sync messages
         sync_results = await SlackMessageService.sync_channel_messages(
@@ -1569,9 +1441,7 @@ async def sync_integration_resource_messages(
         raise
     except ValueError as val_err:
         logger.error(f"ValueError in sync-messages: {val_err}")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail=str(val_err)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(val_err))
     except Exception as e:
         logger.error(f"Unexpected error syncing messages: {str(e)}", exc_info=True)
         # Return a more detailed error for debugging
@@ -1579,11 +1449,7 @@ async def sync_integration_resource_messages(
             error_context = {
                 "workspace_id": str(workspace.id) if workspace else "unknown",
                 "channel_id": str(channel.id) if channel else "unknown",
-                "slack_channel_id": (
-                    channel.slack_id
-                    if channel and hasattr(channel, "slack_id")
-                    else "unknown"
-                ),
+                "slack_channel_id": (channel.slack_id if channel and hasattr(channel, "slack_id") else "unknown"),
                 "error_type": type(e).__name__,
                 "error_message": str(e),
             }
@@ -1661,13 +1527,9 @@ async def analyze_integration_resource(
 
     # Extra validation to ensure start_date is respected
     if original_start_date:
-        logger.info(
-            f"Double-checking start_date is preserved: original={original_start_date}, current={start_date}"
-        )
+        logger.info(f"Double-checking start_date is preserved: original={original_start_date}, current={start_date}")
         if original_start_date != start_date:
-            logger.warning(
-                f"start_date was modified! Restoring original: {original_start_date}"
-            )
+            logger.warning(f"start_date was modified! Restoring original: {original_start_date}")
             start_date = original_start_date
 
     # Create an instance of the OpenRouter service
@@ -1721,9 +1583,7 @@ async def analyze_integration_resource(
             )
 
         # Get the workspace from the database
-        workspace_result = await db.execute(
-            select(SlackWorkspace).where(SlackWorkspace.slack_id == slack_workspace_id)
-        )
+        workspace_result = await db.execute(select(SlackWorkspace).where(SlackWorkspace.slack_id == slack_workspace_id))
         workspace = workspace_result.scalars().first()
 
         if not workspace:
@@ -1734,9 +1594,7 @@ async def analyze_integration_resource(
 
         # Get the channel from the database
         # First, try to get the SlackChannel record
-        channel_result = await db.execute(
-            select(SlackChannel).where(SlackChannel.id == resource_id)
-        )
+        channel_result = await db.execute(select(SlackChannel).where(SlackChannel.id == resource_id))
         channel = channel_result.scalars().first()
 
         # If no direct SlackChannel record, try to create one from the resource
@@ -1747,32 +1605,14 @@ async def analyze_integration_resource(
                 workspace_id=workspace.id,
                 slack_id=resource.external_id,
                 name=resource.name.lstrip("#"),  # Remove # prefix if present
-                type=(
-                    resource.resource_metadata.get("type", "public")
-                    if resource.resource_metadata
-                    else "public"
-                ),
+                type=(resource.resource_metadata.get("type", "public") if resource.resource_metadata else "public"),
                 is_selected_for_analysis=True,  # Assume selected since we're analyzing it
                 is_supported=True,
-                purpose=(
-                    resource.resource_metadata.get("purpose", "")
-                    if resource.resource_metadata
-                    else ""
-                ),
-                topic=(
-                    resource.resource_metadata.get("topic", "")
-                    if resource.resource_metadata
-                    else ""
-                ),
-                member_count=(
-                    resource.resource_metadata.get("member_count", 0)
-                    if resource.resource_metadata
-                    else 0
-                ),
+                purpose=(resource.resource_metadata.get("purpose", "") if resource.resource_metadata else ""),
+                topic=(resource.resource_metadata.get("topic", "") if resource.resource_metadata else ""),
+                member_count=(resource.resource_metadata.get("member_count", 0) if resource.resource_metadata else 0),
                 is_archived=(
-                    resource.resource_metadata.get("is_archived", False)
-                    if resource.resource_metadata
-                    else False
+                    resource.resource_metadata.get("is_archived", False) if resource.resource_metadata else False
                 ),
                 last_sync_at=resource.last_synced_at,
             )
@@ -1781,22 +1621,16 @@ async def analyze_integration_resource(
 
         # Get messages for the channel within the date range
         # Log the dates that will be used in the API call
-        logger.info(
-            f"analyze_integration_resource - Getting messages with dates: start={start_date}, end={end_date}"
-        )
+        logger.info(f"analyze_integration_resource - Getting messages with dates: start={start_date}, end={end_date}")
 
         # Make sure start_date is being properly passed if provided
         if start_date:
-            logger.info(
-                f"analyze_integration_resource - Using explicit start_date: {start_date.isoformat()}"
-            )
+            logger.info(f"analyze_integration_resource - Using explicit start_date: {start_date.isoformat()}")
 
             # Extra check - make sure it's properly formatted in the correct ISO format
             if hasattr(start_date, "isoformat"):
                 iso_formatted = start_date.isoformat()
-                logger.info(
-                    f"analyze_integration_resource - ISO formatted start_date: {iso_formatted}"
-                )
+                logger.info(f"analyze_integration_resource - ISO formatted start_date: {iso_formatted}")
 
         # Use the exact start_date passed to the function
         messages = await get_channel_messages(
@@ -1894,17 +1728,13 @@ async def analyze_integration_resource(
 
         try:
             # Log the workspace and team_id status for debugging
-            logger.info(
-                f"Creating CrossResourceReport with workspace ID: {workspace.id}"
-            )
+            logger.info(f"Creating CrossResourceReport with workspace ID: {workspace.id}")
 
             # Check if workspace.team_id is None and handle it gracefully
             team_id = workspace.team_id
             if team_id is None:
                 # If workspace.team_id is None, try to get it from the integration's owner_team_id
-                logger.warning(
-                    f"Workspace {workspace.id} has null team_id, using integration.owner_team_id instead"
-                )
+                logger.warning(f"Workspace {workspace.id} has null team_id, using integration.owner_team_id instead")
                 team_id = integration.owner_team_id
 
                 if team_id is None:
@@ -1916,13 +1746,9 @@ async def analyze_integration_resource(
                         "Could not determine team_id for CrossResourceReport. Please check workspace and integration configuration."
                     )
 
-                logger.info(
-                    f"Using integration.owner_team_id: {team_id} for CrossResourceReport"
-                )
+                logger.info(f"Using integration.owner_team_id: {team_id} for CrossResourceReport")
             else:
-                logger.info(
-                    f"Using workspace.team_id: {team_id} for CrossResourceReport"
-                )
+                logger.info(f"Using workspace.team_id: {team_id} for CrossResourceReport")
 
             # First create a CrossResourceReport to link the ResourceAnalysis to
             # This is needed because cross_resource_report_id in ResourceAnalysis is non-nullable
@@ -1939,9 +1765,7 @@ async def analyze_integration_resource(
                     "include_reactions": include_reactions,
                     "model": model,
                     "single_channel_analysis": True,  # Mark as a single-channel analysis
-                    "channel_id": str(
-                        channel.id
-                    ),  # Add channel_id to report parameters
+                    "channel_id": str(channel.id),  # Add channel_id to report parameters
                     "channel_name": channel.name,  # Add channel_name to report parameters
                 },
                 comprehensive_analysis=analysis_results.get("channel_summary", ""),
@@ -1952,21 +1776,11 @@ async def analyze_integration_resource(
 
             # Clean up the analysis results for storage
             # Ensure we handle special characters properly in text fields
-            clean_summary = str(analysis_results.get("channel_summary", "")).replace(
-                "\x00", ""
-            )
-            clean_topics = str(analysis_results.get("topic_analysis", "")).replace(
-                "\x00", ""
-            )
-            clean_insights = str(
-                analysis_results.get("contributor_insights", "")
-            ).replace("\x00", "")
-            clean_highlights = str(analysis_results.get("key_highlights", "")).replace(
-                "\x00", ""
-            )
-            clean_model = str(analysis_results.get("model_used", model or "")).replace(
-                "\x00", ""
-            )
+            clean_summary = str(analysis_results.get("channel_summary", "")).replace("\x00", "")
+            clean_topics = str(analysis_results.get("topic_analysis", "")).replace("\x00", "")
+            clean_insights = str(analysis_results.get("contributor_insights", "")).replace("\x00", "")
+            clean_highlights = str(analysis_results.get("key_highlights", "")).replace("\x00", "")
+            clean_model = str(analysis_results.get("model_used", model or "")).replace("\x00", "")
 
             # Create a safe version of stats for JSON storage
             import json
@@ -2026,9 +1840,7 @@ async def analyze_integration_resource(
                 await db.rollback()
                 logger.info("Transaction rolled back successfully after error")
             except Exception as rollback_error:
-                logger.error(
-                    f"Error during transaction rollback: {str(rollback_error)}"
-                )
+                logger.error(f"Error during transaction rollback: {str(rollback_error)}")
             # We'll continue with the API response even if storage fails
 
         # Build the response with the correct date period
@@ -2092,9 +1904,7 @@ async def analyze_integration_resource(
 async def get_integration_resource_analyses(
     integration_id: uuid.UUID,
     resource_id: uuid.UUID,
-    limit: int = Query(
-        10, ge=1, le=100, description="Maximum number of analyses to return"
-    ),
+    limit: int = Query(10, ge=1, le=100, description="Maximum number of analyses to return"),
     offset: int = Query(0, ge=0, description="Offset for pagination"),
     db: AsyncSession = Depends(get_async_db),
     current_user: Dict = Depends(get_current_user),
@@ -2152,9 +1962,7 @@ async def get_integration_resource_analyses(
             )
 
         # Get the workspace from the database
-        workspace_result = await db.execute(
-            select(SlackWorkspace).where(SlackWorkspace.slack_id == slack_workspace_id)
-        )
+        workspace_result = await db.execute(select(SlackWorkspace).where(SlackWorkspace.slack_id == slack_workspace_id))
         workspace = workspace_result.scalars().first()
 
         if not workspace:
@@ -2164,9 +1972,7 @@ async def get_integration_resource_analyses(
             )
 
         # Get the channel to ensure it exists and get the channel name
-        channel_result = await db.execute(
-            select(SlackChannel).where(SlackChannel.id == resource_id)
-        )
+        channel_result = await db.execute(select(SlackChannel).where(SlackChannel.id == resource_id))
         channel = channel_result.scalars().first()
 
         if not channel:
@@ -2201,9 +2007,7 @@ async def get_integration_resource_analyses(
                     key_highlights=analysis.key_highlights,
                     model_used=analysis.model_used,
                     generated_at=analysis.generated_at,
-                    workspace_id=str(
-                        workspace.slack_id
-                    ),  # Include workspace ID for user display
+                    workspace_id=str(workspace.slack_id),  # Include workspace ID for user display
                 )
             )
 
@@ -2285,9 +2089,7 @@ async def get_latest_integration_resource_analysis(
             )
 
         # Get the workspace from the database
-        workspace_result = await db.execute(
-            select(SlackWorkspace).where(SlackWorkspace.slack_id == slack_workspace_id)
-        )
+        workspace_result = await db.execute(select(SlackWorkspace).where(SlackWorkspace.slack_id == slack_workspace_id))
         workspace = workspace_result.scalars().first()
 
         if not workspace:
@@ -2297,9 +2099,7 @@ async def get_latest_integration_resource_analysis(
             )
 
         # Get the channel to ensure it exists and get the channel name
-        channel_result = await db.execute(
-            select(SlackChannel).where(SlackChannel.id == resource_id)
-        )
+        channel_result = await db.execute(select(SlackChannel).where(SlackChannel.id == resource_id))
         channel = channel_result.scalars().first()
 
         if not channel:
@@ -2335,9 +2135,7 @@ async def get_latest_integration_resource_analysis(
             key_highlights=analysis.key_highlights,
             model_used=analysis.model_used,
             generated_at=analysis.generated_at,
-            workspace_id=str(
-                workspace.id
-            ),  # Include database UUID as workspace_id for user display
+            workspace_id=str(workspace.id),  # Include database UUID as workspace_id for user display
         )
 
     except HTTPException:
@@ -2417,9 +2215,7 @@ async def get_integration_resource_analysis(
             )
 
         # Get the workspace from the database
-        workspace_result = await db.execute(
-            select(SlackWorkspace).where(SlackWorkspace.slack_id == slack_workspace_id)
-        )
+        workspace_result = await db.execute(select(SlackWorkspace).where(SlackWorkspace.slack_id == slack_workspace_id))
         workspace = workspace_result.scalars().first()
 
         if not workspace:
@@ -2429,9 +2225,7 @@ async def get_integration_resource_analysis(
             )
 
         # Get the channel to ensure it exists
-        channel_result = await db.execute(
-            select(SlackChannel).where(SlackChannel.id == resource_id)
-        )
+        channel_result = await db.execute(select(SlackChannel).where(SlackChannel.id == resource_id))
         channel = channel_result.scalars().first()
 
         if not channel:
@@ -2463,14 +2257,7 @@ async def get_integration_resource_analysis(
                     stmt = (
                         select(ResourceAnalysis)
                         .where(ResourceAnalysis.resource_id == channel.id)
-                        .order_by(
-                            func.abs(
-                                func.extract(
-                                    "epoch", ResourceAnalysis.analysis_generated_at
-                                )
-                                - timestamp
-                            )
-                        )
+                        .order_by(func.abs(func.extract("epoch", ResourceAnalysis.analysis_generated_at) - timestamp))
                         .limit(1)
                     )
 
@@ -2481,27 +2268,20 @@ async def get_integration_resource_analysis(
                         real_analysis_id = str(analysis.id)
                         logger.debug(f"Found analysis by timestamp: {real_analysis_id}")
                     else:
-                        logger.warning(
-                            f"No analysis found near timestamp {timestamp_str}"
-                        )
+                        logger.warning(f"No analysis found near timestamp {timestamp_str}")
                 except (ValueError, TypeError):
-                    logger.warning(
-                        f"Could not parse timestamp from analysis_id: {analysis_id}"
-                    )
+                    logger.warning(f"Could not parse timestamp from analysis_id: {analysis_id}")
 
             if not real_analysis_id:
                 # As fallback, try to get the latest analysis
-                logger.debug(
-                    f"Using fallback to get latest analysis for channel {channel.id}"
-                )
+                logger.debug(f"Using fallback to get latest analysis for channel {channel.id}")
                 # Get latest analysis for this resource from ResourceAnalysis
                 # Note: ResourceAnalysis is already imported at the top of the file
                 stmt = (
                     select(ResourceAnalysis)
                     .where(
                         ResourceAnalysis.resource_id == channel.id,
-                        ResourceAnalysis.resource_type
-                        == AnalysisResourceType.SLACK_CHANNEL,
+                        ResourceAnalysis.resource_type == AnalysisResourceType.SLACK_CHANNEL,
                     )
                     .order_by(ResourceAnalysis.analysis_generated_at.desc())
                     .limit(1)
@@ -2511,9 +2291,7 @@ async def get_integration_resource_analysis(
 
                 if analysis:
                     real_analysis_id = str(analysis.id)
-                    logger.debug(
-                        f"Using latest analysis as fallback: {real_analysis_id}"
-                    )
+                    logger.debug(f"Using latest analysis as fallback: {real_analysis_id}")
 
         # If we couldn't extract an ID or find an analysis, return 404
         if not real_analysis_id:
@@ -2549,18 +2327,10 @@ async def get_integration_resource_analysis(
             end_date=analysis.period_end,
             # Get message count, participant count, thread count, and reaction count
             # from the results JSON field if available
-            message_count=(
-                analysis.results.get("message_count", 0) if analysis.results else 0
-            ),
-            participant_count=(
-                analysis.results.get("participant_count", 0) if analysis.results else 0
-            ),
-            thread_count=(
-                analysis.results.get("thread_count", 0) if analysis.results else 0
-            ),
-            reaction_count=(
-                analysis.results.get("reaction_count", 0) if analysis.results else 0
-            ),
+            message_count=(analysis.results.get("message_count", 0) if analysis.results else 0),
+            participant_count=(analysis.results.get("participant_count", 0) if analysis.results else 0),
+            thread_count=(analysis.results.get("thread_count", 0) if analysis.results else 0),
+            reaction_count=(analysis.results.get("reaction_count", 0) if analysis.results else 0),
             # Map analysis text fields to response fields
             channel_summary=analysis.resource_summary,
             topic_analysis=analysis.topic_analysis,
@@ -2568,9 +2338,7 @@ async def get_integration_resource_analysis(
             key_highlights=analysis.key_highlights,
             model_used=analysis.model_used,
             generated_at=analysis.analysis_generated_at,
-            workspace_id=str(
-                workspace.id
-            ),  # Include database UUID as workspace_id for user display
+            workspace_id=str(workspace.id),  # Include database UUID as workspace_id for user display
         )
 
     except HTTPException:

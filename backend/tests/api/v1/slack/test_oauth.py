@@ -62,9 +62,7 @@ async def oauth_test_client():
 def test_oauth_callback_success():
     """Test successful OAuth callback."""
     # Skip this test for now as it requires complex async mocking
-    pytest.skip(
-        "This test needs more complex dependency overrides for async database sessions"
-    )
+    pytest.skip("This test needs more complex dependency overrides for async database sessions")
 
 
 def test_oauth_callback_error():

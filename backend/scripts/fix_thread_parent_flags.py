@@ -66,9 +66,7 @@ async def fix_thread_parent_flags():
                 # Update this message to be a thread parent
                 message.is_thread_parent = True
                 updated_count += 1
-                logger.info(
-                    f"Marking message {message.slack_ts} as thread parent (reply_count={message.reply_count})"
-                )
+                logger.info(f"Marking message {message.slack_ts} as thread parent (reply_count={message.reply_count})")
 
         # Commit all changes
         await db.commit()
