@@ -248,7 +248,7 @@ async def check_report_consistency(db: AsyncSession, report_id: UUID) -> Dict[st
                 summary = analysis.results["resource_summary"]
                 if "no actual channel messages" in summary.lower():
                     logger.error(f"LLM reports 'no actual channel messages' despite having {db_count} messages in DB")
-                    logger.info(f"Resource summary: {summary[:200]}...")
+                    logger.info(f"Resource summary: {summary[: 200]}...")
         
         # Get some sample messages to understand content
         sample_messages = await get_sample_messages(db, channel_id, start_date, end_date)
