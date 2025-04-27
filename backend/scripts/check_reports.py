@@ -243,7 +243,7 @@ async def check_report_consistency(db: AsyncSession, report_id: UUID) -> Dict[st
         logger.info(f"Sample messages ({len(sample_messages)}):")
         for i, msg in enumerate(sample_messages):
             truncated_text = msg.text[:100] + "..." if len(msg.text) > 100 else msg.text
-            logger.info(f"  {i+1}. {msg.message_datetime} | User: {msg.user_id} | Text: '{truncated_text}'")
+            logger.info(f"  {i + 1}. {msg.message_datetime} | User: {msg.user_id} | Text: '{truncated_text}'")
             
         # Store results    
         results[str(channel_id)] = {
