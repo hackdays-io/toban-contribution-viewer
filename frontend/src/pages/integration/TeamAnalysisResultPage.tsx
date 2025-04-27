@@ -539,43 +539,6 @@ const TeamAnalysisResultPage: React.FC = () => {
         crossResourceReport.description ||
         `Team analysis of ${crossResourceReport.resource_analyses.length} channels from ${crossResourceReport.date_range_start} to ${crossResourceReport.date_range_end}`
 
-      // Calculate aggregate statistics
-      let totalMessages = 0
-      const totalParticipants = new Set()
-      let totalThreads = 0
-      let totalReactions = 0
-
-      // Process each analysis to collect statistics
-      if (Array.isArray(crossResourceReport.resource_analyses)) {
-        crossResourceReport.resource_analyses.forEach((analysis) => {
-          if (analysis.status === 'COMPLETED') {
-            // Add message count
-            totalMessages += Number(analysis.message_count || 0)
-
-            // Add threads count
-            totalThreads += Number(analysis.thread_count || 0)
-
-            // Add reactions count
-            totalReactions += Number(analysis.reaction_count || 0)
-
-            // Add participant data (if available)
-            if (analysis.participants && Array.isArray(analysis.participants)) {
-              analysis.participants.forEach((participant) => {
-                if (participant.id) {
-                  totalParticipants.add(participant.id)
-                }
-              })
-            } else if (analysis.participant_count) {
-              // If we don't have participant data but have a count, use it as a fallback
-              // This is less accurate but better than showing 0
-              totalParticipants.add(
-                `channel-${analysis.resource_id}-participant`
-              )
-            }
-          }
-        })
-      }
-
       // Construct an analysis object using data from the report and first resource analysis
       const adaptedAnalysis: AnalysisResponse = {
         id: String(crossResourceReport.id || ''),
@@ -590,16 +553,13 @@ const TeamAnalysisResultPage: React.FC = () => {
           crossResourceReport.date_range_end || new Date().toISOString()
         ),
         message_count:
-          totalMessages || Number(crossResourceReport.total_resources || 0),
+          Number(crossResourceReport.total_resources || 0),
         participant_count:
-          totalParticipants.size ||
-          Number(crossResourceReport.completed_analyses || 0),
+          Number(crossResourceReport.total_participants || 0),
         thread_count:
-          totalThreads ||
-          (Array.isArray(crossResourceReport.resource_analyses)
-            ? crossResourceReport.resource_analyses.length
-            : 0),
-        reaction_count: totalReactions || 0,
+          Number(crossResourceReport.total_threads || 0),
+        reaction_count: 
+          Number(crossResourceReport.total_reactions || 0),
         // Always set channel_summary, which is important for UI rendering
         channel_summary: String(reportDescription || ''),
         topic_analysis:
@@ -629,157 +589,6 @@ const TeamAnalysisResultPage: React.FC = () => {
         isClosable: true,
       })
 
-      // Calculate statistics based on any data we might have in the report
-      let totalMessages = 0
-      const totalParticipants = new Set<string>()
-      let totalThreads = 0
-      let totalReactions = 0
-
-      // Even if no completed analyses, try to extract counts from pending ones
-      if (Array.isArray(crossResourceReport.resource_analyses)) {
-        crossResourceReport.resource_analyses.forEach((analysis) => {
-          // Add message count
-          totalMessages += Number(analysis.message_count || 0)
-
-          // Add threads count if available
-          totalThreads += Number(analysis.thread_count || 0)
-
-          // Add reactions count if available
-          totalReactions += Number(analysis.reaction_count || 0)
-
-          // Extract all possible user data
-          try {
-            // Look for detailed result data first
-            if (analysis.results && typeof analysis.results === 'object') {
-              const results = analysis.results as Record<string, unknown>
-
-              // Extract users from the results field if available
-              if (results.users && Array.isArray(results.users)) {
-                results.users.forEach((user: any) => {
-                  if (user && user.id) totalParticipants.add(String(user.id))
-                })
-              }
-
-              // Try participants field within results
-              if (results.participants && Array.isArray(results.participants)) {
-                results.participants.forEach((participant: any) => {
-                  if (participant && participant.id)
-                    totalParticipants.add(String(participant.id))
-                })
-              }
-
-              // Try metadata field which often contains the real analysis details
-              if (results.metadata && typeof results.metadata === 'object') {
-                const metadata = results.metadata as Record<string, unknown>
-                console.log('FOUND METADATA:', metadata)
-
-                // Look for users in metadata
-                if (metadata.users && Array.isArray(metadata.users)) {
-                  metadata.users.forEach((user: any) => {
-                    if (user && user.id) totalParticipants.add(String(user.id))
-                  })
-                }
-
-                // Try user_stats which maps user IDs to their activity
-                if (
-                  metadata.user_stats &&
-                  typeof metadata.user_stats === 'object'
-                ) {
-                  // Extract keys as user IDs
-                  Object.keys(metadata.user_stats).forEach((userId) => {
-                    if (userId) totalParticipants.add(userId)
-                  })
-                }
-
-                // Try participant_count
-                if (metadata.user_count) {
-                  console.log(
-                    'FOUND USER COUNT IN METADATA:',
-                    metadata.user_count
-                  )
-                }
-              }
-
-              // Check messages data for user references
-              if (
-                results.messageData &&
-                typeof results.messageData === 'object'
-              ) {
-                const msgData = results.messageData as Record<string, unknown>
-
-                // Look for users in messageData
-                if (msgData.userData && Array.isArray(msgData.userData)) {
-                  msgData.userData.forEach((user: any) => {
-                    if (user && user.id) totalParticipants.add(String(user.id))
-                  })
-                }
-
-                // Look for distinct users in messages
-                if (msgData.messages && Array.isArray(msgData.messages)) {
-                  msgData.messages.forEach((msg: any) => {
-                    if (msg && msg.user) totalParticipants.add(String(msg.user))
-                  })
-                }
-              }
-            }
-
-            // If still no users found, try participants array at the top level
-            if (analysis.participants && Array.isArray(analysis.participants)) {
-              analysis.participants.forEach((participant: any) => {
-                if (participant && participant.id)
-                  totalParticipants.add(String(participant.id))
-              })
-            }
-
-            // If that fails, try to locate users in message_data
-            if (
-              analysis.message_data &&
-              typeof analysis.message_data === 'object'
-            ) {
-              const msgData = analysis.message_data as Record<string, unknown>
-
-              if (msgData.users && Array.isArray(msgData.users)) {
-                msgData.users.forEach((user: any) => {
-                  if (user && user.id) totalParticipants.add(String(user.id))
-                })
-              }
-
-              // Check messages for user IDs
-              if (msgData.messages && Array.isArray(msgData.messages)) {
-                // Extract unique user IDs from messages
-                msgData.messages.forEach((msg: any) => {
-                  if (msg && msg.user) totalParticipants.add(String(msg.user))
-                })
-              }
-            }
-
-            // If we still don't have users and there's a participant_count, use it as a fallback
-            if (totalParticipants.size === 0 && analysis.participant_count) {
-              // Add at least placeholder entries to represent the count
-              for (let i = 0; i < Number(analysis.participant_count); i++) {
-                totalParticipants.add(`user-${String(analysis.id)}-${i}`)
-              }
-            }
-          } catch (error) {
-            console.error('Error extracting participant data:', error)
-
-            // Fallback to participant_count for safety
-            if (analysis.participant_count) {
-              for (let i = 0; i < Number(analysis.participant_count); i++) {
-                totalParticipants.add(
-                  `fallback-user-${String(analysis.id)}-${i}`
-                )
-              }
-            }
-          }
-        })
-      }
-
-      // Log the actual participant data found
-      console.log('Empty analysis - participant data:', {
-        uniqueParticipants: totalParticipants.size,
-        participantIds: Array.from(totalParticipants).slice(0, 10), // Show first 10 for debugging
-      })
 
       // Create a minimal analysis object so the UI doesn't break
       const emptyAnalysis: AnalysisResponse = {
@@ -795,14 +604,13 @@ const TeamAnalysisResultPage: React.FC = () => {
           crossResourceReport.date_range_end || new Date().toISOString()
         ),
         message_count:
-          totalMessages || Number(crossResourceReport.total_resources || 0),
-        participant_count: totalParticipants.size || 0,
+          Number(crossResourceReport.total_resources || 0),
+        participant_count: 
+          Number(crossResourceReport.total_participants || 0),
         thread_count:
-          totalThreads ||
-          (Array.isArray(crossResourceReport.resource_analyses)
-            ? crossResourceReport.resource_analyses.length
-            : 0),
-        reaction_count: totalReactions || 0,
+          Number(crossResourceReport.total_threads || 0),
+        reaction_count: 
+          Number(crossResourceReport.total_reactions || 0),
         channel_summary: 'No analyses found for this team report.',
         topic_analysis: '',
         contributor_insights: '',
@@ -1473,10 +1281,6 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
       // Count pending analyses and update statistics
       let pendingCount = 0
       let completedCount = 0
-      let totalMessages = 0
-      const totalParticipants = new Set()
-      let totalThreads = 0
-      let totalReactions = 0
 
       if (
         reportStatus.resource_analyses &&
@@ -1512,88 +1316,10 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
 
             if (analysis.status === 'COMPLETED') {
               completedCount++
-
-              // Add message count
-              totalMessages += Number(analysis.message_count || 0)
-
-              // Add threads count
-              totalThreads += Number(analysis.thread_count || 0)
-
-              // Add reactions count
-              totalReactions += Number(analysis.reaction_count || 0)
-
-              // Extract participants from message senders and participant data directly
-              try {
-                // First, try to get actual participants data from message_data
-                if (
-                  analysis.message_data &&
-                  typeof analysis.message_data === 'object'
-                ) {
-                  const msgData = analysis.message_data as Record<
-                    string,
-                    unknown
-                  >
-
-                  // If we have actual messages, extract unique senders
-                  if (msgData.messages && Array.isArray(msgData.messages)) {
-                    msgData.messages.forEach((msg: any) => {
-                      if (msg && msg.user)
-                        totalParticipants.add(String(msg.user))
-                    })
-                  }
-
-                  // If we have user data, use it
-                  if (msgData.users && Array.isArray(msgData.users)) {
-                    msgData.users.forEach((user: any) => {
-                      if (user && user.id)
-                        totalParticipants.add(String(user.id))
-                    })
-                  }
-                }
-
-                // Try participants field if available
-                if (
-                  analysis.participants &&
-                  Array.isArray(analysis.participants)
-                ) {
-                  analysis.participants.forEach((participant: any) => {
-                    if (participant && participant.id)
-                      totalParticipants.add(String(participant.id))
-                  })
-                }
-
-                // If no participant data found but we have a count, use it
-                if (
-                  totalParticipants.size === 0 &&
-                  analysis.participant_count
-                ) {
-                  console.log(
-                    `Using participant_count (${analysis.participant_count}) for ${analysis.resource_name}`
-                  )
-                }
-              } catch (error) {
-                console.error('Error extracting participant data:', error)
-              }
             }
           }
         )
 
-        // Log comprehensive information about the data we found
-        console.log('TEAM ANALYSIS DEBUG - Participant statistics:', {
-          uniqueParticipantCount: totalParticipants.size,
-          totalMessages,
-          totalThreads,
-          totalReactions,
-          completedAnalysesCount: completedCount,
-          pendingAnalysesCount: pendingCount,
-          // Log participant counts from each completed analysis for verification
-          participantCounts: reportStatus.resource_analyses
-            .filter((a: Record<string, unknown>) => a.status === 'COMPLETED')
-            .map((a: Record<string, unknown>) => ({
-              resource_name: a.resource_name,
-              participant_count: a.participant_count,
-            })),
-        })
 
         // Update analysis statistics if we have completed analyses and current analysis data
         if (completedCount > 0 && analysis) {
@@ -1604,11 +1330,6 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
             (a: Record<string, unknown>) => a.status === 'COMPLETED'
           )
 
-          // First try to get counts from the results field
-          let totalParticipantCount = 0
-          let totalMessageCount = 0
-          let totalThreadCount = 0
-          let totalReactionCount = 0
 
           // Look for counts in the results field (where they're actually stored in database)
           completedAnalyses.forEach((a, index) => {
@@ -1633,109 +1354,7 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
                 }
               )
             }
-
-            // Try to access counts from results JSON field
-            const results = a.results as Record<string, unknown> | undefined
-            if (results) {
-              // Try metadata first
-              if (results.metadata && typeof results.metadata === 'object') {
-                const metadata = results.metadata as Record<string, unknown>
-                totalMessageCount += Number(metadata.message_count || 0)
-                totalParticipantCount += Number(metadata.user_count || 0)
-                totalThreadCount += Number(metadata.thread_count || 0)
-                totalReactionCount += Number(metadata.reaction_count || 0)
-
-                if (index === 0) {
-                  console.log('Found metadata counts:', {
-                    messageCount: metadata.message_count,
-                    userCount: metadata.user_count,
-                    threadCount: metadata.thread_count,
-                    reactionCount: metadata.reaction_count,
-                  })
-                }
-              }
-
-              // Then try direct properties as fallback
-              if (results.message_count)
-                totalMessageCount += Number(results.message_count || 0)
-              if (results.participant_count)
-                totalParticipantCount += Number(results.participant_count || 0)
-              if (results.thread_count)
-                totalThreadCount += Number(results.thread_count || 0)
-              if (results.reaction_count)
-                totalReactionCount += Number(results.reaction_count || 0)
-
-              // Try to find users mentioned in contributor_insights
-              if (
-                results.contributor_insights &&
-                typeof results.contributor_insights === 'string'
-              ) {
-                const userMentionRegex = /<@(U[A-Z0-9]+)>/g
-                const userMentions = [
-                  ...results.contributor_insights.matchAll(userMentionRegex),
-                ]
-
-                if (userMentions.length > 0) {
-                  console.log(
-                    `Found ${userMentions.length} user mentions in contributor_insights`
-                  )
-                  userMentions.forEach((match) => {
-                    if (match && match[1]) {
-                      totalParticipants.add(match[1])
-                    }
-                  })
-                }
-              }
-            }
-
-            // Fallback to top-level analysis properties if results don't have counts
-            if (a.message_count)
-              totalMessageCount += Number(a.message_count || 0)
-            if (a.participant_count)
-              totalParticipantCount += Number(a.participant_count || 0)
-            if (a.thread_count) totalThreadCount += Number(a.thread_count || 0)
-            if (a.reaction_count)
-              totalReactionCount += Number(a.reaction_count || 0)
           })
-
-          // Use our calculated values or fall back to what we collected from message data
-          updatedAnalysis.message_count =
-            totalMessageCount > 0 ? totalMessageCount : totalMessages
-          updatedAnalysis.participant_count =
-            totalParticipantCount > 0
-              ? totalParticipantCount
-              : totalParticipants.size > 0
-                ? totalParticipants.size
-                : analysis.participant_count
-          updatedAnalysis.thread_count =
-            totalThreadCount > 0 ? totalThreadCount : totalThreads
-          updatedAnalysis.reaction_count =
-            totalReactionCount > 0 ? totalReactionCount : totalReactions
-
-          console.log('Updating analysis with counts:', {
-            messageCount: updatedAnalysis.message_count,
-            participantCount: updatedAnalysis.participant_count,
-            threadCount: updatedAnalysis.thread_count,
-            reactionCount: updatedAnalysis.reaction_count,
-            // Log sources to understand where data came from
-            sources: {
-              messageCountSource:
-                totalMessageCount > 0 ? 'results field' : 'message collection',
-              participantCountSource:
-                totalParticipantCount > 0
-                  ? 'results field'
-                  : totalParticipants.size > 0
-                    ? 'participant set'
-                    : 'original value',
-              threadCountSource:
-                totalThreadCount > 0 ? 'results field' : 'thread collection',
-              reactionCountSource:
-                totalReactionCount > 0
-                  ? 'results field'
-                  : 'reaction collection',
-            },
-          })
-
           setAnalysis(updatedAnalysis)
         }
       }
@@ -2412,19 +2031,19 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
 
               <Stat>
                 <StatLabel>Participants</StatLabel>
-                <StatNumber>{analysis.participant_count}</StatNumber>
+                <StatNumber>{analysis.participant_count.toLocaleString()}</StatNumber>
                 <StatHelpText>Active contributors</StatHelpText>
               </Stat>
 
               <Stat>
                 <StatLabel>Threads</StatLabel>
-                <StatNumber>{analysis.thread_count}</StatNumber>
+                <StatNumber>{analysis.thread_count.toLocaleString()}</StatNumber>
                 <StatHelpText>Discussion threads</StatHelpText>
               </Stat>
 
               <Stat>
                 <StatLabel>Reactions</StatLabel>
-                <StatNumber>{analysis.reaction_count}</StatNumber>
+                <StatNumber>{analysis.reaction_count.toLocaleString()}</StatNumber>
                 <StatHelpText>Emoji reactions</StatHelpText>
               </Stat>
             </SimpleGrid>
@@ -2725,8 +2344,8 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
               <HStack>
                 <Icon as={FiUsers} size="sm" color="gray.500" />
                 <Text fontSize="sm" color="gray.600">
-                  Analysis includes {analysis.message_count} messages from{' '}
-                  {analysis.participant_count} participants
+                  Analysis includes {analysis.message_count.toLocaleString()} messages from{' '}
+                  {analysis.participant_count.toLocaleString()} participants
                 </Text>
               </HStack>
             </VStack>

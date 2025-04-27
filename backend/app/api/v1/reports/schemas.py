@@ -155,6 +155,19 @@ class ResourceAnalysisResponse(ResourceAnalysisBase):
     analysis_generated_at: Optional[datetime] = Field(
         None, description="When the analysis was generated"
     )
+    # Statistics fields
+    message_count: Optional[int] = Field(
+        None, description="Number of messages in this resource"
+    )
+    participant_count: Optional[int] = Field(
+        None, description="Number of participants in this resource"
+    )
+    thread_count: Optional[int] = Field(
+        None, description="Number of threads in this resource"
+    )
+    reaction_count: Optional[int] = Field(
+        None, description="Number of reactions in this resource"
+    )
     created_at: datetime = Field(..., description="Creation timestamp")
     updated_at: datetime = Field(..., description="Last update timestamp")
 

@@ -139,11 +139,11 @@ class ResourceAnalysis(Base, BaseModel):
     model_used = Column(String(100), nullable=True)
     analysis_generated_at = Column(DateTime, nullable=True)
     
-    # Statistics fields
-    message_count = Column(Integer, nullable=True)
-    participant_count = Column(Integer, nullable=True)
-    thread_count = Column(Integer, nullable=True)
-    reaction_count = Column(Integer, nullable=True)
+        # Statistics fields
+        message_count = Column(Integer, nullable=True)
+        participant_count = Column(Integer, nullable=True)
+        thread_count = Column(Integer, nullable=True)
+        reaction_count = Column(Integer, nullable=True)
 
     # Relationships
     cross_resource_report = relationship(

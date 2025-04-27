@@ -371,6 +371,11 @@ async def get_team_report(
             func.sum(
                 case((ResourceAnalysis.status == ReportStatus.FAILED, 1), else_=0)
             ).label("failed"),
+            # Add aggregated message statistics
+            func.sum(ResourceAnalysis.message_count).label("total_messages"),
+            func.sum(ResourceAnalysis.participant_count).label("total_participants"),
+            func.sum(ResourceAnalysis.thread_count).label("total_threads"),
+            func.sum(ResourceAnalysis.reaction_count).label("total_reactions"),
         ).where(ResourceAnalysis.cross_resource_report_id == report.id)
     )
     stats = analysis_stats.one()
@@ -390,6 +395,12 @@ async def get_team_report(
     response_dict["pending_analyses"] = stats.pending
     response_dict["failed_analyses"] = stats.failed
     response_dict["resource_types"] = resource_types
+    
+    # Include aggregated statistics in the response
+    response_dict["total_messages"] = stats.total_messages or 0
+    response_dict["total_participants"] = stats.total_participants or 0
+    response_dict["total_threads"] = stats.total_threads or 0
+    response_dict["total_reactions"] = stats.total_reactions or 0
 
     return response_dict
 
@@ -481,6 +492,11 @@ async def update_team_report(
             func.sum(
                 case((ResourceAnalysis.status == ReportStatus.FAILED, 1), else_=0)
             ).label("failed"),
+            # Add aggregated message statistics
+            func.sum(ResourceAnalysis.message_count).label("total_messages"),
+            func.sum(ResourceAnalysis.participant_count).label("total_participants"),
+            func.sum(ResourceAnalysis.thread_count).label("total_threads"),
+            func.sum(ResourceAnalysis.reaction_count).label("total_reactions"),
         ).where(ResourceAnalysis.cross_resource_report_id == report.id)
     )
     stats = analysis_stats.one()
@@ -500,6 +516,11 @@ async def update_team_report(
     response_dict["pending_analyses"] = stats.pending
     response_dict["failed_analyses"] = stats.failed
     response_dict["resource_types"] = resource_types
+    # Include aggregated statistics in the response
+    response_dict["total_messages"] = stats.total_messages or 0
+    response_dict["total_participants"] = stats.total_participants or 0
+    response_dict["total_threads"] = stats.total_threads or 0
+    response_dict["total_reactions"] = stats.total_reactions or 0
 
     return response_dict
 
