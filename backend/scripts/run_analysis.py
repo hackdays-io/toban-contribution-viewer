@@ -23,7 +23,6 @@ backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, backend_dir)
 
 # Mock the settings to avoid configuration errors
-import os
 os.environ["SECRET_KEY"] = "debug_secret_key"
 os.environ["DATABASE_URL"] = "postgresql+asyncpg://toban_admin:postgres@localhost:5432/tobancv"
 os.environ["SUPABASE_URL"] = "https://example.supabase.co"
