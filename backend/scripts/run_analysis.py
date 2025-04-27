@@ -305,7 +305,7 @@ async def run_debug_analysis(
         logger.info("Sample messages:")
         for i, msg in enumerate(data["messages"][:5]):
             logger.info(
-                f"  {i+1}. {msg['timestamp']} | User: {msg['user_id']} | Text: '{msg['text'][:100]}...'"
+                f"  {i + 1}. {msg['timestamp']} | User: {msg['user_id']} | Text: '{msg['text'][:100]}...'"
             )
             logger.info(
                 f"     Thread info: parent={msg['is_thread_parent']}, reply={msg['is_thread_reply']}, replies={msg['reply_count']}"

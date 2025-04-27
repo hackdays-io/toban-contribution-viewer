@@ -290,7 +290,7 @@ async def check_report_consistency(
         for i, msg in enumerate(sample_messages):
             truncated_text = msg.text[:100] + "..." if len(msg.text) > 100 else msg.text
             logger.info(
-                f"  {i+1}. {msg.message_datetime} | User: {msg.user_id} | Text: '{truncated_text}'"
+                f"  {i + 1}. {msg.message_datetime} | User: {msg.user_id} | Text: '{truncated_text}'"
             )
 
         # Store results

@@ -476,7 +476,7 @@ class SlackChannelAnalysisService(ResourceAnalysisService):
             logger.info("Sample of first 3 messages in data:")
             for i, msg in enumerate(data["messages"][:3]):
                 logger.info(
-                    f"  Message {i+1}: User={msg.get('user', 'Unknown')}, Text={msg.get('text', '')[:50]}"
+                    f"  Message {i + 1}: User={msg.get('user', 'Unknown')}, Text={msg.get('text', '')[:50]}"
                 )
 
         # Check for the specific case where we have messages in the data but total_messages is 0
@@ -613,7 +613,7 @@ class SlackChannelAnalysisService(ResourceAnalysisService):
                 message_data["messages"][1:4]
             ):  # Skip system message, show first 3 channel messages
                 logger.info(
-                    f"  {i+1}. User: {msg.get('user', 'Unknown')} | Text: {msg.get('text', '')[:50]}"
+                    f"  {i + 1}. User: {msg.get('user', 'Unknown')} | Text: {msg.get('text', '')[:50]}"
                 )
         else:
             # Fallback to just the system prompt if no messages are available
@@ -679,7 +679,7 @@ class SlackChannelAnalysisService(ResourceAnalysisService):
                 logger.info("Sample of messages being sent to LLM:")
                 for i, msg in enumerate(messages_list[:5]):
                     logger.info(
-                        f"  {i+1}. User: {msg.get('user', 'Unknown')} | Text: {msg.get('text', '')[:100]}"
+                        f"  {i + 1}. User: {msg.get('user', 'Unknown')} | Text: {msg.get('text', '')[:100]}"
                     )
 
             # Add debugging info to the response

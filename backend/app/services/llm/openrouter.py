@@ -414,7 +414,7 @@ Keep them intact exactly as they appear in the original messages.
                     logger.info("First 20 lines of user content:")
                     for line_num, line in enumerate(message_lines[:20]):
                         if line.strip():
-                            logger.info(f"Line {line_num+1}: {line[:100]}")
+                            logger.info(f"Line {line_num + 1}: {line[:100]}")
 
             async with httpx.AsyncClient() as client:
                 response = await client.post(
@@ -711,7 +711,7 @@ Keep them intact exactly as they appear in the original messages.
             logger.info("Sample messages being formatted for LLM:")
             for i, msg in enumerate(messages[:5]):
                 logger.info(
-                    f"  {i+1}. User: {msg.get('user', 'Unknown')} | "
+                    f"  {i + 1}. User: {msg.get('user', 'Unknown')} | "
                     f"ID: {msg.get('user_id', 'None')} | "
                     f"Text: {msg.get('text', '')[:100]}"
                 )
