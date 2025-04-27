@@ -233,9 +233,7 @@ def _handle_oauth_error(token_data: Dict[str, Any]) -> None:
             detail="Invalid application configuration. Please contact support.",
         )
     else:
-        raise HTTPException(
-            status_code=400, detail=f"Slack authorization error: {error_message}"
-        )
+        raise HTTPException(status_code=400, detail=f"Slack authorization error: {error_message}")
 
 
 async def _create_or_update_workspace(
@@ -255,9 +253,7 @@ async def _create_or_update_workspace(
         Created or updated SlackWorkspace object
     """
     # Check if workspace already exists
-    result = await db.execute(
-        select(SlackWorkspace).where(SlackWorkspace.slack_id == team_id)
-    )
+    result = await db.execute(select(SlackWorkspace).where(SlackWorkspace.slack_id == team_id))
     existing_workspace = result.scalars().first()
 
     now = datetime.utcnow()
@@ -301,9 +297,7 @@ async def _fetch_workspace_metadata(db_bind, workspace_id: str) -> None:
     """
     try:
         async with AsyncSession(bind=db_bind) as session:
-            result = await session.execute(
-                select(SlackWorkspace).where(SlackWorkspace.id == workspace_id)
-            )
+            result = await session.execute(select(SlackWorkspace).where(SlackWorkspace.id == workspace_id))
             workspace = result.scalars().first()
             if workspace:
                 await WorkspaceService.update_workspace_metadata(session, workspace)
@@ -371,9 +365,7 @@ async def slack_oauth_callback(
         logger.info(f"OAuth successful for workspace: {team_name}")
 
         # Create or update the workspace
-        workspace = await _create_or_update_workspace(
-            db, team_id, team_name, team_domain, oauth_response.access_token
-        )
+        workspace = await _create_or_update_workspace(db, team_id, team_name, team_domain, oauth_response.access_token)
 
         # Add background task to fetch additional workspace metadata
         # This keeps the OAuth flow fast while still getting the additional data we need
@@ -462,9 +454,7 @@ async def _get_workspace_by_id(db: AsyncSession, workspace_id: str) -> SlackWork
     Raises:
         HTTPException: If workspace is not found
     """
-    result = await db.execute(
-        select(SlackWorkspace).where(SlackWorkspace.id == workspace_id)
-    )
+    result = await db.execute(select(SlackWorkspace).where(SlackWorkspace.id == workspace_id))
     workspace = result.scalars().first()
 
     if not workspace:
@@ -483,9 +473,7 @@ async def _update_metadata_background(workspace_id: str) -> None:
     """
     try:
         async with AsyncSessionLocal() as session:
-            result = await session.execute(
-                select(SlackWorkspace).where(SlackWorkspace.id == workspace_id)
-            )
+            result = await session.execute(select(SlackWorkspace).where(SlackWorkspace.id == workspace_id))
             ws = result.scalars().first()
             if ws:
                 await WorkspaceService.update_workspace_metadata(session, ws)
@@ -494,9 +482,7 @@ async def _update_metadata_background(workspace_id: str) -> None:
         logger.error(f"Error in background metadata update: {str(e)}")
 
 
-def _create_workspace_response(
-    workspace: SlackWorkspace, status: str, message: str
-) -> Dict[str, Any]:
+def _create_workspace_response(workspace: SlackWorkspace, status: str, message: str) -> Dict[str, Any]:
     """
     Create a response dictionary from workspace data.
 
@@ -532,9 +518,7 @@ def _create_workspace_response(
     return response
 
 
-async def _update_metadata_sync(
-    db: AsyncSession, workspace: SlackWorkspace
-) -> Dict[str, Any]:
+async def _update_metadata_sync(db: AsyncSession, workspace: SlackWorkspace) -> Dict[str, Any]:
     """
     Update workspace metadata synchronously.
 
@@ -550,9 +534,7 @@ async def _update_metadata_sync(
         logger.info(
             f"Metadata updated for {workspace.name}. Icon URL: {workspace.icon_url}, Team size: {workspace.team_size}"
         )
-        return _create_workspace_response(
-            workspace, "success", f"Token verified for {workspace.name}"
-        )
+        return _create_workspace_response(workspace, "success", f"Token verified for {workspace.name}")
     except Exception as e:
         logger.error(f"Error updating metadata: {str(e)}")
         return _create_workspace_response(
@@ -635,9 +617,7 @@ async def disconnect_workspace(
         Dictionary with status message
     """
     try:
-        result = await db.execute(
-            select(SlackWorkspace).where(SlackWorkspace.id == workspace_id)
-        )
+        result = await db.execute(select(SlackWorkspace).where(SlackWorkspace.id == workspace_id))
         workspace = result.scalars().first()
 
         if not workspace:

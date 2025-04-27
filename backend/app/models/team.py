@@ -46,9 +46,7 @@ class Team(Base, BaseModel):
     avatar_url = Column(String(1024), nullable=True)
     team_size = Column(Integer, default=0, nullable=False)
     is_personal = Column(Boolean, default=False, nullable=False)
-    team_metadata = Column(
-        JSONB, nullable=True
-    )  # Using team_metadata to avoid SQLAlchemy reserved name
+    team_metadata = Column(JSONB, nullable=True)  # Using team_metadata to avoid SQLAlchemy reserved name
 
     # Owner info
     created_by_user_id = Column(String(255), nullable=False)
@@ -60,19 +58,11 @@ class Team(Base, BaseModel):
     )
     slack_workspaces = relationship("SlackWorkspace", back_populates="team")
     # Integration relationships
-    owned_integrations = relationship(
-        "Integration", back_populates="owner_team", cascade="all, delete-orphan"
-    )
-    shared_integrations = relationship(
-        "IntegrationShare", back_populates="team", cascade="all, delete-orphan"
-    )
-    resource_accesses = relationship(
-        "ResourceAccess", back_populates="team", cascade="all, delete-orphan"
-    )
+    owned_integrations = relationship("Integration", back_populates="owner_team", cascade="all, delete-orphan")
+    shared_integrations = relationship("IntegrationShare", back_populates="team", cascade="all, delete-orphan")
+    resource_accesses = relationship("ResourceAccess", back_populates="team", cascade="all, delete-orphan")
     # Cross-resource reports
-    cross_resource_reports = relationship(
-        "CrossResourceReport", back_populates="team", cascade="all, delete-orphan"
-    )
+    cross_resource_reports = relationship("CrossResourceReport", back_populates="team", cascade="all, delete-orphan")
 
     # Uniqueness constraints
     __table_args__ = (Index("ix_team_slug_unique", "slug", unique=True),)
@@ -101,17 +91,13 @@ class TeamMember(Base, BaseModel):
     last_active_at = Column(DateTime, nullable=True)
 
     # Foreign keys
-    team_id = Column(
-        UUID(as_uuid=True), ForeignKey("team.id"), nullable=False, index=True
-    )
+    team_id = Column(UUID(as_uuid=True), ForeignKey("team.id"), nullable=False, index=True)
 
     # Relationships
     team: Mapped["Team"] = relationship("Team", back_populates="members")
 
     # Uniqueness constraints
-    __table_args__ = (
-        Index("ix_teammember_team_id_user_id", "team_id", "user_id", unique=True),
-    )
+    __table_args__ = (Index("ix_teammember_team_id_user_id", "team_id", "user_id", unique=True),)
 
     def __repr__(self) -> str:
         return f"<TeamMember {self.display_name or self.email} ({self.role}) in {self.team_id}>"

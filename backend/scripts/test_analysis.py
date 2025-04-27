@@ -112,9 +112,8 @@ async def main():
 # Modify analyze_data to support dry_run mode
 original_analyze_data = SlackChannelAnalysisService.analyze_data
 
-async def patched_analyze_data(
-    self, data, analysis_type, parameters=None, **kwargs
-):
+
+async def patched_analyze_data(self, data, analysis_type, parameters=None, **kwargs):
     if parameters and parameters.get("dry_run"):
         # Only format the prompt, don't call the LLM
         # Intercept just before the OpenRouter call
@@ -122,6 +121,7 @@ async def patched_analyze_data(
     return await original_analyze_data.__get__(self, SlackChannelAnalysisService)(
         data=data, analysis_type=analysis_type, parameters=parameters, **kwargs
     )
+
 
 # Apply the monkey patch for testing
 SlackChannelAnalysisService.analyze_data = patched_analyze_data

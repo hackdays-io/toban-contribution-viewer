@@ -71,9 +71,7 @@ def test_list_channels(mock_workspace, mock_channels):
     # This test is skipped because the channels API is not yet implemented
 
 
-@pytest.mark.skip(
-    reason="Test needs to be run in isolated environment due to socket connections"
-)
+@pytest.mark.skip(reason="Test needs to be run in isolated environment due to socket connections")
 def test_sync_channels():
     """Test syncing channels from Slack API."""
     # This test is skipped because it requires complex mocking of FastAPI's BackgroundTasks

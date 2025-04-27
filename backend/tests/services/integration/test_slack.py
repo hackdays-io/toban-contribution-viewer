@@ -79,9 +79,7 @@ class TestSlackIntegrationService:
     """Tests for the SlackIntegrationService class."""
 
     @patch("app.services.integration.slack.SlackAPI")
-    async def test_create_from_oauth(
-        self, mock_slack_api_class, mock_db, test_team, test_user_id
-    ):
+    async def test_create_from_oauth(self, mock_slack_api_class, mock_db, test_team, test_user_id):
         """Test creating a Slack integration from OAuth."""
         # Setup
         mock_api = mock_slack_api_class.return_value
@@ -107,9 +105,7 @@ class TestSlackIntegrationService:
         mock_api.get_workspace_info.return_value = workspace_info
 
         # Mock channel and user sync methods
-        with patch.object(
-            SlackIntegrationService, "sync_channels", AsyncMock()
-        ) as mock_sync_channels, patch.object(
+        with patch.object(SlackIntegrationService, "sync_channels", AsyncMock()) as mock_sync_channels, patch.object(
             SlackIntegrationService, "sync_users", AsyncMock()
         ) as mock_sync_users:
             # Execute
@@ -142,9 +138,7 @@ class TestSlackIntegrationService:
         mock_api = mock_slack_api_class.return_value
 
         # Mock get_token method
-        with patch.object(
-            SlackIntegrationService, "get_token", AsyncMock(return_value="xoxb-token")
-        ):
+        with patch.object(SlackIntegrationService, "get_token", AsyncMock(return_value="xoxb-token")):
             # Mock API response for channels
             mock_channels = [
                 {
@@ -179,9 +173,7 @@ class TestSlackIntegrationService:
             mock_db.get.return_value = test_integration
 
             # Execute
-            result = await SlackIntegrationService.sync_channels(
-                db=mock_db, integration_id=test_integration.id
-            )
+            result = await SlackIntegrationService.sync_channels(db=mock_db, integration_id=test_integration.id)
 
             # Assert
             assert len(result) == 2
@@ -195,9 +187,7 @@ class TestSlackIntegrationService:
         mock_api = mock_slack_api_class.return_value
 
         # Mock get_token method
-        with patch.object(
-            SlackIntegrationService, "get_token", AsyncMock(return_value="xoxb-token")
-        ):
+        with patch.object(SlackIntegrationService, "get_token", AsyncMock(return_value="xoxb-token")):
             # Mock API response for users
             mock_users = [
                 {
@@ -256,9 +246,7 @@ class TestSlackIntegrationService:
             mock_db.get.return_value = test_integration
 
             # Execute
-            result = await SlackIntegrationService.sync_users(
-                db=mock_db, integration_id=test_integration.id
-            )
+            result = await SlackIntegrationService.sync_users(db=mock_db, integration_id=test_integration.id)
 
             # Assert
             assert len(result) == 2  # Two users, bot is skipped

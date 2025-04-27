@@ -11,9 +11,7 @@ import sys
 from typing import Dict
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 # We need to add the parent directory to the path to import the app modules
@@ -44,11 +42,7 @@ async def check_workspace_team_ids(db: AsyncSession) -> Dict[str, int]:
     total_workspaces = result.scalar_one_or_none() or 0
 
     # Count workspaces with null team_id
-    stmt = (
-        select(func.count())
-        .select_from(SlackWorkspace)
-        .where(SlackWorkspace.team_id.is_(None))
-    )
+    stmt = select(func.count()).select_from(SlackWorkspace).where(SlackWorkspace.team_id.is_(None))
     result = await db.execute(stmt)
     null_team_id_count = result.scalar_one_or_none() or 0
 
@@ -66,9 +60,7 @@ async def check_workspace_team_ids(db: AsyncSession) -> Dict[str, int]:
     logger.info(f"SlackWorkspace team_id check: {results}")
 
     if null_team_id_count > 0:
-        logger.warning(
-            f"{null_team_id_count} workspaces ({percentage:.1f}%) have null team_id values"
-        )
+        logger.warning(f"{null_team_id_count} workspaces ({percentage:.1f}%) have null team_id values")
 
         # Get list of workspaces with null team_id
         stmt = select(SlackWorkspace).where(SlackWorkspace.team_id.is_(None)).limit(5)
@@ -77,9 +69,7 @@ async def check_workspace_team_ids(db: AsyncSession) -> Dict[str, int]:
 
         logger.info("Sample workspaces with null team_id:")
         for workspace in null_workspaces:
-            logger.info(
-                f"  Workspace ID: {workspace.id}, Name: {workspace.name}, Slack ID: {workspace.slack_id}"
-            )
+            logger.info(f"  Workspace ID: {workspace.id}, Name: {workspace.name}, Slack ID: {workspace.slack_id}")
 
     return results
 
@@ -96,11 +86,7 @@ async def check_integration_team_ids(db: AsyncSession) -> Dict[str, int]:
     total_integrations = result.scalar_one_or_none() or 0
 
     # Count integrations with null owner_team_id
-    stmt = (
-        select(func.count())
-        .select_from(Integration)
-        .where(Integration.owner_team_id.is_(None))
-    )
+    stmt = select(func.count()).select_from(Integration).where(Integration.owner_team_id.is_(None))
     result = await db.execute(stmt)
     null_team_id_count = result.scalar_one_or_none() or 0
 
@@ -118,9 +104,7 @@ async def check_integration_team_ids(db: AsyncSession) -> Dict[str, int]:
     logger.info(f"Integration owner_team_id check: {results}")
 
     if null_team_id_count > 0:
-        logger.warning(
-            f"{null_team_id_count} integrations ({percentage:.1f}%) have null owner_team_id values"
-        )
+        logger.warning(f"{null_team_id_count} integrations ({percentage:.1f}%) have null owner_team_id values")
 
         # Get list of integrations with null owner_team_id
         stmt = select(Integration).where(Integration.owner_team_id.is_(None)).limit(5)
@@ -149,11 +133,7 @@ async def check_resource_integrations(db: AsyncSession) -> Dict[str, int]:
     stmt = (
         select(func.count())
         .select_from(ServiceResource)
-        .where(
-            ServiceResource.integration_id.in_(
-                select(Integration.id).select_from(Integration)
-            )
-        )
+        .where(ServiceResource.integration_id.in_(select(Integration.id).select_from(Integration)))
     )
     result = await db.execute(stmt)
     valid_link_count = result.scalar_one_or_none() or 0
@@ -172,9 +152,7 @@ async def check_resource_integrations(db: AsyncSession) -> Dict[str, int]:
     logger.info(f"ServiceResource integration link check: {results}")
 
     if valid_link_count < total_resources:
-        logger.warning(
-            f"{total_resources - valid_link_count} resources have invalid integration links"
-        )
+        logger.warning(f"{total_resources - valid_link_count} resources have invalid integration links")
 
     return results
 
@@ -205,9 +183,7 @@ async def check_channel_resources(db: AsyncSession) -> Dict[str, int]:
         .select_from(SlackChannel)
         .where(
             SlackChannel.id.in_(
-                select(ServiceResource.id).where(
-                    ServiceResource.resource_type == ResourceType.SLACK_CHANNEL
-                )
+                select(ServiceResource.id).where(ServiceResource.resource_type == ResourceType.SLACK_CHANNEL)
             )
         )
     )
@@ -276,9 +252,7 @@ async def check_report_structure(db: AsyncSession) -> Dict[str, int]:
     logger.info(f"Unified report structure check: {results}")
 
     if valid_link_count < total_analyses:
-        logger.warning(
-            f"{total_analyses - valid_link_count} ResourceAnalysis records have invalid report links"
-        )
+        logger.warning(f"{total_analyses - valid_link_count} ResourceAnalysis records have invalid report links")
 
     return results
 
@@ -295,11 +269,7 @@ async def check_report_team_ids(db: AsyncSession) -> Dict[str, int]:
     total_reports = result.scalar_one_or_none() or 0
 
     # Count reports with null team_id
-    stmt = (
-        select(func.count())
-        .select_from(CrossResourceReport)
-        .where(CrossResourceReport.team_id.is_(None))
-    )
+    stmt = select(func.count()).select_from(CrossResourceReport).where(CrossResourceReport.team_id.is_(None))
     result = await db.execute(stmt)
     null_team_id_count = result.scalar_one_or_none() or 0
 
@@ -317,16 +287,10 @@ async def check_report_team_ids(db: AsyncSession) -> Dict[str, int]:
     logger.info(f"CrossResourceReport team_id check: {results}")
 
     if null_team_id_count > 0:
-        logger.warning(
-            f"{null_team_id_count} reports ({percentage:.1f}%) have null team_id values"
-        )
+        logger.warning(f"{null_team_id_count} reports ({percentage:.1f}%) have null team_id values")
 
         # Get list of reports with null team_id
-        stmt = (
-            select(CrossResourceReport)
-            .where(CrossResourceReport.team_id.is_(None))
-            .limit(5)
-        )
+        stmt = select(CrossResourceReport).where(CrossResourceReport.team_id.is_(None)).limit(5)
         result = await db.execute(stmt)
         null_reports = result.scalars().all()
 
@@ -361,9 +325,7 @@ async def main():
 
         if workspace_team_ids["null_team_id_count"] > 0:
             issues_found += 1
-            logger.warning(
-                f"⚠️ {workspace_team_ids['null_team_id_count']} workspaces have missing team_id values"
-            )
+            logger.warning(f"⚠️ {workspace_team_ids['null_team_id_count']} workspaces have missing team_id values")
 
         if integration_team_ids["null_team_id_count"] > 0:
             issues_found += 1
@@ -371,53 +333,30 @@ async def main():
                 f"⚠️ {integration_team_ids['null_team_id_count']} integrations have missing owner_team_id values"
             )
 
-        if (
-            resource_integrations["valid_link_count"]
-            < resource_integrations["total_resources"]
-        ):
+        if resource_integrations["valid_link_count"] < resource_integrations["total_resources"]:
             issues_found += 1
-            invalid_count = (
-                resource_integrations["total_resources"]
-                - resource_integrations["valid_link_count"]
-            )
-            logger.warning(
-                f"⚠️ {invalid_count} resources have invalid integration links"
-            )
+            invalid_count = resource_integrations["total_resources"] - resource_integrations["valid_link_count"]
+            logger.warning(f"⚠️ {invalid_count} resources have invalid integration links")
 
         if channel_resources["matched_count"] < channel_resources["total_channels"]:
             issues_found += 1
-            unmatched = (
-                channel_resources["total_channels"] - channel_resources["matched_count"]
-            )
-            logger.warning(
-                f"⚠️ {unmatched} SlackChannel records don't have corresponding ServiceResource records"
-            )
+            unmatched = channel_resources["total_channels"] - channel_resources["matched_count"]
+            logger.warning(f"⚠️ {unmatched} SlackChannel records don't have corresponding ServiceResource records")
 
         if report_structure["valid_link_count"] < report_structure["total_analyses"]:
             issues_found += 1
-            invalid_count = (
-                report_structure["total_analyses"]
-                - report_structure["valid_link_count"]
-            )
-            logger.warning(
-                f"⚠️ {invalid_count} ResourceAnalysis records have invalid report links"
-            )
+            invalid_count = report_structure["total_analyses"] - report_structure["valid_link_count"]
+            logger.warning(f"⚠️ {invalid_count} ResourceAnalysis records have invalid report links")
 
         if report_team_ids["null_team_id_count"] > 0:
             issues_found += 1
-            logger.warning(
-                f"⚠️ {report_team_ids['null_team_id_count']} reports have missing team_id values"
-            )
+            logger.warning(f"⚠️ {report_team_ids['null_team_id_count']} reports have missing team_id values")
 
         if issues_found == 0:
             logger.info("✅ No issues found! The integration structure looks good.")
         else:
-            logger.warning(
-                f"⚠️ Found {issues_found} potential issues that might affect the unified analysis flow."
-            )
-            logger.info(
-                "It's recommended to fix these issues for optimal system performance."
-            )
+            logger.warning(f"⚠️ Found {issues_found} potential issues that might affect the unified analysis flow.")
+            logger.info("It's recommended to fix these issues for optimal system performance.")
 
     except Exception as e:
         logger.error(f"Error running checks: {str(e)}", exc_info=True)

@@ -20,9 +20,7 @@ def test_create_service_slack_channel():
     # Mock OpenRouterService constructor
     with patch.object(OpenRouterService, "__init__", return_value=None):
         # Call the factory
-        service = ResourceAnalysisServiceFactory.create_service(
-            resource_type=AnalysisResourceType.SLACK_CHANNEL, db=db
-        )
+        service = ResourceAnalysisServiceFactory.create_service(resource_type=AnalysisResourceType.SLACK_CHANNEL, db=db)
 
         # Verify result
         assert isinstance(service, SlackChannelAnalysisService)
@@ -37,6 +35,4 @@ def test_create_service_unsupported_type():
     with pytest.raises(ValueError):
         # Mock OpenRouterService constructor to avoid real initialization
         with patch.object(OpenRouterService, "__init__", return_value=None):
-            ResourceAnalysisServiceFactory.create_service(
-                resource_type="UNSUPPORTED_TYPE", db=db
-            )
+            ResourceAnalysisServiceFactory.create_service(resource_type="UNSUPPORTED_TYPE", db=db)

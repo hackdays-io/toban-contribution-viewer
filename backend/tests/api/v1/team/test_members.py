@@ -90,18 +90,14 @@ async def test_team_with_members(db: AsyncSession, test_user_id: str) -> Dict:
 
 @pytest.mark.asyncio
 @team_test_mark
-async def test_get_team_members(
-    client: AsyncClient, test_user_auth_header: Dict, test_team_with_members: Dict
-):
+async def test_get_team_members(client: AsyncClient, test_user_auth_header: Dict, test_team_with_members: Dict):
     """
     Test getting a list of team members.
     """
     team_data = await test_team_with_members
     team = team_data["team"]
 
-    response = await client.get(
-        f"/api/v1/teams/{team.id}/members", headers=test_user_auth_header
-    )
+    response = await client.get(f"/api/v1/teams/{team.id}/members", headers=test_user_auth_header)
 
     assert response.status_code == 200
 
@@ -119,9 +115,7 @@ async def test_get_team_members(
 
 @pytest.mark.asyncio
 @team_test_mark
-async def test_get_team_member(
-    client: AsyncClient, test_user_auth_header: Dict, test_team_with_members: Dict
-):
+async def test_get_team_member(client: AsyncClient, test_user_auth_header: Dict, test_team_with_members: Dict):
     """
     Test getting a specific team member.
     """
@@ -129,9 +123,7 @@ async def test_get_team_member(
     team = team_data["team"]
     admin = team_data["admin"]
 
-    response = await client.get(
-        f"/api/v1/teams/{team.id}/members/{admin.id}", headers=test_user_auth_header
-    )
+    response = await client.get(f"/api/v1/teams/{team.id}/members/{admin.id}", headers=test_user_auth_header)
 
     assert response.status_code == 200
 
@@ -143,9 +135,7 @@ async def test_get_team_member(
 
 @pytest.mark.asyncio
 @team_test_mark
-async def test_add_team_member(
-    client: AsyncClient, test_user_auth_header: Dict, test_team_with_members: Dict
-):
+async def test_add_team_member(client: AsyncClient, test_user_auth_header: Dict, test_team_with_members: Dict):
     """
     Test adding a new team member.
     """
@@ -174,9 +164,7 @@ async def test_add_team_member(
 
 @pytest.mark.asyncio
 @team_test_mark
-async def test_update_team_member(
-    client: AsyncClient, test_user_auth_header: Dict, test_team_with_members: Dict
-):
+async def test_update_team_member(client: AsyncClient, test_user_auth_header: Dict, test_team_with_members: Dict):
     """
     Test updating a team member.
     """
@@ -202,9 +190,7 @@ async def test_update_team_member(
 
 @pytest.mark.asyncio
 @team_test_mark
-async def test_remove_team_member(
-    client: AsyncClient, test_user_auth_header: Dict, test_team_with_members: Dict
-):
+async def test_remove_team_member(client: AsyncClient, test_user_auth_header: Dict, test_team_with_members: Dict):
     """
     Test removing a team member.
     """
@@ -212,27 +198,21 @@ async def test_remove_team_member(
     team = team_data["team"]
     viewer = team_data["viewer"]
 
-    response = await client.delete(
-        f"/api/v1/teams/{team.id}/members/{viewer.id}", headers=test_user_auth_header
-    )
+    response = await client.delete(f"/api/v1/teams/{team.id}/members/{viewer.id}", headers=test_user_auth_header)
 
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "success"
 
     # Verify member is no longer accessible
-    response = await client.get(
-        f"/api/v1/teams/{team.id}/members/{viewer.id}", headers=test_user_auth_header
-    )
+    response = await client.get(f"/api/v1/teams/{team.id}/members/{viewer.id}", headers=test_user_auth_header)
 
     assert response.status_code == 404
 
 
 @pytest.mark.asyncio
 @team_test_mark
-async def test_invite_team_member(
-    client: AsyncClient, test_user_auth_header: Dict, test_team_with_members: Dict
-):
+async def test_invite_team_member(client: AsyncClient, test_user_auth_header: Dict, test_team_with_members: Dict):
     """
     Test inviting a user to a team.
     """
@@ -257,9 +237,7 @@ async def test_invite_team_member(
     assert "invitation" in data["message"].lower()
 
     # Check if member with pending status was created
-    response = await client.get(
-        f"/api/v1/teams/{team.id}/members", headers=test_user_auth_header
-    )
+    response = await client.get(f"/api/v1/teams/{team.id}/members", headers=test_user_auth_header)
 
     assert response.status_code == 200
     members = response.json()

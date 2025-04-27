@@ -87,17 +87,13 @@ class TeamScopedAccess:
 
         if not team_id:
             logger.error("No team_id provided for team-scoped access check")
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="Team ID is required"
-            )
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Team ID is required")
 
         # Check if the user is a member of the team
         member = await get_team_member(db, team_id, current_user["id"])
 
         if not member:
-            logger.warning(
-                f"User {current_user['id']} denied access to team {team_id} - not a member"
-            )
+            logger.warning(f"User {current_user['id']} denied access to team {team_id} - not a member")
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You don't have access to this team",
@@ -122,9 +118,7 @@ class TeamScopedAccess:
 
 # Pre-defined dependencies for common role requirements
 require_team_owner = TeamScopedAccess(required_roles=[TeamMemberRole.OWNER])
-require_team_admin = TeamScopedAccess(
-    required_roles=[TeamMemberRole.OWNER, TeamMemberRole.ADMIN]
-)
+require_team_admin = TeamScopedAccess(required_roles=[TeamMemberRole.OWNER, TeamMemberRole.ADMIN])
 require_team_member = TeamScopedAccess(
     required_roles=[TeamMemberRole.OWNER, TeamMemberRole.ADMIN, TeamMemberRole.MEMBER]
 )
@@ -169,9 +163,7 @@ async def check_team_access(
         member = await get_team_member(db, team_id, user_id)
 
         if not member:
-            logger.warning(
-                f"User {user_id} denied access to team {team_id} - not a member"
-            )
+            logger.warning(f"User {user_id} denied access to team {team_id} - not a member")
             return False
 
         # If no specific roles required, any membership is sufficient

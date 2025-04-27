@@ -26,9 +26,7 @@ sys.path.insert(0, backend_dir)
 import os
 
 os.environ["SECRET_KEY"] = "debug_secret_key"
-os.environ["DATABASE_URL"] = (
-    "postgresql+asyncpg://toban_admin:postgres@localhost:5432/tobancv"
-)
+os.environ["DATABASE_URL"] = "postgresql+asyncpg://toban_admin:postgres@localhost:5432/tobancv"
 os.environ["SUPABASE_URL"] = "https://example.supabase.co"
 os.environ["SUPABASE_KEY"] = "debug_key"
 os.environ["SUPABASE_JWT_SECRET"] = "debug_jwt_secret"
@@ -37,10 +35,7 @@ os.environ["OPENROUTER_API_KEY"] = "debug_openrouter_key"
 
 from app.models.integration import Integration
 from app.models.reports import AnalysisType
-from app.models.reports.cross_resource_report import (
-    CrossResourceReport,
-    ResourceAnalysis,
-)
+from app.models.reports.cross_resource_report import CrossResourceReport, ResourceAnalysis
 from app.models.slack import SlackChannel, SlackWorkspace
 from app.services.analysis.slack_channel import SlackChannelAnalysisService
 from app.services.llm.openrouter import OpenRouterService
@@ -49,10 +44,7 @@ from app.services.llm.openrouter import OpenRouterService
 logging.basicConfig(
     level=logging.DEBUG,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    handlers=[
-        logging.StreamHandler(sys.stdout),
-        logging.FileHandler("debug_analysis.log"),
-    ],
+    handlers=[logging.StreamHandler(sys.stdout), logging.FileHandler("debug_analysis.log")],
 )
 
 # Set up module-specific loggers
@@ -76,43 +68,29 @@ engine = create_async_engine(
 )
 
 # Create async session factory
-async_session = sessionmaker(
-    engine, class_=AsyncSession, expire_on_commit=False, autoflush=False
-)
+async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False, autoflush=False)
 
 
-async def get_channel_by_name(
-    db: AsyncSession, channel_name: str
-) -> Optional[SlackChannel]:
+async def get_channel_by_name(db: AsyncSession, channel_name: str) -> Optional[SlackChannel]:
     """Get a Slack channel by name."""
-    result = await db.execute(
-        select(SlackChannel).where(SlackChannel.name == channel_name)
-    )
+    result = await db.execute(select(SlackChannel).where(SlackChannel.name == channel_name))
     return result.scalar_one_or_none()
 
 
-async def get_workspace_for_channel(
-    db: AsyncSession, channel_id: UUID
-) -> Optional[SlackWorkspace]:
+async def get_workspace_for_channel(db: AsyncSession, channel_id: UUID) -> Optional[SlackWorkspace]:
     """Get the workspace for a channel."""
     result = await db.execute(select(SlackChannel).where(SlackChannel.id == channel_id))
     channel = result.scalar_one_or_none()
     if not channel or not channel.workspace_id:
         return None
 
-    result = await db.execute(
-        select(SlackWorkspace).where(SlackWorkspace.id == channel.workspace_id)
-    )
+    result = await db.execute(select(SlackWorkspace).where(SlackWorkspace.id == channel.workspace_id))
     return result.scalar_one_or_none()
 
 
-async def get_integration_for_workspace(
-    db: AsyncSession, workspace_slack_id: str
-) -> Optional[Integration]:
+async def get_integration_for_workspace(db: AsyncSession, workspace_slack_id: str) -> Optional[Integration]:
     """Get the integration for a workspace by Slack ID."""
-    result = await db.execute(
-        select(Integration).where(Integration.workspace_id == workspace_slack_id)
-    )
+    result = await db.execute(select(Integration).where(Integration.workspace_id == workspace_slack_id))
     return result.scalar_one_or_none()
 
 
@@ -137,9 +115,7 @@ async def run_debug_analysis(
         logger.error(f"Channel {channel_name} not found")
         return
 
-    logger.info(
-        f"Found channel: {channel.name} (ID: {channel.id}, Slack ID: {channel.slack_id})"
-    )
+    logger.info(f"Found channel: {channel.name} (ID: {channel.id}, Slack ID: {channel.slack_id})")
 
     # Get the workspace
     workspace = await get_workspace_for_channel(db, channel.id)
@@ -147,9 +123,7 @@ async def run_debug_analysis(
         logger.error(f"Workspace not found for channel {channel_name}")
         return
 
-    logger.info(
-        f"Workspace: {workspace.name} (ID: {workspace.id}, Slack ID: {workspace.slack_id})"
-    )
+    logger.info(f"Workspace: {workspace.name} (ID: {workspace.id}, Slack ID: {workspace.slack_id})")
 
     # Get the integration
     integration = await get_integration_for_workspace(db, workspace.slack_id)
@@ -167,16 +141,12 @@ async def run_debug_analysis(
         # Check if messages_data is a dict or a list (handle both formats)
         if isinstance(messages_data, dict):
             messages = messages_data.get("messages", [])
-            logger.debug(
-                f"_format_messages called with {len(messages)} messages (dict format)"
-            )
+            logger.debug(f"_format_messages called with {len(messages)} messages (dict format)")
             sample_messages = messages[:5]
         else:
             # If it's a list, it's already the messages
             messages = messages_data
-            logger.debug(
-                f"_format_messages called with {len(messages)} messages (list format)"
-            )
+            logger.debug(f"_format_messages called with {len(messages)} messages (list format)")
             sample_messages = messages[:5] if messages else []
 
         logger.debug(f"Sample messages: {json.dumps(sample_messages, indent=2)}")
@@ -191,19 +161,13 @@ async def run_debug_analysis(
                 empty_count += 1
 
         if join_count > 0:
-            logger.warning(
-                f"Found {join_count} join messages out of {len(messages)} total messages"
-            )
+            logger.warning(f"Found {join_count} join messages out of {len(messages)} total messages")
         if empty_count > 0:
-            logger.warning(
-                f"Found {empty_count} empty messages out of {len(messages)} total messages"
-            )
+            logger.warning(f"Found {empty_count} empty messages out of {len(messages)} total messages")
 
         # Call the original function
         result = original_format_messages(self, messages_data, max_tokens)
-        logger.debug(
-            f"_format_messages result content length: {len(result) if result else 0}"
-        )
+        logger.debug(f"_format_messages result content length: {len(result) if result else 0}")
         return result
 
     # Apply the monkeypatch
@@ -220,42 +184,28 @@ async def run_debug_analysis(
 
         # Format the messages to check for content
         message_content = self._format_messages(
-            messages_data.get("messages", [])
-            if isinstance(messages_data, dict)
-            else messages_data
+            messages_data.get("messages", []) if isinstance(messages_data, dict) else messages_data
         )
 
-        logger.debug(
-            f"Message content preview: {message_content[:100]} (length: {len(message_content)})"
-        )
+        logger.debug(f"Message content preview: {message_content[:100]} (length: {len(message_content)})")
 
         # Count types of messages
-        messages_list = (
-            messages_data.get("messages", [])
-            if isinstance(messages_data, dict)
-            else messages_data
-        )
+        messages_list = messages_data.get("messages", []) if isinstance(messages_data, dict) else messages_data
         user_messages = [
             msg
             for msg in messages_list
-            if msg.get("user") != "System"
-            and "さんがチャンネルに参加しました" not in msg.get("text", "")
+            if msg.get("user") != "System" and "さんがチャンネルに参加しました" not in msg.get("text", "")
         ]
         system_messages = [
             msg
             for msg in messages_list
-            if msg.get("user") == "System"
-            or "さんがチャンネルに参加しました" in msg.get("text", "")
+            if msg.get("user") == "System" or "さんがチャンネルに参加しました" in msg.get("text", "")
         ]
 
-        logger.debug(
-            f"Message counts: {len(user_messages)} user messages, {len(system_messages)} system messages"
-        )
+        logger.debug(f"Message counts: {len(user_messages)} user messages, {len(system_messages)} system messages")
 
         if len(user_messages) == 0:
-            logger.warning(
-                "No user messages found - LLM will likely report 'no actual channel messages'"
-            )
+            logger.warning("No user messages found - LLM will likely report 'no actual channel messages'")
 
         if dry_run:
             # Return mock response for dry run
@@ -267,9 +217,7 @@ async def run_debug_analysis(
             }
         else:
             # Call the original method for real runs
-            return await original_analyze(
-                self, channel_name, messages_data, start_date, end_date, model
-            )
+            return await original_analyze(self, channel_name, messages_data, start_date, end_date, model)
 
     # Apply the second monkeypatch
     OpenRouterService.analyze_channel_messages = debug_analyze_channel_messages
@@ -304,30 +252,22 @@ async def run_debug_analysis(
         # Debug check: Let's look at a few message samples
         logger.info("Sample messages:")
         for i, msg in enumerate(data["messages"][:5]):
-            logger.info(
-                f"  {i + 1}. {msg['timestamp']} | User: {msg['user_id']} | Text: '{msg['text'][:100]}...'"
-            )
+            logger.info(f"  {i + 1}. {msg['timestamp']} | User: {msg['user_id']} | Text: '{msg['text'][:100]}...'")
             logger.info(
                 f"     Thread info: parent={msg['is_thread_parent']}, reply={msg['is_thread_reply']}, replies={msg['reply_count']}"
             )
 
         # Prepare data for analysis
         logger.info("Preparing data for analysis...")
-        prepared_data = await analysis_service.prepare_data_for_analysis(
-            data, analysis_type
-        )
+        prepared_data = await analysis_service.prepare_data_for_analysis(data, analysis_type)
 
         # Log prepared data statistics
         logger.info(f"Prepared data: {prepared_data['total_messages']} total messages")
 
         if analysis_type == AnalysisType.ACTIVITY:
-            logger.info(
-                f"Prepared {len(prepared_data.get('messages', []))} messages for LLM"
-            )
+            logger.info(f"Prepared {len(prepared_data.get('messages', []))} messages for LLM")
             sample_prepared = prepared_data.get("messages", [])[:3]
-            logger.info(
-                f"Sample prepared messages: {json.dumps(sample_prepared, indent=2)}"
-            )
+            logger.info(f"Sample prepared messages: {json.dumps(sample_prepared, indent=2)}")
 
         # Run the analysis
         logger.info("Running analysis...")
@@ -342,18 +282,12 @@ async def run_debug_analysis(
             logger.info("Dry run completed - No LLM call made")
         else:
             logger.info("Analysis completed")
-            logger.info(
-                f"Resource summary: {analysis_results.get('resource_summary', '')[:200]}..."
-            )
-            logger.info(
-                f"Key highlights: {analysis_results.get('key_highlights', '')[:200]}..."
-            )
+            logger.info(f"Resource summary: {analysis_results.get('resource_summary', '')[:200]}...")
+            logger.info(f"Key highlights: {analysis_results.get('key_highlights', '')[:200]}...")
 
             # Check for no_data flag
             if analysis_results.get("no_data", False):
-                logger.error(
-                    "LLM reported no_data=True despite having messages in the data"
-                )
+                logger.error("LLM reported no_data=True despite having messages in the data")
 
     except Exception as e:
         logger.error(f"Error running analysis: {str(e)}")
@@ -371,9 +305,7 @@ async def create_debug_cross_report(
     title: str = None,
 ) -> Optional[UUID]:
     """Create a cross-resource report for debugging."""
-    logger.info(
-        f"Creating cross-resource report for channels: {', '.join(channel_names)}"
-    )
+    logger.info(f"Creating cross-resource report for channels: {', '.join(channel_names)}")
     logger.info(f"Date range: {start_date} to {end_date}")
 
     # Get the channels
@@ -446,18 +378,12 @@ async def main():
         print("  analyze <channel_name> <start_date> <end_date> [analysis_type]")
         print("    Run analysis on a single channel")
         print()
-        print(
-            "  create-report <channel1,channel2,...> <start_date> <end_date> [analysis_type]"
-        )
+        print("  create-report <channel1,channel2,...> <start_date> <end_date> [analysis_type]")
         print("    Create a cross-resource report for multiple channels")
         print()
         print("Examples:")
-        print(
-            "  python run_analysis.py analyze proj-oss-boardgame 2024-11-01 2025-04-24 general"
-        )
-        print(
-            "  python run_analysis.py create-report 'proj-oss-boardgame,02_introduction' 2024-11-01 2025-04-24"
-        )
+        print("  python run_analysis.py analyze proj-oss-boardgame 2024-11-01 2025-04-24 general")
+        print("  python run_analysis.py create-report 'proj-oss-boardgame,02_introduction' 2024-11-01 2025-04-24")
         return
 
     command = sys.argv[1]

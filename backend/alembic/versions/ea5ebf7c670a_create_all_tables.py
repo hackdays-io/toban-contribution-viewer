@@ -28,9 +28,7 @@ def upgrade() -> None:
         sa.Column("avatar_url", sa.String(length=1024), nullable=True),
         sa.Column("team_size", sa.Integer(), nullable=False),
         sa.Column("is_personal", sa.Boolean(), nullable=False),
-        sa.Column(
-            "team_metadata", postgresql.JSONB(astext_type=sa.Text()), nullable=True
-        ),
+        sa.Column("team_metadata", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
         sa.Column("created_by_user_id", sa.String(length=255), nullable=False),
         sa.Column("created_by_email", sa.String(length=255), nullable=True),
         sa.Column("id", sa.UUID(), nullable=False),
@@ -49,16 +47,12 @@ def upgrade() -> None:
         sa.Column("description", sa.Text(), nullable=True),
         sa.Column(
             "status",
-            sa.Enum(
-                "PENDING", "IN_PROGRESS", "COMPLETED", "FAILED", name="reportstatus"
-            ),
+            sa.Enum("PENDING", "IN_PROGRESS", "COMPLETED", "FAILED", name="reportstatus"),
             nullable=False,
         ),
         sa.Column("date_range_start", sa.DateTime(), nullable=False),
         sa.Column("date_range_end", sa.DateTime(), nullable=False),
-        sa.Column(
-            "report_parameters", postgresql.JSONB(astext_type=sa.Text()), nullable=True
-        ),
+        sa.Column("report_parameters", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
         sa.Column("comprehensive_analysis", sa.Text(), nullable=True),
         sa.Column("comprehensive_analysis_generated_at", sa.DateTime(), nullable=True),
         sa.Column("model_used", sa.String(length=100), nullable=True),
@@ -78,9 +72,7 @@ def upgrade() -> None:
         ["team_id", "status"],
         unique=False,
     )
-    op.create_index(
-        op.f("ix_crossresourcereport_id"), "crossresourcereport", ["id"], unique=False
-    )
+    op.create_index(op.f("ix_crossresourcereport_id"), "crossresourcereport", ["id"], unique=False)
     op.create_index(
         op.f("ix_crossresourcereport_status"),
         "crossresourcereport",
@@ -154,9 +146,7 @@ def upgrade() -> None:
         sa.Column("domain", sa.String(length=255), nullable=True),
         sa.Column("icon_url", sa.String(length=1024), nullable=True),
         sa.Column("team_size", sa.Integer(), nullable=True),
-        sa.Column(
-            "workspace_metadata", postgresql.JSONB(astext_type=sa.Text()), nullable=True
-        ),
+        sa.Column("workspace_metadata", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
         sa.Column("is_connected", sa.Boolean(), nullable=False),
         sa.Column("connection_status", sa.String(length=50), nullable=False),
         sa.Column("last_connected_at", sa.DateTime(), nullable=False),
@@ -175,15 +165,9 @@ def upgrade() -> None:
         ),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_index(
-        op.f("ix_slackworkspace_id"), "slackworkspace", ["id"], unique=False
-    )
-    op.create_index(
-        op.f("ix_slackworkspace_slack_id"), "slackworkspace", ["slack_id"], unique=True
-    )
-    op.create_index(
-        op.f("ix_slackworkspace_team_id"), "slackworkspace", ["team_id"], unique=False
-    )
+    op.create_index(op.f("ix_slackworkspace_id"), "slackworkspace", ["id"], unique=False)
+    op.create_index(op.f("ix_slackworkspace_slack_id"), "slackworkspace", ["slack_id"], unique=True)
+    op.create_index(op.f("ix_slackworkspace_team_id"), "slackworkspace", ["team_id"], unique=False)
     op.create_table(
         "teammember",
         sa.Column("user_id", sa.String(length=255), nullable=False),
@@ -210,18 +194,14 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index(op.f("ix_teammember_id"), "teammember", ["id"], unique=False)
-    op.create_index(
-        op.f("ix_teammember_team_id"), "teammember", ["team_id"], unique=False
-    )
+    op.create_index(op.f("ix_teammember_team_id"), "teammember", ["team_id"], unique=False)
     op.create_index(
         "ix_teammember_team_id_user_id",
         "teammember",
         ["team_id", "user_id"],
         unique=True,
     )
-    op.create_index(
-        op.f("ix_teammember_user_id"), "teammember", ["user_id"], unique=False
-    )
+    op.create_index(op.f("ix_teammember_user_id"), "teammember", ["user_id"], unique=False)
     op.create_table(
         "integration_share",
         sa.Column(
@@ -248,9 +228,7 @@ def upgrade() -> None:
         ),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_index(
-        op.f("ix_integration_share_id"), "integration_share", ["id"], unique=False
-    )
+    op.create_index(op.f("ix_integration_share_id"), "integration_share", ["id"], unique=False)
     op.create_index(
         op.f("ix_integration_share_integration_id"),
         "integration_share",
@@ -349,9 +327,7 @@ def upgrade() -> None:
         ["affected_team_id"],
         unique=False,
     )
-    op.create_index(
-        op.f("ix_integrationevent_id"), "integrationevent", ["id"], unique=False
-    )
+    op.create_index(op.f("ix_integrationevent_id"), "integrationevent", ["id"], unique=False)
     op.create_index(
         op.f("ix_integrationevent_integration_id"),
         "integrationevent",
@@ -375,16 +351,12 @@ def upgrade() -> None:
         ),
         sa.Column(
             "analysis_type",
-            sa.Enum(
-                "CONTRIBUTION", "TOPICS", "SENTIMENT", "ACTIVITY", name="analysistype"
-            ),
+            sa.Enum("CONTRIBUTION", "TOPICS", "SENTIMENT", "ACTIVITY", name="analysistype"),
             nullable=False,
         ),
         sa.Column(
             "status",
-            sa.Enum(
-                "PENDING", "IN_PROGRESS", "COMPLETED", "FAILED", name="reportstatus"
-            ),
+            sa.Enum("PENDING", "IN_PROGRESS", "COMPLETED", "FAILED", name="reportstatus"),
             nullable=False,
         ),
         sa.Column(
@@ -439,9 +411,7 @@ def upgrade() -> None:
         ["cross_resource_report_id"],
         unique=False,
     )
-    op.create_index(
-        op.f("ix_resourceanalysis_id"), "resourceanalysis", ["id"], unique=False
-    )
+    op.create_index(op.f("ix_resourceanalysis_id"), "resourceanalysis", ["id"], unique=False)
     op.create_index(
         op.f("ix_resourceanalysis_integration_id"),
         "resourceanalysis",
@@ -454,9 +424,7 @@ def upgrade() -> None:
         ["resource_type"],
         unique=False,
     )
-    op.create_index(
-        op.f("ix_resourceanalysis_status"), "resourceanalysis", ["status"], unique=False
-    )
+    op.create_index(op.f("ix_resourceanalysis_status"), "resourceanalysis", ["status"], unique=False)
     op.create_table(
         "serviceresource",
         sa.Column(
@@ -480,9 +448,7 @@ def upgrade() -> None:
         ),
         sa.Column("external_id", sa.String(length=255), nullable=False),
         sa.Column("name", sa.String(length=255), nullable=False),
-        sa.Column(
-            "resource_metadata", postgresql.JSONB(astext_type=sa.Text()), nullable=True
-        ),
+        sa.Column("resource_metadata", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
         sa.Column("last_synced_at", sa.DateTime(), nullable=True),
         sa.Column("integration_id", sa.UUID(), nullable=False),
         sa.Column("id", sa.UUID(), nullable=False),
@@ -495,9 +461,7 @@ def upgrade() -> None:
         ),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_index(
-        op.f("ix_serviceresource_id"), "serviceresource", ["id"], unique=False
-    )
+    op.create_index(op.f("ix_serviceresource_id"), "serviceresource", ["id"], unique=False)
     op.create_index(
         op.f("ix_serviceresource_integration_id"),
         "serviceresource",
@@ -525,9 +489,7 @@ def upgrade() -> None:
         sa.Column("status", sa.String(length=50), nullable=False),
         sa.Column("progress", sa.Float(), nullable=False),
         sa.Column("error_message", sa.Text(), nullable=True),
-        sa.Column(
-            "result_summary", postgresql.JSONB(astext_type=sa.Text()), nullable=True
-        ),
+        sa.Column("result_summary", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
         sa.Column("completion_time", sa.DateTime(), nullable=True),
         sa.Column("workspace_id", sa.UUID(), nullable=False),
         sa.Column("created_by_user_id", sa.UUID(), nullable=True),
@@ -571,9 +533,7 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index(op.f("ix_slackchannel_id"), "slackchannel", ["id"], unique=False)
-    op.create_index(
-        op.f("ix_slackchannel_slack_id"), "slackchannel", ["slack_id"], unique=False
-    )
+    op.create_index(op.f("ix_slackchannel_slack_id"), "slackchannel", ["slack_id"], unique=False)
     op.create_index(
         "ix_slackchannel_workspace_id_slack_id",
         "slackchannel",
@@ -595,9 +555,7 @@ def upgrade() -> None:
         sa.Column("is_bot", sa.Boolean(), nullable=False),
         sa.Column("is_admin", sa.Boolean(), nullable=False),
         sa.Column("is_deleted", sa.Boolean(), nullable=False),
-        sa.Column(
-            "profile_data", postgresql.JSONB(astext_type=sa.Text()), nullable=True
-        ),
+        sa.Column("profile_data", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
         sa.Column("workspace_id", sa.UUID(), nullable=False),
         sa.Column("id", sa.UUID(), nullable=False),
         sa.Column("created_at", sa.DateTime(), nullable=False),
@@ -610,9 +568,7 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index(op.f("ix_slackuser_id"), "slackuser", ["id"], unique=False)
-    op.create_index(
-        op.f("ix_slackuser_slack_id"), "slackuser", ["slack_id"], unique=False
-    )
+    op.create_index(op.f("ix_slackuser_slack_id"), "slackuser", ["slack_id"], unique=False)
     op.create_index(
         "ix_slackuser_workspace_id_slack_id",
         "slackuser",
@@ -657,9 +613,7 @@ def upgrade() -> None:
         ),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_index(
-        op.f("ix_resourceaccess_id"), "resourceaccess", ["id"], unique=False
-    )
+    op.create_index(op.f("ix_resourceaccess_id"), "resourceaccess", ["id"], unique=False)
     op.create_index(
         op.f("ix_resourceaccess_resource_id"),
         "resourceaccess",
@@ -672,9 +626,7 @@ def upgrade() -> None:
         ["resource_id", "team_id"],
         unique=True,
     )
-    op.create_index(
-        op.f("ix_resourceaccess_team_id"), "resourceaccess", ["team_id"], unique=False
-    )
+    op.create_index(op.f("ix_resourceaccess_team_id"), "resourceaccess", ["team_id"], unique=False)
     op.create_table(
         "slackchannelanalysis",
         sa.Column("analysis_id", sa.UUID(), nullable=False),
@@ -691,9 +643,7 @@ def upgrade() -> None:
         sa.Column("key_highlights", sa.Text(), nullable=True),
         sa.Column("model_used", sa.String(length=255), nullable=True),
         sa.Column("generated_at", sa.DateTime(), nullable=False),
-        sa.Column(
-            "raw_response", postgresql.JSONB(astext_type=sa.Text()), nullable=True
-        ),
+        sa.Column("raw_response", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
         sa.Column("status", sa.String(length=50), nullable=False),
         sa.Column("error_message", sa.Text(), nullable=True),
         sa.Column("id", sa.UUID(), nullable=False),
@@ -734,9 +684,7 @@ def upgrade() -> None:
         ["generated_at"],
         unique=False,
     )
-    op.create_index(
-        op.f("ix_slackchannelanalysis_id"), "slackchannelanalysis", ["id"], unique=False
-    )
+    op.create_index(op.f("ix_slackchannelanalysis_id"), "slackchannelanalysis", ["id"], unique=False)
     op.create_table(
         "slackcontribution",
         sa.Column("problem_solving_score", sa.Float(), nullable=True),
@@ -754,9 +702,7 @@ def upgrade() -> None:
             nullable=True,
         ),
         sa.Column("insights", sa.Text(), nullable=True),
-        sa.Column(
-            "insights_data", postgresql.JSONB(astext_type=sa.Text()), nullable=True
-        ),
+        sa.Column("insights_data", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
         sa.Column("analysis_id", sa.UUID(), nullable=False),
         sa.Column("user_id", sa.UUID(), nullable=False),
         sa.Column("channel_id", sa.UUID(), nullable=True),
@@ -784,9 +730,7 @@ def upgrade() -> None:
         ["analysis_id", "user_id", "channel_id"],
         unique=True,
     )
-    op.create_index(
-        op.f("ix_slackcontribution_id"), "slackcontribution", ["id"], unique=False
-    )
+    op.create_index(op.f("ix_slackcontribution_id"), "slackcontribution", ["id"], unique=False)
     op.create_table(
         "slackmessage",
         sa.Column("slack_id", sa.String(length=255), nullable=False),
@@ -798,9 +742,7 @@ def upgrade() -> None:
         sa.Column("is_edited", sa.Boolean(), nullable=False),
         sa.Column("edited_ts", sa.String(length=50), nullable=True),
         sa.Column("has_attachments", sa.Boolean(), nullable=False),
-        sa.Column(
-            "attachments", postgresql.JSONB(astext_type=sa.Text()), nullable=True
-        ),
+        sa.Column("attachments", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
         sa.Column("files", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
         sa.Column("thread_ts", sa.String(length=50), nullable=True),
         sa.Column("is_thread_parent", sa.Boolean(), nullable=False),
@@ -812,9 +754,7 @@ def upgrade() -> None:
         sa.Column("is_analyzed", sa.Boolean(), nullable=False),
         sa.Column("message_category", sa.String(length=100), nullable=True),
         sa.Column("sentiment_score", sa.Float(), nullable=True),
-        sa.Column(
-            "analysis_data", postgresql.JSONB(astext_type=sa.Text()), nullable=True
-        ),
+        sa.Column("analysis_data", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
         sa.Column("channel_id", sa.UUID(), nullable=False),
         sa.Column("user_id", sa.UUID(), nullable=True),
         sa.Column("parent_id", sa.UUID(), nullable=True),
@@ -849,15 +789,9 @@ def upgrade() -> None:
         ["message_datetime"],
         unique=False,
     )
-    op.create_index(
-        op.f("ix_slackmessage_slack_id"), "slackmessage", ["slack_id"], unique=False
-    )
-    op.create_index(
-        op.f("ix_slackmessage_slack_ts"), "slackmessage", ["slack_ts"], unique=False
-    )
-    op.create_index(
-        op.f("ix_slackmessage_thread_ts"), "slackmessage", ["thread_ts"], unique=False
-    )
+    op.create_index(op.f("ix_slackmessage_slack_id"), "slackmessage", ["slack_id"], unique=False)
+    op.create_index(op.f("ix_slackmessage_slack_ts"), "slackmessage", ["slack_ts"], unique=False)
+    op.create_index(op.f("ix_slackmessage_thread_ts"), "slackmessage", ["thread_ts"], unique=False)
     op.create_index(
         "ix_slackmessage_user_id_slack_ts",
         "slackmessage",
@@ -897,9 +831,7 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     # ### commands auto generated by Alembic - please adjust! ###
-    op.drop_index(
-        "ix_slackreaction_message_id_user_id_emoji_name", table_name="slackreaction"
-    )
+    op.drop_index("ix_slackreaction_message_id_user_id_emoji_name", table_name="slackreaction")
     op.drop_index(op.f("ix_slackreaction_id"), table_name="slackreaction")
     op.drop_table("slackreaction")
     op.drop_index("ix_slackmessage_user_id_slack_ts", table_name="slackmessage")
@@ -917,19 +849,13 @@ def downgrade() -> None:
     )
     op.drop_table("slackcontribution")
     op.drop_index(op.f("ix_slackchannelanalysis_id"), table_name="slackchannelanalysis")
-    op.drop_index(
-        op.f("ix_slackchannelanalysis_generated_at"), table_name="slackchannelanalysis"
-    )
-    op.drop_index(
-        op.f("ix_slackchannelanalysis_channel_id"), table_name="slackchannelanalysis"
-    )
+    op.drop_index(op.f("ix_slackchannelanalysis_generated_at"), table_name="slackchannelanalysis")
+    op.drop_index(op.f("ix_slackchannelanalysis_channel_id"), table_name="slackchannelanalysis")
     op.drop_index(
         "ix_slackchannelanalysis_analysis_id_channel_id",
         table_name="slackchannelanalysis",
     )
-    op.drop_index(
-        op.f("ix_slackchannelanalysis_analysis_id"), table_name="slackchannelanalysis"
-    )
+    op.drop_index(op.f("ix_slackchannelanalysis_analysis_id"), table_name="slackchannelanalysis")
     op.drop_table("slackchannelanalysis")
     op.drop_index(op.f("ix_resourceaccess_team_id"), table_name="resourceaccess")
     op.drop_index("ix_resourceaccess_resource_id_team_id", table_name="resourceaccess")
@@ -951,54 +877,34 @@ def downgrade() -> None:
         "ix_serviceresource_integration_id_resource_type_external_id",
         table_name="serviceresource",
     )
-    op.drop_index(
-        op.f("ix_serviceresource_integration_id"), table_name="serviceresource"
-    )
+    op.drop_index(op.f("ix_serviceresource_integration_id"), table_name="serviceresource")
     op.drop_index(op.f("ix_serviceresource_id"), table_name="serviceresource")
     op.drop_table("serviceresource")
     op.drop_index(op.f("ix_resourceanalysis_status"), table_name="resourceanalysis")
-    op.drop_index(
-        op.f("ix_resourceanalysis_resource_type"), table_name="resourceanalysis"
-    )
-    op.drop_index(
-        op.f("ix_resourceanalysis_integration_id"), table_name="resourceanalysis"
-    )
+    op.drop_index(op.f("ix_resourceanalysis_resource_type"), table_name="resourceanalysis")
+    op.drop_index(op.f("ix_resourceanalysis_integration_id"), table_name="resourceanalysis")
     op.drop_index(op.f("ix_resourceanalysis_id"), table_name="resourceanalysis")
     op.drop_index(
         op.f("ix_resourceanalysis_cross_resource_report_id"),
         table_name="resourceanalysis",
     )
-    op.drop_index(
-        op.f("ix_resourceanalysis_analysis_type"), table_name="resourceanalysis"
-    )
+    op.drop_index(op.f("ix_resourceanalysis_analysis_type"), table_name="resourceanalysis")
     op.drop_index("ix_resource_analysis_resource_type", table_name="resourceanalysis")
-    op.drop_index(
-        "ix_resource_analysis_report_id_status", table_name="resourceanalysis"
-    )
+    op.drop_index("ix_resource_analysis_report_id_status", table_name="resourceanalysis")
     op.drop_table("resourceanalysis")
-    op.drop_index(
-        op.f("ix_integrationevent_integration_id"), table_name="integrationevent"
-    )
+    op.drop_index(op.f("ix_integrationevent_integration_id"), table_name="integrationevent")
     op.drop_index(op.f("ix_integrationevent_id"), table_name="integrationevent")
-    op.drop_index(
-        op.f("ix_integrationevent_affected_team_id"), table_name="integrationevent"
-    )
+    op.drop_index(op.f("ix_integrationevent_affected_team_id"), table_name="integrationevent")
     op.drop_table("integrationevent")
     op.drop_index(
         op.f("ix_integrationcredential_integration_id"),
         table_name="integrationcredential",
     )
-    op.drop_index(
-        op.f("ix_integrationcredential_id"), table_name="integrationcredential"
-    )
+    op.drop_index(op.f("ix_integrationcredential_id"), table_name="integrationcredential")
     op.drop_table("integrationcredential")
     op.drop_index(op.f("ix_integration_share_team_id"), table_name="integration_share")
-    op.drop_index(
-        "ix_integration_share_integration_id_team_id", table_name="integration_share"
-    )
-    op.drop_index(
-        op.f("ix_integration_share_integration_id"), table_name="integration_share"
-    )
+    op.drop_index("ix_integration_share_integration_id_team_id", table_name="integration_share")
+    op.drop_index(op.f("ix_integration_share_integration_id"), table_name="integration_share")
     op.drop_index(op.f("ix_integration_share_id"), table_name="integration_share")
     op.drop_table("integration_share")
     op.drop_index(op.f("ix_teammember_user_id"), table_name="teammember")
@@ -1018,16 +924,10 @@ def downgrade() -> None:
     op.drop_index(op.f("ix_integration_owner_team_id"), table_name="integration")
     op.drop_index(op.f("ix_integration_id"), table_name="integration")
     op.drop_table("integration")
-    op.drop_index(
-        op.f("ix_crossresourcereport_team_id"), table_name="crossresourcereport"
-    )
-    op.drop_index(
-        op.f("ix_crossresourcereport_status"), table_name="crossresourcereport"
-    )
+    op.drop_index(op.f("ix_crossresourcereport_team_id"), table_name="crossresourcereport")
+    op.drop_index(op.f("ix_crossresourcereport_status"), table_name="crossresourcereport")
     op.drop_index(op.f("ix_crossresourcereport_id"), table_name="crossresourcereport")
-    op.drop_index(
-        "ix_cross_resource_report_team_id_status", table_name="crossresourcereport"
-    )
+    op.drop_index("ix_cross_resource_report_team_id_status", table_name="crossresourcereport")
     op.drop_table("crossresourcereport")
     op.drop_index("ix_team_slug_unique", table_name="team")
     op.drop_index(op.f("ix_team_slug"), table_name="team")

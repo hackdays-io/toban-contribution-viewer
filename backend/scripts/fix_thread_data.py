@@ -51,9 +51,7 @@ async def fix_thread_data(channel_id=None, max_threads=50):
 
     try:
         # Build the query to find thread parent messages
-        query = select(SlackMessage).where(
-            SlackMessage.is_thread_parent.is_(True), SlackMessage.reply_count > 0
-        )
+        query = select(SlackMessage).where(SlackMessage.is_thread_parent.is_(True), SlackMessage.reply_count > 0)
 
         # If channel ID is provided, limit to that channel
         if channel_id:
@@ -75,15 +73,11 @@ async def fix_thread_data(channel_id=None, max_threads=50):
         # Process each thread parent message
         for parent in parent_messages:
             threads_processed += 1
-            logger.info(
-                f"Processing thread {threads_processed}/{len(parent_messages)}: {parent.slack_ts}"
-            )
+            logger.info(f"Processing thread {threads_processed}/{len(parent_messages)}: {parent.slack_ts}")
 
             # Get the channel info for this message
             channel_result = await db.execute(
-                select(SlackChannel)
-                .options(select(SlackChannel.workspace))
-                .where(SlackChannel.id == parent.channel_id)
+                select(SlackChannel).options(select(SlackChannel.workspace)).where(SlackChannel.id == parent.channel_id)
             )
             channel = channel_result.scalars().first()
 
@@ -92,9 +86,7 @@ async def fix_thread_data(channel_id=None, max_threads=50):
                 continue
 
             if not channel.workspace.access_token:
-                logger.warning(
-                    f"No access token for workspace {channel.workspace.id}, skipping"
-                )
+                logger.warning(f"No access token for workspace {channel.workspace.id}, skipping")
                 continue
 
             # API client will be created in the service
@@ -109,9 +101,7 @@ async def fix_thread_data(channel_id=None, max_threads=50):
                     max_pages=20,  # Maximum 20 pages (10,000 replies should be enough)
                 )
 
-                logger.info(
-                    f"Fetched {len(thread_replies)} replies for thread {parent.slack_ts}"
-                )
+                logger.info(f"Fetched {len(thread_replies)} replies for thread {parent.slack_ts}")
 
                 # If we got no replies, skip
                 if not thread_replies:
@@ -163,17 +153,13 @@ async def fix_thread_data(channel_id=None, max_threads=50):
                         logger.info(f"Added new reply {reply.get('ts')}")
 
                 # Update parent message with reply count
-                parent.reply_count = (
-                    len(thread_replies) - 1
-                )  # Subtract 1 for parent message
+                parent.reply_count = len(thread_replies) - 1  # Subtract 1 for parent message
 
                 # Commit changes for this thread
                 if replies_added > 0:
                     await db.commit()
                     total_replies_added += replies_added
-                    logger.info(
-                        f"Added/updated {replies_added} replies for thread {parent.slack_ts}"
-                    )
+                    logger.info(f"Added/updated {replies_added} replies for thread {parent.slack_ts}")
 
             except Exception as e:
                 logger.error(f"Error processing thread {parent.slack_ts}: {e}")
@@ -211,9 +197,7 @@ async def main():
         )
         args = parser.parse_args()
 
-        result = await fix_thread_data(
-            channel_id=args.channel, max_threads=args.max_threads
-        )
+        result = await fix_thread_data(channel_id=args.channel, max_threads=args.max_threads)
         logger.info(
             f"Script completed successfully. Processed {result['threads_processed']} threads, added {result['replies_added']} replies."
         )

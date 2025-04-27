@@ -59,25 +59,19 @@ def mock_channel():
 
 
 @pytest.mark.asyncio
-async def test_get_channels_for_workspace(
-    mock_db_session, mock_workspace, mock_channel
-):
+async def test_get_channels_for_workspace(mock_db_session, mock_workspace, mock_channel):
     """Test getting channels for a workspace."""
     # Mock the select result for workspace query
     mock_workspace_result = MagicMock()
     mock_workspace_result.scalars = MagicMock()
     mock_workspace_result.scalars.return_value = MagicMock()
-    mock_workspace_result.scalars.return_value.first = MagicMock(
-        return_value=mock_workspace
-    )
+    mock_workspace_result.scalars.return_value.first = MagicMock(return_value=mock_workspace)
 
     # Mock the channel list result
     mock_channels_result = MagicMock()
     mock_channels_result.scalars = MagicMock()
     mock_channels_result.scalars.return_value = MagicMock()
-    mock_channels_result.scalars.return_value.all = MagicMock(
-        return_value=[mock_channel]
-    )
+    mock_channels_result.scalars.return_value.all = MagicMock(return_value=[mock_channel])
 
     # Mock the count result
     mock_count_result = MagicMock()
@@ -147,17 +141,13 @@ async def test_sync_channels_from_slack(mock_db_session, mock_workspace):
     mock_workspace_result = MagicMock()
     mock_workspace_result.scalars = MagicMock()
     mock_workspace_result.scalars.return_value = MagicMock()
-    mock_workspace_result.scalars.return_value.first = MagicMock(
-        return_value=mock_workspace
-    )
+    mock_workspace_result.scalars.return_value.first = MagicMock(return_value=mock_workspace)
 
     # Mock channel queries
     mock_channel_result = MagicMock()
     mock_channel_result.scalars = MagicMock()
     mock_channel_result.scalars.return_value = MagicMock()
-    mock_channel_result.scalars.return_value.first = MagicMock(
-        return_value=None
-    )  # No existing channels
+    mock_channel_result.scalars.return_value.first = MagicMock(return_value=None)  # No existing channels
 
     # Set up the db.execute mock
     mock_db_session.execute = AsyncMock()
@@ -219,17 +209,13 @@ async def test_sync_channels_from_slack(mock_db_session, mock_workspace):
 
 
 @pytest.mark.asyncio
-async def test_select_channels_for_analysis_without_bot_install(
-    mock_db_session, mock_workspace, mock_channel
-):
+async def test_select_channels_for_analysis_without_bot_install(mock_db_session, mock_workspace, mock_channel):
     """Test selecting channels for analysis without bot installation."""
     # Mock the workspace query
     mock_workspace_result = MagicMock()
     mock_workspace_result.scalars = MagicMock()
     mock_workspace_result.scalars.return_value = MagicMock()
-    mock_workspace_result.scalars.return_value.first = MagicMock(
-        return_value=mock_workspace
-    )
+    mock_workspace_result.scalars.return_value.first = MagicMock(return_value=mock_workspace)
 
     # Mock update results
     mock_update_result1 = MagicMock()
@@ -241,9 +227,7 @@ async def test_select_channels_for_analysis_without_bot_install(
     mock_selected_result = MagicMock()
     mock_selected_result.scalars = MagicMock()
     mock_selected_result.scalars.return_value = MagicMock()
-    mock_selected_result.scalars.return_value.all = MagicMock(
-        return_value=[selected_channel]
-    )
+    mock_selected_result.scalars.return_value.all = MagicMock(return_value=[selected_channel])
 
     # Set up the db.execute mock
     mock_db_session.execute = AsyncMock()
@@ -275,24 +259,18 @@ async def test_select_channels_for_analysis_without_bot_install(
     assert "bot_installation" not in result
 
     # Verify the db operations
-    assert (
-        mock_db_session.execute.call_count == 5
-    )  # Including all_channels query for debugging
+    assert mock_db_session.execute.call_count == 5  # Including all_channels query for debugging
     assert mock_db_session.commit.called
 
 
 @pytest.mark.asyncio
-async def test_select_channels_for_analysis_with_bot_install(
-    mock_db_session, mock_workspace, mock_channel
-):
+async def test_select_channels_for_analysis_with_bot_install(mock_db_session, mock_workspace, mock_channel):
     """Test selecting channels for analysis with bot installation."""
     # Mock the workspace query
     mock_workspace_result = MagicMock()
     mock_workspace_result.scalars = MagicMock()
     mock_workspace_result.scalars.return_value = MagicMock()
-    mock_workspace_result.scalars.return_value.first = MagicMock(
-        return_value=mock_workspace
-    )
+    mock_workspace_result.scalars.return_value.first = MagicMock(return_value=mock_workspace)
 
     # Mock update results
     mock_update_result1 = MagicMock()
@@ -319,9 +297,7 @@ async def test_select_channels_for_analysis_with_bot_install(
     mock_selected_result = MagicMock()
     mock_selected_result.scalars = MagicMock()
     mock_selected_result.scalars.return_value = MagicMock()
-    mock_selected_result.scalars.return_value.all = MagicMock(
-        return_value=[mock_channel, channel_without_bot]
-    )
+    mock_selected_result.scalars.return_value.all = MagicMock(return_value=[mock_channel, channel_without_bot])
 
     # Set up the db.execute mock
     mock_db_session.execute = AsyncMock()
@@ -341,9 +317,7 @@ async def test_select_channels_for_analysis_with_bot_install(
         mock_client = AsyncMock(spec=SlackApiClient)
 
         # Mock join_channel to succeed
-        mock_client.join_channel = AsyncMock(
-            return_value={"ok": True, "channel": {"id": "C67890"}}
-        )
+        mock_client.join_channel = AsyncMock(return_value={"ok": True, "channel": {"id": "C67890"}})
 
         mock_client_class.return_value = mock_client
 
@@ -373,7 +347,5 @@ async def test_select_channels_for_analysis_with_bot_install(
         mock_client.join_channel.assert_called_once_with(channel_without_bot.slack_id)
 
         # Verify the db operations
-        assert (
-            mock_db_session.execute.call_count == 5
-        )  # Including all_channels query for debugging
+        assert mock_db_session.execute.call_count == 5  # Including all_channels query for debugging
         assert mock_db_session.commit.called

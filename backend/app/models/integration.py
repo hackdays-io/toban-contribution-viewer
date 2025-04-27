@@ -108,23 +108,17 @@ class Integration(Base, BaseModel):
     service_type = Column(Enum(IntegrationType), nullable=False)
 
     # Status and metadata
-    status = Column(
-        Enum(IntegrationStatus), default=IntegrationStatus.ACTIVE, nullable=False
-    )
+    status = Column(Enum(IntegrationStatus), default=IntegrationStatus.ACTIVE, nullable=False)
     integration_metadata = Column(
         JSONB, nullable=True
     )  # Service-specific configuration (renamed from metadata to avoid SQLAlchemy conflict)
     last_used_at = Column(DateTime, nullable=True)
 
     # External service identifiers
-    workspace_id = Column(
-        String(255), nullable=True
-    )  # ID of the workspace in the external service
+    workspace_id = Column(String(255), nullable=True)  # ID of the workspace in the external service
 
     # Owner info
-    owner_team_id = Column(
-        UUID(as_uuid=True), ForeignKey("team.id"), nullable=False, index=True
-    )
+    owner_team_id = Column(UUID(as_uuid=True), ForeignKey("team.id"), nullable=False, index=True)
     created_by_user_id = Column(String(255), nullable=False)
 
     # Table constraints
@@ -135,16 +129,12 @@ class Integration(Base, BaseModel):
             "workspace_id",
             "service_type",
             unique=True,
-            postgresql_where=workspace_id.isnot(
-                None
-            ),  # Only enforce uniqueness when workspace_id is not null
+            postgresql_where=workspace_id.isnot(None),  # Only enforce uniqueness when workspace_id is not null
         ),
     )
 
     # Relationships
-    owner_team: Mapped["Team"] = relationship(
-        "Team", back_populates="owned_integrations"
-    )
+    owner_team: Mapped["Team"] = relationship("Team", back_populates="owned_integrations")
     credentials: Mapped[List["IntegrationCredential"]] = relationship(
         "IntegrationCredential",
         back_populates="integration",
@@ -177,19 +167,13 @@ class IntegrationCredential(Base, BaseModel):
     scopes = Column(JSONB, nullable=True)  # Permissions granted
 
     # Foreign keys
-    integration_id = Column(
-        UUID(as_uuid=True), ForeignKey("integration.id"), nullable=False, index=True
-    )
+    integration_id = Column(UUID(as_uuid=True), ForeignKey("integration.id"), nullable=False, index=True)
 
     # Relationships
-    integration: Mapped["Integration"] = relationship(
-        "Integration", back_populates="credentials"
-    )
+    integration: Mapped["Integration"] = relationship("Integration", back_populates="credentials")
 
     def __repr__(self) -> str:
-        return (
-            f"<IntegrationCredential {self.credential_type} for {self.integration_id}>"
-        )
+        return f"<IntegrationCredential {self.credential_type} for {self.integration_id}>"
 
 
 class IntegrationShare(Base, BaseModel):
@@ -205,18 +189,12 @@ class IntegrationShare(Base, BaseModel):
     revoked_at = Column(DateTime, nullable=True)
 
     # Foreign keys
-    integration_id = Column(
-        UUID(as_uuid=True), ForeignKey("integration.id"), nullable=False, index=True
-    )
-    team_id = Column(
-        UUID(as_uuid=True), ForeignKey("team.id"), nullable=False, index=True
-    )
+    integration_id = Column(UUID(as_uuid=True), ForeignKey("integration.id"), nullable=False, index=True)
+    team_id = Column(UUID(as_uuid=True), ForeignKey("team.id"), nullable=False, index=True)
     shared_by_user_id = Column(String(255), nullable=False)
 
     # Relationships
-    integration: Mapped["Integration"] = relationship(
-        "Integration", back_populates="shared_with"
-    )
+    integration: Mapped["Integration"] = relationship("Integration", back_populates="shared_with")
     team: Mapped["Team"] = relationship("Team", back_populates="shared_integrations")
 
     # Ensure unique sharing between integration and team
@@ -248,14 +226,10 @@ class ServiceResource(Base, BaseModel):
     last_synced_at = Column(DateTime, nullable=True)
 
     # Foreign keys
-    integration_id = Column(
-        UUID(as_uuid=True), ForeignKey("integration.id"), nullable=False, index=True
-    )
+    integration_id = Column(UUID(as_uuid=True), ForeignKey("integration.id"), nullable=False, index=True)
 
     # Relationships
-    integration: Mapped["Integration"] = relationship(
-        "Integration", back_populates="resources"
-    )
+    integration: Mapped["Integration"] = relationship("Integration", back_populates="resources")
     access_grants: Mapped[List["ResourceAccess"]] = relationship(
         "ResourceAccess", back_populates="resource", cascade="all, delete-orphan"
     )
@@ -272,9 +246,7 @@ class ServiceResource(Base, BaseModel):
     )
 
     def __repr__(self) -> str:
-        return (
-            f"<ServiceResource {self.resource_type} {self.name} ({self.external_id})>"
-        )
+        return f"<ServiceResource {self.resource_type} {self.name} ({self.external_id})>"
 
 
 class ResourceAccess(Base, BaseModel):
@@ -286,18 +258,12 @@ class ResourceAccess(Base, BaseModel):
     access_level = Column(Enum(AccessLevel), default=AccessLevel.READ, nullable=False)
 
     # Foreign keys
-    resource_id = Column(
-        UUID(as_uuid=True), ForeignKey("serviceresource.id"), nullable=False, index=True
-    )
-    team_id = Column(
-        UUID(as_uuid=True), ForeignKey("team.id"), nullable=False, index=True
-    )
+    resource_id = Column(UUID(as_uuid=True), ForeignKey("serviceresource.id"), nullable=False, index=True)
+    team_id = Column(UUID(as_uuid=True), ForeignKey("team.id"), nullable=False, index=True)
     granted_by_user_id = Column(String(255), nullable=False)
 
     # Relationships
-    resource: Mapped["ServiceResource"] = relationship(
-        "ServiceResource", back_populates="access_grants"
-    )
+    resource: Mapped["ServiceResource"] = relationship("ServiceResource", back_populates="access_grants")
     team: Mapped["Team"] = relationship("Team", back_populates="resource_accesses")
 
     # Ensure unique access grants per resource and team
@@ -324,18 +290,12 @@ class IntegrationEvent(Base, BaseModel):
     details = Column(JSONB, nullable=True)
 
     # Foreign keys
-    integration_id = Column(
-        UUID(as_uuid=True), ForeignKey("integration.id"), nullable=False, index=True
-    )
+    integration_id = Column(UUID(as_uuid=True), ForeignKey("integration.id"), nullable=False, index=True)
     actor_user_id = Column(String(255), nullable=False)
-    affected_team_id = Column(
-        UUID(as_uuid=True), ForeignKey("team.id"), nullable=True, index=True
-    )
+    affected_team_id = Column(UUID(as_uuid=True), ForeignKey("team.id"), nullable=True, index=True)
 
     # Relationships
-    integration: Mapped["Integration"] = relationship(
-        "Integration", back_populates="events"
-    )
+    integration: Mapped["Integration"] = relationship("Integration", back_populates="events")
     affected_team: Mapped[Optional["Team"]] = relationship("Team")
 
     def __repr__(self) -> str:

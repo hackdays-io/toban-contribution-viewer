@@ -91,9 +91,7 @@ def convert_team_to_dict(team, include_members: bool = False) -> Dict:
 
 @router.get("/", response_model=List[TeamResponse])
 async def get_teams(
-    include_members: bool = Query(
-        False, description="Include team members in response"
-    ),
+    include_members: bool = Query(False, description="Include team members in response"),
     db: AsyncSession = Depends(get_async_db),
     current_user: Dict = Depends(get_current_user),
 ):
@@ -111,9 +109,7 @@ async def get_teams(
     logger.debug(f"Getting teams for user: {current_user['id']}")
 
     # Get the teams from the service
-    teams = await TeamService.get_teams_for_user(
-        db=db, user_id=current_user["id"], include_members=include_members
-    )
+    teams = await TeamService.get_teams_for_user(db=db, user_id=current_user["id"], include_members=include_members)
 
     # Convert to dictionaries to avoid lazy loading issues
     team_responses = [convert_team_to_dict(team, include_members) for team in teams]
@@ -158,9 +154,7 @@ async def create_team(
 @router.get("/{team_id}", response_model=TeamResponse)
 async def get_team(
     team_id: UUID,
-    include_members: bool = Query(
-        False, description="Include team members in response"
-    ),
+    include_members: bool = Query(False, description="Include team members in response"),
     db: AsyncSession = Depends(get_async_db),
     current_user: Dict = Depends(get_current_user),
 ):
@@ -181,17 +175,13 @@ async def get_team(
     # Get the team
     team = await TeamService.get_team_by_id(db, team_id, include_members)
     if not team:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Team not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Team not found")
 
     # Verify the user has access
     from app.core.team_scoped_access import check_team_access
 
     # Check if user has access to this team
-    has_access = await check_team_access(
-        team_id=team_id, user_id=current_user["id"], db=db
-    )
+    has_access = await check_team_access(team_id=team_id, user_id=current_user["id"], db=db)
 
     if not has_access:
         raise HTTPException(
@@ -206,9 +196,7 @@ async def get_team(
 @router.get("/by-slug/{slug}", response_model=TeamResponse)
 async def get_team_by_slug(
     slug: str,
-    include_members: bool = Query(
-        False, description="Include team members in response"
-    ),
+    include_members: bool = Query(False, description="Include team members in response"),
     db: AsyncSession = Depends(get_async_db),
     current_user: Dict = Depends(get_current_user),
 ):
@@ -229,17 +217,13 @@ async def get_team_by_slug(
     # Get the team
     team = await TeamService.get_team_by_slug(db, slug, include_members)
     if not team:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Team not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Team not found")
 
     # Verify the user has access
     from app.core.team_scoped_access import check_team_access
 
     # Check if user has access to this team
-    has_access = await check_team_access(
-        team_id=team.id, user_id=current_user["id"], db=db
-    )
+    has_access = await check_team_access(team_id=team.id, user_id=current_user["id"], db=db)
 
     if not has_access:
         raise HTTPException(
@@ -335,8 +319,6 @@ async def delete_team(
         )
 
     # Delete the team
-    result = await TeamService.delete_team(
-        db=db, team_id=team_id, user_id=current_user["id"]
-    )
+    result = await TeamService.delete_team(db=db, team_id=team_id, user_id=current_user["id"])
 
     return result

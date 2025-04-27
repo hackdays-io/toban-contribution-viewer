@@ -32,9 +32,7 @@ class ResourceAnalysisTaskScheduler:
     _tasks: Dict[str, asyncio.Task] = {}
 
     @classmethod
-    async def schedule_analysis(
-        cls, analysis_id: Union[str, UUID], db: Optional[AsyncSession] = None
-    ) -> bool:
+    async def schedule_analysis(cls, analysis_id: Union[str, UUID], db: Optional[AsyncSession] = None) -> bool:
         """
         Schedule a resource analysis task.
 
@@ -54,9 +52,7 @@ class ResourceAnalysisTaskScheduler:
             return False
 
         # Create a new task
-        task = asyncio.create_task(
-            cls._run_analysis(analysis_id), name=f"analysis_{analysis_id_str}"
-        )
+        task = asyncio.create_task(cls._run_analysis(analysis_id), name=f"analysis_{analysis_id_str}")
 
         # Store the task
         cls._tasks[analysis_id_str] = task
@@ -67,9 +63,7 @@ class ResourceAnalysisTaskScheduler:
         return True
 
     @classmethod
-    async def schedule_analyses_for_report(
-        cls, report_id: Union[str, UUID], db: Optional[AsyncSession] = None
-    ) -> int:
+    async def schedule_analyses_for_report(cls, report_id: Union[str, UUID], db: Optional[AsyncSession] = None) -> int:
         """
         Schedule analysis tasks for all analyses in a cross-resource report.
 
@@ -92,9 +86,7 @@ class ResourceAnalysisTaskScheduler:
             analyses_result = await db.execute(
                 select(ResourceAnalysis).where(
                     ResourceAnalysis.cross_resource_report_id == report_id,
-                    ResourceAnalysis.status.in_(
-                        [ReportStatus.PENDING, ReportStatus.FAILED]
-                    ),
+                    ResourceAnalysis.status.in_([ReportStatus.PENDING, ReportStatus.FAILED]),
                 )
             )
             analyses = analyses_result.scalars().all()
@@ -198,9 +190,7 @@ class ResourceAnalysisTaskScheduler:
             del cls._tasks[analysis_id]
 
     @classmethod
-    async def _check_and_update_report_status(
-        cls, db: AsyncSession, report_id: UUID
-    ) -> None:
+    async def _check_and_update_report_status(cls, db: AsyncSession, report_id: UUID) -> None:
         """
         Check the status of all analyses in a report and update the report status if needed.
 
@@ -229,9 +219,7 @@ class ResourceAnalysisTaskScheduler:
 
             # If all analyses are complete, update the report status to COMPLETED
             if total_analyses > 0 and completed_analyses == total_analyses:
-                logger.info(
-                    f"All analyses for report {report_id} are complete. Updating report status to COMPLETED."
-                )
+                logger.info(f"All analyses for report {report_id} are complete. Updating report status to COMPLETED.")
                 await db.execute(
                     update(CrossResourceReport)
                     .where(CrossResourceReport.id == report_id)
@@ -241,9 +229,7 @@ class ResourceAnalysisTaskScheduler:
 
             # If all analyses are failed, update the report status to FAILED
             elif total_analyses > 0 and failed_analyses == total_analyses:
-                logger.warning(
-                    f"All analyses for report {report_id} have failed. Updating report status to FAILED."
-                )
+                logger.warning(f"All analyses for report {report_id} have failed. Updating report status to FAILED.")
                 await db.execute(
                     update(CrossResourceReport)
                     .where(CrossResourceReport.id == report_id)
@@ -253,11 +239,7 @@ class ResourceAnalysisTaskScheduler:
 
             # If there are no pending or in-progress analyses but we have a mix of completed and failed,
             # mark the report as COMPLETED but should show warnings in the UI
-            elif (
-                total_analyses > 0
-                and pending_analyses == 0
-                and in_progress_analyses == 0
-            ):
+            elif total_analyses > 0 and pending_analyses == 0 and in_progress_analyses == 0:
                 logger.info(
                     f"Report {report_id} has {completed_analyses} completed and {failed_analyses} failed analyses. Marking as COMPLETED with partial success."
                 )
@@ -292,9 +274,7 @@ class ResourceAnalysisTaskScheduler:
 
         try:
             # Get the analysis
-            analysis_result = await db.execute(
-                select(ResourceAnalysis).where(ResourceAnalysis.id == analysis_id)
-            )
+            analysis_result = await db.execute(select(ResourceAnalysis).where(ResourceAnalysis.id == analysis_id))
             analysis = analysis_result.scalar_one_or_none()
 
             if not analysis:
@@ -303,9 +283,7 @@ class ResourceAnalysisTaskScheduler:
 
             # Create the appropriate service
             try:
-                service = ResourceAnalysisServiceFactory.create_service(
-                    resource_type=analysis.resource_type, db=db
-                )
+                service = ResourceAnalysisServiceFactory.create_service(resource_type=analysis.resource_type, db=db)
             except ValueError as e:
                 logger.error(f"Failed to create service: {str(e)}")
                 await db.commit()
@@ -315,9 +293,7 @@ class ResourceAnalysisTaskScheduler:
             report = None
             if analysis.cross_resource_report_id:
                 report_result = await db.execute(
-                    select(CrossResourceReport).where(
-                        CrossResourceReport.id == analysis.cross_resource_report_id
-                    )
+                    select(CrossResourceReport).where(CrossResourceReport.id == analysis.cross_resource_report_id)
                 )
                 report = report_result.scalar_one_or_none()
 
@@ -337,18 +313,12 @@ class ResourceAnalysisTaskScheduler:
                     resource_count = resource_count_result.scalar_one() or 0
 
                     if resource_count > 1:
-                        logger.info(
-                            f"Report contains {resource_count} resources (multi-channel analysis)"
-                        )
+                        logger.info(f"Report contains {resource_count} resources (multi-channel analysis)")
                     else:
-                        logger.info(
-                            "Report contains only one resource (single-channel analysis)"
-                        )
+                        logger.info("Report contains only one resource (single-channel analysis)")
 
             # Run the analysis
-            logger.info(
-                f"Running analysis {analysis_id} for resource {analysis.resource_id}"
-            )
+            logger.info(f"Running analysis {analysis_id} for resource {analysis.resource_id}")
 
             # For issue #238 - log the period dates
             logger.info(
@@ -370,9 +340,7 @@ class ResourceAnalysisTaskScheduler:
 
                     # Find the channel
                     channel_result = await db.execute(
-                        select(SlackChannel).where(
-                            SlackChannel.id == analysis.resource_id
-                        )
+                        select(SlackChannel).where(SlackChannel.id == analysis.resource_id)
                     )
                     channel = channel_result.scalar_one_or_none()
 
@@ -384,14 +352,12 @@ class ResourceAnalysisTaskScheduler:
                         sync_threshold = 6  # OPTIMIZED: Reduced from 24 to 6 hours to avoid duplicating frontend sync
                         needs_sync = True
 
-                        # OPTIMIZATION: Check if frontend already synced recently - we can detect this by 
+                        # OPTIMIZATION: Check if frontend already synced recently - we can detect this by
                         # checking if last_sync_at is very recent (within the last 10 minutes)
                         recently_synced_by_frontend = False
                         if channel.last_sync_at:
-                            minutes_since_sync = (
-                                current_time - channel.last_sync_at
-                            ).total_seconds() / 60
-                            
+                            minutes_since_sync = (current_time - channel.last_sync_at).total_seconds() / 60
+
                             # If synced in the last 10 minutes, frontend probably triggered this
                             if minutes_since_sync < 10:
                                 recently_synced_by_frontend = True
@@ -399,7 +365,7 @@ class ResourceAnalysisTaskScheduler:
                                     f"Channel {channel.name} was just synced {minutes_since_sync:.1f} minutes ago, "
                                     f"likely by frontend. Skipping redundant sync."
                                 )
-                            
+
                             # Regular sync threshold check if not recently synced
                             if not recently_synced_by_frontend:
                                 hours_since_sync = minutes_since_sync / 60
@@ -414,9 +380,7 @@ class ResourceAnalysisTaskScheduler:
                                         f"Channel {channel.name} was synced recently ({hours_since_sync:.1f} hours ago), skipping sync"
                                     )
                         else:
-                            logger.info(
-                                f"Channel {channel.name} has never been synced, performing initial sync"
-                            )
+                            logger.info(f"Channel {channel.name} has never been synced, performing initial sync")
 
                         if needs_sync and not recently_synced_by_frontend:
                             logger.info(
@@ -433,18 +397,12 @@ class ResourceAnalysisTaskScheduler:
 
                             logger.info(f"Message sync result: {sync_result}")
                         else:
-                            logger.info(
-                                f"Skipping message sync for channel {channel.name} (synced recently)"
-                            )
+                            logger.info(f"Skipping message sync for channel {channel.name} (synced recently)")
                     else:
-                        logger.warning(
-                            f"Could not find channel {analysis.resource_id} for syncing"
-                        )
+                        logger.warning(f"Could not find channel {analysis.resource_id} for syncing")
 
                 except Exception as sync_error:
-                    logger.error(
-                        f"Error syncing messages for multi-channel report: {str(sync_error)}"
-                    )
+                    logger.error(f"Error syncing messages for multi-channel report: {str(sync_error)}")
                     # Continue with analysis even if sync fails
 
             # Run the actual analysis
@@ -463,9 +421,7 @@ class ResourceAnalysisTaskScheduler:
 
             # Check if this is part of a report and if all analyses are complete
             if analysis.cross_resource_report_id:
-                await cls._check_and_update_report_status(
-                    db, analysis.cross_resource_report_id
-                )
+                await cls._check_and_update_report_status(db, analysis.cross_resource_report_id)
 
         except asyncio.CancelledError:
             # Cancellation is not an error
@@ -474,9 +430,7 @@ class ResourceAnalysisTaskScheduler:
 
         except Exception as e:
             # Log and propagate other exceptions
-            logger.error(
-                f"Error running analysis {analysis_id}: {str(e)}", exc_info=True
-            )
+            logger.error(f"Error running analysis {analysis_id}: {str(e)}", exc_info=True)
 
             # Update the analysis status to FAILED
             try:
@@ -489,16 +443,12 @@ class ResourceAnalysisTaskScheduler:
 
                 # Check if this analysis is part of a report
                 analysis_result = await db.execute(
-                    select(ResourceAnalysis.cross_resource_report_id).where(
-                        ResourceAnalysis.id == analysis_id
-                    )
+                    select(ResourceAnalysis.cross_resource_report_id).where(ResourceAnalysis.id == analysis_id)
                 )
                 cross_resource_report_id = analysis_result.scalar_one_or_none()
 
                 if cross_resource_report_id:
-                    await cls._check_and_update_report_status(
-                        db, cross_resource_report_id
-                    )
+                    await cls._check_and_update_report_status(db, cross_resource_report_id)
 
             except Exception as update_error:
                 logger.error(f"Error updating analysis status: {update_error}")

@@ -19,18 +19,10 @@ depends_on = None
 
 def upgrade():
     # Add the count fields to the ResourceAnalysis table
-    op.add_column(
-        "resourceanalysis", sa.Column("message_count", sa.Integer(), nullable=True)
-    )
-    op.add_column(
-        "resourceanalysis", sa.Column("participant_count", sa.Integer(), nullable=True)
-    )
-    op.add_column(
-        "resourceanalysis", sa.Column("thread_count", sa.Integer(), nullable=True)
-    )
-    op.add_column(
-        "resourceanalysis", sa.Column("reaction_count", sa.Integer(), nullable=True)
-    )
+    op.add_column("resourceanalysis", sa.Column("message_count", sa.Integer(), nullable=True))
+    op.add_column("resourceanalysis", sa.Column("participant_count", sa.Integer(), nullable=True))
+    op.add_column("resourceanalysis", sa.Column("thread_count", sa.Integer(), nullable=True))
+    op.add_column("resourceanalysis", sa.Column("reaction_count", sa.Integer(), nullable=True))
 
 
 def downgrade():

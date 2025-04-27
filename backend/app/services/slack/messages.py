@@ -45,9 +45,7 @@ async def get_channel_messages(
         List of SlackMessage objects
     """
     # Verify workspace exists
-    workspace_result = await db.execute(
-        select(SlackWorkspace).where(SlackWorkspace.id == workspace_id)
-    )
+    workspace_result = await db.execute(select(SlackWorkspace).where(SlackWorkspace.id == workspace_id))
     workspace = workspace_result.scalars().first()
 
     if not workspace:
@@ -105,9 +103,7 @@ async def get_channel_messages(
     return messages
 
 
-async def get_channel_users(
-    db: AsyncSession, workspace_id: str, channel_id: str
-) -> List[SlackUser]:
+async def get_channel_users(db: AsyncSession, workspace_id: str, channel_id: str) -> List[SlackUser]:
     """
     Get all users who have posted messages in a specific channel.
 
@@ -120,9 +116,7 @@ async def get_channel_users(
         List of SlackUser objects
     """
     # Verify workspace exists
-    workspace_result = await db.execute(
-        select(SlackWorkspace).where(SlackWorkspace.id == workspace_id)
-    )
+    workspace_result = await db.execute(select(SlackWorkspace).where(SlackWorkspace.id == workspace_id))
     workspace = workspace_result.scalars().first()
 
     if not workspace:
@@ -170,12 +164,12 @@ async def get_channel_users(
 class SlackMessageService:
     """
     Service for retrieving, processing, and storing Slack messages.
-    
+
     Note: This service doesn't store a database session in the constructor,
     but instead requires it to be passed to each method to ensure sessions are
     properly scoped.
     """
-    
+
     def __init__(self):
         """Initialize the SlackMessageService."""
         pass
@@ -212,9 +206,7 @@ class SlackMessageService:
             Dictionary with messages and pagination information
         """
         # Verify workspace exists and get access token
-        workspace_result = await db.execute(
-            select(SlackWorkspace).where(SlackWorkspace.id == workspace_id)
-        )
+        workspace_result = await db.execute(select(SlackWorkspace).where(SlackWorkspace.id == workspace_id))
         workspace = workspace_result.scalars().first()
 
         if not workspace:
@@ -223,9 +215,7 @@ class SlackMessageService:
 
         if not workspace.access_token:
             logger.error(f"Workspace has no access token: {workspace_id}")
-            raise HTTPException(
-                status_code=400, detail="Workspace is not properly connected"
-            )
+            raise HTTPException(status_code=400, detail="Workspace is not properly connected")
 
         # Verify channel exists
         channel_result = await db.execute(
@@ -251,10 +241,7 @@ class SlackMessageService:
             # If specific thread is requested, get parent and replies
             query = query.where(
                 (SlackMessage.slack_ts == thread_ts)  # Get the parent
-                | (
-                    (SlackMessage.thread_ts == thread_ts)
-                    & (SlackMessage.is_thread_reply.is_(True))
-                )  # Get replies
+                | ((SlackMessage.thread_ts == thread_ts) & (SlackMessage.is_thread_reply.is_(True)))  # Get replies
             )
 
         # Sort by datetime descending (newest first)
@@ -265,13 +252,11 @@ class SlackMessageService:
             # Dates should already be timezone-naive at this point from the API layer
             # But we'll check again just to be sure
             if hasattr(start_date, "tzinfo") and start_date.tzinfo:
-                logger.warning(
-                    "start_date still has tzinfo, converting to naive datetime"
-                )
+                logger.warning("start_date still has tzinfo, converting to naive datetime")
                 naive_start_date = start_date.replace(tzinfo=None)
             else:
                 naive_start_date = start_date
-                
+
             # Log the actual start date being applied
             logger.info(f"SlackMessageService.get_channel_messages - Filtering with start_date: {naive_start_date}")
             query = query.where(SlackMessage.message_datetime >= naive_start_date)
@@ -280,13 +265,11 @@ class SlackMessageService:
             # Dates should already be timezone-naive at this point from the API layer
             # But we'll check again just to be sure
             if hasattr(end_date, "tzinfo") and end_date.tzinfo:
-                logger.warning(
-                    "end_date still has tzinfo, converting to naive datetime"
-                )
+                logger.warning("end_date still has tzinfo, converting to naive datetime")
                 naive_end_date = end_date.replace(tzinfo=None)
             else:
                 naive_end_date = end_date
-                
+
             # Log the actual end date being applied
             logger.info(f"SlackMessageService.get_channel_messages - Filtering with end_date: {naive_end_date}")
             query = query.where(SlackMessage.message_datetime <= naive_end_date)
@@ -305,19 +288,13 @@ class SlackMessageService:
         safe_start_date = None
         if start_date:
             if hasattr(start_date, "tzinfo") and start_date.tzinfo:
-                logger.warning(
-                    "start_date has tzinfo during comparison, converting to naive"
-                )
+                logger.warning("start_date has tzinfo during comparison, converting to naive")
                 safe_start_date = start_date.replace(tzinfo=None)
             else:
                 safe_start_date = start_date
 
         should_fetch_from_api = len(messages) == 0 or (
-            start_date
-            and (
-                not channel.oldest_synced_ts
-                or safe_start_date < messages[-1].message_datetime
-            )
+            start_date and (not channel.oldest_synced_ts or safe_start_date < messages[-1].message_datetime)
         )
 
         if should_fetch_from_api:
@@ -325,15 +302,13 @@ class SlackMessageService:
             api_client = SlackApiClient(workspace.access_token)
 
             # Fetch messages from Slack API
-            api_messages, has_more, next_cursor = (
-                await SlackMessageService._fetch_messages_from_api(
-                    api_client=api_client,
-                    channel_id=channel.slack_id,
-                    start_date=start_date,
-                    end_date=end_date,
-                    limit=limit,
-                    cursor=cursor,
-                )
+            api_messages, has_more, next_cursor = await SlackMessageService._fetch_messages_from_api(
+                api_client=api_client,
+                channel_id=channel.slack_id,
+                start_date=start_date,
+                end_date=end_date,
+                limit=limit,
+                cursor=cursor,
             )
 
             # Store fetched messages in database
@@ -347,28 +322,14 @@ class SlackMessageService:
                 )
 
                 # Update channel sync status
-                oldest_ts = (
-                    min([msg.get("ts", "0") for msg in api_messages])
-                    if api_messages
-                    else None
-                )
-                latest_ts = (
-                    max([msg.get("ts", "0") for msg in api_messages])
-                    if api_messages
-                    else None
-                )
+                oldest_ts = min([msg.get("ts", "0") for msg in api_messages]) if api_messages else None
+                latest_ts = max([msg.get("ts", "0") for msg in api_messages]) if api_messages else None
 
                 # Only update if we have messages and the timestamps are valid
                 if oldest_ts and latest_ts:
-                    if (
-                        not channel.oldest_synced_ts
-                        or oldest_ts < channel.oldest_synced_ts
-                    ):
+                    if not channel.oldest_synced_ts or oldest_ts < channel.oldest_synced_ts:
                         channel.oldest_synced_ts = oldest_ts
-                    if (
-                        not channel.latest_synced_ts
-                        or latest_ts > channel.latest_synced_ts
-                    ):
+                    if not channel.latest_synced_ts or latest_ts > channel.latest_synced_ts:
                         channel.latest_synced_ts = latest_ts
 
                 channel.last_sync_at = datetime.utcnow()
@@ -460,18 +421,14 @@ class SlackMessageService:
         try:
             # Fetch messages from Slack API
             logger.info(f"Fetching messages from Slack API for channel {channel_id}")
-            response = await api_client._make_request(
-                "GET", "conversations.history", params=params
-            )
+            response = await api_client._make_request("GET", "conversations.history", params=params)
 
             # Extract messages and pagination info
             messages = response.get("messages", [])
             has_more = response.get("has_more", False)
             next_cursor = response.get("response_metadata", {}).get("next_cursor")
 
-            logger.info(
-                f"Fetched {len(messages)} messages from Slack API for channel {channel_id}"
-            )
+            logger.info(f"Fetched {len(messages)} messages from Slack API for channel {channel_id}")
             return messages, has_more, next_cursor
 
         except SlackApiRateLimitError as e:
@@ -545,9 +502,7 @@ class SlackMessageService:
 
         # Commit the changes
         await db.commit()
-        logger.info(
-            f"Stored {stored_message_count} messages for channel {channel.name}"
-        )
+        logger.info(f"Stored {stored_message_count} messages for channel {channel.name}")
 
         # Fetch and store thread replies if requested
         if include_replies and thread_ts_set:
@@ -556,17 +511,13 @@ class SlackMessageService:
 
             for thread_ts in thread_ts_set:
                 # Fetch thread replies from Slack API
-                logger.info(
-                    f"Fetching thread replies for thread {thread_ts} in channel {channel.name}"
-                )
-                thread_replies = (
-                    await SlackMessageService._fetch_thread_replies_with_pagination(
-                        access_token=channel.workspace.access_token,
-                        channel_id=channel.slack_id,
-                        thread_ts=thread_ts,
-                        limit=100,  # Fetch up to 100 replies per page
-                        max_pages=10,  # Maximum 10 pages (1000 replies)
-                    )
+                logger.info(f"Fetching thread replies for thread {thread_ts} in channel {channel.name}")
+                thread_replies = await SlackMessageService._fetch_thread_replies_with_pagination(
+                    access_token=channel.workspace.access_token,
+                    channel_id=channel.slack_id,
+                    thread_ts=thread_ts,
+                    limit=100,  # Fetch up to 100 replies per page
+                    max_pages=10,  # Maximum 10 pages (1000 replies)
                 )
 
                 # Get the parent message to associate replies with
@@ -579,9 +530,7 @@ class SlackMessageService:
                 parent_message = parent_result.scalars().first()
 
                 if not parent_message:
-                    logger.warning(
-                        f"Parent message for thread {thread_ts} not found, skipping replies"
-                    )
+                    logger.warning(f"Parent message for thread {thread_ts} not found, skipping replies")
                     continue
 
                 # Track replies stored for this thread
@@ -604,9 +553,7 @@ class SlackMessageService:
 
                     if existing_reply:
                         # Skip already stored replies
-                        logger.debug(
-                            f"Reply {reply.get('ts')} already exists, skipping"
-                        )
+                        logger.debug(f"Reply {reply.get('ts')} already exists, skipping")
                         continue
 
                     # Process and store the reply
@@ -624,12 +571,8 @@ class SlackMessageService:
 
                 if thread_reply_count > 0:
                     # Update parent message with latest counts
-                    parent_message.reply_count = (
-                        len(thread_replies) - 1
-                    )  # Subtract 1 for parent message
-                    logger.info(
-                        f"Stored {thread_reply_count} replies for thread {thread_ts}"
-                    )
+                    parent_message.reply_count = len(thread_replies) - 1  # Subtract 1 for parent message
+                    logger.info(f"Stored {thread_reply_count} replies for thread {thread_ts}")
                     total_replies_stored += thread_reply_count
 
             # Commit all thread replies
@@ -681,9 +624,7 @@ class SlackMessageService:
         # A message is a thread parent if either:
         # 1. It has replies (reply_count > 0) AND
         # 2. Either thread_ts equals its own ts (it started a thread) OR thread_ts is None (not yet marked as thread)
-        is_thread_parent = message.get("reply_count", 0) > 0 and (
-            thread_ts == slack_ts or thread_ts is None
-        )
+        is_thread_parent = message.get("reply_count", 0) > 0 and (thread_ts == slack_ts or thread_ts is None)
         # A message is a thread reply if it has a thread_ts that's different from its own ts
         is_thread_reply = thread_ts is not None and thread_ts != slack_ts
 
@@ -716,15 +657,11 @@ class SlackMessageService:
             if user:
                 # User exists in database, use their ID
                 db_user_id = user.id
-                logger.debug(
-                    f"Found existing user in database: {user.name} ({user.slack_id})"
-                )
+                logger.debug(f"Found existing user in database: {user.name} ({user.slack_id})")
             else:
                 # User not found in database, fetch from Slack API and create
                 try:
-                    logger.info(
-                        f"User {user_id} not found in database, fetching from Slack API"
-                    )
+                    logger.info(f"User {user_id} not found in database, fetching from Slack API")
                     new_user = await SlackMessageService._fetch_and_create_user(
                         db=db,
                         workspace_id=workspace_id,
@@ -733,9 +670,7 @@ class SlackMessageService:
                     )
                     if new_user:
                         db_user_id = new_user.id
-                        logger.info(
-                            f"Created new user: {new_user.name} ({new_user.slack_id})"
-                        )
+                        logger.info(f"Created new user: {new_user.name} ({new_user.slack_id})")
                 except Exception as e:
                     logger.error(f"Error fetching user data from Slack API: {str(e)}")
                     # Continue without user ID, it will be None
@@ -763,9 +698,7 @@ class SlackMessageService:
 
         # Create message data dictionary
         message_data = {
-            "slack_id": message.get(
-                "client_msg_id", slack_ts
-            ),  # Use client_msg_id if available
+            "slack_id": message.get("client_msg_id", slack_ts),  # Use client_msg_id if available
             "slack_ts": slack_ts,
             "text": text,
             "processed_text": text,  # We'll process mentions later
@@ -819,9 +752,7 @@ class SlackMessageService:
         client = SlackApiClient(access_token)
 
         # Log the thread fetch operation
-        logger.info(
-            f"Attempting to fetch thread replies for thread {thread_ts} in channel {channel_id}"
-        )
+        logger.info(f"Attempting to fetch thread replies for thread {thread_ts} in channel {channel_id}")
 
         while page_count < max_pages:
             try:
@@ -842,9 +773,7 @@ class SlackMessageService:
                 error_message = response.get("error", "None")
 
                 if has_error:
-                    logger.error(
-                        f"Slack API error for thread {thread_ts}: {error_message}"
-                    )
+                    logger.error(f"Slack API error for thread {thread_ts}: {error_message}")
                     break
 
                 # Add replies to our collection
@@ -925,9 +854,7 @@ class SlackMessageService:
                 phone=safe_str(profile.get("phone"), 50),
                 timezone=safe_str(profile.get("tz"), 100),
                 timezone_offset=user_data.get("tz_offset"),
-                profile_image_url=safe_str(
-                    profile.get("image_original") or profile.get("image_192"), 1024
-                ),
+                profile_image_url=safe_str(profile.get("image_original") or profile.get("image_192"), 1024),
                 is_bot=user_data.get("is_bot", False),
                 is_admin=user_data.get("is_admin", False),
                 is_deleted=user_data.get("deleted", False),
@@ -973,11 +900,7 @@ class SlackMessageService:
             "reply_count": message.reply_count,
             "reply_users_count": message.reply_users_count,
             "reaction_count": message.reaction_count,
-            "message_datetime": (
-                message.message_datetime.isoformat()
-                if message.message_datetime
-                else None
-            ),
+            "message_datetime": (message.message_datetime.isoformat() if message.message_datetime else None),
             "channel_id": str(message.channel_id),
             "user_id": str(message.user_id) if message.user_id else None,
             "parent_id": str(message.parent_id) if message.parent_id else None,
@@ -1009,9 +932,7 @@ class SlackMessageService:
             Dictionary with messages and pagination information
         """
         # Verify workspace exists
-        workspace_result = await db.execute(
-            select(SlackWorkspace).where(SlackWorkspace.id == workspace_id)
-        )
+        workspace_result = await db.execute(select(SlackWorkspace).where(SlackWorkspace.id == workspace_id))
         workspace = workspace_result.scalars().first()
 
         if not workspace:
@@ -1032,9 +953,7 @@ class SlackMessageService:
             raise HTTPException(status_code=404, detail="Some channels not found")
 
         # Convert timezone-aware datetimes to naive for database compatibility
-        naive_start_date = (
-            start_date.replace(tzinfo=None) if start_date.tzinfo else start_date
-        )
+        naive_start_date = start_date.replace(tzinfo=None) if start_date.tzinfo else start_date
         naive_end_date = end_date.replace(tzinfo=None) if end_date.tzinfo else end_date
 
         # Query messages from database
@@ -1056,14 +975,19 @@ class SlackMessageService:
 
         # Count total messages for pagination - but more efficiently using COUNT()
         from sqlalchemy import func
-        count_query = select(func.count()).select_from(SlackMessage).where(
-            SlackMessage.channel_id.in_(channel_ids),
-            SlackMessage.message_datetime >= naive_start_date,
-            SlackMessage.message_datetime <= naive_end_date,
+
+        count_query = (
+            select(func.count())
+            .select_from(SlackMessage)
+            .where(
+                SlackMessage.channel_id.in_(channel_ids),
+                SlackMessage.message_datetime >= naive_start_date,
+                SlackMessage.message_datetime <= naive_end_date,
+            )
         )
         count_result = await db.execute(count_query)
         total_count = count_result.scalar() or 0
-        
+
         # Log message counts for debugging Issue #238
         logger.info(f"Total messages found for channels {channel_ids}: {total_count}")
 
@@ -1166,7 +1090,7 @@ class SlackMessageService:
     ) -> Dict[str, Any]:
         """
         Sync messages and thread replies from a Slack channel to the database.
-        
+
         Important: After successful sync, this method invalidates any cached data
         for this channel to ensure fresh data is used for analysis.
 
@@ -1187,9 +1111,7 @@ class SlackMessageService:
             Dictionary with sync results
         """
         # Verify workspace exists and get access token
-        workspace_result = await db.execute(
-            select(SlackWorkspace).where(SlackWorkspace.id == workspace_id)
-        )
+        workspace_result = await db.execute(select(SlackWorkspace).where(SlackWorkspace.id == workspace_id))
         workspace = workspace_result.scalars().first()
 
         if not workspace:
@@ -1198,9 +1120,7 @@ class SlackMessageService:
 
         if not workspace.access_token:
             logger.error(f"Workspace has no access token: {workspace_id}")
-            raise HTTPException(
-                status_code=400, detail="Workspace is not properly connected"
-            )
+            raise HTTPException(status_code=400, detail="Workspace is not properly connected")
 
         # Verify channel exists
         channel_result = await db.execute(
@@ -1232,15 +1152,13 @@ class SlackMessageService:
         while has_more:
             try:
                 # Fetch messages from Slack API
-                messages, has_more, next_cursor = (
-                    await SlackMessageService._fetch_messages_from_api(
-                        api_client=api_client,
-                        channel_id=channel.slack_id,
-                        start_date=start_date,
-                        end_date=end_date,
-                        limit=batch_size,
-                        cursor=next_cursor,
-                    )
+                messages, has_more, next_cursor = await SlackMessageService._fetch_messages_from_api(
+                    api_client=api_client,
+                    channel_id=channel.slack_id,
+                    start_date=start_date,
+                    end_date=end_date,
+                    limit=batch_size,
+                    cursor=next_cursor,
                 )
 
                 if not messages:
@@ -1262,8 +1180,7 @@ class SlackMessageService:
                 new_result = await db.execute(
                     select(SlackMessage).where(
                         SlackMessage.channel_id == channel_id,
-                        SlackMessage.created_at
-                        > datetime.utcnow() - timedelta(minutes=5),
+                        SlackMessage.created_at > datetime.utcnow() - timedelta(minutes=5),
                     )
                 )
                 new_messages = new_result.scalars().all()
@@ -1272,18 +1189,14 @@ class SlackMessageService:
                 # Calculate new messages based on difference from before this batch
                 new_in_batch = new_message_count - stored_before
 
-                logger.info(
-                    f"Processed batch of {len(messages)} messages, stored {new_in_batch} new messages"
-                )
+                logger.info(f"Processed batch of {len(messages)} messages, stored {new_in_batch} new messages")
 
                 # Avoid rate limiting
                 if has_more:
                     time.sleep(1)
 
             except Exception as e:
-                logger.error(
-                    f"Error syncing messages for channel {channel.name}: {str(e)}"
-                )
+                logger.error(f"Error syncing messages for channel {channel.name}: {str(e)}")
                 error_count += 1
                 # If we have too many errors, break
                 if error_count >= 3:
@@ -1294,10 +1207,11 @@ class SlackMessageService:
         # Update channel sync status
         channel.last_sync_at = datetime.utcnow()
         await db.commit()
-        
+
         # Invalidate cache after sync
         try:
             from app.services.analysis.data_cache import ChannelDataCache
+
             ChannelDataCache.invalidate(channel_id)
             logger.info(f"Invalidated data cache for channel {channel_id} after sync")
         except ImportError:
@@ -1308,9 +1222,7 @@ class SlackMessageService:
             fixed_count = await SlackMessageService.fix_message_user_references(
                 db=db, workspace_id=workspace_id, channel_id=channel_id
             )
-            logger.info(
-                f"Fixed {fixed_count} message user references for channel {channel.name}"
-            )
+            logger.info(f"Fixed {fixed_count} message user references for channel {channel.name}")
         except Exception as e:
             logger.error(f"Error fixing message user references: {str(e)}")
             fixed_count = 0
@@ -1337,21 +1249,15 @@ class SlackMessageService:
                   AND is_thread_parent = FALSE
                 """
 
-                result = await db.execute(
-                    text(thread_flag_sql), {"channel_id": channel_id}
-                )
-                fixed_thread_flags = (
-                    result.rowcount if hasattr(result, "rowcount") else 0
-                )
+                result = await db.execute(text(thread_flag_sql), {"channel_id": channel_id})
+                fixed_thread_flags = result.rowcount if hasattr(result, "rowcount") else 0
                 await db.commit()
 
                 logger.info(f"Fixed {fixed_thread_flags} thread parent flags")
 
                 # Get all thread parent messages in the timeframe
                 end_date_for_threads = datetime.utcnow()
-                start_date_for_threads = end_date_for_threads - timedelta(
-                    days=thread_days
-                )
+                start_date_for_threads = end_date_for_threads - timedelta(days=thread_days)
 
                 parent_result = await db.execute(
                     select(SlackMessage).where(
@@ -1392,13 +1298,11 @@ class SlackMessageService:
 
                             if not existing:
                                 # Process and store the reply
-                                reply_data = (
-                                    await SlackMessageService._prepare_message_data(
-                                        db=db,
-                                        workspace_id=workspace_id,
-                                        channel=channel,
-                                        message=reply,
-                                    )
+                                reply_data = await SlackMessageService._prepare_message_data(
+                                    db=db,
+                                    workspace_id=workspace_id,
+                                    channel=channel,
+                                    message=reply,
                                 )
 
                                 # Create new reply
@@ -1408,14 +1312,10 @@ class SlackMessageService:
 
                         # Update parent with latest counts
                         if thread_replies:
-                            parent.reply_count = (
-                                len(thread_replies) - 1
-                            )  # Subtract 1 for parent message
+                            parent.reply_count = len(thread_replies) - 1  # Subtract 1 for parent message
 
                     except Exception as e:
-                        logger.error(
-                            f"Error syncing thread {parent.slack_ts}: {str(e)}"
-                        )
+                        logger.error(f"Error syncing thread {parent.slack_ts}: {str(e)}")
                         thread_sync_results["thread_errors"] += 1
 
                 # Commit all thread changes

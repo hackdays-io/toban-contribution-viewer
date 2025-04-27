@@ -11,9 +11,7 @@ import sys
 from typing import Dict, List, Tuple
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 # We need to add the parent directory to the path to import the app modules
@@ -43,11 +41,7 @@ async def check_workspace_team_mapping(db: AsyncSession) -> Tuple[int, int]:
     total_workspaces = result.scalar_one_or_none() or 0
 
     # Count workspaces with null team_id
-    stmt = (
-        select(func.count())
-        .select_from(SlackWorkspace)
-        .where(SlackWorkspace.team_id.is_(None))
-    )
+    stmt = select(func.count()).select_from(SlackWorkspace).where(SlackWorkspace.team_id.is_(None))
     result = await db.execute(stmt)
     null_team_id_count = result.scalar_one_or_none() or 0
 
@@ -56,9 +50,7 @@ async def check_workspace_team_mapping(db: AsyncSession) -> Tuple[int, int]:
     if total_workspaces > 0:
         percentage = (null_team_id_count / total_workspaces) * 100
 
-    logger.info(
-        f"Found {total_workspaces} workspaces, {null_team_id_count} ({percentage:.1f}%) missing team_id"
-    )
+    logger.info(f"Found {total_workspaces} workspaces, {null_team_id_count} ({percentage:.1f}%) missing team_id")
 
     return (total_workspaces, null_team_id_count)
 
@@ -70,9 +62,7 @@ async def find_workspace_teams(db: AsyncSession) -> List[Dict]:
     Returns:
         List of dictionaries with workspace and potential team info
     """
-    logger.info(
-        "Finding potential team associations for workspaces with missing team_id..."
-    )
+    logger.info("Finding potential team associations for workspaces with missing team_id...")
 
     # Get all workspaces with null team_id
     stmt = select(SlackWorkspace).where(SlackWorkspace.team_id.is_(None))
@@ -122,9 +112,7 @@ async def find_workspace_teams(db: AsyncSession) -> List[Dict]:
     return workspace_teams
 
 
-async def fix_workspace_team_mapping(
-    db: AsyncSession, dry_run: bool = True
-) -> Tuple[int, int]:
+async def fix_workspace_team_mapping(db: AsyncSession, dry_run: bool = True) -> Tuple[int, int]:
     """
     Fix SlackWorkspace records with missing team_id values.
 
@@ -145,9 +133,7 @@ async def fix_workspace_team_mapping(
             logger.info(
                 f"{'Would fix' if dry_run else 'Fixing'} workspace {workspace['workspace_name']} ({workspace['workspace_id']}):"
             )
-            logger.info(
-                f"  Setting team_id to {workspace['team_id']} ({workspace['team_name']})"
-            )
+            logger.info(f"  Setting team_id to {workspace['team_id']} ({workspace['team_name']})")
 
             if not dry_run:
                 try:
@@ -158,14 +144,10 @@ async def fix_workspace_team_mapping(
                     )
                     await db.execute(stmt)
                     await db.commit()
-                    logger.info(
-                        f"  ✅ Successfully updated workspace {workspace['workspace_id']}"
-                    )
+                    logger.info(f"  ✅ Successfully updated workspace {workspace['workspace_id']}")
                     total_fixed += 1
                 except Exception as e:
-                    logger.error(
-                        f"  ❌ Failed to update workspace {workspace['workspace_id']}: {str(e)}"
-                    )
+                    logger.error(f"  ❌ Failed to update workspace {workspace['workspace_id']}: {str(e)}")
                     await db.rollback()
                     total_failed += 1
             else:
@@ -195,9 +177,7 @@ async def main(auto_fix: bool = False):
         total_workspaces, null_team_id_count = await check_workspace_team_mapping(db)
 
         if null_team_id_count == 0:
-            logger.info(
-                "✅ No workspaces with missing team_id found. All workspaces are properly mapped!"
-            )
+            logger.info("✅ No workspaces with missing team_id found. All workspaces are properly mapped!")
             return
 
         # Try to find team associations for workspaces with missing team_id
@@ -210,12 +190,8 @@ async def main(auto_fix: bool = False):
 
         for workspace in workspace_teams:
             if workspace["can_fix"]:
-                logger.info(
-                    f"✅ Workspace: {workspace['workspace_name']} ({workspace['workspace_id']})"
-                )
-                logger.info(
-                    f"  Team: {workspace['team_name']} ({workspace['team_id']})"
-                )
+                logger.info(f"✅ Workspace: {workspace['workspace_name']} ({workspace['workspace_id']})")
+                logger.info(f"  Team: {workspace['team_name']} ({workspace['team_id']})")
                 logger.info(f"  Integration: {workspace['integration_id']}")
                 fixable_count += 1
             else:
@@ -233,54 +209,36 @@ async def main(auto_fix: bool = False):
 
         if fixable_count > 0 and not auto_fix:
             try:
-                fix_option = (
-                    input("\nWould you like to fix the workspace team mapping? (y/n): ")
-                    .strip()
-                    .lower()
-                )
+                fix_option = input("\nWould you like to fix the workspace team mapping? (y/n): ").strip().lower()
                 should_fix = fix_option == "y"
             except (EOFError, KeyboardInterrupt):
-                logger.info(
-                    "No input available or interrupted, running in dry run mode"
-                )
+                logger.info("No input available or interrupted, running in dry run mode")
                 should_fix = False
 
         if fixable_count > 0:
             if should_fix:
                 # Fix workspace team mapping
                 logger.info("Applying fixes to workspace team mapping...")
-                total_fixed, total_failed = await fix_workspace_team_mapping(
-                    db, dry_run=False
-                )
-                logger.info(
-                    f"Fix summary: {total_fixed} workspaces fixed, {total_failed} workspaces failed to fix"
-                )
+                total_fixed, total_failed = await fix_workspace_team_mapping(db, dry_run=False)
+                logger.info(f"Fix summary: {total_fixed} workspaces fixed, {total_failed} workspaces failed to fix")
 
                 # Check mapping status after fix
-                total_workspaces, null_team_id_count = (
-                    await check_workspace_team_mapping(db)
-                )
+                total_workspaces, null_team_id_count = await check_workspace_team_mapping(db)
 
                 if null_team_id_count == 0:
                     logger.info("✅ All workspaces now have team_id values!")
                 else:
-                    logger.warning(
-                        f"⚠️ {null_team_id_count} workspaces still have missing team_id values"
-                    )
+                    logger.warning(f"⚠️ {null_team_id_count} workspaces still have missing team_id values")
             else:
                 # Show what would be fixed in dry run mode
                 logger.info("Running in dry run mode (no changes will be made):")
-                total_fixed, total_failed = await fix_workspace_team_mapping(
-                    db, dry_run=True
-                )
+                total_fixed, total_failed = await fix_workspace_team_mapping(db, dry_run=True)
                 logger.info(
                     f"Dry run summary: {total_fixed} workspaces would be fixed, {total_failed} workspaces could not be fixed"
                 )
 
     except Exception as e:
-        logger.error(
-            f"Error running workspace team mapping validation: {str(e)}", exc_info=True
-        )
+        logger.error(f"Error running workspace team mapping validation: {str(e)}", exc_info=True)
     finally:
         await db.close()
 
@@ -288,9 +246,7 @@ async def main(auto_fix: bool = False):
 if __name__ == "__main__":
     import argparse
 
-    parser = argparse.ArgumentParser(
-        description="Check and fix Slack workspace team mapping"
-    )
+    parser = argparse.ArgumentParser(description="Check and fix Slack workspace team mapping")
     parser.add_argument(
         "--auto-fix",
         action="store_true",

@@ -95,15 +95,9 @@ async def analyze_channel(
     start_date: Optional[datetime] = Query(
         None, description="Start date for analysis period (defaults to 30 days ago)"
     ),
-    end_date: Optional[datetime] = Query(
-        None, description="End date for analysis period (defaults to current date)"
-    ),
-    include_threads: bool = Query(
-        True, description="Whether to include thread replies in the analysis"
-    ),
-    include_reactions: bool = Query(
-        True, description="Whether to include reactions data in the analysis"
-    ),
+    end_date: Optional[datetime] = Query(None, description="End date for analysis period (defaults to current date)"),
+    include_threads: bool = Query(True, description="Whether to include thread replies in the analysis"),
+    include_reactions: bool = Query(True, description="Whether to include reactions data in the analysis"),
     model: Optional[str] = Query(None, description="Specific LLM model to use"),
     use_json_mode: bool = Query(
         True,
@@ -131,9 +125,7 @@ async def analyze_channel(
 async def get_channel_analyses(
     workspace_id: str,
     channel_id: str,
-    limit: int = Query(
-        10, ge=1, le=100, description="Maximum number of analyses to return"
-    ),
+    limit: int = Query(10, ge=1, le=100, description="Maximum number of analyses to return"),
     offset: int = Query(0, ge=0, description="Offset for pagination"),
     db: AsyncSession = Depends(get_async_db),
 ):

@@ -9,9 +9,7 @@ from datetime import datetime
 from typing import Optional
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 
@@ -65,9 +63,7 @@ async def test_team_id_selection():
     # Apply the fix logic
     team_id = workspace.team_id
     if team_id is None:
-        logger.warning(
-            f"Workspace {workspace.id} has null team_id, using integration.owner_team_id instead"
-        )
+        logger.warning(f"Workspace {workspace.id} has null team_id, using integration.owner_team_id instead")
         team_id = integration.owner_team_id
 
         if team_id is None:
@@ -78,9 +74,7 @@ async def test_team_id_selection():
                 "Could not determine team_id for CrossResourceReport. Please check workspace and integration configuration."
             )
 
-        logger.info(
-            f"Using integration.owner_team_id: {team_id} for CrossResourceReport"
-        )
+        logger.info(f"Using integration.owner_team_id: {team_id} for CrossResourceReport")
     else:
         logger.info(f"Using workspace.team_id: {team_id} for CrossResourceReport")
 
@@ -102,9 +96,7 @@ async def test_team_id_selection():
     workspace_without_team = MockWorkspace(workspace_id, None)
 
     logger.info("Case 2: workspace.team_id is None")
-    logger.info(
-        f"Creating CrossResourceReport with workspace ID: {workspace_without_team.id}"
-    )
+    logger.info(f"Creating CrossResourceReport with workspace ID: {workspace_without_team.id}")
 
     # Apply the fix logic
     team_id = workspace_without_team.team_id
@@ -122,9 +114,7 @@ async def test_team_id_selection():
                 "Could not determine team_id for CrossResourceReport. Please check workspace and integration configuration."
             )
 
-        logger.info(
-            f"Using integration.owner_team_id: {team_id} for CrossResourceReport"
-        )
+        logger.info(f"Using integration.owner_team_id: {team_id} for CrossResourceReport")
     else:
         logger.info(f"Using workspace.team_id: {team_id} for CrossResourceReport")
 
@@ -146,9 +136,7 @@ async def test_team_id_selection():
     integration_without_team = MockIntegration(integration_id, None)
 
     logger.info("Case 3: both workspace.team_id and integration.owner_team_id are None")
-    logger.info(
-        f"Creating CrossResourceReport with workspace ID: {workspace_without_team.id}"
-    )
+    logger.info(f"Creating CrossResourceReport with workspace ID: {workspace_without_team.id}")
 
     try:
         # Apply the fix logic
@@ -169,9 +157,7 @@ async def test_team_id_selection():
                     "Could not determine team_id for CrossResourceReport. Please check workspace and integration configuration."
                 )
 
-            logger.info(
-                f"Using integration.owner_team_id: {team_id} for CrossResourceReport"
-            )
+            logger.info(f"Using integration.owner_team_id: {team_id} for CrossResourceReport")
         else:
             logger.info(f"Using workspace.team_id: {team_id} for CrossResourceReport")
 

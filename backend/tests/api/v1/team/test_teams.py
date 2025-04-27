@@ -64,15 +64,11 @@ async def test_team(db: AsyncSession, test_user_id: str) -> Team:
 
 @pytest.mark.asyncio
 @team_test_mark
-async def test_create_team(
-    client: AsyncClient, test_user_auth_header: Dict, team_data: Dict
-):
+async def test_create_team(client: AsyncClient, test_user_auth_header: Dict, team_data: Dict):
     """
     Test creating a team.
     """
-    response = await client.post(
-        "/api/v1/teams/", json=team_data, headers=test_user_auth_header
-    )
+    response = await client.post("/api/v1/teams/", json=team_data, headers=test_user_auth_header)
 
     assert response.status_code == 201
 
@@ -87,9 +83,7 @@ async def test_create_team(
 
 @pytest.mark.asyncio
 @team_test_mark
-async def test_get_teams(
-    client: AsyncClient, test_user_auth_header: Dict, test_team_fixture: Team
-):
+async def test_get_teams(client: AsyncClient, test_user_auth_header: Dict, test_team_fixture: Team):
     """
     Test getting a list of teams for the current user.
     """
@@ -109,16 +103,12 @@ async def test_get_teams(
 
 @pytest.mark.asyncio
 @team_test_mark
-async def test_get_team_by_id(
-    client: AsyncClient, test_user_auth_header: Dict, test_team_fixture: Team
-):
+async def test_get_team_by_id(client: AsyncClient, test_user_auth_header: Dict, test_team_fixture: Team):
     """
     Test getting a team by ID.
     """
     team = await test_team_fixture
-    response = await client.get(
-        f"/api/v1/teams/{team.id}", headers=test_user_auth_header
-    )
+    response = await client.get(f"/api/v1/teams/{team.id}", headers=test_user_auth_header)
 
     assert response.status_code == 200
 
@@ -130,16 +120,12 @@ async def test_get_team_by_id(
 
 @pytest.mark.asyncio
 @team_test_mark
-async def test_get_team_by_slug(
-    client: AsyncClient, test_user_auth_header: Dict, test_team_fixture: Team
-):
+async def test_get_team_by_slug(client: AsyncClient, test_user_auth_header: Dict, test_team_fixture: Team):
     """
     Test getting a team by slug.
     """
     team = await test_team_fixture
-    response = await client.get(
-        f"/api/v1/teams/by-slug/{team.slug}", headers=test_user_auth_header
-    )
+    response = await client.get(f"/api/v1/teams/by-slug/{team.slug}", headers=test_user_auth_header)
 
     assert response.status_code == 200
 
@@ -151,18 +137,14 @@ async def test_get_team_by_slug(
 
 @pytest.mark.asyncio
 @team_test_mark
-async def test_update_team(
-    client: AsyncClient, test_user_auth_header: Dict, test_team_fixture: Team
-):
+async def test_update_team(client: AsyncClient, test_user_auth_header: Dict, test_team_fixture: Team):
     """
     Test updating a team.
     """
     team = await test_team_fixture
     update_data = {"name": "Updated Team Name", "description": "Updated description"}
 
-    response = await client.put(
-        f"/api/v1/teams/{team.id}", json=update_data, headers=test_user_auth_header
-    )
+    response = await client.put(f"/api/v1/teams/{team.id}", json=update_data, headers=test_user_auth_header)
 
     assert response.status_code == 200
 
@@ -175,24 +157,18 @@ async def test_update_team(
 
 @pytest.mark.asyncio
 @team_test_mark
-async def test_delete_team(
-    client: AsyncClient, test_user_auth_header: Dict, test_team_fixture: Team
-):
+async def test_delete_team(client: AsyncClient, test_user_auth_header: Dict, test_team_fixture: Team):
     """
     Test deleting a team.
     """
     team = await test_team_fixture
-    response = await client.delete(
-        f"/api/v1/teams/{team.id}", headers=test_user_auth_header
-    )
+    response = await client.delete(f"/api/v1/teams/{team.id}", headers=test_user_auth_header)
 
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "success"
 
     # Verify team is no longer accessible
-    response = await client.get(
-        f"/api/v1/teams/{team.id}", headers=test_user_auth_header
-    )
+    response = await client.get(f"/api/v1/teams/{team.id}", headers=test_user_auth_header)
 
     assert response.status_code == 404

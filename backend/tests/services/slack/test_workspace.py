@@ -39,9 +39,7 @@ def mock_workspace():
 
 @pytest.mark.asyncio
 @patch("app.services.slack.workspace.SlackApiClient")
-async def test_update_workspace_metadata_success(
-    mock_client_class, mock_db_session, mock_workspace
-):
+async def test_update_workspace_metadata_success(mock_client_class, mock_db_session, mock_workspace):
     """Test updating workspace metadata successfully."""
     # Mock API responses
     mock_client = AsyncMock(spec=SlackApiClient)
@@ -61,9 +59,7 @@ async def test_update_workspace_metadata_success(
     mock_client_class.return_value = mock_client
 
     # Execute the service method
-    result = await WorkspaceService.update_workspace_metadata(
-        mock_db_session, mock_workspace
-    )
+    result = await WorkspaceService.update_workspace_metadata(mock_db_session, mock_workspace)
 
     # Verify results
     assert result.name == "Updated Name"
@@ -83,9 +79,7 @@ async def test_update_workspace_metadata_success(
 
 @pytest.mark.asyncio
 @patch("app.services.slack.workspace.SlackApiClient")
-async def test_update_workspace_metadata_api_error(
-    mock_client_class, mock_db_session, mock_workspace
-):
+async def test_update_workspace_metadata_api_error(mock_client_class, mock_db_session, mock_workspace):
     """Test handling API errors during metadata update."""
     # Mock API error
     mock_client = AsyncMock(spec=SlackApiClient)
@@ -98,9 +92,7 @@ async def test_update_workspace_metadata_api_error(
 
     # Execute the service method and expect an exception
     with pytest.raises(Exception):
-        await WorkspaceService.update_workspace_metadata(
-            mock_db_session, mock_workspace
-        )
+        await WorkspaceService.update_workspace_metadata(mock_db_session, mock_workspace)
 
     # Verify workspace was marked as disconnected due to token error
     assert mock_workspace.is_connected is False
@@ -114,9 +106,7 @@ async def test_update_workspace_metadata_api_error(
 @pytest.mark.skip(reason="Need to fix async mock chain")
 @pytest.mark.asyncio
 @patch("app.services.slack.workspace.SlackApiClient")
-async def test_verify_workspace_tokens(
-    mock_client_class, mock_db_session, mock_workspace
-):
+async def test_verify_workspace_tokens(mock_client_class, mock_db_session, mock_workspace):
     """Test token verification."""
     # Mock API client and response
     mock_client = AsyncMock(spec=SlackApiClient)
@@ -134,9 +124,7 @@ async def test_verify_workspace_tokens(
 @pytest.mark.skip(reason="Need to fix async mock chain")
 @pytest.mark.asyncio
 @patch("app.services.slack.workspace.SlackApiClient")
-async def test_verify_workspace_tokens_invalid(
-    mock_client_class, mock_db_session, mock_workspace
-):
+async def test_verify_workspace_tokens_invalid(mock_client_class, mock_db_session, mock_workspace):
     """Test handling invalid tokens."""
     # Skip the actual test for now
     assert True

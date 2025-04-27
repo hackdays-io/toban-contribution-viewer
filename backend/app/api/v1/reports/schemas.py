@@ -39,18 +39,10 @@ class ReportStatusEnum(str, Enum):
 class ReportFilterParams(BaseModel):
     """Query parameters for filtering reports."""
 
-    status: Optional[ReportStatusEnum] = Field(
-        None, description="Filter by report status"
-    )
-    resource_type: Optional[ResourceTypeEnum] = Field(
-        None, description="Filter by resource type"
-    )
-    start_date: Optional[datetime] = Field(
-        None, description="Filter by reports starting after this date"
-    )
-    end_date: Optional[datetime] = Field(
-        None, description="Filter by reports ending before this date"
-    )
+    status: Optional[ReportStatusEnum] = Field(None, description="Filter by report status")
+    resource_type: Optional[ResourceTypeEnum] = Field(None, description="Filter by resource type")
+    start_date: Optional[datetime] = Field(None, description="Filter by reports starting after this date")
+    end_date: Optional[datetime] = Field(None, description="Filter by reports ending before this date")
     page: int = Field(1, description="Page number", ge=1)
     page_size: int = Field(20, description="Number of items per page", ge=1, le=100)
     sort_by: str = Field("created_at", description="Field to sort by")
@@ -67,15 +59,9 @@ class ReportFilterParams(BaseModel):
 class ResourceAnalysisFilterParams(BaseModel):
     """Query parameters for filtering resource analyses."""
 
-    status: Optional[ReportStatusEnum] = Field(
-        None, description="Filter by analysis status"
-    )
-    resource_type: Optional[ResourceTypeEnum] = Field(
-        None, description="Filter by resource type"
-    )
-    analysis_type: Optional[AnalysisTypeEnum] = Field(
-        None, description="Filter by analysis type"
-    )
+    status: Optional[ReportStatusEnum] = Field(None, description="Filter by analysis status")
+    resource_type: Optional[ResourceTypeEnum] = Field(None, description="Filter by resource type")
+    analysis_type: Optional[AnalysisTypeEnum] = Field(None, description="Filter by analysis type")
     page: int = Field(1, description="Page number", ge=1)
     page_size: int = Field(20, description="Number of items per page", ge=1, le=100)
 
@@ -89,9 +75,7 @@ class ResourceAnalysisBase(BaseModel):
     analysis_type: AnalysisTypeEnum = Field(..., description="Type of analysis")
     period_start: datetime = Field(..., description="Start of analysis period")
     period_end: datetime = Field(..., description="End of analysis period")
-    analysis_parameters: Optional[Dict] = Field(
-        None, description="Parameters for the analysis"
-    )
+    analysis_parameters: Optional[Dict] = Field(None, description="Parameters for the analysis")
 
 
 class CrossResourceReportBase(BaseModel):
@@ -101,9 +85,7 @@ class CrossResourceReportBase(BaseModel):
     description: Optional[str] = Field(None, description="Report description")
     date_range_start: datetime = Field(..., description="Start of report date range")
     date_range_end: datetime = Field(..., description="End of report date range")
-    report_parameters: Optional[Dict] = Field(
-        None, description="Parameters for the report"
-    )
+    report_parameters: Optional[Dict] = Field(None, description="Parameters for the report")
 
 
 class CrossResourceReportCreate(CrossResourceReportBase):
@@ -119,15 +101,9 @@ class CrossResourceReportUpdate(BaseModel):
 
     title: Optional[str] = Field(None, description="Report title", max_length=255)
     description: Optional[str] = Field(None, description="Report description")
-    date_range_start: Optional[datetime] = Field(
-        None, description="Start of report date range"
-    )
-    date_range_end: Optional[datetime] = Field(
-        None, description="End of report date range"
-    )
-    report_parameters: Optional[Dict] = Field(
-        None, description="Parameters for the report"
-    )
+    date_range_start: Optional[datetime] = Field(None, description="Start of report date range")
+    date_range_end: Optional[datetime] = Field(None, description="End of report date range")
+    report_parameters: Optional[Dict] = Field(None, description="Parameters for the report")
 
 
 class ResourceAnalysisResponse(ResourceAnalysisBase):
@@ -137,37 +113,17 @@ class ResourceAnalysisResponse(ResourceAnalysisBase):
     cross_resource_report_id: UUID = Field(..., description="Cross-resource report ID")
     status: ReportStatusEnum = Field(..., description="Analysis status")
     results: Optional[Dict] = Field(None, description="Analysis results")
-    contributor_insights: Optional[str] = Field(
-        None, description="LLM-generated contributor insights"
-    )
-    topic_analysis: Optional[str] = Field(
-        None, description="LLM-generated topic analysis"
-    )
-    resource_summary: Optional[str] = Field(
-        None, description="LLM-generated resource summary"
-    )
-    key_highlights: Optional[str] = Field(
-        None, description="LLM-generated key highlights"
-    )
-    model_used: Optional[str] = Field(
-        None, description="LLM model used for the analysis"
-    )
-    analysis_generated_at: Optional[datetime] = Field(
-        None, description="When the analysis was generated"
-    )
+    contributor_insights: Optional[str] = Field(None, description="LLM-generated contributor insights")
+    topic_analysis: Optional[str] = Field(None, description="LLM-generated topic analysis")
+    resource_summary: Optional[str] = Field(None, description="LLM-generated resource summary")
+    key_highlights: Optional[str] = Field(None, description="LLM-generated key highlights")
+    model_used: Optional[str] = Field(None, description="LLM model used for the analysis")
+    analysis_generated_at: Optional[datetime] = Field(None, description="When the analysis was generated")
     # Statistics fields
-    message_count: Optional[int] = Field(
-        None, description="Number of messages in this resource"
-    )
-    participant_count: Optional[int] = Field(
-        None, description="Number of participants in this resource"
-    )
-    thread_count: Optional[int] = Field(
-        None, description="Number of threads in this resource"
-    )
-    reaction_count: Optional[int] = Field(
-        None, description="Number of reactions in this resource"
-    )
+    message_count: Optional[int] = Field(None, description="Number of messages in this resource")
+    participant_count: Optional[int] = Field(None, description="Number of participants in this resource")
+    thread_count: Optional[int] = Field(None, description="Number of threads in this resource")
+    reaction_count: Optional[int] = Field(None, description="Number of reactions in this resource")
     created_at: datetime = Field(..., description="Creation timestamp")
     updated_at: datetime = Field(..., description="Last update timestamp")
 
@@ -183,47 +139,27 @@ class CrossResourceReportResponse(CrossResourceReportBase):
     id: UUID = Field(..., description="Report ID")
     team_id: UUID = Field(..., description="Team ID")
     status: ReportStatusEnum = Field(..., description="Report status")
-    comprehensive_analysis: Optional[str] = Field(
-        None, description="LLM-generated comprehensive analysis"
-    )
+    comprehensive_analysis: Optional[str] = Field(None, description="LLM-generated comprehensive analysis")
     comprehensive_analysis_generated_at: Optional[datetime] = Field(
         None, description="When the comprehensive analysis was generated"
     )
-    model_used: Optional[str] = Field(
-        None, description="LLM model used for the analysis"
-    )
+    model_used: Optional[str] = Field(None, description="LLM model used for the analysis")
     created_at: datetime = Field(..., description="Creation timestamp")
     updated_at: datetime = Field(..., description="Last update timestamp")
 
     # Summary statistics
-    total_resources: Optional[int] = Field(
-        None, description="Total number of resources analyzed"
-    )
-    completed_analyses: Optional[int] = Field(
-        None, description="Number of completed resource analyses"
-    )
-    pending_analyses: Optional[int] = Field(
-        None, description="Number of pending resource analyses"
-    )
-    failed_analyses: Optional[int] = Field(
-        None, description="Number of failed resource analyses"
-    )
-    resource_types: Optional[List[str]] = Field(
-        None, description="Types of resources included"
-    )
+    total_resources: Optional[int] = Field(None, description="Total number of resources analyzed")
+    completed_analyses: Optional[int] = Field(None, description="Number of completed resource analyses")
+    pending_analyses: Optional[int] = Field(None, description="Number of pending resource analyses")
+    failed_analyses: Optional[int] = Field(None, description="Number of failed resource analyses")
+    resource_types: Optional[List[str]] = Field(None, description="Types of resources included")
     # Message statistics
-    total_messages: Optional[int] = Field(
-        None, description="Total number of messages across all resources"
-    )
+    total_messages: Optional[int] = Field(None, description="Total number of messages across all resources")
     total_participants: Optional[int] = Field(
         None, description="Total number of unique participants across all resources"
     )
-    total_threads: Optional[int] = Field(
-        None, description="Total number of threads across all resources"
-    )
-    total_reactions: Optional[int] = Field(
-        None, description="Total number of reactions across all resources"
-    )
+    total_threads: Optional[int] = Field(None, description="Total number of threads across all resources")
+    total_reactions: Optional[int] = Field(None, description="Total number of reactions across all resources")
 
     class Config:
         """Pydantic configuration."""
@@ -247,12 +183,8 @@ class ResourceAnalysisSummary(BaseModel):
     pending: int = Field(..., description="Number of pending analyses")
     in_progress: int = Field(..., description="Number of in-progress analyses")
     failed: int = Field(..., description="Number of failed analyses")
-    resource_types: Dict[str, int] = Field(
-        ..., description="Count of analyses by resource type"
-    )
-    analysis_types: Dict[str, int] = Field(
-        ..., description="Count of analyses by analysis type"
-    )
+    resource_types: Dict[str, int] = Field(..., description="Count of analyses by resource type")
+    analysis_types: Dict[str, int] = Field(..., description="Count of analyses by analysis type")
 
 
 class ReportGenerationResponse(BaseModel):
@@ -260,9 +192,7 @@ class ReportGenerationResponse(BaseModel):
 
     report_id: UUID = Field(..., description="Report ID")
     status: ReportStatusEnum = Field(..., description="Updated report status")
-    resource_analyses_created: int = Field(
-        ..., description="Number of resource analyses created"
-    )
+    resource_analyses_created: int = Field(..., description="Number of resource analyses created")
     message: str = Field(..., description="Status message")
 
 
@@ -288,6 +218,4 @@ class ChannelReportCreate(BaseModel):
     end_date: datetime = Field(..., description="End date for analysis period")
     include_threads: bool = Field(True, description="Whether to include thread replies")
     include_reactions: bool = Field(True, description="Whether to include reactions")
-    analysis_type: str = Field(
-        "CONTRIBUTION", description="Type of analysis to perform"
-    )
+    analysis_type: str = Field("CONTRIBUTION", description="Type of analysis to perform")

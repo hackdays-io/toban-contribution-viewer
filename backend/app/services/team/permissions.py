@@ -67,9 +67,7 @@ async def ensure_team_permission(
     Raises:
         HTTPException: If user doesn't have required permissions
     """
-    logger.info(
-        f"Checking if user {user_id} has role {allowed_roles} in team {team_id}"
-    )
+    logger.info(f"Checking if user {user_id} has role {allowed_roles} in team {team_id}")
 
     # Get the user's team membership - only active members can access team resources
     member = await get_team_member(db, team_id, user_id, include_all_statuses=False)
@@ -83,9 +81,7 @@ async def ensure_team_permission(
 
     # Check if the user's role is in the allowed roles
     if member.role not in allowed_roles:
-        logger.warning(
-            f"User {user_id} with role {member.role} tried to perform action requiring {allowed_roles}"
-        )
+        logger.warning(f"User {user_id} with role {member.role} tried to perform action requiring {allowed_roles}")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You don't have the required permissions for this action",
@@ -191,9 +187,7 @@ def create_team_permission_dependency(required_roles: List[TeamMemberRole]):
         A dependency function that can be used with FastAPI
     """
 
-    async def has_team_permission(
-        team_id: UUID, db: AsyncSession, current_user: dict
-    ) -> TeamMember:
+    async def has_team_permission(team_id: UUID, db: AsyncSession, current_user: dict) -> TeamMember:
         """
         Check if current user has the required role for the team.
 
@@ -208,8 +202,6 @@ def create_team_permission_dependency(required_roles: List[TeamMemberRole]):
         Raises:
             HTTPException: If user doesn't have required permission
         """
-        return await ensure_team_permission(
-            db, team_id, current_user["id"], required_roles
-        )
+        return await ensure_team_permission(db, team_id, current_user["id"], required_roles)
 
     return has_team_permission

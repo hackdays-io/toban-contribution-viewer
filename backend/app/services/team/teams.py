@@ -61,9 +61,7 @@ class TeamService:
 
         # Auto-create a team if user has none and auto_create is enabled
         if not teams and auto_create:
-            logger.info(
-                f"No teams found for user {user_id}, auto-creating a personal team"
-            )
+            logger.info(f"No teams found for user {user_id}, auto-creating a personal team")
             try:
                 # Create a personal team for this user
                 team_name = "My Personal Team"
@@ -93,17 +91,11 @@ class TeamService:
                 await db.commit()
 
                 # Explicitly load the team with its members to avoid lazy loading issues
-                query = (
-                    select(Team)
-                    .where(Team.id == team.id)
-                    .options(selectinload(Team.members))
-                )
+                query = select(Team).where(Team.id == team.id).options(selectinload(Team.members))
                 result = await db.execute(query)
                 team = result.scalars().first()
 
-                logger.info(
-                    f"Auto-created team '{team.name}' (ID: {team.id}) for user {user_id}"
-                )
+                logger.info(f"Auto-created team '{team.name}' (ID: {team.id}) for user {user_id}")
 
                 # Return the newly created team
                 return [team]
@@ -115,9 +107,7 @@ class TeamService:
         return teams
 
     @staticmethod
-    async def get_team_by_id(
-        db: AsyncSession, team_id: UUID, include_members: bool = False
-    ) -> Optional[Team]:
+    async def get_team_by_id(db: AsyncSession, team_id: UUID, include_members: bool = False) -> Optional[Team]:
         """
         Get a team by its ID.
 
@@ -147,9 +137,7 @@ class TeamService:
         return team
 
     @staticmethod
-    async def get_team_by_slug(
-        db: AsyncSession, slug: str, include_members: bool = False
-    ) -> Optional[Team]:
+    async def get_team_by_slug(db: AsyncSession, slug: str, include_members: bool = False) -> Optional[Team]:
         """
         Get a team by its slug.
 
@@ -240,17 +228,11 @@ class TeamService:
             await db.commit()
 
             # Explicitly load the team with its members to avoid lazy loading issues
-            query = (
-                select(Team)
-                .where(Team.id == team.id)
-                .options(selectinload(Team.members))
-            )
+            query = select(Team).where(Team.id == team.id).options(selectinload(Team.members))
             result = await db.execute(query)
             team_with_members = result.scalars().first()
 
-            logger.info(
-                f"Created team '{team.name}' (ID: {team.id}) for user {user_id}"
-            )
+            logger.info(f"Created team '{team.name}' (ID: {team.id}) for user {user_id}")
             return team_with_members
 
         except IntegrityError as e:
@@ -269,9 +251,7 @@ class TeamService:
             )
 
     @staticmethod
-    async def update_team(
-        db: AsyncSession, team_id: UUID, team_data: Dict, user_id: str
-    ) -> Team:
+    async def update_team(db: AsyncSession, team_id: UUID, team_data: Dict, user_id: str) -> Team:
         """
         Update an existing team.
 
@@ -293,14 +273,10 @@ class TeamService:
         team = await TeamService.get_team_by_id(db, team_id)
         if not team:
             logger.warning(f"Team with ID {team_id} not found during update")
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Team not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Team not found")
 
         # Check permissions (user must be owner or admin)
-        await ensure_team_permission(
-            db, team_id, user_id, [TeamMemberRole.OWNER, TeamMemberRole.ADMIN]
-        )
+        await ensure_team_permission(db, team_id, user_id, [TeamMemberRole.OWNER, TeamMemberRole.ADMIN])
 
         # Check if slug is being changed and if the new slug exists
         if team_data.get("slug") and team_data["slug"] != team.slug:
@@ -373,9 +349,7 @@ class TeamService:
         team = await TeamService.get_team_by_id(db, team_id)
         if not team:
             logger.warning(f"Team with ID {team_id} not found during delete")
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Team not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Team not found")
 
         # Check permissions (only owner can delete)
         await ensure_team_permission(db, team_id, user_id, [TeamMemberRole.OWNER])

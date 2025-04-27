@@ -31,9 +31,7 @@ class ResourceAnalysisService(abc.ABC):
         self.db = db
 
     @abc.abstractmethod
-    async def fetch_data(
-        self, resource_id: UUID, start_date: datetime, end_date: datetime, **kwargs
-    ) -> Dict[str, Any]:
+    async def fetch_data(self, resource_id: UUID, start_date: datetime, end_date: datetime, **kwargs) -> Dict[str, Any]:
         """
         Fetch data for a specific resource within a date range.
 
@@ -48,9 +46,7 @@ class ResourceAnalysisService(abc.ABC):
         """
 
     @abc.abstractmethod
-    async def analyze_data(
-        self, data: Dict[str, Any], analysis_type: str, **kwargs
-    ) -> Dict[str, Any]:
+    async def analyze_data(self, data: Dict[str, Any], analysis_type: str, **kwargs) -> Dict[str, Any]:
         """
         Analyze resource data using LLM.
 
@@ -64,9 +60,7 @@ class ResourceAnalysisService(abc.ABC):
         """
 
     @abc.abstractmethod
-    async def prepare_data_for_analysis(
-        self, data: Dict[str, Any], analysis_type: str
-    ) -> Dict[str, Any]:
+    async def prepare_data_for_analysis(self, data: Dict[str, Any], analysis_type: str) -> Dict[str, Any]:
         """
         Process raw resource data into a format suitable for LLM analysis.
 
@@ -108,18 +102,12 @@ class ResourceAnalysisService(abc.ABC):
             .values(
                 status=status,
                 # Add error message to results if status is failed
-                results=(
-                    {"error": message}
-                    if status == ReportStatus.FAILED and message
-                    else None
-                ),
+                results=({"error": message} if status == ReportStatus.FAILED and message else None),
             )
         )
 
         # Return the updated analysis
-        result = await self.db.execute(
-            select(ResourceAnalysis).where(ResourceAnalysis.id == analysis_id)
-        )
+        result = await self.db.execute(select(ResourceAnalysis).where(ResourceAnalysis.id == analysis_id))
         analysis = result.scalar_one_or_none()
         return analysis
 
@@ -185,15 +173,11 @@ class ResourceAnalysisService(abc.ABC):
 
         # Update the analysis
         await self.db.execute(
-            update(ResourceAnalysis)
-            .where(ResourceAnalysis.id == analysis_id)
-            .values(**update_values)
+            update(ResourceAnalysis).where(ResourceAnalysis.id == analysis_id).values(**update_values)
         )
 
         # Return the updated analysis
-        result = await self.db.execute(
-            select(ResourceAnalysis).where(ResourceAnalysis.id == analysis_id)
-        )
+        result = await self.db.execute(select(ResourceAnalysis).where(ResourceAnalysis.id == analysis_id))
         analysis = result.scalar_one_or_none()
         return analysis
 
@@ -222,9 +206,7 @@ class ResourceAnalysisService(abc.ABC):
         if current_retry < max_retries:
             # For certain error types, we might want to retry
             if self._is_retryable_error(error):
-                logger.info(
-                    f"Retrying analysis {analysis_id} (attempt {current_retry + 1}/{max_retries})"
-                )
+                logger.info(f"Retrying analysis {analysis_id} (attempt {current_retry + 1}/{max_retries})")
                 # Mark as pending for retry
                 return await self.update_analysis_status(
                     analysis_id=analysis_id,
@@ -299,9 +281,7 @@ class ResourceAnalysisService(abc.ABC):
         """
         try:
             # Update status to in progress
-            await self.update_analysis_status(
-                analysis_id=analysis_id, status=ReportStatus.IN_PROGRESS
-            )
+            await self.update_analysis_status(analysis_id=analysis_id, status=ReportStatus.IN_PROGRESS)
 
             # Fetch data from the resource
             data = await self.fetch_data(
@@ -315,9 +295,7 @@ class ResourceAnalysisService(abc.ABC):
             logger.debug(f"Message metadata: {data.get('metadata')}")
 
             # Process the data for analysis
-            processed_data = await self.prepare_data_for_analysis(
-                data=data, analysis_type=analysis_type
-            )
+            processed_data = await self.prepare_data_for_analysis(data=data, analysis_type=analysis_type)
 
             # Send to LLM for analysis
             results = await self.analyze_data(

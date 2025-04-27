@@ -29,16 +29,11 @@ import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
-from app.models.reports.cross_resource_report import (
-    CrossResourceReport,
-    ResourceAnalysis,
-)
+from app.models.reports.cross_resource_report import CrossResourceReport, ResourceAnalysis
 from app.models.slack import SlackChannel, SlackMessage
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 # Database connection - hardcoded for local development
@@ -52,14 +47,10 @@ engine = create_async_engine(
 )
 
 # Create async session factory
-async_session = sessionmaker(
-    engine, class_=AsyncSession, expire_on_commit=False, autoflush=False
-)
+async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False, autoflush=False)
 
 
-async def get_report_by_id(
-    db: AsyncSession, report_id: UUID
-) -> Optional[CrossResourceReport]:
+async def get_report_by_id(db: AsyncSession, report_id: UUID) -> Optional[CrossResourceReport]:
     """
     Get a cross-resource report by ID.
 
@@ -70,15 +61,11 @@ async def get_report_by_id(
     Returns:
         The report if found, None otherwise
     """
-    result = await db.execute(
-        sa.select(CrossResourceReport).where(CrossResourceReport.id == report_id)
-    )
+    result = await db.execute(sa.select(CrossResourceReport).where(CrossResourceReport.id == report_id))
     return result.scalar_one_or_none()
 
 
-async def get_recent_reports(
-    db: AsyncSession, limit: int = 5
-) -> List[CrossResourceReport]:
+async def get_recent_reports(db: AsyncSession, limit: int = 5) -> List[CrossResourceReport]:
     """
     Get the most recent cross-resource reports.
 
@@ -90,16 +77,12 @@ async def get_recent_reports(
         List of reports
     """
     result = await db.execute(
-        sa.select(CrossResourceReport)
-        .order_by(CrossResourceReport.created_at.desc())
-        .limit(limit)
+        sa.select(CrossResourceReport).order_by(CrossResourceReport.created_at.desc()).limit(limit)
     )
     return result.scalars().all()
 
 
-async def get_resource_analyses(
-    db: AsyncSession, report_id: UUID
-) -> List[ResourceAnalysis]:
+async def get_resource_analyses(db: AsyncSession, report_id: UUID) -> List[ResourceAnalysis]:
     """
     Get the resource analyses for a cross-resource report.
 
@@ -110,11 +93,7 @@ async def get_resource_analyses(
     Returns:
         List of resource analyses
     """
-    result = await db.execute(
-        sa.select(ResourceAnalysis).where(
-            ResourceAnalysis.cross_resource_report_id == report_id
-        )
-    )
+    result = await db.execute(sa.select(ResourceAnalysis).where(ResourceAnalysis.cross_resource_report_id == report_id))
     return result.scalars().all()
 
 
@@ -154,9 +133,7 @@ async def count_channel_messages(
     return result.scalar_one()
 
 
-async def check_report_consistency(
-    db: AsyncSession, report_id: UUID
-) -> Dict[str, Dict[str, int]]:
+async def check_report_consistency(db: AsyncSession, report_id: UUID) -> Dict[str, Dict[str, int]]:
     """
     Check the consistency of a cross-resource report.
     Compares the number of messages processed in the analysis vs.
@@ -189,11 +166,7 @@ async def check_report_consistency(
     logger.info(f"Found {len(analyses)} resource analyses")
 
     # Filter for Slack channel analyses
-    slack_analyses = [
-        analysis
-        for analysis in analyses
-        if analysis.resource_type.name == "SLACK_CHANNEL"
-    ]
+    slack_analyses = [analysis for analysis in analyses if analysis.resource_type.name == "SLACK_CHANNEL"]
     if not slack_analyses:
         logger.info(f"No Slack channel analyses found for report {report_id}")
         return {}
@@ -210,25 +183,19 @@ async def check_report_consistency(
         channel_id = analysis.resource_id
 
         # Get the channel name for better logging
-        channel_result = await db.execute(
-            sa.select(SlackChannel).where(SlackChannel.id == channel_id)
-        )
+        channel_result = await db.execute(sa.select(SlackChannel).where(SlackChannel.id == channel_id))
         channel = channel_result.scalar_one_or_none()
         channel_name = channel.name if channel else f"Unknown channel {channel_id}"
         channel_slack_id = channel.slack_id if channel else "Unknown"
 
         logger.info(f"\n{'=' * 50}")
-        logger.info(
-            f"Checking channel: {channel_name} (ID: {channel_id}, Slack ID: {channel_slack_id})"
-        )
+        logger.info(f"Checking channel: {channel_name} (ID: {channel_id}, Slack ID: {channel_slack_id})")
 
         # Count actual messages in the database
         db_count = await count_channel_messages(db, channel_id, start_date, end_date)
 
         # Count messages without user_id
-        no_user_count = await count_messages_without_user(
-            db, channel_id, start_date, end_date
-        )
+        no_user_count = await count_messages_without_user(db, channel_id, start_date, end_date)
 
         # Count system messages (messages containing "has joined the channel" or similar)
         system_count = await count_system_messages(db, channel_id, start_date, end_date)
@@ -244,9 +211,7 @@ async def check_report_consistency(
             # Check if analysis contains no_data flag
             no_data = analysis.results.get("no_data", False)
             if no_data:
-                logger.warning(
-                    f"Analysis has no_data=True flag despite having {db_count} messages in DB"
-                )
+                logger.warning(f"Analysis has no_data=True flag despite having {db_count} messages in DB")
 
             # Try to get prepared data from the results if available
             # The ResourceAnalysis model doesn't have a prepared_data attribute
@@ -268,30 +233,21 @@ async def check_report_consistency(
         # Calculate the difference
         diff = db_count - analysis_count
         if diff != 0:
-            logger.warning(
-                f"Discrepancy in channel {channel_name}: "
-                f"Missing {diff} messages in analysis"
-            )
+            logger.warning(f"Discrepancy in channel {channel_name}: " f"Missing {diff} messages in analysis")
 
             # Check for resource_summary in results
             if analysis.results and "resource_summary" in analysis.results:
                 summary = analysis.results["resource_summary"]
                 if "no actual channel messages" in summary.lower():
-                    logger.error(
-                        f"LLM reports 'no actual channel messages' despite having {db_count} messages in DB"
-                    )
+                    logger.error(f"LLM reports 'no actual channel messages' despite having {db_count} messages in DB")
                     logger.info(f"Resource summary: {summary[:200]}...")
 
         # Get some sample messages to understand content
-        sample_messages = await get_sample_messages(
-            db, channel_id, start_date, end_date
-        )
+        sample_messages = await get_sample_messages(db, channel_id, start_date, end_date)
         logger.info(f"Sample messages ({len(sample_messages)}):")
         for i, msg in enumerate(sample_messages):
             truncated_text = msg.text[:100] + "..." if len(msg.text) > 100 else msg.text
-            logger.info(
-                f"  {i + 1}. {msg.message_datetime} | User: {msg.user_id} | Text: '{truncated_text}'"
-            )
+            logger.info(f"  {i + 1}. {msg.message_datetime} | User: {msg.user_id} | Text: '{truncated_text}'")
 
         # Store results
         results[str(channel_id)] = {
@@ -364,11 +320,7 @@ async def count_system_messages(
 
 
 async def get_sample_messages(
-    db: AsyncSession,
-    channel_id: UUID,
-    start_date: datetime,
-    end_date: datetime,
-    limit: int = 5,
+    db: AsyncSession, channel_id: UUID, start_date: datetime, end_date: datetime, limit: int = 5
 ) -> List[SlackMessage]:
     """Get sample messages from a channel within a date range."""
     # Make sure dates are naive
@@ -411,32 +363,20 @@ async def main() -> None:
             # Print summary
             if results:
                 total_db_messages = sum(r["database_count"] for r in results.values())
-                total_analysis_messages = sum(
-                    r["analysis_count"] for r in results.values()
-                )
+                total_analysis_messages = sum(r["analysis_count"] for r in results.values())
 
                 logger.info("=" * 60)
                 logger.info(f"Report {report_id} Summary:")
                 logger.info(f"Total messages in database: {total_db_messages}")
-                logger.info(
-                    f"Total messages processed in analyses: {total_analysis_messages}"
-                )
-                logger.info(
-                    f"Difference: {total_db_messages - total_analysis_messages}"
-                )
+                logger.info(f"Total messages processed in analyses: {total_analysis_messages}")
+                logger.info(f"Difference: {total_db_messages - total_analysis_messages}")
 
                 # Print channels with discrepancies
-                discrepancies = {
-                    k: v for k, v in results.items() if v["difference"] != 0
-                }
+                discrepancies = {k: v for k, v in results.items() if v["difference"] != 0}
                 if discrepancies:
-                    logger.warning(
-                        f"Found {len(discrepancies)} channels with discrepancies:"
-                    )
-                    for _channel_id, data in discrepancies.items():
-                        logger.warning(
-                            f"  {data['channel_name']}: missing {data['difference']} messages"
-                        )
+                    logger.warning(f"Found {len(discrepancies)} channels with discrepancies:")
+                    for _, data in discrepancies.items():
+                        logger.warning(f"  {data['channel_name']}: missing {data['difference']} messages")
                 else:
                     logger.info("All channels have consistent message counts!")
 
@@ -458,31 +398,19 @@ async def main() -> None:
 
                 # Print summary
                 if results:
-                    total_db_messages = sum(
-                        r["database_count"] for r in results.values()
-                    )
-                    total_analysis_messages = sum(
-                        r["analysis_count"] for r in results.values()
-                    )
+                    total_db_messages = sum(r["database_count"] for r in results.values())
+                    total_analysis_messages = sum(r["analysis_count"] for r in results.values())
 
                     logger.info("-" * 60)
                     logger.info(f"Report {report.id} Summary:")
                     logger.info(f"Total messages in database: {total_db_messages}")
-                    logger.info(
-                        f"Total messages processed in analyses: {total_analysis_messages}"
-                    )
-                    logger.info(
-                        f"Difference: {total_db_messages - total_analysis_messages}"
-                    )
+                    logger.info(f"Total messages processed in analyses: {total_analysis_messages}")
+                    logger.info(f"Difference: {total_db_messages - total_analysis_messages}")
 
                     # Print channels with discrepancies
-                    discrepancies = {
-                        k: v for k, v in results.items() if v["difference"] != 0
-                    }
+                    discrepancies = {k: v for k, v in results.items() if v["difference"] != 0}
                     if discrepancies:
-                        logger.warning(
-                            f"Found {len(discrepancies)} channels with discrepancies"
-                        )
+                        logger.warning(f"Found {len(discrepancies)} channels with discrepancies")
                     else:
                         logger.info("All channels have consistent message counts!")
 

@@ -41,9 +41,7 @@ async def test_update_analysis_status():
 
     # Mock the execute and scalar_one_or_none methods
     mock_result = MagicMock()
-    mock_result.scalar_one_or_none.return_value = ResourceAnalysis(
-        id=uuid.uuid4(), status=ReportStatus.IN_PROGRESS
-    )
+    mock_result.scalar_one_or_none.return_value = ResourceAnalysis(id=uuid.uuid4(), status=ReportStatus.IN_PROGRESS)
     db.execute.return_value = mock_result
 
     # Create service instance
@@ -73,9 +71,7 @@ async def test_store_analysis_results():
 
     # Mock the execute and scalar_one_or_none methods
     mock_result = MagicMock()
-    mock_result.scalar_one_or_none.return_value = ResourceAnalysis(
-        id=uuid.uuid4(), status=ReportStatus.COMPLETED
-    )
+    mock_result.scalar_one_or_none.return_value = ResourceAnalysis(id=uuid.uuid4(), status=ReportStatus.COMPLETED)
     db.execute.return_value = mock_result
 
     # Create service instance
@@ -109,9 +105,7 @@ async def test_handle_errors_non_retryable():
 
     # Mock the execute and scalar_one_or_none methods
     mock_result = MagicMock()
-    mock_result.scalar_one_or_none.return_value = ResourceAnalysis(
-        id=uuid.uuid4(), status=ReportStatus.FAILED
-    )
+    mock_result.scalar_one_or_none.return_value = ResourceAnalysis(id=uuid.uuid4(), status=ReportStatus.FAILED)
     db.execute.return_value = mock_result
 
     # Create service instance
@@ -150,9 +144,7 @@ async def test_handle_errors_retryable():
         # Call the method with a retryable error
         analysis_id = uuid.uuid4()
         error = ConnectionError("Test connection error")
-        result = await service.handle_errors(
-            error=error, analysis_id=analysis_id, max_retries=3, current_retry=0
-        )
+        result = await service.handle_errors(error=error, analysis_id=analysis_id, max_retries=3, current_retry=0)
 
         # Check that the returned analysis has PENDING status for retry
         assert result.status == ReportStatus.PENDING
@@ -202,9 +194,7 @@ async def test_run_analysis_success():
     )
 
     # Check that all methods were called with expected arguments
-    service.update_analysis_status.assert_called_with(
-        analysis_id=analysis_id, status=ReportStatus.IN_PROGRESS
-    )
+    service.update_analysis_status.assert_called_with(analysis_id=analysis_id, status=ReportStatus.IN_PROGRESS)
 
     service.fetch_data.assert_called_with(
         resource_id=resource_id,
@@ -214,9 +204,7 @@ async def test_run_analysis_success():
         parameters={"test": "param"},
     )
 
-    service.prepare_data_for_analysis.assert_called_with(
-        data={"test": "data"}, analysis_type="CONTRIBUTION"
-    )
+    service.prepare_data_for_analysis.assert_called_with(data={"test": "data"}, analysis_type="CONTRIBUTION")
 
     service.analyze_data.assert_called_with(
         data={"processed": "data"},
@@ -282,14 +270,10 @@ async def test_run_analysis_error():
     )
 
     # Check that update_analysis_status was called
-    service.update_analysis_status.assert_called_with(
-        analysis_id=analysis_id, status=ReportStatus.IN_PROGRESS
-    )
+    service.update_analysis_status.assert_called_with(analysis_id=analysis_id, status=ReportStatus.IN_PROGRESS)
 
     # Check that fetch_data was called
     service.fetch_data.assert_called()
 
     # Check that handle_errors was called with the error
-    service.handle_errors.assert_called_with(
-        error=service.fetch_data.side_effect, analysis_id=analysis_id
-    )
+    service.handle_errors.assert_called_with(error=service.fetch_data.side_effect, analysis_id=analysis_id)

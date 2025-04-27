@@ -234,8 +234,6 @@ async def test_cascade_delete(db_session: AsyncSession):
     await db_session.flush()
 
     # Verify the analysis was also deleted (or at least removed from the session)
-    result = await db_session.execute(
-        f"SELECT COUNT(*) FROM resourceanalysis WHERE id = '{analysis_id}'"
-    )
+    result = await db_session.execute(f"SELECT COUNT(*) FROM resourceanalysis WHERE id = '{analysis_id}'")
     count = result.scalar()
     assert count == 0

@@ -23,9 +23,7 @@ class WorkspaceService:
     """
 
     @staticmethod
-    async def get_workspace_metadata(
-        db: AsyncSession, workspace_id: str
-    ) -> Optional[SlackWorkspace]:
+    async def get_workspace_metadata(db: AsyncSession, workspace_id: str) -> Optional[SlackWorkspace]:
         """
         Get a workspace by ID.
 
@@ -36,15 +34,11 @@ class WorkspaceService:
         Returns:
             Workspace if found, None otherwise
         """
-        result = await db.execute(
-            select(SlackWorkspace).where(SlackWorkspace.id == workspace_id)
-        )
+        result = await db.execute(select(SlackWorkspace).where(SlackWorkspace.id == workspace_id))
         return result.scalars().first()
 
     @staticmethod
-    async def update_workspace_metadata(
-        db: AsyncSession, workspace: SlackWorkspace
-    ) -> SlackWorkspace:
+    async def update_workspace_metadata(db: AsyncSession, workspace: SlackWorkspace) -> SlackWorkspace:
         """
         Fetch and update workspace metadata from Slack API.
 
@@ -124,9 +118,7 @@ class WorkspaceService:
             )
 
     @staticmethod
-    async def verify_workspace_tokens(
-        db: AsyncSession, workspace_id: Optional[str] = None
-    ) -> List[Dict[str, Any]]:
+    async def verify_workspace_tokens(db: AsyncSession, workspace_id: Optional[str] = None) -> List[Dict[str, Any]]:
         """
         Verify tokens for one or all workspaces.
 
@@ -163,14 +155,10 @@ class WorkspaceService:
                     continue
 
                 # Create client and verify token
-                logger.info(
-                    f"Verifying token for workspace {workspace.id} ({workspace.name})"
-                )
+                logger.info(f"Verifying token for workspace {workspace.id} ({workspace.name})")
                 client = SlackApiClient(workspace.access_token)
                 is_valid = await client.verify_token()
-                logger.info(
-                    f"Token verification result for workspace {workspace.id}: {is_valid}"
-                )
+                logger.info(f"Token verification result for workspace {workspace.id}: {is_valid}")
 
                 if not is_valid:
                     # Update workspace status
@@ -182,9 +170,7 @@ class WorkspaceService:
                     verification_result["message"] = "Token is invalid or expired"
 
             except Exception as e:
-                logger.error(
-                    f"Error verifying token for workspace {workspace.id}: {str(e)}"
-                )
+                logger.error(f"Error verifying token for workspace {workspace.id}: {str(e)}")
                 verification_result["status"] = "error"
                 verification_result["message"] = f"Error during verification: {str(e)}"
 

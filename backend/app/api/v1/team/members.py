@@ -46,9 +46,7 @@ async def get_team_members(
     Returns:
         List of team members
     """
-    logger.info(
-        f"User {current_user['id']} requesting members for team {team_id} with status={status}"
-    )
+    logger.info(f"User {current_user['id']} requesting members for team {team_id} with status={status}")
 
     # Get team members based on the requested status
     if status == "all":
@@ -84,18 +82,14 @@ async def get_team_member(
     Returns:
         Team member data
     """
-    logger.info(
-        f"User {current_user['id']} requesting member {member_id} in team {team_id}"
-    )
+    logger.info(f"User {current_user['id']} requesting member {member_id} in team {team_id}")
 
     member = await TeamMemberService.get_team_member_by_id(
         db=db, team_id=team_id, member_id=member_id, user_id=current_user["id"]
     )
 
     if not member:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Team member not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Team member not found")
 
     return member
 
@@ -151,9 +145,7 @@ async def invite_team_member(
     Returns:
         Status message
     """
-    logger.info(
-        f"User {current_user['id']} inviting {invitation.email} to team {team_id}"
-    )
+    logger.info(f"User {current_user['id']} inviting {invitation.email} to team {team_id}")
 
     # Prepare member data for invitation
     member_data = {
@@ -165,9 +157,7 @@ async def invite_team_member(
     }
 
     # Create the pending member
-    await TeamMemberService.add_team_member(
-        db=db, team_id=team_id, member_data=member_data, user_id=current_user["id"]
-    )
+    await TeamMemberService.add_team_member(db=db, team_id=team_id, member_data=member_data, user_id=current_user["id"])
 
     # In a real system, you would send an email here with the invitation link
 
@@ -199,9 +189,7 @@ async def update_team_member(
     Returns:
         Updated team member data
     """
-    logger.info(
-        f"User {current_user['id']} updating member {member_id} in team {team_id}"
-    )
+    logger.info(f"User {current_user['id']} updating member {member_id} in team {team_id}")
 
     updated_member = await TeamMemberService.update_team_member(
         db=db,
@@ -233,9 +221,7 @@ async def remove_team_member(
     Returns:
         Status message
     """
-    logger.info(
-        f"User {current_user['id']} removing member {member_id} from team {team_id}"
-    )
+    logger.info(f"User {current_user['id']} removing member {member_id} from team {team_id}")
 
     result = await TeamMemberService.remove_team_member(
         db=db, team_id=team_id, member_id=member_id, user_id=current_user["id"]
@@ -263,9 +249,7 @@ async def resend_team_invitation(
     Returns:
         Status message
     """
-    logger.info(
-        f"User {current_user['id']} resending invitation to member {member_id} in team {team_id}"
-    )
+    logger.info(f"User {current_user['id']} resending invitation to member {member_id} in team {team_id}")
 
     result = await TeamMemberService.resend_invitation(
         db=db, team_id=team_id, member_id=member_id, user_id=current_user["id"]
@@ -309,15 +293,11 @@ async def debug_accept_invitation(
 
     if not member:
         logger.warning(f"Member {member_id} not found for debug acceptance")
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Team member not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Team member not found")
 
     # Check if member has a pending invitation
     if member.invitation_status not in ["pending", "expired"]:
-        logger.warning(
-            f"Cannot accept invitation for member {member_id} with status {member.invitation_status}"
-        )
+        logger.warning(f"Cannot accept invitation for member {member_id} with status {member.invitation_status}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Cannot accept invitation with status: {member.invitation_status}",

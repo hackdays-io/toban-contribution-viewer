@@ -56,9 +56,7 @@ class CrossResourceReport(Base, BaseModel):
     """
 
     # Foreign key to team
-    team_id = Column(
-        UUID(as_uuid=True), ForeignKey("team.id"), nullable=False, index=True
-    )
+    team_id = Column(UUID(as_uuid=True), ForeignKey("team.id"), nullable=False, index=True)
 
     # Report metadata
     title = Column(String(255), nullable=False)
@@ -89,9 +87,7 @@ class CrossResourceReport(Base, BaseModel):
     )
 
     # Indexes
-    __table_args__ = (
-        Index("ix_cross_resource_report_team_id_status", team_id, status),
-    )
+    __table_args__ = (Index("ix_cross_resource_report_team_id_status", team_id, status),)
 
 
 class ResourceAnalysis(Base, BaseModel):
@@ -106,9 +102,7 @@ class ResourceAnalysis(Base, BaseModel):
         nullable=False,
         index=True,
     )
-    integration_id = Column(
-        UUID(as_uuid=True), ForeignKey("integration.id"), nullable=False, index=True
-    )
+    integration_id = Column(UUID(as_uuid=True), ForeignKey("integration.id"), nullable=False, index=True)
     resource_id = Column(UUID(as_uuid=True), nullable=False)
 
     # Resource metadata
@@ -117,9 +111,7 @@ class ResourceAnalysis(Base, BaseModel):
         nullable=False,
         index=True,
     )
-    analysis_type = Column(
-        Enum(AnalysisType, name="analysistype"), nullable=False, index=True
-    )
+    analysis_type = Column(Enum(AnalysisType, name="analysistype"), nullable=False, index=True)
     status = Column(
         Enum(ReportStatus, name="reportstatus"),
         default=ReportStatus.PENDING,
@@ -148,15 +140,11 @@ class ResourceAnalysis(Base, BaseModel):
     reaction_count = Column(Integer, nullable=True)
 
     # Relationships
-    cross_resource_report = relationship(
-        "CrossResourceReport", back_populates="resource_analyses"
-    )
+    cross_resource_report = relationship("CrossResourceReport", back_populates="resource_analyses")
     integration = relationship("Integration")
 
     # Indexes
     __table_args__ = (
-        Index(
-            "ix_resource_analysis_report_id_status", cross_resource_report_id, status
-        ),
+        Index("ix_resource_analysis_report_id_status", cross_resource_report_id, status),
         Index("ix_resource_analysis_resource_type", resource_type),
     )

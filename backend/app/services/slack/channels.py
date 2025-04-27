@@ -21,9 +21,7 @@ from app.services.slack.api import SlackApiClient, SlackApiError
 logger = logging.getLogger(__name__)
 
 
-async def get_channel_by_id(
-    db: AsyncSession, workspace_id: str, channel_id: str
-) -> Optional[SlackChannel]:
+async def get_channel_by_id(db: AsyncSession, workspace_id: str, channel_id: str) -> Optional[SlackChannel]:
     """
     Get a channel by its ID.
 
@@ -36,9 +34,7 @@ async def get_channel_by_id(
         SlackChannel or None if not found
     """
     result = await db.execute(
-        select(SlackChannel).where(
-            SlackChannel.workspace_id == workspace_id, SlackChannel.id == channel_id
-        )
+        select(SlackChannel).where(SlackChannel.workspace_id == workspace_id, SlackChannel.id == channel_id)
     )
     return result.scalars().first()
 
@@ -77,9 +73,7 @@ class ChannelService:
             Dictionary containing the channels and pagination metadata
         """
         # Check if workspace exists and get access token
-        result = await db.execute(
-            select(SlackWorkspace).where(SlackWorkspace.id == workspace_id)
-        )
+        result = await db.execute(select(SlackWorkspace).where(SlackWorkspace.id == workspace_id))
         workspace = result.scalars().first()
 
         if not workspace:
@@ -88,9 +82,7 @@ class ChannelService:
 
         if not workspace.access_token:
             logger.error(f"Workspace has no access token: {workspace_id}")
-            raise HTTPException(
-                status_code=400, detail="Workspace is not properly connected"
-            )
+            raise HTTPException(status_code=400, detail="Workspace is not properly connected")
 
         # Fetch channels from database first
         query = select(SlackChannel).where(SlackChannel.workspace_id == workspace_id)
@@ -100,11 +92,7 @@ class ChannelService:
         )
 
         # Check and log the actual values in the database for debugging
-        existing_types_query = (
-            select(SlackChannel.type)
-            .where(SlackChannel.workspace_id == workspace_id)
-            .distinct()
-        )
+        existing_types_query = select(SlackChannel.type).where(SlackChannel.workspace_id == workspace_id).distinct()
         existing_types_result = await db.execute(existing_types_query)
         existing_types = [row[0] for row in existing_types_result.fetchall()]
         logger.info(f"Existing channel types in database: {existing_types}")
@@ -148,21 +136,15 @@ class ChannelService:
             raise
 
         # Get total count for pagination
-        count_query = select(SlackChannel).where(
-            SlackChannel.workspace_id == workspace_id
-        )
+        count_query = select(SlackChannel).where(SlackChannel.workspace_id == workspace_id)
         if channel_types:
             if set(channel_types) == set(["public", "private", "im", "mpim"]):
                 # When all types are requested, don't apply the filter to count query
-                logger.info(
-                    "All channel types requested, not applying type filter to count query"
-                )
+                logger.info("All channel types requested, not applying type filter to count query")
             else:
                 # Apply filter for specific types
                 count_query = count_query.where(SlackChannel.type.in_(channel_types))
-                logger.info(
-                    f"Applied channel type filter to count query: {channel_types}"
-                )
+                logger.info(f"Applied channel type filter to count query: {channel_types}")
         if not include_archived:
             count_query = count_query.where(SlackChannel.is_archived.is_(False))
             logger.info("Excluded archived channels from count query")
@@ -170,18 +152,12 @@ class ChannelService:
         # Apply bot installation filter if requested
         if bot_installed_only:
             count_query = count_query.where(SlackChannel.has_bot.is_(True))
-            logger.info(
-                "Filtered count query to only include channels where bot is installed"
-            )
+            logger.info("Filtered count query to only include channels where bot is installed")
 
         # Apply analysis selection filter if requested
         if selected_for_analysis_only:
-            count_query = count_query.where(
-                SlackChannel.is_selected_for_analysis.is_(True)
-            )
-            logger.info(
-                "Filtered count query to only include channels selected for analysis"
-            )
+            count_query = count_query.where(SlackChannel.is_selected_for_analysis.is_(True))
+            logger.info("Filtered count query to only include channels selected for analysis")
 
         try:
             count_result = await db.execute(count_query)
@@ -190,9 +166,7 @@ class ChannelService:
             logger.info(f"Total channel count: {total_count}")
         except Exception as e:
             logger.error(f"Database error when counting channels: {str(e)}")
-            total_count = len(
-                channels
-            )  # Fallback to the number of channels we retrieved
+            total_count = len(channels)  # Fallback to the number of channels we retrieved
             logger.warning(f"Using fallback count: {total_count}")
 
         # Format response
@@ -244,9 +218,7 @@ class ChannelService:
             Tuple of (created_count, updated_count, total_count)
         """
         # Get workspace
-        result = await db.execute(
-            select(SlackWorkspace).where(SlackWorkspace.id == workspace_id)
-        )
+        result = await db.execute(select(SlackWorkspace).where(SlackWorkspace.id == workspace_id))
         workspace = result.scalars().first()
 
         if not workspace:
@@ -255,9 +227,7 @@ class ChannelService:
 
         if not workspace.access_token:
             logger.error(f"Workspace has no access token: {workspace_id}")
-            raise HTTPException(
-                status_code=400, detail="Workspace is not properly connected"
-            )
+            raise HTTPException(status_code=400, detail="Workspace is not properly connected")
 
         # Create API client
         api_client = SlackApiClient(workspace.access_token)
@@ -276,24 +246,18 @@ class ChannelService:
         page_count = 0
         max_pages = 5  # Reduced to 5 pages to avoid timeouts
 
-        logger.info(
-            f"Starting channel sync for workspace {workspace_id} with limit={limit}"
-        )
+        logger.info(f"Starting channel sync for workspace {workspace_id} with limit={limit}")
 
         while has_more and page_count < max_pages:
             page_count += 1
             try:
-                logger.info(
-                    f"Fetching channel page {page_count} for workspace {workspace_id}"
-                )
+                logger.info(f"Fetching channel page {page_count} for workspace {workspace_id}")
 
                 # Set the types to fetch - make explicit for clarity
                 channel_types = "public_channel,private_channel,mpim,im"
 
                 # Fetch channels from Slack API
-                logger.info(
-                    f"API request with cursor={cursor}, limit={limit}, types={channel_types}"
-                )
+                logger.info(f"API request with cursor={cursor}, limit={limit}, types={channel_types}")
                 response = await api_client.get_channels(
                     cursor=cursor,
                     limit=limit,
@@ -350,9 +314,7 @@ class ChannelService:
                         try:
                             has_bot = await api_client.check_bot_in_channel(channel_id)
                         except Exception as e:
-                            logger.warning(
-                                f"Error checking bot membership in {channel_id}: {str(e)}"
-                            )
+                            logger.warning(f"Error checking bot membership in {channel_id}: {str(e)}")
 
                     # Prepare channel data
                     created_ts = channel_data.get("created")
@@ -389,9 +351,7 @@ class ChannelService:
                         updated_count += 1
                     else:
                         # Create new channel
-                        new_channel = SlackChannel(
-                            workspace_id=workspace_id, **channel_values
-                        )
+                        new_channel = SlackChannel(workspace_id=workspace_id, **channel_values)
                         db.add(new_channel)
                         created_count += 1
 
@@ -426,9 +386,7 @@ class ChannelService:
                 f"Reached maximum page count ({max_pages}) for workspace {workspace_id}. Some channels may not have been synced."
             )
 
-        logger.info(
-            f"Completed channel sync: processed {page_count} pages with {total_count} total channels"
-        )
+        logger.info(f"Completed channel sync: processed {page_count} pages with {total_count} total channels")
 
         # Update channels that were not found in the API to mark them as archived
         # This handles channels that might have been deleted or the bot removed from
@@ -480,9 +438,7 @@ class ChannelService:
         """
         try:
             # Verify workspace exists and get access token
-            workspace_result = await db.execute(
-                select(SlackWorkspace).where(SlackWorkspace.id == workspace_id)
-            )
+            workspace_result = await db.execute(select(SlackWorkspace).where(SlackWorkspace.id == workspace_id))
             workspace = workspace_result.scalars().first()
 
             if not workspace:
@@ -491,9 +447,7 @@ class ChannelService:
 
             if install_bot and not workspace.access_token:
                 logger.error(f"Workspace has no access token: {workspace_id}")
-                raise HTTPException(
-                    status_code=400, detail="Workspace is not properly connected"
-                )
+                raise HTTPException(status_code=400, detail="Workspace is not properly connected")
 
             # Create API client if we need to install the bot
             api_client = None
@@ -550,15 +504,11 @@ class ChannelService:
                 select(SlackChannel).where(SlackChannel.workspace_id == workspace_id)
             )
             all_channels = all_channels_result.scalars().all()
-            logger.info(
-                f"Found {len(all_channels)} total channels for workspace_id={workspace_id}"
-            )
+            logger.info(f"Found {len(all_channels)} total channels for workspace_id={workspace_id}")
 
             # For debugging, check if the specific channel exists
             for channel in all_channels:
-                logger.info(
-                    f"Channel in DB: id={channel.id}, name={channel.name}, slack_id={channel.slack_id}"
-                )
+                logger.info(f"Channel in DB: id={channel.id}, name={channel.name}, slack_id={channel.slack_id}")
 
                 # Check if any of the requested channel_ids match this channel
                 for channel_id in channel_ids:
@@ -579,9 +529,7 @@ class ChannelService:
                 )
             )
             selected_channels = selected_count_result.scalars().all()
-            logger.info(
-                f"Found {len(selected_channels)} channels marked for analysis after update"
-            )
+            logger.info(f"Found {len(selected_channels)} channels marked for analysis after update")
 
             # Install bot in selected channels if requested
             bot_installation_results = []
@@ -596,9 +544,7 @@ class ChannelService:
 
                     try:
                         # Try to join the channel
-                        logger.info(
-                            f"Attempting to join channel {channel.name} ({channel.slack_id})"
-                        )
+                        logger.info(f"Attempting to join channel {channel.name} ({channel.slack_id})")
                         await api_client.join_channel(channel.slack_id)
 
                         # Update channel record
@@ -630,9 +576,7 @@ class ChannelService:
                                 "error_message": error_message,
                             }
                         )
-                        logger.error(
-                            f"Failed to join channel {channel.name}: {error_message}"
-                        )
+                        logger.error(f"Failed to join channel {channel.name}: {error_message}")
 
             # Commit the changes
             await db.commit()
@@ -711,9 +655,7 @@ class ChannelService:
             # Update workspace status to indicate sync in progress
             try:
                 await session.execute(
-                    update(SlackWorkspace)
-                    .where(SlackWorkspace.id == workspace_id)
-                    .values(connection_status="syncing")
+                    update(SlackWorkspace).where(SlackWorkspace.id == workspace_id).values(connection_status="syncing")
                 )
                 await session.commit()
             except Exception as e:
@@ -731,9 +673,7 @@ class ChannelService:
             while has_more and page_count < max_pages:
                 page_count += 1
                 try:
-                    logger.info(
-                        f"Background sync: Fetching channel page {page_count} for workspace {workspace_id}"
-                    )
+                    logger.info(f"Background sync: Fetching channel page {page_count} for workspace {workspace_id}")
 
                     # Set the types to fetch - make explicit for clarity
                     channel_types = "public_channel,private_channel,mpim,im"
@@ -753,29 +693,21 @@ class ChannelService:
                     total_in_page = len(channels)
                     total_count += total_in_page
 
-                    logger.info(
-                        f"Background sync: Retrieved {total_in_page} channels in page {page_count}"
-                    )
+                    logger.info(f"Background sync: Retrieved {total_in_page} channels in page {page_count}")
 
                     # Add channels to batch for processing
                     channels_to_process.extend(channels)
 
                     # Process channels in batches to avoid memory issues
-                    if len(channels_to_process) >= batch_size or not (
-                        cursor and cursor.strip() and sync_all_pages
-                    ):
-                        logger.info(
-                            f"Background sync: Processing batch of {len(channels_to_process)} channels"
-                        )
+                    if len(channels_to_process) >= batch_size or not (cursor and cursor.strip() and sync_all_pages):
+                        logger.info(f"Background sync: Processing batch of {len(channels_to_process)} channels")
 
-                        batch_created, batch_updated = (
-                            await ChannelService._process_channel_batch(
-                                session=session,
-                                workspace_id=workspace_id,
-                                api_client=api_client,
-                                channels=channels_to_process,
-                                synced_ids=synced_channel_ids,
-                            )
+                        batch_created, batch_updated = await ChannelService._process_channel_batch(
+                            session=session,
+                            workspace_id=workspace_id,
+                            api_client=api_client,
+                            channels=channels_to_process,
+                            synced_ids=synced_channel_ids,
                         )
 
                         created_count += batch_created
@@ -802,25 +734,19 @@ class ChannelService:
                     await asyncio.sleep(0.5)
 
                 except Exception as e:
-                    logger.error(
-                        f"Background sync: Error processing page {page_count}: {str(e)}"
-                    )
+                    logger.error(f"Background sync: Error processing page {page_count}: {str(e)}")
                     # Continue with next page rather than aborting the entire process
                     await asyncio.sleep(1)  # Delay before next attempt
 
             # Process any remaining channels
             if channels_to_process:
-                logger.info(
-                    f"Background sync: Processing final batch of {len(channels_to_process)} channels"
-                )
-                batch_created, batch_updated = (
-                    await ChannelService._process_channel_batch(
-                        session=session,
-                        workspace_id=workspace_id,
-                        api_client=api_client,
-                        channels=channels_to_process,
-                        synced_ids=synced_channel_ids,
-                    )
+                logger.info(f"Background sync: Processing final batch of {len(channels_to_process)} channels")
+                batch_created, batch_updated = await ChannelService._process_channel_batch(
+                    session=session,
+                    workspace_id=workspace_id,
+                    api_client=api_client,
+                    channels=channels_to_process,
+                    synced_ids=synced_channel_ids,
                 )
 
                 created_count += batch_created
@@ -852,16 +778,12 @@ class ChannelService:
                         missing_count += 1
 
                     if missing_count > 0:
-                        logger.info(
-                            f"Background sync: Marked {missing_count} channels as archived"
-                        )
+                        logger.info(f"Background sync: Marked {missing_count} channels as archived")
                         updated_count += missing_count
                         await session.commit()
 
                 except Exception as e:
-                    logger.error(
-                        f"Background sync: Error updating missing channels: {str(e)}"
-                    )
+                    logger.error(f"Background sync: Error updating missing channels: {str(e)}")
                     await session.rollback()
 
             # Update workspace with sync timestamp and status
@@ -879,9 +801,7 @@ class ChannelService:
                     f"Background sync: Updated workspace status to 'active' with last_sync_at={sync_complete_time.isoformat()}"
                 )
             except Exception as e:
-                logger.error(
-                    f"Background sync: Error updating workspace sync timestamp: {str(e)}"
-                )
+                logger.error(f"Background sync: Error updating workspace sync timestamp: {str(e)}")
                 await session.rollback()
 
             elapsed_time = time.time() - start_time
@@ -903,9 +823,7 @@ class ChannelService:
                     )
                     await session.commit()
             except Exception as nested_error:
-                logger.error(
-                    f"Background sync: Error updating workspace status after error: {str(nested_error)}"
-                )
+                logger.error(f"Background sync: Error updating workspace status after error: {str(nested_error)}")
         finally:
             # Ensure the session is closed
             if "session" in locals() and session:
@@ -983,9 +901,7 @@ class ChannelService:
                 try:
                     has_bot = await api_client.check_bot_in_channel(channel_id)
                 except Exception as e:
-                    logger.warning(
-                        f"Error checking bot membership in {channel_id}: {str(e)}"
-                    )
+                    logger.warning(f"Error checking bot membership in {channel_id}: {str(e)}")
 
             # Prepare channel data
             created_ts = channel_data.get("created")

@@ -138,9 +138,7 @@ def test_get_messages_by_date_range(
 ):
     """Test the get_messages_by_date_range endpoint."""
     # Configure the mock
-    mock_slack_message_service.get_messages_by_date_range.return_value = (
-        mock_message_response
-    )
+    mock_slack_message_service.get_messages_by_date_range.return_value = mock_message_response
 
     # Make the request
     response = client.get(

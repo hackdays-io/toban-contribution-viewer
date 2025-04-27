@@ -20,12 +20,8 @@ from app.core.env_test import check_env  # noqa: E402
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Check environment variables configuration"
-    )
-    parser.add_argument(
-        "--env-file", "-e", help="Path to .env file to check", default=".env"
-    )
+    parser = argparse.ArgumentParser(description="Check environment variables configuration")
+    parser.add_argument("--env-file", "-e", help="Path to .env file to check", default=".env")
     parser.add_argument(
         "--no-exit",
         "-n",

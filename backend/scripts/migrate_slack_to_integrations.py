@@ -87,11 +87,7 @@ async def migrate_slack_workspace(db: AsyncSession, workspace: SlackWorkspace):
         name=f"{workspace.name} Slack",
         description=f"Slack workspace for {workspace.name}",
         service_type=IntegrationType.SLACK,
-        status=(
-            IntegrationStatus.ACTIVE
-            if workspace.is_connected
-            else IntegrationStatus.DISCONNECTED
-        ),
+        status=(IntegrationStatus.ACTIVE if workspace.is_connected else IntegrationStatus.DISCONNECTED),
         integration_metadata={
             "slack_id": workspace.slack_id,
             "domain": workspace.domain,
@@ -116,9 +112,7 @@ async def migrate_slack_workspace(db: AsyncSession, workspace: SlackWorkspace):
             encrypted_value=workspace.access_token,  # Assuming it's already encrypted
             expires_at=workspace.token_expires_at,
             refresh_token=workspace.refresh_token,  # Assuming it's already encrypted
-            scopes={
-                "scopes": ["channels:read", "users:read", "emoji:read"]
-            },  # Default Slack scopes
+            scopes={"scopes": ["channels:read", "users:read", "emoji:read"]},  # Default Slack scopes
             integration_id=integration.id,
             created_at=workspace.created_at,
             updated_at=workspace.updated_at,
@@ -143,9 +137,7 @@ async def migrate_slack_workspace(db: AsyncSession, workspace: SlackWorkspace):
     db.add(event)
 
     # Migrate channels as resources
-    channels = await db.execute(
-        select(SlackChannel).where(SlackChannel.workspace_id == workspace.id)
-    )
+    channels = await db.execute(select(SlackChannel).where(SlackChannel.workspace_id == workspace.id))
     for channel in channels.scalars().all():
         channel_resource = ServiceResource(
             id=uuid.uuid4(),
@@ -169,9 +161,7 @@ async def migrate_slack_workspace(db: AsyncSession, workspace: SlackWorkspace):
         db.add(channel_resource)
 
     # Migrate users as resources
-    users = await db.execute(
-        select(SlackUser).where(SlackUser.workspace_id == workspace.id)
-    )
+    users = await db.execute(select(SlackUser).where(SlackUser.workspace_id == workspace.id))
     for user in users.scalars().all():
         user_resource = ServiceResource(
             id=uuid.uuid4(),
@@ -218,13 +208,9 @@ async def run_migration():
         for workspace in workspaces:
             try:
                 integration_id = await migrate_slack_workspace(db, workspace)
-                logger.info(
-                    f"Successfully migrated workspace {workspace.name} to integration {integration_id}"
-                )
+                logger.info(f"Successfully migrated workspace {workspace.name} to integration {integration_id}")
             except Exception as e:
-                logger.error(
-                    f"Error migrating workspace {workspace.id}: {str(e)}", exc_info=True
-                )
+                logger.error(f"Error migrating workspace {workspace.id}: {str(e)}", exc_info=True)
                 await db.rollback()
                 continue
 
