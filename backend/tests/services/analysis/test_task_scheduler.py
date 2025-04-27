@@ -129,7 +129,9 @@ async def test_schedule_analyses_for_report():
             assert mock_schedule.call_count == 2
 
 
-@pytest.mark.skip(reason="ResourceAnalysis object has no attribute 'date_range_start' - test needs extensive mocking")
+@pytest.mark.skip(
+    reason="ResourceAnalysis object has no attribute 'date_range_start' - test needs extensive mocking"
+)
 @pytest.mark.asyncio
 async def test_run_analysis():
     """Test the _run_analysis method."""

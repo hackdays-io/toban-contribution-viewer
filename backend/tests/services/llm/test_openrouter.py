@@ -216,10 +216,12 @@ Key Highlights: These are the highlights."""
         }
         mock_extract.return_value = mock_fallback
         sections_missing = mock_extract(llm_response_missing)
-        
+
         assert sections_missing["channel_summary"] == "This is only a summary."
         assert sections_missing["topic_analysis"] == "Fallback topic content"
-        assert sections_missing["contributor_insights"] == "Fallback contributor content"
+        assert (
+            sections_missing["contributor_insights"] == "Fallback contributor content"
+        )
         assert sections_missing["key_highlights"] == "Fallback highlights content"
 
 
