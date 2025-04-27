@@ -237,11 +237,6 @@ async def check_report_consistency(db: AsyncSession, report_id: UUID) -> Dict[st
         
         # Calculate the difference
         diff = db_count - analysis_count
-        if diff != 0:
-            logger.warning(
-                f"Discrepancy in channel {channel_name}: "
-                f"Missing {diff} messages in analysis"
-            )
         
         # Get some sample messages to understand content
         sample_messages = await get_sample_messages(db, channel_id, start_date, end_date)
