@@ -160,7 +160,7 @@ def test_analyze_channel_success(
     # Check structure for deprecation message
     assert "message" in result
     assert "suggested_alternative" in result
-    
+
     # Check message contains deprecation notice
     assert "deprecated" in result["message"].lower()
     assert "integrations" in result["suggested_alternative"].lower()
@@ -191,7 +191,7 @@ def test_analyze_channel_with_model_override(
     # Assert the response - now 410 Gone because API is deprecated
     assert response.status_code == 410
     result = response.json()
-    
+
     # Check deprecation message
     assert "deprecated" in result["message"].lower()
     assert "integrations" in result["suggested_alternative"].lower()
@@ -216,7 +216,7 @@ def test_analyze_channel_no_dates(
     # Assert the response - now 410 Gone because API is deprecated
     assert response.status_code == 410
     result = response.json()
-    
+
     # Check deprecation message
     assert "deprecated" in result["message"].lower()
     assert "integrations" in result["suggested_alternative"].lower()
@@ -268,7 +268,7 @@ def test_analyze_channel_error_handling(
     # Assert the response - now 410 Gone because API is deprecated
     assert response.status_code == 410
     result = response.json()
-    
+
     # Check deprecation message
     assert "deprecated" in result["message"].lower()
     assert "integrations" in result["suggested_alternative"].lower()

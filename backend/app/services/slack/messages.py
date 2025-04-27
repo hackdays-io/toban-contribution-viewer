@@ -79,14 +79,18 @@ async def get_channel_messages(
         if hasattr(start_date, "tzinfo") and start_date.tzinfo:
             start_date = start_date.replace(tzinfo=None)
         # Log the start date with type information
-        logger.info(f"Filtering messages with start_date: {start_date} (type: {type(start_date).__name__})")
+        logger.info(
+            f"Filtering messages with start_date: {start_date} (type: {type(start_date).__name__})"
+        )
         query = query.where(SlackMessage.message_datetime >= start_date)
 
     if end_date:
         if hasattr(end_date, "tzinfo") and end_date.tzinfo:
             end_date = end_date.replace(tzinfo=None)
         # Log the end date with type information
-        logger.info(f"Filtering messages with end_date: {end_date} (type: {type(end_date).__name__})")
+        logger.info(
+            f"Filtering messages with end_date: {end_date} (type: {type(end_date).__name__})"
+        )
         query = query.where(SlackMessage.message_datetime <= end_date)
 
     # Sort by datetime (oldest first for analysis)
@@ -170,15 +174,14 @@ async def get_channel_users(
 class SlackMessageService:
     """
     Service for retrieving, processing, and storing Slack messages.
-    
+
     Note: This service doesn't store a database session in the constructor,
     but instead requires it to be passed to each method to ensure sessions are
     properly scoped.
     """
-    
+
     def __init__(self):
         """Initialize the SlackMessageService."""
-        pass
 
     @staticmethod
     async def get_channel_messages(
@@ -271,9 +274,11 @@ class SlackMessageService:
                 naive_start_date = start_date.replace(tzinfo=None)
             else:
                 naive_start_date = start_date
-                
+
             # Log the actual start date being applied
-            logger.info(f"SlackMessageService.get_channel_messages - Filtering with start_date: {naive_start_date}")
+            logger.info(
+                f"SlackMessageService.get_channel_messages - Filtering with start_date: {naive_start_date}"
+            )
             query = query.where(SlackMessage.message_datetime >= naive_start_date)
 
         if end_date:
@@ -286,9 +291,11 @@ class SlackMessageService:
                 naive_end_date = end_date.replace(tzinfo=None)
             else:
                 naive_end_date = end_date
-                
+
             # Log the actual end date being applied
-            logger.info(f"SlackMessageService.get_channel_messages - Filtering with end_date: {naive_end_date}")
+            logger.info(
+                f"SlackMessageService.get_channel_messages - Filtering with end_date: {naive_end_date}"
+            )
             query = query.where(SlackMessage.message_datetime <= naive_end_date)
 
         # Apply pagination
@@ -451,11 +458,15 @@ class SlackMessageService:
         if start_date:
             # Convert datetime to Slack timestamp (seconds since epoch)
             params["oldest"] = str(start_date.timestamp())
-            logger.info(f"API fetch - Using start_date: {start_date}, converted to timestamp: {params['oldest']}")
+            logger.info(
+                f"API fetch - Using start_date: {start_date}, converted to timestamp: {params['oldest']}"
+            )
         if end_date:
             # Convert datetime to Slack timestamp (seconds since epoch)
             params["latest"] = str(end_date.timestamp())
-            logger.info(f"API fetch - Using end_date: {end_date}, converted to timestamp: {params['latest']}")
+            logger.info(
+                f"API fetch - Using end_date: {end_date}, converted to timestamp: {params['latest']}"
+            )
 
         try:
             # Fetch messages from Slack API
@@ -1056,14 +1067,19 @@ class SlackMessageService:
 
         # Count total messages for pagination - but more efficiently using COUNT()
         from sqlalchemy import func
-        count_query = select(func.count()).select_from(SlackMessage).where(
-            SlackMessage.channel_id.in_(channel_ids),
-            SlackMessage.message_datetime >= naive_start_date,
-            SlackMessage.message_datetime <= naive_end_date,
+
+        count_query = (
+            select(func.count())
+            .select_from(SlackMessage)
+            .where(
+                SlackMessage.channel_id.in_(channel_ids),
+                SlackMessage.message_datetime >= naive_start_date,
+                SlackMessage.message_datetime <= naive_end_date,
+            )
         )
         count_result = await db.execute(count_query)
         total_count = count_result.scalar() or 0
-        
+
         # Log message counts for debugging Issue #238
         logger.info(f"Total messages found for channels {channel_ids}: {total_count}")
 
@@ -1166,7 +1182,7 @@ class SlackMessageService:
     ) -> Dict[str, Any]:
         """
         Sync messages and thread replies from a Slack channel to the database.
-        
+
         Important: After successful sync, this method invalidates any cached data
         for this channel to ensure fresh data is used for analysis.
 
@@ -1294,14 +1310,17 @@ class SlackMessageService:
         # Update channel sync status
         channel.last_sync_at = datetime.utcnow()
         await db.commit()
-        
+
         # Invalidate cache after sync
         try:
             from app.services.analysis.data_cache import ChannelDataCache
+
             ChannelDataCache.invalidate(channel_id)
             logger.info(f"Invalidated data cache for channel {channel_id} after sync")
         except ImportError:
-            logger.warning("Could not import ChannelDataCache to invalidate channel cache")
+            logger.warning(
+                "Could not import ChannelDataCache to invalidate channel cache"
+            )
 
         # Try to fix any messages that might be missing user_id references
         try:

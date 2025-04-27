@@ -384,14 +384,14 @@ class ResourceAnalysisTaskScheduler:
                         sync_threshold = 6  # OPTIMIZED: Reduced from 24 to 6 hours to avoid duplicating frontend sync
                         needs_sync = True
 
-                        # OPTIMIZATION: Check if frontend already synced recently - we can detect this by 
+                        # OPTIMIZATION: Check if frontend already synced recently - we can detect this by
                         # checking if last_sync_at is very recent (within the last 10 minutes)
                         recently_synced_by_frontend = False
                         if channel.last_sync_at:
                             minutes_since_sync = (
                                 current_time - channel.last_sync_at
                             ).total_seconds() / 60
-                            
+
                             # If synced in the last 10 minutes, frontend probably triggered this
                             if minutes_since_sync < 10:
                                 recently_synced_by_frontend = True
@@ -399,7 +399,7 @@ class ResourceAnalysisTaskScheduler:
                                     f"Channel {channel.name} was just synced {minutes_since_sync:.1f} minutes ago, "
                                     f"likely by frontend. Skipping redundant sync."
                                 )
-                            
+
                             # Regular sync threshold check if not recently synced
                             if not recently_synced_by_frontend:
                                 hours_since_sync = minutes_since_sync / 60

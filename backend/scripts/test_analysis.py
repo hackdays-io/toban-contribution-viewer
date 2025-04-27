@@ -80,13 +80,19 @@ async def main():
             # Only include the bare minimum required for each analysis type
         }
 
-        for analysis_type in [AnalysisType.CONTRIBUTION, AnalysisType.TOPICS, "GENERAL"]:
+        for analysis_type in [
+            AnalysisType.CONTRIBUTION,
+            AnalysisType.TOPICS,
+            "GENERAL",
+        ]:
             logger.info(f"Testing analyze_data with minimal data for {analysis_type}")
             try:
                 # Prepare context - this would normally be done by prepare_data_for_analysis
                 context_data = minimal_data.copy()
                 if analysis_type == AnalysisType.CONTRIBUTION:
-                    context_data["user_contributions_text"] = "User 1: 3 messages\nUser 2: 2 messages"
+                    context_data["user_contributions_text"] = (
+                        "User 1: 3 messages\nUser 2: 2 messages"
+                    )
                 elif analysis_type == AnalysisType.TOPICS:
                     context_data["messages_by_date_text"] = "2023-01-01: 5 messages"
                 else:
@@ -96,7 +102,9 @@ async def main():
                 await service.analyze_data(
                     data=context_data,
                     analysis_type=analysis_type,
-                    parameters={"dry_run": True},  # We'll check this in the analyze_data method
+                    parameters={
+                        "dry_run": True
+                    },  # We'll check this in the analyze_data method
                 )
                 logger.info(f"Successfully formatted template for {analysis_type}")
             except Exception as e:
@@ -112,9 +120,8 @@ async def main():
 # Modify analyze_data to support dry_run mode
 original_analyze_data = SlackChannelAnalysisService.analyze_data
 
-async def patched_analyze_data(
-    self, data, analysis_type, parameters=None, **kwargs
-):
+
+async def patched_analyze_data(self, data, analysis_type, parameters=None, **kwargs):
     if parameters and parameters.get("dry_run"):
         # Only format the prompt, don't call the LLM
         # Intercept just before the OpenRouter call
@@ -122,6 +129,7 @@ async def patched_analyze_data(
     return await original_analyze_data.__get__(self, SlackChannelAnalysisService)(
         data=data, analysis_type=analysis_type, parameters=parameters, **kwargs
     )
+
 
 # Apply the monkey patch for testing
 SlackChannelAnalysisService.analyze_data = patched_analyze_data

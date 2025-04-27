@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 class AnalysisStoreService:
     """
     Service for storing and retrieving LLM analysis results.
-    
+
     DEPRECATED: This service has been deprecated in favor of the ResourceAnalysis system.
     """
 

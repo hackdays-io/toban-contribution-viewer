@@ -23,7 +23,13 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 # These imports are used in the test files via mock patches
-__all__ = ["router", "get_channel_by_id", "get_channel_messages", "get_channel_users", "OpenRouterService"]
+__all__ = [
+    "router",
+    "get_channel_by_id",
+    "get_channel_messages",
+    "get_channel_users",
+    "OpenRouterService",
+]
 
 
 class AnalysisOptions(BaseModel):
