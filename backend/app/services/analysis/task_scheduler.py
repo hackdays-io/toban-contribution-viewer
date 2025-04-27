@@ -7,11 +7,11 @@ import logging
 from typing import Dict, List, Optional, Union
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_async_db
-from app.models.reports import ReportStatus, ResourceAnalysis
+from app.models.reports import CrossResourceReport, ReportStatus, ResourceAnalysis
 from app.services.analysis.factory import ResourceAnalysisServiceFactory
 
 logger = logging.getLogger(__name__)
@@ -208,10 +208,6 @@ class ResourceAnalysisTaskScheduler:
             db: Database session
             report_id: ID of the CrossResourceReport to check
         """
-        from sqlalchemy import func, update
-
-        from app.models.reports import CrossResourceReport
-
         try:
             # Count the analyses for this report by status
             analyses_result = await db.execute(
@@ -315,7 +311,143 @@ class ResourceAnalysisTaskScheduler:
                 await db.commit()
                 return
 
+            # Get the report if this is part of a multi-channel report
+            report = None
+            if analysis.cross_resource_report_id:
+                report_result = await db.execute(
+                    select(CrossResourceReport).where(
+                        CrossResourceReport.id == analysis.cross_resource_report_id
+                    )
+                )
+                report = report_result.scalar_one_or_none()
+
+                # For issue #238 - log report details to trace data consistency problems
+                if report:
+                    logger.info(
+                        f"Analysis {analysis_id} is part of report {report.id} "
+                        f"with period {report.date_range_start} to {report.date_range_end}"
+                    )
+
+                    # If it's multi-channel, check how many resources are in the report
+                    resource_count_result = await db.execute(
+                        select(func.count())
+                        .select_from(ResourceAnalysis)
+                        .where(ResourceAnalysis.cross_resource_report_id == report.id)
+                    )
+                    resource_count = resource_count_result.scalar_one() or 0
+
+                    if resource_count > 1:
+                        logger.info(
+                            f"Report contains {resource_count} resources (multi-channel analysis)"
+                        )
+                    else:
+                        logger.info(
+                            "Report contains only one resource (single-channel analysis)"
+                        )
+
             # Run the analysis
+            logger.info(
+                f"Running analysis {analysis_id} for resource {analysis.resource_id}"
+            )
+
+            # For issue #238 - log the period dates
+            logger.info(
+                f"Analysis period: {analysis.period_start} to {analysis.period_end} "
+                f"(types: {type(analysis.period_start).__name__}, {type(analysis.period_end).__name__})"
+            )
+
+            # MULTI-CHANNEL DEBUG: For multi-channel reports, sync messages only if needed
+            if report and resource_count > 1:
+                try:
+                    # Import the message service
+                    from app.services.slack.messages import SlackMessageService
+
+                    # Create a new message service - without passing db
+                    message_service = SlackMessageService()
+
+                    # Get the channel
+                    from app.models.slack import SlackChannel
+
+                    # Find the channel
+                    channel_result = await db.execute(
+                        select(SlackChannel).where(
+                            SlackChannel.id == analysis.resource_id
+                        )
+                    )
+                    channel = channel_result.scalar_one_or_none()
+
+                    if channel:
+                        # Check when channel was last synced
+                        from datetime import datetime
+
+                        current_time = datetime.utcnow()
+                        sync_threshold = 6  # OPTIMIZED: Reduced from 24 to 6 hours to avoid duplicating frontend sync
+                        needs_sync = True
+
+                        # OPTIMIZATION: Check if frontend already synced recently - we can detect this by 
+                        # checking if last_sync_at is very recent (within the last 10 minutes)
+                        recently_synced_by_frontend = False
+                        if channel.last_sync_at:
+                            minutes_since_sync = (
+                                current_time - channel.last_sync_at
+                            ).total_seconds() / 60
+                            
+                            # If synced in the last 10 minutes, frontend probably triggered this
+                            if minutes_since_sync < 10:
+                                recently_synced_by_frontend = True
+                                logger.info(
+                                    f"Channel {channel.name} was just synced {minutes_since_sync:.1f} minutes ago, "
+                                    f"likely by frontend. Skipping redundant sync."
+                                )
+                            
+                            # Regular sync threshold check if not recently synced
+                            if not recently_synced_by_frontend:
+                                hours_since_sync = minutes_since_sync / 60
+                                needs_sync = hours_since_sync > sync_threshold
+
+                                if needs_sync:
+                                    logger.info(
+                                        f"Channel {channel.name} was last synced {hours_since_sync:.1f} hours ago, exceeding threshold of {sync_threshold} hours"
+                                    )
+                                else:
+                                    logger.info(
+                                        f"Channel {channel.name} was synced recently ({hours_since_sync:.1f} hours ago), skipping sync"
+                                    )
+                        else:
+                            logger.info(
+                                f"Channel {channel.name} has never been synced, performing initial sync"
+                            )
+
+                        if needs_sync and not recently_synced_by_frontend:
+                            logger.info(
+                                f"Multi-channel report: Syncing messages for channel {channel.name} ({channel.id})"
+                            )
+
+                            # Sync messages for this channel with the date range
+                            sync_result = await message_service.sync_channel_messages(
+                                channel_id=str(channel.id),
+                                start_date=analysis.period_start,
+                                end_date=analysis.period_end,
+                                include_replies=True,
+                            )
+
+                            logger.info(f"Message sync result: {sync_result}")
+                        else:
+                            logger.info(
+                                f"Skipping message sync for channel {channel.name} (synced recently)"
+                            )
+                    else:
+                        logger.warning(
+                            f"Could not find channel {analysis.resource_id} for syncing"
+                        )
+
+                except Exception as sync_error:
+                    logger.error(
+                        f"Error syncing messages for multi-channel report: {str(sync_error)}"
+                    )
+                    # Continue with analysis even if sync fails
+
+            # Run the actual analysis
             analysis_result = await service.run_analysis(
                 analysis_id=analysis.id,
                 resource_id=analysis.resource_id,
@@ -347,8 +479,6 @@ class ResourceAnalysisTaskScheduler:
             )
 
             # Update the analysis status to FAILED
-            from sqlalchemy import update
-
             try:
                 await db.execute(
                     update(ResourceAnalysis)

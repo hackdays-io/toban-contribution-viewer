@@ -166,7 +166,9 @@ const mockIntegrationContext = {
 describe('TeamChannelSelector', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockIntegrationContext.isChannelSelectedForAnalysis = vi.fn((channelId) => channelId === 'channel-1')
+    mockIntegrationContext.isChannelSelectedForAnalysis = vi.fn(
+      (channelId) => channelId === 'channel-1'
+    )
     mockIntegrationContext.selectedChannels = [
       {
         id: 'channel-1',
@@ -285,10 +287,10 @@ describe('TeamChannelSelector', () => {
     // Click the Private option - using getAllByText since there might be multiple elements with "Private" text
     const privateLabels = screen.getAllByText('Private')
     // Find the one that's inside a radio button (it should have chakra-radio__label in its class)
-    const privateRadio = privateLabels.find(el => 
+    const privateRadio = privateLabels.find((el) =>
       el.className.includes('chakra-radio__label')
     )
-    
+
     if (privateRadio) {
       await act(async () => {
         fireEvent.click(privateRadio)
@@ -347,8 +349,8 @@ describe('TeamChannelSelector', () => {
     // Create a new mock with both channel-1 and channel-2 selected
     const updatedMockWithTwoChannels = {
       ...mockIntegrationContext,
-      isChannelSelectedForAnalysis: vi.fn((channelId) => 
-        channelId === 'channel-1' || channelId === 'channel-2'
+      isChannelSelectedForAnalysis: vi.fn(
+        (channelId) => channelId === 'channel-1' || channelId === 'channel-2'
       ),
       selectedChannels: [
         ...mockIntegrationContext.selectedChannels,
@@ -367,7 +369,7 @@ describe('TeamChannelSelector', () => {
           updated_at: '2023-01-01T00:00:00Z',
           last_synced_at: '2023-01-01T00:00:00Z',
         },
-      ]
+      ],
     }
 
     // Re-render with updated mock context
@@ -388,22 +390,26 @@ describe('TeamChannelSelector', () => {
     // Create a new mock with just channel-1 selected again
     const updatedMockWithOneChannel = {
       ...mockIntegrationContext,
-      isChannelSelectedForAnalysis: vi.fn((channelId) => channelId === 'channel-1'),
-      selectedChannels: [{
-        id: 'channel-1',
-        integration_id: 'test-int-1',
-        resource_type: ResourceType.SLACK_CHANNEL,
-        external_id: 'C12345',
-        name: 'general',
-        metadata: {
-          is_private: false,
-          member_count: 25,
-          is_selected_for_analysis: true,
+      isChannelSelectedForAnalysis: vi.fn(
+        (channelId) => channelId === 'channel-1'
+      ),
+      selectedChannels: [
+        {
+          id: 'channel-1',
+          integration_id: 'test-int-1',
+          resource_type: ResourceType.SLACK_CHANNEL,
+          external_id: 'C12345',
+          name: 'general',
+          metadata: {
+            is_private: false,
+            member_count: 25,
+            is_selected_for_analysis: true,
+          },
+          created_at: '2023-01-01T00:00:00Z',
+          updated_at: '2023-01-01T00:00:00Z',
+          last_synced_at: '2023-01-01T00:00:00Z',
         },
-        created_at: '2023-01-01T00:00:00Z',
-        updated_at: '2023-01-01T00:00:00Z',
-        last_synced_at: '2023-01-01T00:00:00Z',
-      }]
+      ],
     }
 
     // Re-render with updated mock
@@ -429,7 +435,7 @@ describe('TeamChannelSelector', () => {
 
     // Find and click the checkbox for the second channel (random)
     const checkboxes = screen.getAllByRole('checkbox')
-    
+
     await act(async () => {
       fireEvent.click(checkboxes[1]) // channel-2
     })
@@ -442,7 +448,7 @@ describe('TeamChannelSelector', () => {
 
     // Check that selectChannelsForAnalysis was called
     expect(mockIntegrationContext.selectChannelsForAnalysis).toHaveBeenCalled()
-    
+
     // Verify it was called with the integration ID
     const calls = mockIntegrationContext.selectChannelsForAnalysis.mock.calls
     expect(calls.length).toBeGreaterThan(0)
@@ -456,11 +462,11 @@ describe('TeamChannelSelector', () => {
 
     // Find and click the checkbox for the third channel (private-channel)
     const checkboxes = screen.getAllByRole('checkbox')
-    
+
     await act(async () => {
       fireEvent.click(checkboxes[0]) // Deselect channel-1
     })
-    
+
     await act(async () => {
       fireEvent.click(checkboxes[2]) // Select channel-3
     })
@@ -473,7 +479,7 @@ describe('TeamChannelSelector', () => {
 
     // Check that selectChannelsForAnalysis was called
     expect(mockIntegrationContext.selectChannelsForAnalysis).toHaveBeenCalled()
-    
+
     // Verify it was called with the integration ID
     const calls = mockIntegrationContext.selectChannelsForAnalysis.mock.calls
     expect(calls.length).toBeGreaterThan(0)
@@ -499,7 +505,7 @@ describe('TeamChannelSelector', () => {
 
     // The save buttons should reflect loading state
     const saveButtons = screen.getAllByText('Save Selection')
-    
+
     // Check that the buttons have a loading appearance
     // Instead of checking the disabled attribute, which might be implemented differently
     // depending on the UI framework, we just verify that buttons exist

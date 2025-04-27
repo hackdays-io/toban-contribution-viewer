@@ -1,491 +1,492 @@
+#!/usr/bin/env python3
 """
-Script to check the Cross-Resource Reports structure and data.
+Script to check report data consistency.
+Verifies that all messages within a given date range are included in reports.
 
-This script validates that the cross-resource reports are properly configured
-and connected to resource analyses in the unified analysis flow.
+Usage:
+    python check_reports.py [cross-resource-report-id]
+
+Example:
+    python check_reports.py 123e4567-e89b-12d3-a456-426614174000
+
+If a report ID is provided, checks only that specific report.
+Otherwise, checks the most recent 5 reports.
 """
 
 import asyncio
-import json
 import logging
+import os
 import sys
-from datetime import datetime, timedelta
-from typing import Dict, List
+from datetime import datetime
+from typing import Dict, List, Optional
+from uuid import UUID
+
+# Add the backend directory to the Python path
+backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, backend_dir)
+
+import sqlalchemy as sa
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import sessionmaker
+
+from app.models.reports.cross_resource_report import (
+    CrossResourceReport,
+    ResourceAnalysis,
+)
+from app.models.slack import SlackChannel, SlackMessage
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
-# We need to add the parent directory to the path to import the app modules
-sys.path.insert(0, ".")
+# Database connection - hardcoded for local development
+DATABASE_URL = "postgresql+asyncpg://toban_admin:postgres@localhost:5432/tobancv"
 
-from sqlalchemy import desc, func, select
-from sqlalchemy.ext.asyncio import AsyncSession
+# Create async database engine
+engine = create_async_engine(
+    DATABASE_URL,
+    echo=False,  # Set to True for SQL debugging
+    pool_pre_ping=True,
+)
 
-from app.db.session import AsyncSessionLocal
-from app.models.integration import Integration
-from app.models.reports import (
-    AnalysisResourceType,
-    AnalysisType,
-    CrossResourceReport,
-    ReportStatus,
-    ResourceAnalysis,
+# Create async session factory
+async_session = sessionmaker(
+    engine, class_=AsyncSession, expire_on_commit=False, autoflush=False
 )
 
 
-async def check_report_count(db: AsyncSession) -> Dict[str, int]:
+async def get_report_by_id(
+    db: AsyncSession, report_id: UUID
+) -> Optional[CrossResourceReport]:
     """
-    Check the number of CrossResourceReport records.
+    Get a cross-resource report by ID.
+
+    Args:
+        db: Database session
+        report_id: ID of the report to retrieve
+
+    Returns:
+        The report if found, None otherwise
     """
-    logger.info("Checking CrossResourceReport count...")
-
-    # Count total reports
-    stmt = select(func.count()).select_from(CrossResourceReport)
-    result = await db.execute(stmt)
-    total_reports = result.scalar_one_or_none() or 0
-
-    # Count reports by status
-    status_counts = {}
-    for status_value in ReportStatus:
-        stmt = (
-            select(func.count())
-            .select_from(CrossResourceReport)
-            .where(CrossResourceReport.status == status_value)
-        )
-        result = await db.execute(stmt)
-        count = result.scalar_one_or_none() or 0
-        status_counts[status_value.value] = count
-
-    # Count reports from the last 30 days
-    thirty_days_ago = datetime.utcnow() - timedelta(days=30)
-    stmt = (
-        select(func.count())
-        .select_from(CrossResourceReport)
-        .where(CrossResourceReport.created_at >= thirty_days_ago)
+    result = await db.execute(
+        sa.select(CrossResourceReport).where(CrossResourceReport.id == report_id)
     )
-    result = await db.execute(stmt)
-    recent_count = result.scalar_one_or_none() or 0
-
-    results = {
-        "total_reports": total_reports,
-        "status_counts": status_counts,
-        "recent_reports": recent_count,
-    }
-
-    logger.info(f"CrossResourceReport count: {total_reports}")
-    logger.info(f"Reports by status: {json.dumps(status_counts, indent=2)}")
-    logger.info(f"Reports from last 30 days: {recent_count}")
-
-    return results
+    return result.scalar_one_or_none()
 
 
-async def check_analysis_count(db: AsyncSession) -> Dict[str, int]:
+async def get_recent_reports(
+    db: AsyncSession, limit: int = 5
+) -> List[CrossResourceReport]:
     """
-    Check the number of ResourceAnalysis records.
+    Get the most recent cross-resource reports.
+
+    Args:
+        db: Database session
+        limit: Maximum number of reports to retrieve
+
+    Returns:
+        List of reports
     """
-    logger.info("Checking ResourceAnalysis count...")
-
-    # Count total analyses
-    stmt = select(func.count()).select_from(ResourceAnalysis)
-    result = await db.execute(stmt)
-    total_analyses = result.scalar_one_or_none() or 0
-
-    # Count analyses by status
-    status_counts = {}
-    for status_value in ReportStatus:
-        stmt = (
-            select(func.count())
-            .select_from(ResourceAnalysis)
-            .where(ResourceAnalysis.status == status_value)
-        )
-        result = await db.execute(stmt)
-        count = result.scalar_one_or_none() or 0
-        status_counts[status_value.value] = count
-
-    # Count analyses by resource type
-    resource_type_counts = {}
-    for resource_type in AnalysisResourceType:
-        stmt = (
-            select(func.count())
-            .select_from(ResourceAnalysis)
-            .where(ResourceAnalysis.resource_type == resource_type)
-        )
-        result = await db.execute(stmt)
-        count = result.scalar_one_or_none() or 0
-        resource_type_counts[resource_type.value] = count
-
-    # Count analyses by analysis type
-    analysis_type_counts = {}
-    for analysis_type in AnalysisType:
-        stmt = (
-            select(func.count())
-            .select_from(ResourceAnalysis)
-            .where(ResourceAnalysis.analysis_type == analysis_type)
-        )
-        result = await db.execute(stmt)
-        count = result.scalar_one_or_none() or 0
-        analysis_type_counts[analysis_type.value] = count
-
-    results = {
-        "total_analyses": total_analyses,
-        "status_counts": status_counts,
-        "resource_type_counts": resource_type_counts,
-        "analysis_type_counts": analysis_type_counts,
-    }
-
-    logger.info(f"ResourceAnalysis count: {total_analyses}")
-    logger.info(f"Analyses by status: {json.dumps(status_counts, indent=2)}")
-    logger.info(
-        f"Analyses by resource type: {json.dumps(resource_type_counts, indent=2)}"
+    result = await db.execute(
+        sa.select(CrossResourceReport)
+        .order_by(CrossResourceReport.created_at.desc())
+        .limit(limit)
     )
-    logger.info(
-        f"Analyses by analysis type: {json.dumps(analysis_type_counts, indent=2)}"
-    )
-
-    return results
+    return result.scalars().all()
 
 
-async def check_report_analysis_relationships(db: AsyncSession) -> Dict[str, int]:
+async def get_resource_analyses(
+    db: AsyncSession, report_id: UUID
+) -> List[ResourceAnalysis]:
     """
-    Check the relationships between CrossResourceReport and ResourceAnalysis records.
+    Get the resource analyses for a cross-resource report.
+
+    Args:
+        db: Database session
+        report_id: ID of the report
+
+    Returns:
+        List of resource analyses
     """
-    logger.info("Checking report-analysis relationships...")
-
-    # Count analyses per report
-    stmt = (
-        select(
-            CrossResourceReport.id,
-            func.count(ResourceAnalysis.id).label("analysis_count"),
+    result = await db.execute(
+        sa.select(ResourceAnalysis).where(
+            ResourceAnalysis.cross_resource_report_id == report_id
         )
-        .outerjoin(
-            ResourceAnalysis,
-            CrossResourceReport.id == ResourceAnalysis.cross_resource_report_id,
-        )
-        .group_by(CrossResourceReport.id)
     )
-    result = await db.execute(stmt)
-    report_analysis_counts = result.fetchall()
+    return result.scalars().all()
 
-    # Calculate statistics
-    total_reports = len(report_analysis_counts)
-    reports_with_analyses = sum(1 for r in report_analysis_counts if r[1] > 0)
-    reports_without_analyses = sum(1 for r in report_analysis_counts if r[1] == 0)
 
-    max_analyses = 0
-    min_analyses = float("inf")
-    total_analyses = 0
+async def count_channel_messages(
+    db: AsyncSession,
+    channel_id: UUID,
+    start_date: datetime,
+    end_date: datetime,
+) -> int:
+    """
+    Count the number of messages in a channel within a date range.
 
-    for _, count in report_analysis_counts:
-        max_analyses = max(max_analyses, count)
-        if count > 0:  # Only consider reports with at least one analysis for min
-            min_analyses = min(min_analyses, count)
-        total_analyses += count
+    Args:
+        db: Database session
+        channel_id: ID of the channel
+        start_date: Start date for the count
+        end_date: End date for the count
 
-    avg_analyses = total_analyses / total_reports if total_reports > 0 else 0
-    min_analyses = min_analyses if min_analyses != float("inf") else 0
+    Returns:
+        Number of messages
+    """
+    # Make sure start_date and end_date are naive datetimes
+    if start_date.tzinfo:
+        start_date = start_date.replace(tzinfo=None)
+    if end_date.tzinfo:
+        end_date = end_date.replace(tzinfo=None)
 
-    # Count single-channel vs multi-channel reports
-    single_channel_reports = sum(1 for r in report_analysis_counts if r[1] == 1)
-    multi_channel_reports = sum(1 for r in report_analysis_counts if r[1] > 1)
-
-    # Count orphaned analyses (analyses without valid reports)
-    stmt = (
-        select(func.count())
-        .select_from(ResourceAnalysis)
+    result = await db.execute(
+        sa.select(sa.func.count())
+        .select_from(SlackMessage)
         .where(
-            ~ResourceAnalysis.cross_resource_report_id.in_(
-                select(CrossResourceReport.id).select_from(CrossResourceReport)
-            )
+            SlackMessage.channel_id == channel_id,
+            SlackMessage.message_datetime >= start_date,
+            SlackMessage.message_datetime <= end_date,
         )
     )
-    result = await db.execute(stmt)
-    orphaned_analyses = result.scalar_one_or_none() or 0
+    return result.scalar_one()
 
-    results = {
-        "total_reports": total_reports,
-        "reports_with_analyses": reports_with_analyses,
-        "reports_without_analyses": reports_without_analyses,
-        "single_channel_reports": single_channel_reports,
-        "multi_channel_reports": multi_channel_reports,
-        "max_analyses_per_report": max_analyses,
-        "min_analyses_per_report": min_analyses,
-        "avg_analyses_per_report": f"{avg_analyses:.2f}",
-        "orphaned_analyses": orphaned_analyses,
-    }
 
-    logger.info(
-        f"Report-analysis relationship statistics: {json.dumps(results, indent=2)}"
-    )
+async def check_report_consistency(
+    db: AsyncSession, report_id: UUID
+) -> Dict[str, Dict[str, int]]:
+    """
+    Check the consistency of a cross-resource report.
+    Compares the number of messages processed in the analysis vs.
+    the actual number of messages in the database for each channel.
 
-    # Sample reports with a lot of analyses
-    if max_analyses > 5:
-        stmt = (
-            select(CrossResourceReport)
-            .outerjoin(
-                ResourceAnalysis,
-                CrossResourceReport.id == ResourceAnalysis.cross_resource_report_id,
-            )
-            .group_by(CrossResourceReport.id)
-            .having(func.count(ResourceAnalysis.id) > 5)
-            .limit(3)
+    Args:
+        db: Database session
+        report_id: ID of the report to check
+
+    Returns:
+        Dictionary mapping channel ID to message counts
+    """
+    logger.info(f"Checking report consistency for report {report_id}")
+
+    # Get the report
+    report = await get_report_by_id(db, report_id)
+    if not report:
+        logger.error(f"Report {report_id} not found")
+        return {}
+
+    logger.info(f"Report details: {report.title}")
+    logger.info(f"Date range: {report.date_range_start} to {report.date_range_end}")
+
+    # Get the resource analyses
+    analyses = await get_resource_analyses(db, report_id)
+    if not analyses:
+        logger.error(f"No resource analyses found for report {report_id}")
+        return {}
+
+    logger.info(f"Found {len(analyses)} resource analyses")
+
+    # Filter for Slack channel analyses
+    slack_analyses = [
+        analysis
+        for analysis in analyses
+        if analysis.resource_type.name == "SLACK_CHANNEL"
+    ]
+    if not slack_analyses:
+        logger.info(f"No Slack channel analyses found for report {report_id}")
+        return {}
+
+    logger.info(f"Found {len(slack_analyses)} Slack channel analyses")
+
+    # Get the date range for the report
+    start_date = report.date_range_start
+    end_date = report.date_range_end
+
+    # Check each Slack channel analysis
+    results = {}
+    for analysis in slack_analyses:
+        channel_id = analysis.resource_id
+
+        # Get the channel name for better logging
+        channel_result = await db.execute(
+            sa.select(SlackChannel).where(SlackChannel.id == channel_id)
         )
-        result = await db.execute(stmt)
-        sample_reports = result.scalars().all()
+        channel = channel_result.scalar_one_or_none()
+        channel_name = channel.name if channel else f"Unknown channel {channel_id}"
+        channel_slack_id = channel.slack_id if channel else "Unknown"
 
-        logger.info("Sample reports with many analyses:")
-        for report in sample_reports:
-            stmt = select(func.count()).where(
-                ResourceAnalysis.cross_resource_report_id == report.id
+        logger.info(f"\n{'=' * 50}")
+        logger.info(
+            f"Checking channel: {channel_name} (ID: {channel_id}, Slack ID: {channel_slack_id})"
+        )
+
+        # Count actual messages in the database
+        db_count = await count_channel_messages(db, channel_id, start_date, end_date)
+
+        # Count messages without user_id
+        no_user_count = await count_messages_without_user(
+            db, channel_id, start_date, end_date
+        )
+
+        # Count system messages (messages containing "has joined the channel" or similar)
+        system_count = await count_system_messages(db, channel_id, start_date, end_date)
+
+        # Get the number of messages processed in the analysis
+        analysis_count = 0
+        prepared_count = 0
+        if analysis.results:
+            if "metadata" in analysis.results:
+                metadata = analysis.results.get("metadata", {})
+                analysis_count = metadata.get("message_count", 0)
+
+            # Check if analysis contains no_data flag
+            no_data = analysis.results.get("no_data", False)
+            if no_data:
+                logger.warning(
+                    f"Analysis has no_data=True flag despite having {db_count} messages in DB"
+                )
+
+            # Try to get prepared data from the results if available
+            # The ResourceAnalysis model doesn't have a prepared_data attribute
+            # but we might be able to infer it from other fields
+            total_messages = analysis.results.get("total_messages", 0)
+            if total_messages > 0:
+                prepared_count = total_messages
+
+        # Log the results
+        logger.info(
+            f"Message counts:\n"
+            f"  Database total: {db_count} messages\n"
+            f"  Without user_id: {no_user_count} messages\n"
+            f"  System messages: {system_count} messages\n"
+            f"  Prepared for LLM: {prepared_count} messages\n"
+            f"  Analysis processed: {analysis_count} messages"
+        )
+
+        # Calculate the difference
+        diff = db_count - analysis_count
+        if diff != 0:
+            logger.warning(
+                f"Discrepancy in channel {channel_name}: "
+                f"Missing {diff} messages in analysis"
             )
-            result = await db.execute(stmt)
-            analysis_count = result.scalar_one_or_none() or 0
 
+            # Check for resource_summary in results
+            if analysis.results and "resource_summary" in analysis.results:
+                summary = analysis.results["resource_summary"]
+                if "no actual channel messages" in summary.lower():
+                    logger.error(
+                        f"LLM reports 'no actual channel messages' despite having {db_count} messages in DB"
+                    )
+                    logger.info(f"Resource summary: {summary[:200]}...")
+
+        # Get some sample messages to understand content
+        sample_messages = await get_sample_messages(
+            db, channel_id, start_date, end_date
+        )
+        logger.info(f"Sample messages ({len(sample_messages)}):")
+        for i, msg in enumerate(sample_messages):
+            truncated_text = msg.text[:100] + "..." if len(msg.text) > 100 else msg.text
             logger.info(
-                f"  Report ID: {report.id}, Title: {report.title}, Analysis count: {analysis_count}"
+                f"  {i + 1}. {msg.message_datetime} | User: {msg.user_id} | Text: '{truncated_text}'"
             )
 
-    # Log reports without analyses
-    if reports_without_analyses > 0:
-        stmt = (
-            select(CrossResourceReport)
-            .outerjoin(
-                ResourceAnalysis,
-                CrossResourceReport.id == ResourceAnalysis.cross_resource_report_id,
-            )
-            .group_by(CrossResourceReport.id)
-            .having(func.count(ResourceAnalysis.id) == 0)
-            .limit(5)
-        )
-        result = await db.execute(stmt)
-        empty_reports = result.scalars().all()
-
-        logger.info("Sample reports without analyses:")
-        for report in empty_reports:
-            logger.info(f"  Report ID: {report.id}, Title: {report.title}")
-
-    return results
-
-
-async def check_recently_created_reports(
-    db: AsyncSession, days: int = 7
-) -> Dict[str, List[Dict]]:
-    """
-    Check recently created CrossResourceReport records.
-    """
-    logger.info(f"Checking reports created in the last {days} days...")
-
-    # Get recent reports
-    recent_date = datetime.utcnow() - timedelta(days=days)
-    stmt = (
-        select(CrossResourceReport)
-        .where(CrossResourceReport.created_at >= recent_date)
-        .order_by(desc(CrossResourceReport.created_at))
-        .limit(10)
-    )
-    result = await db.execute(stmt)
-    recent_reports = result.scalars().all()
-
-    # Process each report
-    report_details = []
-    for report in recent_reports:
-        # Get analyses for this report
-        stmt = select(ResourceAnalysis).where(
-            ResourceAnalysis.cross_resource_report_id == report.id
-        )
-        result = await db.execute(stmt)
-        analyses = result.scalars().all()
-
-        # Get team name if available
-        team_name = "Unknown"
-        if report.team_id:
-            team_name = f"Team ID: {report.team_id}"
-
-        report_detail = {
-            "id": str(report.id),
-            "title": report.title,
-            "team": team_name,
-            "created_at": report.created_at.isoformat() if report.created_at else None,
-            "status": report.status.value if report.status else None,
-            "analysis_count": len(analyses),
-            "parameters": report.report_parameters,
-            "is_single_channel": (
-                report.report_parameters.get("single_channel_analysis", False)
-                if report.report_parameters
-                else False
-            ),
+        # Store results
+        results[str(channel_id)] = {
+            "channel_name": channel_name,
+            "database_count": db_count,
+            "no_user_count": no_user_count,
+            "system_count": system_count,
+            "prepared_count": prepared_count,
+            "analysis_count": analysis_count,
+            "difference": diff,
         }
-        report_details.append(report_detail)
-
-    results = {"count": len(recent_reports), "reports": report_details}
-
-    logger.info(f"Found {len(recent_reports)} reports created in the last {days} days")
-    if recent_reports:
-        logger.info("Recent reports:")
-        for detail in report_details:
-            logger.info(f"  Report: {detail['title']}")
-            logger.info(f"    ID: {detail['id']}")
-            logger.info(f"    Team: {detail['team']}")
-            logger.info(f"    Created: {detail['created_at']}")
-            logger.info(f"    Status: {detail['status']}")
-            logger.info(f"    Analysis count: {detail['analysis_count']}")
-            logger.info(f"    Is single channel: {detail['is_single_channel']}")
 
     return results
 
 
-async def check_report_team_ids(db: AsyncSession) -> Dict[str, int]:
-    """
-    Check CrossResourceReport team_id assignments.
-    """
-    logger.info("Checking CrossResourceReport team_id assignments...")
+async def count_messages_without_user(
+    db: AsyncSession,
+    channel_id: UUID,
+    start_date: datetime,
+    end_date: datetime,
+) -> int:
+    """Count messages without a user_id in a channel within a date range."""
+    # Make sure dates are naive
+    if start_date.tzinfo:
+        start_date = start_date.replace(tzinfo=None)
+    if end_date.tzinfo:
+        end_date = end_date.replace(tzinfo=None)
 
-    # Count total reports
-    stmt = select(func.count()).select_from(CrossResourceReport)
-    result = await db.execute(stmt)
-    total_reports = result.scalar_one_or_none() or 0
-
-    # Count reports with null team_id
-    stmt = (
-        select(func.count())
-        .select_from(CrossResourceReport)
-        .where(CrossResourceReport.team_id.is_(None))
+    result = await db.execute(
+        sa.select(sa.func.count())
+        .select_from(SlackMessage)
+        .where(
+            SlackMessage.channel_id == channel_id,
+            SlackMessage.message_datetime >= start_date,
+            SlackMessage.message_datetime <= end_date,
+            SlackMessage.user_id.is_(None),
+        )
     )
-    result = await db.execute(stmt)
-    null_team_id_count = result.scalar_one_or_none() or 0
+    return result.scalar_one()
 
-    # Calculate percentage
-    percentage = 0
-    if total_reports > 0:
-        percentage = (null_team_id_count / total_reports) * 100
 
-    results = {
-        "total_reports": total_reports,
-        "null_team_id_count": null_team_id_count,
-        "percentage": f"{percentage:.1f}%",
-    }
+async def count_system_messages(
+    db: AsyncSession,
+    channel_id: UUID,
+    start_date: datetime,
+    end_date: datetime,
+) -> int:
+    """Count system messages in a channel within a date range."""
+    # Make sure dates are naive
+    if start_date.tzinfo:
+        start_date = start_date.replace(tzinfo=None)
+    if end_date.tzinfo:
+        end_date = end_date.replace(tzinfo=None)
 
-    logger.info(f"CrossResourceReport team_id check: {results}")
-
-    if null_team_id_count > 0:
-        logger.warning(
-            f"{null_team_id_count} reports ({percentage:.1f}%) have null team_id values"
+    result = await db.execute(
+        sa.select(sa.func.count())
+        .select_from(SlackMessage)
+        .where(
+            SlackMessage.channel_id == channel_id,
+            SlackMessage.message_datetime >= start_date,
+            SlackMessage.message_datetime <= end_date,
+            sa.or_(
+                SlackMessage.text.contains("has joined the channel"),
+                SlackMessage.text.contains("has left the channel"),
+                sa.and_(SlackMessage.user_id.is_(None), SlackMessage.text != ""),
+            ),
         )
+    )
+    return result.scalar_one()
 
-        # Get list of reports with null team_id
-        stmt = (
-            select(CrossResourceReport)
-            .where(CrossResourceReport.team_id.is_(None))
-            .limit(5)
+
+async def get_sample_messages(
+    db: AsyncSession,
+    channel_id: UUID,
+    start_date: datetime,
+    end_date: datetime,
+    limit: int = 5,
+) -> List[SlackMessage]:
+    """Get sample messages from a channel within a date range."""
+    # Make sure dates are naive
+    if start_date.tzinfo:
+        start_date = start_date.replace(tzinfo=None)
+    if end_date.tzinfo:
+        end_date = end_date.replace(tzinfo=None)
+
+    result = await db.execute(
+        sa.select(SlackMessage)
+        .where(
+            SlackMessage.channel_id == channel_id,
+            SlackMessage.message_datetime >= start_date,
+            SlackMessage.message_datetime <= end_date,
         )
-        result = await db.execute(stmt)
-        null_reports = result.scalars().all()
+        .order_by(SlackMessage.message_datetime.desc())
+        .limit(limit)
+    )
+    return result.scalars().all()
 
-        logger.info("Sample reports with null team_id:")
-        for report in null_reports:
-            logger.info(f"  Report ID: {report.id}, Title: {report.title}")
 
-            # Check analyses for this report
-            stmt = select(ResourceAnalysis).where(
-                ResourceAnalysis.cross_resource_report_id == report.id
-            )
-            result = await db.execute(stmt)
-            analyses = result.scalars().all()
+async def main() -> None:
+    """Main entry point."""
+    logger.info("Starting report consistency check")
 
-            if analyses:
-                # Check if any analysis has a linked integration with owner_team_id
-                for analysis in analyses:
-                    if analysis.integration_id:
-                        stmt = select(Integration).where(
-                            Integration.id == analysis.integration_id
+    report_id = None
+    if len(sys.argv) > 1:
+        try:
+            report_id = UUID(sys.argv[1])
+        except ValueError:
+            logger.error(f"Invalid report ID: {sys.argv[1]}")
+            sys.exit(1)
+
+    async with async_session() as db:
+        if report_id:
+            # Check a specific report
+            logger.info(f"Checking report {report_id}")
+            results = await check_report_consistency(db, report_id)
+
+            # Print summary
+            if results:
+                total_db_messages = sum(r["database_count"] for r in results.values())
+                total_analysis_messages = sum(
+                    r["analysis_count"] for r in results.values()
+                )
+
+                logger.info("=" * 60)
+                logger.info(f"Report {report_id} Summary:")
+                logger.info(f"Total messages in database: {total_db_messages}")
+                logger.info(
+                    f"Total messages processed in analyses: {total_analysis_messages}"
+                )
+                logger.info(
+                    f"Difference: {total_db_messages - total_analysis_messages}"
+                )
+
+                # Print channels with discrepancies
+                discrepancies = {
+                    k: v for k, v in results.items() if v["difference"] != 0
+                }
+                if discrepancies:
+                    logger.warning(
+                        f"Found {len(discrepancies)} channels with discrepancies:"
+                    )
+                    for _channel_id, data in discrepancies.items():
+                        logger.warning(
+                            f"  {data['channel_name']}: missing {data['difference']} messages"
                         )
-                        result = await db.execute(stmt)
-                        integration = result.scalar_one_or_none()
+                else:
+                    logger.info("All channels have consistent message counts!")
 
-                        if integration and integration.owner_team_id:
-                            logger.info(
-                                f"    Could use integration.owner_team_id: {integration.owner_team_id}"
-                            )
-                            break
+                logger.info("=" * 60)
 
-    return results
-
-
-async def main():
-    """
-    Main function to run all checks.
-    """
-    logger.info("Starting Cross-Resource Reports validation")
-
-    db = AsyncSessionLocal()
-
-    try:
-        # Run all checks
-        report_counts = await check_report_count(db)
-        analysis_counts = await check_analysis_count(db)
-        relationship_stats = await check_report_analysis_relationships(db)
-        recent_reports = await check_recently_created_reports(db)
-        team_id_check = await check_report_team_ids(db)
-
-        # Overall result summary
-        logger.info("=== Validation Summary ===")
-
-        issues_found = 0
-
-        if relationship_stats["reports_without_analyses"] > 0:
-            issues_found += 1
-            logger.warning(
-                f"⚠️ {relationship_stats['reports_without_analyses']} reports have no associated analyses"
-            )
-
-        if relationship_stats["orphaned_analyses"] > 0:
-            issues_found += 1
-            logger.warning(
-                f"⚠️ {relationship_stats['orphaned_analyses']} analyses are orphaned (no valid report)"
-            )
-
-        if team_id_check["null_team_id_count"] > 0:
-            issues_found += 1
-            logger.warning(
-                f"⚠️ {team_id_check['null_team_id_count']} reports have missing team_id values"
-            )
-
-        if issues_found == 0:
-            logger.info(
-                "✅ No issues found! The cross-resource reports structure looks good."
-            )
         else:
-            logger.warning(
-                f"⚠️ Found {issues_found} potential issues that might affect the reports functionality."
-            )
-            logger.info(
-                "It's recommended to fix these issues for optimal system performance."
-            )
+            # Check recent reports
+            logger.info("Checking recent reports")
+            reports = await get_recent_reports(db)
 
-        # Print validation totals
-        logger.info("=== Validation Totals ===")
-        logger.info(
-            f"Total CrossResourceReport records: {report_counts['total_reports']}"
-        )
-        logger.info(
-            f"Total ResourceAnalysis records: {analysis_counts['total_analyses']}"
-        )
-        logger.info(
-            f"Single-channel reports: {relationship_stats['single_channel_reports']}"
-        )
-        logger.info(
-            f"Multi-channel reports: {relationship_stats['multi_channel_reports']}"
-        )
-        logger.info(
-            f"Average analyses per report: {relationship_stats['avg_analyses_per_report']}"
-        )
-        logger.info(f"Reports created in last 7 days: {recent_reports['count']}")
+            if not reports:
+                logger.info("No reports found")
+                return
 
-    except Exception as e:
-        logger.error(f"Error running checks: {str(e)}", exc_info=True)
-    finally:
-        await db.close()
+            logger.info(f"Found {len(reports)} recent reports")
+            for report in reports:
+                logger.info(f"Checking report {report.id} ({report.title})")
+                results = await check_report_consistency(db, report.id)
+
+                # Print summary
+                if results:
+                    total_db_messages = sum(
+                        r["database_count"] for r in results.values()
+                    )
+                    total_analysis_messages = sum(
+                        r["analysis_count"] for r in results.values()
+                    )
+
+                    logger.info("-" * 60)
+                    logger.info(f"Report {report.id} Summary:")
+                    logger.info(f"Total messages in database: {total_db_messages}")
+                    logger.info(
+                        f"Total messages processed in analyses: {total_analysis_messages}"
+                    )
+                    logger.info(
+                        f"Difference: {total_db_messages - total_analysis_messages}"
+                    )
+
+                    # Print channels with discrepancies
+                    discrepancies = {
+                        k: v for k, v in results.items() if v["difference"] != 0
+                    }
+                    if discrepancies:
+                        logger.warning(
+                            f"Found {len(discrepancies)} channels with discrepancies"
+                        )
+                    else:
+                        logger.info("All channels have consistent message counts!")
+
+                    logger.info("-" * 60)
 
 
 if __name__ == "__main__":

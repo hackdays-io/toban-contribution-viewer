@@ -238,6 +238,10 @@ async def test_run_analysis_success():
         resource_summary="Test summary",
         key_highlights="Test highlights",
         model_used="test-model",
+        message_count=None,
+        participant_count=None,
+        thread_count=None,
+        reaction_count=None,
     )
 
 

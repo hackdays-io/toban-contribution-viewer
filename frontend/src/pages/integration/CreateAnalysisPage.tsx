@@ -46,10 +46,8 @@ import useAuth from '../../context/useAuth'
 import useIntegration from '../../context/useIntegration'
 import integrationService, {
   ServiceResource,
-  AnalysisOptions,
   ResourceType,
 } from '../../lib/integrationService'
-import env from '../../config/env'
 import TeamChannelSelector from '../../components/integration/TeamChannelSelector'
 
 interface ChannelResource extends ServiceResource {
@@ -453,70 +451,47 @@ const CreateAnalysisPage: React.FC = () => {
 
       // First - sync the channel data to ensure we have the latest messages
       try {
-        // Use the primary channel we defined above
-        // No need to redefine it here
-
-        // Step 1: Sync general integration resources
-        console.log('Syncing general integration data first...')
-        await integrationService.syncResources(selectedIntegration)
-
-        // Step 2: Specifically sync messages for this channel
+        // Specifically sync messages for this channel
         console.log(`Syncing messages for channel ${primaryChannel}...`)
-        const syncChannelEndpoint = `${env.apiUrl}/integrations/${selectedIntegration}/resources/${primaryChannel}/sync-messages`
 
-        // Build the request URL with query parameters
-        const url = new URL(syncChannelEndpoint)
-        url.searchParams.append(
-          'start_date',
-          startDateParam ||
+        // Use the integrationService method for channel sync
+        const syncOptions = {
+          start_date:
+            startDateParam ||
             formatDateWithoutTimezone(
               new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString()
-            )
+            ),
+          end_date:
+            endDateParam || formatDateWithoutTimezone(new Date().toISOString()),
+          include_replies: includeThreads,
+        }
+
+        const channelSyncResult = await integrationService.syncChannelMessages(
+          selectedIntegration,
+          primaryChannel,
+          syncOptions
         )
-        url.searchParams.append(
-          'end_date',
-          endDateParam || formatDateWithoutTimezone(new Date().toISOString())
-        )
-        url.searchParams.append('include_replies', includeThreads.toString())
 
-        // Make the channel messages sync request
-        const headers = await integrationService.getAuthHeaders()
-        const channelSyncResponse = await fetch(url.toString(), {
-          method: 'POST',
-          headers,
-          credentials: 'include',
-        })
-
-        if (!channelSyncResponse.ok) {
-          let errorDetail = ''
-          try {
-            const responseText = await channelSyncResponse.text()
-            try {
-              const errorData = JSON.parse(responseText)
-              errorDetail =
-                errorData.detail || errorData.message || responseText
-            } catch {
-              errorDetail = responseText || channelSyncResponse.statusText
-            }
-          } catch {
-            // Ignore response reading errors
-          }
-
+        // Check if the result is an error
+        if (integrationService.isApiError(channelSyncResult)) {
           toast({
             title: 'Channel Sync Warning',
-            description: `Channel sync was not fully successful: ${errorDetail}. Analysis may not include the latest messages.`,
+            description: `Channel sync was not fully successful: ${channelSyncResult.message}. Analysis may not include the latest messages.`,
             status: 'warning',
             duration: 7000,
             isClosable: true,
           })
         } else {
-          const channelSyncResult = await channelSyncResponse.json()
           console.log('Channel messages sync successful:', channelSyncResult)
 
           // Extract sync statistics from the response
           const syncStats = channelSyncResult.sync_results || {}
-          const newMessages = syncStats.new_message_count || 0
-          const repliesCount = syncStats.replies_synced || 0
+          const newMessages =
+            ((syncStats as Record<string, unknown>)
+              .new_message_count as number) || 0
+          const repliesCount =
+            ((syncStats as Record<string, unknown>).replies_synced as number) ||
+            0
 
           // Only show the sync message if there are actual messages synced
           if (newMessages > 0 || repliesCount > 0) {
@@ -548,8 +523,8 @@ const CreateAnalysisPage: React.FC = () => {
         })
       }
 
-      // Now, run the analysis for all selected channels
-      const analysisOptions: AnalysisOptions = {
+      // Prepare analysis options
+      const analysisOptions = {
         analysis_type: 'contribution',
         start_date: startDateParam || undefined,
         end_date: endDateParam || undefined,
@@ -557,8 +532,8 @@ const CreateAnalysisPage: React.FC = () => {
         include_reactions: includeReactions,
       }
 
-      // We need to make sure we have the full resource information for selected channels
-      const selectedChannelsDetails = selectedChannels.map((channelId) => {
+      // Prepare channel data for the unified createChannelReport method
+      const channelsForReport = selectedChannels.map((channelId) => {
         const channel = allChannelResources.find((r) => r.id === channelId)
         if (!channel) {
           console.warn(`Could not find details for channel ${channelId}`)
@@ -566,16 +541,13 @@ const CreateAnalysisPage: React.FC = () => {
         return {
           id: channelId,
           name: channel?.name || 'Unknown Channel',
-          has_bot: channel?.metadata?.has_bot || false,
+          integration_id: selectedIntegration,
         }
       })
 
-      // We already defined primaryChannel above
-      // No need to redefine it here
+      console.log('Selected channels for analysis:', channelsForReport)
 
-      console.log('Selected channels for analysis:', selectedChannelsDetails)
-
-      // Show how many channels are being analyzed
+      // Show info about number of channels being analyzed
       toast({
         title: `Analyzing ${selectedChannels.length} channels`,
         description:
@@ -587,141 +559,32 @@ const CreateAnalysisPage: React.FC = () => {
         isClosable: true,
       })
 
-      // Handle the creation of analysis differently based on whether we have multiple channels
-      let result
-      let redirectPath
-
-      // Use the cross-resource report API for multiple channels
-      if (selectedChannels.length > 1) {
-        // Multi-channel report is now enabled
-        console.log(
-          'Creating multi-channel report with',
-          selectedChannels.length,
-          'channels'
-        )
-
-        // First, create resource analysis data for each selected channel
-        const resourceAnalyses = selectedChannels.map((channelId) => {
-          // Find the channel details
-          const channel = allChannelResources.find((r) => r.id === channelId)
-          if (!channel) {
-            console.warn(`Could not find details for channel ${channelId}`)
-          }
-
-          return {
-            integration_id: selectedIntegration,
-            resource_id: channelId,
-            resource_type: 'SLACK_CHANNEL',
-            analysis_type: 'CONTRIBUTION',
-            period_start: startDateParam || undefined,
-            period_end: endDateParam || undefined,
-            analysis_parameters: {
-              include_threads: includeThreads,
-              include_reactions: includeReactions,
-            },
-          }
-        })
-
-        // Create a cross-resource report
-        const reportData = {
-          title: `Multi-channel Analysis (${selectedChannels.length} channels)`,
-          description: `Analysis of ${selectedChannels.length} Slack channels`,
-          date_range_start: startDateParam,
-          date_range_end: endDateParam,
-          report_parameters: {
-            include_threads: includeThreads,
-            include_reactions: includeReactions,
-          },
-          resource_analyses: resourceAnalyses,
-        }
-
-        console.log('Creating cross-resource report with date range:', {
-          start: startDateParam,
-          end: endDateParam,
-          format: 'YYYY-MM-DD (without timezone)',
-        })
-
-        // Call the API to create the cross-resource report
-        try {
-          const headers = await integrationService.getAuthHeaders()
-          const teamId = teamContext?.currentTeamId
-
-          if (!teamId) {
-            throw new Error('No team ID available')
-          }
-
-          // Create the cross-resource report
-          const reportResponse = await fetch(
-            `${env.apiUrl}/reports/${teamId}/cross-resource-reports`,
-            {
-              method: 'POST',
-              headers: {
-                ...headers,
-                'Content-Type': 'application/json',
-              },
-              credentials: 'include',
-              body: JSON.stringify(reportData),
-            }
-          )
-
-          if (!reportResponse.ok) {
-            const errorData = await reportResponse.json()
-            throw new Error(
-              `Failed to create cross-resource report: ${errorData.detail || reportResponse.statusText}`
-            )
-          }
-
-          // Parse the report response
-          const report = await reportResponse.json()
-          console.log('Created cross-resource report:', report)
-
-          // Generate the report
-          const generateResponse = await fetch(
-            `${env.apiUrl}/reports/${teamId}/cross-resource-reports/${report.id}/generate`,
-            {
-              method: 'POST',
-              headers,
-              credentials: 'include',
-            }
-          )
-
-          if (!generateResponse.ok) {
-            const errorData = await generateResponse.json()
-            throw new Error(
-              `Failed to generate report: ${errorData.detail || generateResponse.statusText}`
-            )
-          }
-
-          const generateResult = await generateResponse.json()
-          console.log('Report generation started:', generateResult)
-
-          // Set the redirect path to the team analysis result page
-          redirectPath = `/dashboard/integrations/${selectedIntegration}/team-analysis/${report.id}`
-        } catch (error) {
-          console.error('Error creating multi-channel report:', error)
-          throw error
-        }
-      } else {
-        // Use the single channel analysis for just one channel
-        result = await integrationService.analyzeResource(
-          selectedIntegration,
-          primaryChannel,
-          analysisOptions
-        )
-
-        // Check if the result is an error
-        if (integrationService.isApiError(result)) {
-          const errorMessage = `Analysis failed: ${result.message}${result.detail ? `\nDetail: ${result.detail}` : ''}`
-          console.error(errorMessage)
-          throw new Error(errorMessage)
-        }
-
-        redirectPath = `/dashboard/integrations/${selectedIntegration}/channels/${primaryChannel}/analysis/${result.analysis_id}`
+      // Use the unified method to create either a single or multi-channel report
+      const teamId = teamContext?.currentTeamId
+      if (!teamId) {
+        throw new Error('No team ID available')
       }
+
+      const result = await integrationService.createChannelReport(
+        teamId,
+        channelsForReport,
+        analysisOptions
+      )
+
+      // Check for error
+      if (integrationService.isApiError(result)) {
+        const errorMessage = `Analysis failed: ${result.message}${result.detail ? `\nDetail: ${result.detail}` : ''}`
+        console.error(errorMessage)
+        throw new Error(errorMessage)
+      }
+
+      // Always go to team-analysis page
+      const reportId = result.report_id || result.id
+      const redirectPath = `/dashboard/integrations/${selectedIntegration}/team-analysis/${reportId}`
 
       // Notify user and redirect
       toast({
-        title: 'Report Generated Successfully',
+        title: 'Report generation process was started successfully',
         description: 'Redirecting to the detailed report page...',
         status: 'success',
         duration: 3000,
@@ -1418,7 +1281,7 @@ const CreateAnalysisPage: React.FC = () => {
               isLoading={isAnalyzing}
               loadingText="Running Analysis..."
             >
-              Run Analysis
+              Run Analysis!
             </Button>
           </CardFooter>
         </Card>

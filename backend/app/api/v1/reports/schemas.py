@@ -155,6 +155,19 @@ class ResourceAnalysisResponse(ResourceAnalysisBase):
     analysis_generated_at: Optional[datetime] = Field(
         None, description="When the analysis was generated"
     )
+    # Statistics fields
+    message_count: Optional[int] = Field(
+        None, description="Number of messages in this resource"
+    )
+    participant_count: Optional[int] = Field(
+        None, description="Number of participants in this resource"
+    )
+    thread_count: Optional[int] = Field(
+        None, description="Number of threads in this resource"
+    )
+    reaction_count: Optional[int] = Field(
+        None, description="Number of reactions in this resource"
+    )
     created_at: datetime = Field(..., description="Creation timestamp")
     updated_at: datetime = Field(..., description="Last update timestamp")
 
@@ -198,6 +211,19 @@ class CrossResourceReportResponse(CrossResourceReportBase):
     resource_types: Optional[List[str]] = Field(
         None, description="Types of resources included"
     )
+    # Message statistics
+    total_messages: Optional[int] = Field(
+        None, description="Total number of messages across all resources"
+    )
+    total_participants: Optional[int] = Field(
+        None, description="Total number of unique participants across all resources"
+    )
+    total_threads: Optional[int] = Field(
+        None, description="Total number of threads across all resources"
+    )
+    total_reactions: Optional[int] = Field(
+        None, description="Total number of reactions across all resources"
+    )
 
     class Config:
         """Pydantic configuration."""
@@ -238,3 +264,30 @@ class ReportGenerationResponse(BaseModel):
         ..., description="Number of resource analyses created"
     )
     message: str = Field(..., description="Status message")
+
+
+# Schema for creating a new report from channels
+class ChannelReportCreate(BaseModel):
+    """Schema for creating a new channel-based report."""
+
+    team_id: UUID = Field(..., description="Team ID")
+    channels: List[Dict[str, str]] = Field(
+        ...,
+        description="List of channels to include in the report",
+        example=[
+            {
+                "id": "uuid-here",
+                "name": "general",
+                "integration_id": "integration-uuid-here",
+            }
+        ],
+    )
+    title: Optional[str] = Field(None, description="Custom report title")
+    description: Optional[str] = Field(None, description="Custom report description")
+    start_date: datetime = Field(..., description="Start date for analysis period")
+    end_date: datetime = Field(..., description="End date for analysis period")
+    include_threads: bool = Field(True, description="Whether to include thread replies")
+    include_reactions: bool = Field(True, description="Whether to include reactions")
+    analysis_type: str = Field(
+        "CONTRIBUTION", description="Type of analysis to perform"
+    )

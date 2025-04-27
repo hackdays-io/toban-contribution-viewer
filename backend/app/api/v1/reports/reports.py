@@ -1,8 +1,9 @@
 """API endpoints for cross-resource reports."""
 
 import logging
+from datetime import timedelta
 from typing import Dict, List
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 from sqlalchemy import and_, case, desc, func, select
@@ -10,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.api.v1.reports.schemas import (
+    ChannelReportCreate,
     CrossResourceReportCreate,
     CrossResourceReportDetailResponse,
     CrossResourceReportResponse,
@@ -30,6 +32,7 @@ from app.models.reports import (
     ResourceAnalysis,
 )
 from app.models.team import Team, TeamMemberRole
+from app.services.slack.utils import get_channel_message_stats
 
 logger = logging.getLogger(__name__)
 
@@ -367,6 +370,11 @@ async def get_team_report(
             func.sum(
                 case((ResourceAnalysis.status == ReportStatus.FAILED, 1), else_=0)
             ).label("failed"),
+            # Add aggregated message statistics
+            func.sum(ResourceAnalysis.message_count).label("total_messages"),
+            func.sum(ResourceAnalysis.participant_count).label("total_participants"),
+            func.sum(ResourceAnalysis.thread_count).label("total_threads"),
+            func.sum(ResourceAnalysis.reaction_count).label("total_reactions"),
         ).where(ResourceAnalysis.cross_resource_report_id == report.id)
     )
     stats = analysis_stats.one()
@@ -386,6 +394,12 @@ async def get_team_report(
     response_dict["pending_analyses"] = stats.pending
     response_dict["failed_analyses"] = stats.failed
     response_dict["resource_types"] = resource_types
+
+    # Include aggregated statistics in the response
+    response_dict["total_messages"] = stats.total_messages or 0
+    response_dict["total_participants"] = stats.total_participants or 0
+    response_dict["total_threads"] = stats.total_threads or 0
+    response_dict["total_reactions"] = stats.total_reactions or 0
 
     return response_dict
 
@@ -477,6 +491,11 @@ async def update_team_report(
             func.sum(
                 case((ResourceAnalysis.status == ReportStatus.FAILED, 1), else_=0)
             ).label("failed"),
+            # Add aggregated message statistics
+            func.sum(ResourceAnalysis.message_count).label("total_messages"),
+            func.sum(ResourceAnalysis.participant_count).label("total_participants"),
+            func.sum(ResourceAnalysis.thread_count).label("total_threads"),
+            func.sum(ResourceAnalysis.reaction_count).label("total_reactions"),
         ).where(ResourceAnalysis.cross_resource_report_id == report.id)
     )
     stats = analysis_stats.one()
@@ -496,6 +515,11 @@ async def update_team_report(
     response_dict["pending_analyses"] = stats.pending
     response_dict["failed_analyses"] = stats.failed
     response_dict["resource_types"] = resource_types
+    # Include aggregated statistics in the response
+    response_dict["total_messages"] = stats.total_messages or 0
+    response_dict["total_participants"] = stats.total_participants or 0
+    response_dict["total_threads"] = stats.total_threads or 0
+    response_dict["total_reactions"] = stats.total_reactions or 0
 
     return response_dict
 
@@ -939,3 +963,254 @@ async def generate_report(
     response.message += f" Scheduled {scheduled_count} analysis tasks."
 
     return response
+
+
+@router.post(
+    "/{team_id}/channel-reports",
+    response_model=CrossResourceReportResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create a new channel-based report",
+    description="Creates a new report for analyzing one or more Slack channels with specific date range and options",
+)
+async def create_channel_report(
+    team_id: UUID,
+    report_data: ChannelReportCreate,
+    db: AsyncSession = Depends(get_async_db),
+    current_user: Dict = Depends(get_current_user),
+):
+    """
+    Create a new channel-based report for one or more Slack channels.
+    This endpoint provides a simplified interface for creating cross-resource reports
+    specifically for Slack channel analysis.
+
+    Args:
+        team_id: Team ID
+        report_data: Report creation data including channels and parameters
+        db: Database session
+        current_user: Current authenticated user
+
+    Returns:
+        Newly created report with generation status
+    """
+    logger.debug(
+        f"Creating channel report for team {team_id}, user {current_user['id']} "
+        f"with {len(report_data.channels)} channels"
+    )
+
+    # Check if user has access to this team
+    has_access = await check_team_access(
+        team_id=team_id,
+        user_id=current_user["id"],
+        db=db,
+        roles=[TeamMemberRole.OWNER, TeamMemberRole.ADMIN, TeamMemberRole.MEMBER],
+    )
+
+    if not has_access:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You don't have access to create reports for this team",
+        )
+
+    # Verify there are channels to analyze
+    if not report_data.channels or len(report_data.channels) == 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="At least one channel must be specified for analysis",
+        )
+
+    # Generate default title and description if not provided
+    title = report_data.title or (
+        f"Multi-channel Analysis ({len(report_data.channels)} channels)"
+        if len(report_data.channels) > 1
+        else f"Analysis of #{report_data.channels[0]['name']}"
+    )
+
+    description = report_data.description or (
+        f"Analysis of {len(report_data.channels)} Slack channels"
+        if len(report_data.channels) > 1
+        else f"Analysis of Slack channel #{report_data.channels[0]['name']}"
+    )
+
+    # Format dates to ensure consistent handling
+    try:
+        start_date = report_data.start_date
+        end_date = report_data.end_date
+
+        # For security, limit the date range to something reasonable
+        max_days = 180  # 6 months
+        date_difference = (end_date - start_date).days
+        if date_difference > max_days:
+            logger.warning(
+                f"Requested date range of {date_difference} days exceeds maximum of {max_days} days. "
+                f"Limiting to {max_days} days."
+            )
+            start_date = end_date - timedelta(days=max_days)
+    except Exception as e:
+        logger.error(f"Error formatting dates: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid date format: {str(e)}",
+        )
+
+    # Create the report in pending status
+    new_report = CrossResourceReport(
+        id=uuid4(),  # Generate a new UUID for the report
+        team_id=team_id,
+        title=title,
+        description=description,
+        date_range_start=start_date,
+        date_range_end=end_date,
+        status=ReportStatus.PENDING,
+        report_parameters={
+            "include_threads": report_data.include_threads,
+            "include_reactions": report_data.include_reactions,
+            "analysis_type": report_data.analysis_type,
+            "channel_count": len(report_data.channels),
+        },
+    )
+    db.add(new_report)
+    await db.flush()
+
+    # Determine the analysis type
+    try:
+        # Convert the provided analysis type string to proper enum case
+        analysis_type_str = report_data.analysis_type.upper()
+        # Verify it's a valid analysis type
+        analysis_type = getattr(AnalysisType, analysis_type_str)
+    except (AttributeError, ValueError):
+        logger.warning(
+            f"Invalid analysis type: {report_data.analysis_type}. Using CONTRIBUTION."
+        )
+        analysis_type = AnalysisType.CONTRIBUTION
+
+    # Create ResourceAnalysis entries for each channel
+    resource_analyses = []
+    for channel in report_data.channels:
+        # Extract required fields
+        try:
+            channel_id = UUID(channel["id"])
+            integration_id = UUID(channel["integration_id"])
+        except (KeyError, ValueError) as e:
+            logger.error(f"Invalid channel data: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid channel data: {str(e)}",
+            )
+
+        # Get initial message statistics for the channel
+        channel_stats = await get_channel_message_stats(
+            db=db, channel_id=channel_id, start_date=start_date, end_date=end_date
+        )
+
+        logger.info(
+            f"Initial stats for channel {channel.get('name')}: "
+            f"messages={channel_stats['message_count']}, "
+            f"participants={channel_stats['participant_count']}, "
+            f"threads={channel_stats['thread_count']}, "
+            f"reactions={channel_stats['reaction_count']}"
+        )
+
+        # Create the resource analysis record with initial statistics
+        analysis = ResourceAnalysis(
+            id=uuid4(),  # Generate a new UUID for each analysis
+            cross_resource_report_id=new_report.id,
+            integration_id=integration_id,
+            resource_id=channel_id,
+            resource_type=AnalysisResourceType.SLACK_CHANNEL,
+            analysis_type=analysis_type,
+            status=ReportStatus.PENDING,
+            period_start=start_date,
+            period_end=end_date,
+            # Include statistics from database
+            message_count=channel_stats["message_count"],
+            participant_count=channel_stats["participant_count"],
+            thread_count=channel_stats["thread_count"],
+            reaction_count=channel_stats["reaction_count"],
+            analysis_parameters={
+                "include_threads": report_data.include_threads,
+                "include_reactions": report_data.include_reactions,
+                "channel_name": channel.get("name", "Unknown"),
+            },
+        )
+        db.add(analysis)
+        resource_analyses.append(analysis)
+
+    # Commit all changes
+    await db.commit()
+    await db.refresh(new_report)
+
+    # Log what was created
+    logger.info(
+        f"Created report {new_report.id} with {len(resource_analyses)} channel analyses"
+    )
+
+    # Trigger background task to start the analysis process
+    from app.services.analysis.task_scheduler import ResourceAnalysisTaskScheduler
+
+    scheduled_count = await ResourceAnalysisTaskScheduler.schedule_analyses_for_report(
+        report_id=new_report.id, db=db
+    )
+
+    logger.info(
+        f"Scheduled {scheduled_count} analysis tasks for report {new_report.id}"
+    )
+
+    # Get summary statistics for the response
+    analysis_stats = await db.execute(
+        select(
+            func.count().label("total"),
+            func.sum(
+                case((ResourceAnalysis.status == ReportStatus.COMPLETED, 1), else_=0)
+            ).label("completed"),
+            func.sum(
+                case((ResourceAnalysis.status == ReportStatus.PENDING, 1), else_=0)
+            ).label("pending"),
+            func.sum(
+                case((ResourceAnalysis.status == ReportStatus.FAILED, 1), else_=0)
+            ).label("failed"),
+            # Add aggregated stats across all channels
+            func.sum(ResourceAnalysis.message_count).label("total_messages"),
+            func.sum(ResourceAnalysis.participant_count).label("total_participants"),
+            func.sum(ResourceAnalysis.thread_count).label("total_threads"),
+            func.sum(ResourceAnalysis.reaction_count).label("total_reactions"),
+        ).where(ResourceAnalysis.cross_resource_report_id == new_report.id)
+    )
+    stats = analysis_stats.one()
+
+    # Get types of resources
+    resource_types_query = await db.execute(
+        select(ResourceAnalysis.resource_type)
+        .distinct()
+        .where(ResourceAnalysis.cross_resource_report_id == new_report.id)
+    )
+    resource_types = [rt[0] for rt in resource_types_query.all()]
+
+    # Add summary message counts to report parameters
+    updated_params = (
+        new_report.report_parameters.copy() if new_report.report_parameters else {}
+    )
+    updated_params.update(
+        {
+            "total_messages": stats.total_messages or 0,
+            "total_participants": stats.total_participants or 0,
+            "total_threads": stats.total_threads or 0,
+            "total_reactions": stats.total_reactions or 0,
+        }
+    )
+    new_report.report_parameters = updated_params
+    await db.commit()
+
+    # Prepare the response
+    response_dict = new_report.__dict__.copy()
+    response_dict["total_resources"] = stats.total
+    response_dict["completed_analyses"] = stats.completed
+    response_dict["pending_analyses"] = stats.pending
+    response_dict["failed_analyses"] = stats.failed
+    response_dict["resource_types"] = resource_types
+    # Include the counts in the response
+    response_dict["total_messages"] = stats.total_messages or 0
+    response_dict["total_participants"] = stats.total_participants or 0
+    response_dict["total_threads"] = stats.total_threads or 0
+    response_dict["total_reactions"] = stats.total_reactions or 0
+
+    return response_dict

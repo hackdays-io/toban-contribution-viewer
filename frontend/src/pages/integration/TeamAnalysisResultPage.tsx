@@ -1,4 +1,4 @@
-import React, { useEffect, useState, FC } from 'react'
+import React, { useEffect, useState, FC, useCallback } from 'react'
 import {
   Badge,
   Box,
@@ -72,7 +72,7 @@ interface AnalysisResponse {
   team_id?: string // Team ID for the analysis
   report_id?: string // CrossResourceReport ID for unified flow
   is_unified_report?: boolean // Flag indicating this uses the unified report system
-  
+
   // Added properties for handling JSON extraction
   fixedChannelSummary?: string
   fixedTopicAnalysis?: string
@@ -271,8 +271,9 @@ const ChannelAnalysisList: FC<ChannelAnalysisListProps> = ({
   }
 
   // Filter analyses using the provided filter function
-  const filteredAnalyses = 
-    reportResult?.resource_analyses && Array.isArray(reportResult.resource_analyses)
+  const filteredAnalyses =
+    reportResult?.resource_analyses &&
+    Array.isArray(reportResult.resource_analyses)
       ? reportResult.resource_analyses.filter(filterFn)
       : []
 
@@ -321,7 +322,14 @@ const ChannelAnalysisList: FC<ChannelAnalysisListProps> = ({
                         : 'yellow'
                   }
                 >
-                  {channelAnalysis.status}
+                  {channelAnalysis.status === 'PENDING' ? (
+                    <HStack spacing={1}>
+                      <Text>PENDING</Text>
+                      <Spinner size="xs" />
+                    </HStack>
+                  ) : (
+                    channelAnalysis.status
+                  )}
                 </Badge>
               </Flex>
             </CardHeader>
@@ -407,10 +415,15 @@ const TeamAnalysisResultPage: React.FC = () => {
     string,
     unknown
   > | null>(null)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [pendingAnalyses, setPendingAnalyses] = useState<number>(0)
   const highlightBg = useColorModeValue('purple.50', 'purple.800')
 
   // Check if this is a team analysis by URL pattern
-  const isTeamAnalysis = window.location.pathname.includes('/team-analysis/')
+  // Fix for multi-channel analysis - also check if analysisId is a cross-resource report ID
+  const isTeamAnalysis =
+    window.location.pathname.includes('/team-analysis/') ||
+    (analysisId && !channelId) // If we have an analysisId but no channelId, it's likely a team analysis
 
   // Create share URL for the current analysis based on URL type
   const shareUrl = isTeamAnalysis
@@ -424,6 +437,9 @@ const TeamAnalysisResultPage: React.FC = () => {
       // For team analysis, we only need integrationId and analysisId
       if (integrationId && analysisId) {
         fetchData()
+        // Start checking for pending analyses after initial data load
+        setIsRefreshing(true)
+        checkReportStatus()
       }
     } else {
       // For channel analysis, we need all three IDs
@@ -449,7 +465,7 @@ const TeamAnalysisResultPage: React.FC = () => {
   /**
    * Handle team analysis (cross-resource report)
    */
-  const handleTeamAnalysis = async () => {
+  const handleTeamAnalysis = useCallback(async () => {
     // Try to get integration data through context or direct API call
     let teamId
     let directIntegration = null
@@ -459,8 +475,9 @@ const TeamAnalysisResultPage: React.FC = () => {
       teamId = currentIntegration.owner_team.id
     } else {
       // If context doesn't have it yet, get it directly
-      const integrationResult =
-        await integrationService.getIntegration(integrationId ?? '')
+      const integrationResult = await integrationService.getIntegration(
+        integrationId ?? ''
+      )
 
       if (!integrationService.isApiError(integrationResult)) {
         directIntegration = integrationResult
@@ -507,12 +524,15 @@ const TeamAnalysisResultPage: React.FC = () => {
     // Extract data from the report to match our Analysis interface format
     // This is a temporary solution until we implement proper cross-resource report handling
     if (
-      crossResourceReport.resource_analyses && 
+      crossResourceReport.resource_analyses &&
       Array.isArray(crossResourceReport.resource_analyses) &&
       crossResourceReport.resource_analyses.length > 0
     ) {
       // Use the first resource analysis as a template
-      const firstAnalysis = crossResourceReport.resource_analyses[0] as Record<string, unknown>
+      const firstAnalysis = crossResourceReport.resource_analyses[0] as Record<
+        string,
+        unknown
+      >
 
       // Get the report description for the channel_summary field, with fallbacks
       const reportDescription =
@@ -523,15 +543,19 @@ const TeamAnalysisResultPage: React.FC = () => {
       const adaptedAnalysis: AnalysisResponse = {
         id: String(crossResourceReport.id || ''),
         channel_id: String(firstAnalysis.resource_id || ''),
-        channel_name: String(crossResourceReport.title || 'Cross-resource Report'),
-        start_date: String(crossResourceReport.date_range_start || new Date().toISOString()),
-        end_date: String(crossResourceReport.date_range_end || new Date().toISOString()),
-        message_count: Number(crossResourceReport.total_resources || 0),
-        participant_count: Number(crossResourceReport.completed_analyses || 0),
-        thread_count: Array.isArray(crossResourceReport.resource_analyses) 
-          ? crossResourceReport.resource_analyses.length 
-          : 0,
-        reaction_count: 0,
+        channel_name: String(
+          crossResourceReport.title || 'Cross-resource Report'
+        ),
+        start_date: String(
+          crossResourceReport.date_range_start || new Date().toISOString()
+        ),
+        end_date: String(
+          crossResourceReport.date_range_end || new Date().toISOString()
+        ),
+        message_count: Number(crossResourceReport.total_messages || 0),
+        participant_count: Number(crossResourceReport.total_participants || 0),
+        thread_count: Number(crossResourceReport.total_threads || 0),
+        reaction_count: Number(crossResourceReport.total_reactions || 0),
         // Always set channel_summary, which is important for UI rendering
         channel_summary: String(reportDescription || ''),
         topic_analysis:
@@ -541,8 +565,9 @@ const TeamAnalysisResultPage: React.FC = () => {
         key_highlights:
           'Multiple resource analysis - see individual analyses for details',
         model_used: String(firstAnalysis.model_used || 'N/A'),
-        generated_at:
-          String(crossResourceReport.created_at || new Date().toISOString()),
+        generated_at: String(
+          crossResourceReport.created_at || new Date().toISOString()
+        ),
         workspace_id: directIntegration
           ? directIntegration.id
           : currentIntegration?.id || '', // Use integration ID as workspace ID for display
@@ -564,17 +589,19 @@ const TeamAnalysisResultPage: React.FC = () => {
       const emptyAnalysis: AnalysisResponse = {
         id: String(crossResourceReport.id || analysisId || ''),
         channel_id: '',
-        channel_name: String(crossResourceReport.title || 'Cross-resource Report'),
+        channel_name: String(
+          crossResourceReport.title || 'Cross-resource Report'
+        ),
         start_date: String(
           crossResourceReport.date_range_start || new Date().toISOString()
         ),
         end_date: String(
           crossResourceReport.date_range_end || new Date().toISOString()
         ),
-        message_count: 0,
-        participant_count: 0,
-        thread_count: 0,
-        reaction_count: 0,
+        message_count: Number(crossResourceReport.total_messages || 0),
+        participant_count: Number(crossResourceReport.total_participants || 0),
+        thread_count: Number(crossResourceReport.total_threads || 0),
+        reaction_count: Number(crossResourceReport.total_reactions || 0),
         channel_summary: 'No analyses found for this team report.',
         topic_analysis: '',
         contributor_insights: '',
@@ -590,12 +617,12 @@ const TeamAnalysisResultPage: React.FC = () => {
 
       setAnalysis(emptyAnalysis)
     }
-  }
+  }, [analysisId, currentIntegration, integrationId, toast])
 
   /**
    * Handle channel analysis flow
    */
-  const handleChannelAnalysis = async () => {
+  const handleChannelAnalysis = useCallback(async () => {
     // Fetch channel from resource list
     if (integrationId && channelId) {
       await fetchResources(integrationId)
@@ -607,11 +634,26 @@ const TeamAnalysisResultPage: React.FC = () => {
       }
     }
 
+    // Make sure we have a valid analysis ID before making the API call
+    if (!analysisId || analysisId === 'undefined') {
+      console.error('Invalid or undefined analysis ID:', analysisId)
+      throw new Error('Invalid analysis ID')
+    }
+
+    // For channel analysis, make sure we have a valid channel ID
+    if (!isTeamAnalysis && (!channelId || channelId === 'undefined')) {
+      console.error(
+        'Invalid or undefined channel ID for channel analysis:',
+        channelId
+      )
+      throw new Error('Invalid channel ID for channel analysis')
+    }
+
     // Fetch the specific analysis using the integration service
     const analysisResult = await integrationService.getResourceAnalysis(
       integrationId || '',
       channelId || '',
-      analysisId || ''
+      analysisId
     )
 
     // Check if the result is an API error
@@ -621,12 +663,19 @@ const TeamAnalysisResultPage: React.FC = () => {
 
     // Set the analysis data, casting it to the expected type
     setAnalysis(analysisResult as unknown as AnalysisResponse)
-  }
+  }, [
+    analysisId,
+    channelId,
+    currentResources,
+    fetchResources,
+    integrationId,
+    isTeamAnalysis,
+  ])
 
   /**
    * Fetch analysis data from API
    */
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setIsLoading(true)
 
     try {
@@ -661,7 +710,14 @@ const TeamAnalysisResultPage: React.FC = () => {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [
+    integrationId,
+    isTeamAnalysis,
+    fetchIntegration,
+    handleTeamAnalysis,
+    handleChannelAnalysis,
+    toast,
+  ])
 
   /**
    * Handle share button click
@@ -728,257 +784,6 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
       isClosable: true,
     })
   }
-
-  /**
-   * Format text with message components to handle Slack formatting
-   * Enhanced to handle more JSON formats and provide better error recovery
-   * @deprecated This function is kept for reference but is no longer used directly
-   */
-  // Function completely removed to avoid TypeScript/ESLint warnings 
-  
-  /* Original function for reference:
-  const formatTextLegacy = (text: string, sectionType?: string) => {
-    if (!text) return null
-
-    // SPECIAL CASE: If we're looking for a section OTHER than channel_summary,
-    // first check if the channel_summary might contain all sections as JSON
-    if (
-      sectionType &&
-      sectionType !== 'channel_summary' &&
-      analysis?.channel_summary
-    ) {
-      try {
-        // Check if channel_summary contains JSON
-        const summaryText = analysis.channel_summary
-
-        // First check for JSON in code blocks
-        if (summaryText.includes('```json') && summaryText.includes('```')) {
-          const codeBlockRegex = /```json\s*([\s\S]*?)\s*```/
-          const match = summaryText.match(codeBlockRegex)
-          if (match && match[1]) {
-            try {
-              const parsed = JSON.parse(match[1].trim())
-              if (sectionType in parsed) {
-                return renderPlainText(
-                  parsed[sectionType as keyof typeof parsed] as string
-                )
-              }
-            } catch (e) {
-              console.warn(
-                'Failed to parse channel_summary code block as JSON:',
-                e
-              )
-            }
-          }
-        }
-
-        // Then check if the entire channel_summary is JSON
-        if (
-          summaryText.trim().startsWith('{') &&
-          summaryText.trim().endsWith('}')
-        ) {
-          try {
-            const parsed = JSON.parse(summaryText)
-            if (sectionType in parsed) {
-              return renderPlainText(
-                parsed[sectionType as keyof typeof parsed] as string
-              )
-            }
-          } catch (e) {
-            console.warn('Failed to parse channel_summary as direct JSON:', e)
-          }
-        }
-      } catch (error) {
-        console.error('Error checking channel_summary for sections:', error)
-      }
-    }
-
-    try {
-      // STRATEGY 1: Handle code blocks - exact pattern match from database JSON+code block format
-      if (text.includes('```json') && text.includes('```')) {
-        // Extract content between code block markers using more robust regex
-        const regex = /```json\s*([\s\S]*?)\s*```/g
-        const matches = Array.from(text.matchAll(regex))
-
-        for (const match of matches) {
-          if (match && match[1]) {
-            const jsonContent = match[1].trim()
-            try {
-              const parsed = JSON.parse(jsonContent)
-
-              // If we have a specific section to render, extract it from the parsed JSON
-              if (sectionType && sectionType in parsed) {
-                return renderPlainText(
-                  parsed[sectionType as keyof typeof parsed] as string
-                )
-              }
-
-              // renderStructuredContent call removed
-              return renderPlainText(parsed.channel_summary || '')
-            } catch (e) {
-              console.warn('Failed to parse code block content as JSON:', e)
-              // Continue to next match if available
-            }
-          }
-        }
-        // Fall through to next strategy if all matches failed
-      }
-
-      // STRATEGY 2: Direct JSON parsing - for standard JSON objects
-      if (text.trim().startsWith('{') && text.trim().endsWith('}')) {
-        try {
-          const parsed = JSON.parse(text)
-          // If we have a specific section to render, extract it from the parsed JSON
-          if (sectionType && sectionType in parsed) {
-            return renderPlainText(
-              parsed[sectionType as keyof typeof parsed] as string
-            )
-          }
-
-          // renderStructuredContent call removed
-          return renderPlainText(parsed.channel_summary || '')
-        } catch (e) {
-          console.warn('Failed to parse as direct JSON:', e)
-          // Fall through to next strategy
-        }
-      }
-
-      // STRATEGY 3: For JSON mixed with markdown or text
-      const jsonIndicators = [
-        '"channel_summary":',
-        '"topic_analysis":',
-        '"contributor_insights":',
-        '"key_highlights":',
-      ]
-      if (jsonIndicators.some((indicator) => text.includes(indicator))) {
-        // Try to extract just the JSON part
-        const jsonExtractRegex = /(\{[\s\S]*\})/
-        const jsonMatch = text.match(jsonExtractRegex)
-
-        if (jsonMatch && jsonMatch[1]) {
-          try {
-            const extracted = jsonMatch[1].trim()
-            const parsed = JSON.parse(extracted)
-            // If we have a specific section to render, extract it from the parsed JSON
-            if (sectionType && sectionType in parsed) {
-              return renderPlainText(
-                parsed[sectionType as keyof typeof parsed] as string
-              )
-            }
-
-            // renderStructuredContent call removed
-          return renderPlainText(parsed.channel_summary || '')
-          } catch (e) {
-            console.warn('Failed to parse extracted JSON:', e)
-          }
-        }
-
-        // Try more aggressive reconstruction if extraction failed
-        try {
-          // Extract just the content we need
-          const structuredContent: Record<string, string> = {}
-
-          // Section extractors - using non-greedy pattern to avoid capturing too much
-          const extractSection = (key: string): string | null => {
-            const regex = new RegExp(
-              `"${key}"\\s*:\\s*"([\\s\\S]*?)"(?:,|\\})`,
-              'i'
-            )
-            const match = text.match(regex)
-            return match && match[1] ? match[1] : null
-          }
-
-          // Try to extract each known section
-          const sections = [
-            'channel_summary',
-            'topic_analysis',
-            'contributor_insights',
-            'key_highlights',
-          ]
-          let foundAnySection = false
-
-          for (const section of sections) {
-            const content = extractSection(section)
-            if (content !== null) {
-              structuredContent[section] = content
-              foundAnySection = true
-            }
-          }
-
-          if (foundAnySection) {
-            console.log(
-              'Manual extraction created object with keys:',
-              Object.keys(structuredContent)
-            )
-
-            // If we have a specific section to render, and it was found, return just that section
-            if (sectionType && sectionType in structuredContent) {
-              console.log(
-                `Found ${sectionType} in manually extracted content, rendering only that section`
-              )
-              return renderPlainText(structuredContent[sectionType])
-            }
-
-            // renderStructuredContent call removed
-            return renderPlainText(structuredContent.channel_summary || '')
-          }
-        } catch (e) {
-          console.warn('JSON section extraction failed:', e)
-        }
-      }
-
-      // Special case: if sectionType is specified but we couldn't extract it from JSON,
-      // try to directly render the provided text
-      if (sectionType) {
-        return renderPlainText(text)
-      }
-
-      // FALLBACK: If we couldn't parse as JSON, treat as regular text
-      return renderPlainText(text)
-    } catch (error) {
-      console.error('Error in formatText:', error)
-      return renderPlainText(text)
-    }
-  }
-  */
-
-  /**
-   * Extract content from the channel_summary field when it's in JSON format
-   * @deprecated This function is kept for reference but is no longer used directly
-   */
-  // Function completely removed to avoid TypeScript/ESLint warnings
-  
-  /* Original function for reference:
-  const extractChannelSummaryContentLegacy = (text: string): string => {
-    if (!text || text.trim().length === 0) {
-      return ''
-    }
-
-    // If text starts with { and contains "channel_summary", it's probably a JSON object
-    if (text.trim().startsWith('{') && text.includes('"channel_summary"')) {
-      try {
-        // Try to parse it as JSON first
-        const cleanedText = text.replace(/[^\x20-\x7E]/g, '')
-        const jsonData = JSON.parse(cleanedText)
-
-        // If it has a channel_summary field, return that
-        if (jsonData.channel_summary) {
-          return jsonData.channel_summary
-        }
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      } catch (error) {
-        // Try regex extraction as fallback
-        const match = text.match(/"channel_summary"\s*:\s*"([^"]*)"/)
-        if (match && match[1]) {
-          return match[1].replace(/\\"/g, '"').replace(/\\n/g, '\n')
-        }
-      }
-    }
-
-    // Otherwise return the original text
-    return text
-  }
-  */
 
   /**
    * Render plain text with proper formatting and support for markdown-like syntax
@@ -1145,8 +950,185 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
    * Render structured content from parsed JSON or manually extracted object
    * Function has been removed and all calls replaced with renderPlainText to fix ESLint/TypeScript issues
    */
-  
+
   // Note: renderSection functionality has been integrated into renderPlainText for simplicity
+
+  /**
+   * Checks the status of a cross-resource report and counts pending analyses
+   */
+  const checkReportStatus = useCallback(async () => {
+    if (!analysisId || !isTeamAnalysis) return
+
+    try {
+      // Get the team ID from the current integration or direct API call
+      let teamId = currentIntegration?.owner_team?.id
+
+      if (!teamId) {
+        // Try to get it directly if not available in context
+        const integrationResult = await integrationService.getIntegration(
+          integrationId ?? ''
+        )
+
+        if (!integrationService.isApiError(integrationResult)) {
+          teamId = integrationResult.owner_team.id
+        } else {
+          console.error(
+            'Could not get team ID for status check',
+            integrationResult
+          )
+          return
+        }
+      }
+
+      // Get the latest report status
+      const reportStatus = await integrationService.getCrossResourceReport(
+        teamId,
+        analysisId,
+        true // includeAnalyses=true to check individual resource analyses
+      )
+
+      if (integrationService.isApiError(reportStatus)) {
+        console.error('Error checking report status:', reportStatus)
+        return
+      }
+
+      // Inspect the first analysis for debugging
+      if (
+        reportStatus.resource_analyses &&
+        Array.isArray(reportStatus.resource_analyses) &&
+        reportStatus.resource_analyses.length > 0
+      ) {
+        const firstAnalysis = reportStatus.resource_analyses[0]
+        console.log('FIRST ANALYSIS FIELD KEYS:', Object.keys(firstAnalysis))
+
+        if (firstAnalysis.results) {
+          console.log('RESULTS FIELD KEYS:', Object.keys(firstAnalysis.results))
+        }
+      }
+
+      // Update the report result state
+      setReportResult(reportStatus)
+
+      // Count pending analyses and update statistics
+      let pendingCount = 0
+      let completedCount = 0
+
+      if (
+        reportStatus.resource_analyses &&
+        Array.isArray(reportStatus.resource_analyses)
+      ) {
+        // Count pending analyses
+        pendingCount = reportStatus.resource_analyses.filter(
+          (analysis: Record<string, unknown>) => analysis.status === 'PENDING'
+        ).length
+
+        // Count completed analyses and gather statistics
+        reportStatus.resource_analyses.forEach(
+          (analysis: Record<string, unknown>, index: number) => {
+            // Log detailed information about each analysis
+            if (index === 0) {
+              console.log('ANALYSIS DETAILS:', {
+                id: analysis.id,
+                resourceId: analysis.resource_id,
+                resourceName: analysis.resource_name,
+                status: analysis.status,
+                hasParticipantCount: Boolean(analysis.participant_count),
+                participantCount: analysis.participant_count,
+                hasParticipants: Boolean(analysis.participants),
+                participantsIsArray:
+                  analysis.participants && Array.isArray(analysis.participants),
+                participantsLength:
+                  analysis.participants && Array.isArray(analysis.participants)
+                    ? analysis.participants.length
+                    : 0,
+                keys: Object.keys(analysis),
+              })
+            }
+
+            if (analysis.status === 'COMPLETED') {
+              completedCount++
+            }
+          }
+        )
+
+        // Update analysis statistics if we have completed analyses and current analysis data
+        if (completedCount > 0 && analysis) {
+          const updatedAnalysis = { ...analysis }
+
+          // Get message, participant, thread, and reaction counts from results field in database
+          const completedAnalyses = reportStatus.resource_analyses.filter(
+            (a: Record<string, unknown>) => a.status === 'COMPLETED'
+          )
+
+          // Look for counts in the results field (where they're actually stored in database)
+          completedAnalyses.forEach((a, index) => {
+            // Log the first analysis record structure for debugging
+            if (index === 0) {
+              console.log(
+                'RESOURCE ANALYSIS DEBUG - First analysis structure:',
+                {
+                  hasResults: Boolean(a.results),
+                  resultsKeys:
+                    a.results && typeof a.results === 'object'
+                      ? Object.keys(a.results as Record<string, unknown>)
+                      : [],
+                  hasMetadata:
+                    a.results &&
+                    typeof a.results === 'object' &&
+                    (a.results as Record<string, unknown>).metadata
+                      ? true
+                      : false,
+                  metadataKeys:
+                    a.results &&
+                    typeof a.results === 'object' &&
+                    (a.results as Record<string, unknown>).metadata &&
+                    typeof (a.results as Record<string, unknown>).metadata ===
+                      'object'
+                      ? Object.keys(
+                          (a.results as Record<string, unknown>)
+                            .metadata as Record<string, unknown>
+                        )
+                      : [],
+                  hasMessageCount: Boolean(a.message_count),
+                  hasParticipantCount: Boolean(a.participant_count),
+                  resourceName: a.resource_name,
+                }
+              )
+            }
+          })
+          setAnalysis(updatedAnalysis)
+        }
+      }
+
+      // Update the pending count
+      setPendingAnalyses(pendingCount)
+
+      // If there are still pending analyses, check again after a delay
+      if (pendingCount > 0) {
+        setTimeout(() => {
+          checkReportStatus()
+        }, 5000) // Check every 5 seconds
+      } else {
+        // No more pending analyses, stop refreshing
+        setIsRefreshing(false)
+
+        // If we were explicitly refreshing, reload the data to get final results
+        if (isRefreshing) {
+          fetchData()
+        }
+      }
+    } catch (error) {
+      console.error('Error checking report status:', error)
+    }
+  }, [
+    analysisId,
+    currentIntegration?.owner_team?.id,
+    integrationId,
+    isRefreshing,
+    isTeamAnalysis,
+    fetchData,
+    analysis,
+  ])
 
   // Try to get the workspace ID from different sources
   const workspaceId = analysis?.workspace_id || currentIntegration?.id
@@ -1677,10 +1659,19 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
                   {formatDate(analysis.start_date)} -{' '}
                   {formatDate(analysis.end_date)}
                 </Badge>
+                {pendingAnalyses > 0 && (
+                  <Badge colorScheme="yellow" ml={2}>
+                    <HStack spacing={1}>
+                      <Text>{pendingAnalyses} pending</Text>
+                      <Spinner size="xs" />
+                    </HStack>
+                  </Badge>
+                )}
               </HStack>
               <Text color="gray.600">
                 {currentIntegration?.name || 'Workspace'} • Generated on{' '}
                 {formatDateTime(analysis.generated_at)}
+                {pendingAnalyses > 0 && ' • Analysis in progress'}
               </Text>
             </Flex>
           </GridItem>
@@ -1735,6 +1726,31 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
                     onClick={handleExport}
                   />
                 </Tooltip>
+                {isTeamAnalysis && (
+                  <Tooltip
+                    label={isRefreshing ? 'Refreshing...' : 'Refresh status'}
+                    hasArrow
+                  >
+                    <IconButton
+                      aria-label="Refresh analysis status"
+                      icon={
+                        isRefreshing ? (
+                          <Spinner size="sm" />
+                        ) : (
+                          <Icon as={FiClock} />
+                        )
+                      }
+                      variant="outline"
+                      size="sm"
+                      colorScheme={pendingAnalyses > 0 ? 'yellow' : 'gray'}
+                      onClick={() => {
+                        setIsRefreshing(true)
+                        checkReportStatus()
+                      }}
+                      isDisabled={isRefreshing}
+                    />
+                  </Tooltip>
+                )}
               </HStack>
             </Flex>
           </GridItem>
@@ -1757,19 +1773,25 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
 
               <Stat>
                 <StatLabel>Participants</StatLabel>
-                <StatNumber>{analysis.participant_count}</StatNumber>
+                <StatNumber>
+                  {analysis.participant_count.toLocaleString()}
+                </StatNumber>
                 <StatHelpText>Active contributors</StatHelpText>
               </Stat>
 
               <Stat>
                 <StatLabel>Threads</StatLabel>
-                <StatNumber>{analysis.thread_count}</StatNumber>
+                <StatNumber>
+                  {analysis.thread_count.toLocaleString()}
+                </StatNumber>
                 <StatHelpText>Discussion threads</StatHelpText>
               </Stat>
 
               <Stat>
                 <StatLabel>Reactions</StatLabel>
-                <StatNumber>{analysis.reaction_count}</StatNumber>
+                <StatNumber>
+                  {analysis.reaction_count.toLocaleString()}
+                </StatNumber>
                 <StatHelpText>Emoji reactions</StatHelpText>
               </Stat>
             </SimpleGrid>
@@ -1905,7 +1927,8 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
                   currentResources={currentResources}
                   integrationId={integrationId || ''}
                   filterFn={(analysis) =>
-                    analysis.status === 'COMPLETED' && Boolean(analysis.topic_analysis)
+                    analysis.status === 'COMPLETED' &&
+                    Boolean(analysis.topic_analysis)
                   }
                   contentField="topic_analysis"
                   emptyMessage="No topic analysis available for this channel."
@@ -2043,7 +2066,8 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
                   currentResources={currentResources}
                   integrationId={integrationId || ''}
                   filterFn={(analysis) =>
-                    analysis.status === 'COMPLETED' && Boolean(analysis.key_highlights)
+                    analysis.status === 'COMPLETED' &&
+                    Boolean(analysis.key_highlights)
                   }
                   contentField="key_highlights"
                   emptyMessage="No key highlights available for this channel."
@@ -2068,8 +2092,9 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
               <HStack>
                 <Icon as={FiUsers} size="sm" color="gray.500" />
                 <Text fontSize="sm" color="gray.600">
-                  Analysis includes {analysis.message_count} messages from{' '}
-                  {analysis.participant_count} participants
+                  Analysis includes {analysis.message_count.toLocaleString()}{' '}
+                  messages from {analysis.participant_count.toLocaleString()}{' '}
+                  participants
                 </Text>
               </HStack>
             </VStack>

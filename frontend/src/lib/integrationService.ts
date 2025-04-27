@@ -451,7 +451,9 @@ class IntegrationService {
       const resource = resources.find((res) => res.id === resourceId)
 
       if (!resource) {
-        console.error(`Resource ${resourceId} not found in integration ${integrationId}`)
+        console.error(
+          `Resource ${resourceId} not found in integration ${integrationId}`
+        )
         throw new Error(`Resource ${resourceId} not found`)
       }
       return resource
@@ -469,8 +471,12 @@ class IntegrationService {
   ): Promise<Record<string, unknown> | ApiError> {
     try {
       // Basic logging for sync request
-      console.log(`Syncing resources for integration ${integrationId}`, 
-        resourceTypes && resourceTypes.length > 0 ? resourceTypes : 'all resource types')
+      console.log(
+        `Syncing resources for integration ${integrationId}`,
+        resourceTypes && resourceTypes.length > 0
+          ? resourceTypes
+          : 'all resource types'
+      )
 
       const headers = await this.getAuthHeaders()
       let url = `${this.apiUrl}/${integrationId}/sync`
@@ -494,7 +500,7 @@ class IntegrationService {
       let result: Record<string, unknown>
       try {
         const text = await response.text()
-        
+
         try {
           result = text ? JSON.parse(text) : {}
         } catch (jsonError) {
@@ -575,6 +581,74 @@ class IntegrationService {
       return await response.json()
     } catch (error) {
       return this.handleError(error, 'Failed to share integration')
+    }
+  }
+
+  /**
+   * Sync messages for a specific channel
+   * @param integrationId Integration UUID
+   * @param channelId Channel UUID
+   * @param options Options for syncing including date range and thread inclusion
+   */
+  async syncChannelMessages(
+    integrationId: string,
+    channelId: string,
+    options: {
+      start_date?: string
+      end_date?: string
+      include_replies?: boolean
+    }
+  ): Promise<Record<string, unknown> | ApiError> {
+    try {
+      const headers = await this.getAuthHeaders()
+      const syncChannelEndpoint = `${this.apiUrl}/${integrationId}/resources/${channelId}/sync-messages`
+
+      // Build the request URL with query parameters
+      const url = new URL(syncChannelEndpoint)
+      if (options.start_date) {
+        url.searchParams.append('start_date', options.start_date)
+      }
+      if (options.end_date) {
+        url.searchParams.append('end_date', options.end_date)
+      }
+      if (options.include_replies !== undefined) {
+        url.searchParams.append(
+          'include_replies',
+          options.include_replies.toString()
+        )
+      }
+
+      // Make the channel messages sync request
+      const response = await fetch(url.toString(), {
+        method: 'POST',
+        headers,
+        credentials: 'include',
+      })
+
+      if (!response.ok) {
+        let errorDetail = ''
+        try {
+          const responseText = await response.text()
+          try {
+            const errorData = JSON.parse(responseText)
+            errorDetail = errorData.detail || errorData.message || responseText
+          } catch {
+            errorDetail = responseText || response.statusText
+          }
+        } catch {
+          // Ignore response reading errors
+        }
+
+        return {
+          status: response.status,
+          message: `Channel sync failed: ${errorDetail}`,
+          detail: errorDetail,
+        }
+      }
+
+      return await response.json()
+    } catch (error) {
+      return this.handleError(error, 'Failed to sync channel messages')
     }
   }
 
@@ -711,7 +785,9 @@ class IntegrationService {
         )
       })
 
-      console.log(`Found ${selectedChannels.length} channels selected for analysis out of ${resources.length} total channels`)
+      console.log(
+        `Found ${selectedChannels.length} channels selected for analysis out of ${resources.length} total channels`
+      )
 
       return selectedChannels
     } catch (error) {
@@ -770,6 +846,87 @@ class IntegrationService {
       return await response.json()
     } catch (error) {
       return this.handleError(error, 'Failed to analyze resource')
+    }
+  }
+
+  /**
+   * Create a cross-resource report for multiple channels or a single channel
+   * This function can be used for both single and multi-channel analyses
+   * @param teamId Team UUID
+   * @param channels Array of channel resources to include in the report
+   * @param options Analysis options
+   * @param title Custom title for the report (optional)
+   * @param description Custom description for the report (optional)
+   */
+  async createChannelReport(
+    teamId: string,
+    channels: { id: string; name: string; integration_id: string }[],
+    options: {
+      start_date?: string
+      end_date?: string
+      include_threads?: boolean
+      include_reactions?: boolean
+      analysis_type?: string
+    },
+    title?: string,
+    description?: string
+  ): Promise<Record<string, unknown> | ApiError> {
+    try {
+      // Use the new dedicated API endpoint for channel reports
+      const headers = await this.getAuthHeaders()
+      const url = `${env.apiUrl}/reports/${teamId}/channel-reports`
+
+      // Prepare request body
+      const requestData = {
+        team_id: teamId,
+        channels: channels,
+        start_date: options.start_date,
+        end_date: options.end_date,
+        include_threads: options.include_threads ?? true,
+        include_reactions: options.include_reactions ?? true,
+        analysis_type: options.analysis_type?.toUpperCase() || 'CONTRIBUTION',
+        title: title,
+        description: description,
+      }
+
+      console.log('Creating channel report with data:', requestData)
+
+      // Make the API call
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          ...headers,
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(requestData),
+      })
+
+      if (!response.ok) {
+        let errorDetail = ''
+        try {
+          const errorText = await response.text()
+          try {
+            const errorJson = JSON.parse(errorText)
+            errorDetail = errorJson.detail || errorJson.message || errorText
+          } catch {
+            errorDetail = errorText
+          }
+        } catch {
+          errorDetail = response.statusText
+        }
+
+        return {
+          status: response.status,
+          message: `Failed to create channel report: ${errorDetail}`,
+          detail: errorDetail,
+        }
+      }
+
+      return await response.json()
+    } catch (error) {
+      console.error('Error in createChannelReport:', error)
+      return this.handleError(error, 'Failed to create channel report')
     }
   }
 
