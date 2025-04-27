@@ -24,6 +24,7 @@ sys.path.insert(0, backend_dir)
 
 # Mock the settings to avoid configuration errors
 import os
+
 os.environ["SECRET_KEY"] = "debug_secret_key"
 os.environ["DATABASE_URL"] = "postgresql+asyncpg://toban_admin:postgres@localhost:5432/tobancv"
 os.environ["SUPABASE_URL"] = "https://example.supabase.co"
@@ -33,8 +34,8 @@ os.environ["OPENAI_API_KEY"] = "debug_openai_key"
 os.environ["OPENROUTER_API_KEY"] = "debug_openrouter_key"
 
 from app.models.integration import Integration
-from app.models.reports.cross_resource_report import CrossResourceReport, ResourceAnalysis
 from app.models.reports import AnalysisType
+from app.models.reports.cross_resource_report import CrossResourceReport, ResourceAnalysis
 from app.models.slack import SlackChannel, SlackMessage, SlackUser, SlackWorkspace
 from app.services.analysis.slack_channel import SlackChannelAnalysisService
 from app.services.llm.openrouter import OpenRouterService
