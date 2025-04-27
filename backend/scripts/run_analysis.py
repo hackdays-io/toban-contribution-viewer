@@ -9,14 +9,14 @@ import json
 import logging
 import os
 import sys
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from typing import List, Optional
 from uuid import UUID, uuid4
 
 import uvloop
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import selectinload, sessionmaker
+from sqlalchemy.orm import sessionmaker
 
 # Add the backend directory to the Python path
 backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -34,7 +34,7 @@ os.environ["OPENROUTER_API_KEY"] = "debug_openrouter_key"
 from app.models.integration import Integration
 from app.models.reports import AnalysisType
 from app.models.reports.cross_resource_report import CrossResourceReport, ResourceAnalysis
-from app.models.slack import SlackChannel, SlackMessage, SlackUser, SlackWorkspace
+from app.models.slack import SlackChannel, SlackWorkspace
 from app.services.analysis.slack_channel import SlackChannelAnalysisService
 from app.services.llm.openrouter import OpenRouterService
 
@@ -157,7 +157,6 @@ async def run_debug_analysis(
         logger.debug(f"Sample messages: {json.dumps(sample_messages, indent=2)}")
         
         # Count messages with system text
-        system_count = 0
         join_count = 0
         empty_count = 0
         for msg in messages:
@@ -246,7 +245,7 @@ async def run_debug_analysis(
         # Debug check: Let's look at a few message samples
         logger.info("Sample messages:")
         for i, msg in enumerate(data["messages"][:5]):
-            logger.info(f"  {i+1}. {msg['timestamp']} | User: {msg['user_id']} | Text: '{msg['text'][:100]}...'")
+            logger.info(f"  {i + 1}. {msg['timestamp']} | User: {msg['user_id']} | Text: '{msg['text'][:100]}...'")
             logger.info(f"     Thread info: parent={msg['is_thread_parent']}, reply={msg['is_thread_reply']}, replies={msg['reply_count']}")
         
         # Prepare data for analysis
@@ -410,7 +409,7 @@ async def main():
             
             if report_id:
                 logger.info(f"Created cross-resource report with ID: {report_id}")
-                logger.info(f"Use this ID to monitor the report status and results")
+                logger.info("Use this ID to monitor the report status and results")
         
         else:
             logger.error(f"Unknown command: {command}")
