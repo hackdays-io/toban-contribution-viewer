@@ -17,8 +17,8 @@ import asyncio
 import logging
 import os
 import sys
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Set, Tuple
+from datetime import datetime
+from typing import Dict, List, Optional
 from uuid import UUID
 
 # Add the backend directory to the Python path
@@ -26,7 +26,6 @@ backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, backend_dir)
 
 import sqlalchemy as sa
-from sqlalchemy import func
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
