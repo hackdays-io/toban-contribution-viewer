@@ -92,7 +92,7 @@ const Analytics: React.FC = () => {
             )
             
             if (!integrationService.isApiError(response) && response.items) {
-              const teamReports = response.items.map((report: any) => ({
+              const teamReports = response.items.map((report: Record<string, unknown>) => ({
                 id: report.id,
                 title: report.title || 'Untitled Report',
                 date: report.created_at,
@@ -243,7 +243,7 @@ const Analytics: React.FC = () => {
   const formatDate = (dateString: string) => {
     try {
       return format(new Date(dateString), 'MMM d, yyyy')
-    } catch (e) {
+    } catch {
       return dateString
     }
   }

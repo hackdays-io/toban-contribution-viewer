@@ -26,7 +26,7 @@ import integrationService from '../../lib/integrationService';
 import Breadcrumb from '../../components/layout/Breadcrumb';
 
 // Status styles
-const getStatusStyles = (status: string) => {
+const getStatusStyles = (status: string): { color: 'success' | 'warning' | 'info' | 'error' | 'default', label: string } => {
   switch (status.toLowerCase()) {
     case 'completed':
       return { color: 'success', label: 'Completed' };
@@ -96,6 +96,7 @@ const CrossResourceReportsPage: React.FC = () => {
 
   useEffect(() => {
     fetchReports();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [teamId, page, rowsPerPage]);
 
   const handleChangePage = (event: unknown, newPage: number) => {
@@ -115,7 +116,7 @@ const CrossResourceReportsPage: React.FC = () => {
   const formatDate = (dateString: string) => {
     try {
       return format(new Date(dateString), 'MMM d, yyyy h:mm a');
-    } catch (e) {
+    } catch {
       return dateString;
     }
   };
@@ -220,7 +221,7 @@ const CrossResourceReportsPage: React.FC = () => {
                       <TableCell>
                         <Chip 
                           label={statusInfo.label} 
-                          color={statusInfo.color as any} 
+                          color={statusInfo.color} 
                           size="small" 
                           variant="filled" 
                         />
