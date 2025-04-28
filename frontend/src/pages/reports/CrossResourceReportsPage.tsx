@@ -1,265 +1,299 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import React, { useEffect, useState } from 'react'
+import { useParams, Link } from 'react-router-dom'
 import {
   Box,
   Button,
   Card,
-  CardContent,
-  Typography,
-  CircularProgress,
-  Paper,
+  CardBody,
+  Text,
+  Spinner,
   Table,
-  TableBody,
-  TableCell,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
   TableContainer,
-  TableHead,
-  TableRow,
-  TablePagination,
-  Chip,
-  Tooltip,
+  Flex,
+  VStack,
+  HStack,
+  Badge,
   IconButton,
-} from '@mui/material';
-import { Refresh as RefreshIcon, Visibility as ViewIcon } from '@mui/icons-material';
-import { format } from 'date-fns';
-import PageTitle from '../../components/layout/PageTitle';
-import integrationService from '../../lib/integrationService';
-import Breadcrumb from '../../components/layout/Breadcrumb';
+  Tooltip,
+  Select,
+  useColorModeValue,
+} from '@chakra-ui/react'
+import {
+  FiRefreshCw,
+  FiEye,
+} from 'react-icons/fi'
+import { format } from 'date-fns'
+import PageTitle from '../../components/layout/PageTitle'
+import integrationService from '../../lib/integrationService'
 
 // Status styles
-const getStatusStyles = (status: string): { color: 'success' | 'warning' | 'info' | 'error' | 'default', label: string } => {
+const getStatusStyles = (
+  status: string
+): {
+  colorScheme: 'green' | 'yellow' | 'blue' | 'red' | 'gray'
+  label: string
+} => {
   switch (status.toLowerCase()) {
     case 'completed':
-      return { color: 'success', label: 'Completed' };
+      return { colorScheme: 'green', label: 'Completed' }
     case 'pending':
-      return { color: 'warning', label: 'Pending' };
+      return { colorScheme: 'yellow', label: 'Pending' }
     case 'in_progress':
-      return { color: 'info', label: 'In Progress' };
+      return { colorScheme: 'blue', label: 'In Progress' }
     case 'failed':
-      return { color: 'error', label: 'Failed' };
+      return { colorScheme: 'red', label: 'Failed' }
     default:
-      return { color: 'default', label: status };
+      return { colorScheme: 'gray', label: status }
   }
-};
+}
 
 interface CrossResourceReport {
-  id: string;
-  title: string;
-  created_at: string;
-  status: string;
-  resource_count: number;
-  description?: string;
+  id: string
+  title: string
+  created_at: string
+  status: string
+  resource_count: number
+  description?: string
   created_by: {
-    id: string;
-    name?: string;
-    email?: string;
-  };
+    id: string
+    name?: string
+    email?: string
+  }
 }
 
 const CrossResourceReportsPage: React.FC = () => {
-  const { teamId } = useParams<{ teamId: string }>();
-  const [reports, setReports] = useState<CrossResourceReport[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const [page, setPage] = useState<number>(0);
-  const [totalCount, setTotalCount] = useState<number>(0);
-  const [rowsPerPage, setRowsPerPage] = useState<number>(10);
-  const [refreshing, setRefreshing] = useState<boolean>(false);
+  const { teamId } = useParams<{ teamId: string }>()
+  const [reports, setReports] = useState<CrossResourceReport[]>([])
+  const [loading, setLoading] = useState<boolean>(true)
+  const [error, setError] = useState<string | null>(null)
+  const [page, setPage] = useState<number>(0)
+  const [totalCount, setTotalCount] = useState<number>(0)
+  const [rowsPerPage, setRowsPerPage] = useState<number>(10)
+  const [refreshing, setRefreshing] = useState<boolean>(false)
+  
+  const errorBgColor = useColorModeValue('red.50', 'red.900')
+  const errorTextColor = useColorModeValue('red.600', 'red.200')
 
   const fetchReports = async () => {
-    if (!teamId) return;
-    
-    setLoading(true);
-    setError(null);
-    
+    if (!teamId) return
+
+    setLoading(true)
+    setError(null)
+
     try {
       const response = await integrationService.getCrossResourceReports(
         teamId,
         page + 1, // API uses 1-based indexing
         rowsPerPage
-      );
-      
+      )
+
       if (integrationService.isApiError(response)) {
-        setError(`Error loading reports: ${response.message}`);
-        setReports([]);
+        setError(`Error loading reports: ${response.message}`)
+        setReports([])
       } else {
-        setReports(response.items || []);
-        setTotalCount(response.total || 0);
+        setReports(response.items || [])
+        setTotalCount(response.total || 0)
       }
     } catch (err) {
-      setError('Failed to load cross-resource reports');
-      console.error('Error fetching reports:', err);
+      setError('Failed to load cross-resource reports')
+      console.error('Error fetching reports:', err)
     } finally {
-      setLoading(false);
-      setRefreshing(false);
+      setLoading(false)
+      setRefreshing(false)
     }
-  };
+  }
 
   useEffect(() => {
-    fetchReports();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [teamId, page, rowsPerPage]);
+    fetchReports()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [teamId, page, rowsPerPage])
 
-  const handleChangePage = (event: unknown, newPage: number) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
+  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setRowsPerPage(parseInt(event.target.value, 10))
+    setPage(0)
+  }
 
   const handleRefresh = () => {
-    setRefreshing(true);
-    fetchReports();
-  };
+    setRefreshing(true)
+    fetchReports()
+  }
+  
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage)
+  }
 
   const formatDate = (dateString: string) => {
     try {
-      return format(new Date(dateString), 'MMM d, yyyy h:mm a');
+      return format(new Date(dateString), 'MMM d, yyyy h:mm a')
     } catch {
-      return dateString;
+      return dateString
     }
-  };
+  }
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Breadcrumb
-        items={[
-          { label: 'Dashboard', to: '/dashboard' },
-          { label: 'Teams', to: '/dashboard/teams' },
-          { label: 'Cross-Resource Reports', to: '#' },
-        ]}
-      />
-      
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+    <Box p={5}>
+      <Flex justifyContent="space-between" alignItems="center" mb={6}>
         <PageTitle title="Cross-Resource Analysis Reports" />
         
-        <Box sx={{ display: 'flex', gap: 2 }}>
+        <HStack spacing={3}>
           <Button
-            variant="outlined"
-            color="primary"
-            startIcon={<RefreshIcon />}
+            variant="outline"
+            colorScheme="blue"
+            leftIcon={<FiRefreshCw />}
             onClick={handleRefresh}
-            disabled={refreshing}
+            isLoading={refreshing}
+            loadingText="Refreshing..."
           >
-            {refreshing ? 'Refreshing...' : 'Refresh'}
+            Refresh
           </Button>
           
           <Button
-            variant="contained"
-            color="primary"
-            component={Link}
+            colorScheme="blue"
+            as={Link}
             to={`/dashboard/integrations/create-analysis/${teamId}`}
           >
             Create New Analysis
           </Button>
-        </Box>
-      </Box>
+        </HStack>
+      </Flex>
 
       {loading && !refreshing ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
-          <CircularProgress />
-        </Box>
+        <Flex justify="center" align="center" my={10}>
+          <Spinner size="xl" thickness="4px" color="blue.500" />
+        </Flex>
       ) : error ? (
-        <Card variant="outlined" sx={{ mb: 3, bgcolor: 'error.light', color: 'error.contrastText' }}>
-          <CardContent>
-            <Typography variant="h6">Error</Typography>
-            <Typography>{error}</Typography>
-          </CardContent>
+        <Card mb={5} bg={errorBgColor} color={errorTextColor}>
+          <CardBody>
+            <Text fontWeight="bold">Error</Text>
+            <Text>{error}</Text>
+          </CardBody>
         </Card>
       ) : reports.length === 0 ? (
-        <Card variant="outlined" sx={{ mb: 3 }}>
-          <CardContent>
-            <Typography variant="h6" align="center" sx={{ my: 3 }}>
+        <Card variant="outline" mb={5}>
+          <CardBody textAlign="center" py={10}>
+            <Text fontSize="lg" fontWeight="semibold" mb={3}>
               No cross-resource reports found
-            </Typography>
-            <Typography align="center" color="textSecondary">
+            </Text>
+            <Text color="gray.500" mb={5}>
               Create a new analysis to generate insights across multiple resources.
-            </Typography>
-            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
-              <Button
-                variant="contained"
-                color="primary"
-                component={Link}
-                to={`/dashboard/integrations/create-analysis/${teamId}`}
-              >
-                Create Analysis
-              </Button>
-            </Box>
-          </CardContent>
+            </Text>
+            <Button
+              colorScheme="blue"
+              as={Link}
+              to={`/dashboard/integrations/create-analysis/${teamId}`}
+            >
+              Create Analysis
+            </Button>
+          </CardBody>
         </Card>
       ) : (
         <>
-          <TableContainer component={Paper}>
-            <Table sx={{ minWidth: 650 }}>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Title</TableCell>
-                  <TableCell>Created</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell>Resources</TableCell>
-                  <TableCell>Created By</TableCell>
-                  <TableCell align="right">Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
+          <TableContainer borderWidth="1px" borderRadius="md" mb={5}>
+            <Table variant="simple">
+              <Thead>
+                <Tr>
+                  <Th>Title</Th>
+                  <Th>Created</Th>
+                  <Th>Status</Th>
+                  <Th>Resources</Th>
+                  <Th>Created By</Th>
+                  <Th isNumeric>Actions</Th>
+                </Tr>
+              </Thead>
+              <Tbody>
                 {reports.map((report) => {
-                  const statusInfo = getStatusStyles(report.status);
+                  const statusInfo = getStatusStyles(report.status)
                   return (
-                    <TableRow key={report.id} hover>
-                      <TableCell component="th" scope="row">
-                        <Typography variant="body1" fontWeight="medium">
-                          {report.title}
-                        </Typography>
-                        {report.description && (
-                          <Typography variant="body2" color="textSecondary" noWrap sx={{ maxWidth: 300 }}>
-                            {report.description}
-                          </Typography>
-                        )}
-                      </TableCell>
-                      <TableCell>{formatDate(report.created_at)}</TableCell>
-                      <TableCell>
-                        <Chip 
-                          label={statusInfo.label} 
-                          color={statusInfo.color} 
-                          size="small" 
-                          variant="filled" 
-                        />
-                      </TableCell>
-                      <TableCell>{report.resource_count}</TableCell>
-                      <TableCell>
-                        {report.created_by?.name || report.created_by?.email || 'Unknown user'}
-                      </TableCell>
-                      <TableCell align="right">
-                        <Tooltip title="View Report">
-                          <IconButton 
-                            component={Link} 
+                    <Tr key={report.id}>
+                      <Td>
+                        <VStack align="start" spacing={0}>
+                          <Text fontWeight="medium">{report.title}</Text>
+                          {report.description && (
+                            <Text fontSize="sm" color="gray.500" noOfLines={1}>
+                              {report.description}
+                            </Text>
+                          )}
+                        </VStack>
+                      </Td>
+                      <Td>{formatDate(report.created_at)}</Td>
+                      <Td>
+                        <Badge colorScheme={statusInfo.colorScheme} variant="subtle" px={2} py={1} borderRadius="full">
+                          {statusInfo.label}
+                        </Badge>
+                      </Td>
+                      <Td>{report.resource_count}</Td>
+                      <Td>
+                        {report.created_by?.name ||
+                          report.created_by?.email ||
+                          'Unknown user'}
+                      </Td>
+                      <Td isNumeric>
+                        <Tooltip label="View Report">
+                          <IconButton
+                            as={Link}
                             to={`/dashboard/integrations/team-analysis/${report.id}`}
-                            color="primary"
-                          >
-                            <ViewIcon />
-                          </IconButton>
+                            icon={<FiEye />}
+                            aria-label="View Report"
+                            colorScheme="blue"
+                            variant="ghost"
+                            size="sm"
+                          />
                         </Tooltip>
-                      </TableCell>
-                    </TableRow>
-                  );
+                      </Td>
+                    </Tr>
+                  )
                 })}
-              </TableBody>
+              </Tbody>
             </Table>
           </TableContainer>
-          <TablePagination
-            rowsPerPageOptions={[5, 10, 25]}
-            component="div"
-            count={totalCount}
-            rowsPerPage={rowsPerPage}
-            page={page}
-            onPageChange={handleChangePage}
-            onRowsPerPageChange={handleChangeRowsPerPage}
-          />
+          
+          <Flex justify="space-between" align="center">
+            <HStack>
+              <Text fontSize="sm">Rows per page:</Text>
+              <Select 
+                size="sm" 
+                width="70px"
+                value={rowsPerPage}
+                onChange={handleChangeRowsPerPage}
+              >
+                <option value="5">5</option>
+                <option value="10">10</option>
+                <option value="25">25</option>
+              </Select>
+            </HStack>
+            
+            <HStack>
+              <Text fontSize="sm">
+                {page * rowsPerPage + 1}-
+                {Math.min((page + 1) * rowsPerPage, totalCount)} of {totalCount}
+              </Text>
+              <Button
+                size="sm"
+                onClick={() => handlePageChange(page - 1)}
+                isDisabled={page === 0}
+                variant="ghost"
+              >
+                Previous
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => handlePageChange(page + 1)}
+                isDisabled={(page + 1) * rowsPerPage >= totalCount}
+                variant="ghost"
+              >
+                Next
+              </Button>
+            </HStack>
+          </Flex>
         </>
       )}
     </Box>
-  );
-};
+  )
+}
 
-export default CrossResourceReportsPage;
+export default CrossResourceReportsPage
