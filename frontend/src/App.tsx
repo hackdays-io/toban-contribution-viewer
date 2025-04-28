@@ -31,6 +31,9 @@ import {
 // Team Pages
 import { TeamsPage, TeamDetailPage, TeamMembersPage } from './pages/team'
 
+// Report Pages
+import { CrossResourceReportsPage } from './pages/reports'
+
 // Integration Pages
 import {
   IntegrationsPage,
@@ -155,6 +158,18 @@ function App() {
                   <ProtectedRoute>
                     <AppLayout>
                       <Analytics />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Cross-Resource Reports History Page */}
+              <Route
+                path="/dashboard/teams/:teamId/reports"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <CrossResourceReportsPage />
                     </AppLayout>
                   </ProtectedRoute>
                 }

@@ -1143,6 +1143,59 @@ class IntegrationService {
       return this.handleError(error, 'Failed to get cross-resource report')
     }
   }
+
+  /**
+   * Get cross-resource reports history for a team
+   * @param teamId Team UUID
+   * @param page Page number (optional, defaults to 1)
+   * @param limit Number of reports per page (optional, defaults to 10)
+   * @param status Filter by report status (optional)
+   */
+  async getCrossResourceReports(
+    teamId: string,
+    page: number = 1,
+    limit: number = 10,
+    status?: string
+  ): Promise<Record<string, unknown> | ApiError> {
+    try {
+      const headers = await this.getAuthHeaders()
+      let url = `${REPORTS_API_BASE}/${teamId}/cross-resource-reports?page=${page}&limit=${limit}`
+      
+      if (status) {
+        url += `&status=${status}`
+      }
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          ...headers,
+          Accept: 'application/json',
+        },
+        credentials: 'include',
+      })
+
+      if (!response.ok) {
+        let errorDetail = ''
+        try {
+          const errorText = await response.text()
+          const errorJson = JSON.parse(errorText)
+          errorDetail = errorJson.detail || errorText
+        } catch {
+          errorDetail = response.statusText
+        }
+
+        return {
+          status: response.status,
+          message: `Failed to retrieve reports: ${response.status} ${response.statusText}`,
+          detail: errorDetail,
+        }
+      }
+
+      return await response.json()
+    } catch (error) {
+      return this.handleError(error, 'Failed to get cross-resource reports')
+    }
+  }
 }
 
 // Export singleton instance
