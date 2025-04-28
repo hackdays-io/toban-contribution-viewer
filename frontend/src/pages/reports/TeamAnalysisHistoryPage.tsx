@@ -38,42 +38,13 @@ import {
 import PageTitle from '../../components/layout/PageTitle'
 import integrationService from '../../lib/integrationService'
 import useAuth from '../../context/useAuth'
-
-// Status styles
-const getStatusInfo = (
-  status: string
-): {
-  colorScheme: 'green' | 'yellow' | 'blue' | 'red' | 'gray'
-  label: string
-} => {
-  switch (status.toLowerCase()) {
-    case 'completed':
-      return { colorScheme: 'green', label: 'Completed' }
-    case 'pending':
-      return { colorScheme: 'yellow', label: 'Pending' }
-    case 'in_progress':
-      return { colorScheme: 'blue', label: 'In Progress' }
-    case 'failed':
-      return { colorScheme: 'red', label: 'Failed' }
-    default:
-      return { colorScheme: 'gray', label: status }
-  }
-}
-
-interface AnalysisReport {
-  id: string
-  title: string
-  description?: string
-  status: string
-  resource_count: number
-  created_at: string
-  updated_at: string
-  created_by?: {
-    id?: string
-    name?: string
-    email?: string
-  }
-}
+import { 
+  AnalysisReport, 
+  normalizeReportData, 
+  getTotalCount, 
+  getStatusInfo,
+  formatDate
+} from '../../utils/reportUtils'
 
 const TeamAnalysisHistoryPage: React.FC = () => {
   const { teamId } = useParams<{ teamId: string }>()
@@ -115,82 +86,9 @@ const TeamAnalysisHistoryPage: React.FC = () => {
         setError(`Error loading reports: ${response.message}`)
         setReports([])
       } else {
-        // Handle different possible response structures
-        let reportItems = [];
-        let totalItems = 0;
-        
-        if (Array.isArray(response)) {
-          // Direct array response
-          reportItems = response;
-          totalItems = response.length;
-        } else if (response.items && Array.isArray(response.items)) {
-          // Object with items array
-          reportItems = response.items;
-          totalItems = response.total || response.items.length;
-        } else if (typeof response === 'object') {
-          // Unknown structure - try to extract data intelligently
-          
-          // Try different common property names for items
-          const possibleArrayProps = ['data', 'reports', 'results', 'content', 'records'];
-          for (const prop of possibleArrayProps) {
-            if (response[prop] && Array.isArray(response[prop])) {
-              reportItems = response[prop];
-              totalItems = response.total || response.count || reportItems.length;
-              break;
-            }
-          }
-          
-          // If we still don't have items, look for any array property
-          if (reportItems.length === 0) {
-            for (const key in response) {
-              if (Array.isArray(response[key]) && response[key].length > 0) {
-                reportItems = response[key];
-                totalItems = response.total || response.count || reportItems.length;
-                break;
-              }
-            }
-          }
-        }
-        
-        // Normalize the data format to match our expected structure
-        const normalizedReports = reportItems.map(item => {
-          // Check for resource count fields without logging
-          const resourceFields = {};
-          ['resource_count', 'resourceCount', 'resources', 'total_resources', 'totalResources', 'channel_count'].forEach(field => {
-            if (item[field] !== undefined) {
-              resourceFields[field] = item[field];
-            }
-          });
-          
-          return {
-            id: item.id,
-            title: item.title || item.name || 'Untitled Analysis',
-            description: item.description,
-            status: item.status || 'unknown',
-            // Look for resource count in more possible fields
-            resource_count: item.resource_count || item.resourceCount || item.total_resources || 
-                           item.totalResources || item.channel_count || 
-                           (Array.isArray(item.resources) ? item.resources.length : 0) || 0,
-            created_at: item.created_at || item.createdAt || item.timestamp || new Date().toISOString(),
-            updated_at: item.updated_at || item.updatedAt || item.created_at || new Date().toISOString(),
-            created_by: item.created_by_user ? {
-              // Handle flat structure where creator info is directly in the item
-              id: item.created_by_user || item.created_by || item.user_id || '',
-              name: item.creator_name || item.user_name || '',
-              email: item.creator_email || item.user_email || ''
-            } : (item.created_by || item.createdBy) ? {
-              // Handle nested structure with created_by or createdBy object
-              id: item.created_by?.id || item.createdBy?.id || '',
-              name: item.created_by?.name || item.createdBy?.name || '',
-              email: item.created_by?.email || item.createdBy?.email || ''
-            } : {
-              // Fallback with empty values instead of 'unknown'
-              id: '',
-              name: '',
-              email: ''
-            }
-          };
-        });
+        // Use the utility functions to normalize the data
+        const normalizedReports = normalizeReportData(response);
+        const totalItems = getTotalCount(response, normalizedReports);
         
         setReports(normalizedReports);
         setTotalCount(totalItems);
@@ -232,22 +130,7 @@ const TeamAnalysisHistoryPage: React.FC = () => {
     setPage(0) // Reset to first page when filter changes
   }
 
-  const formatDate = (dateString: string) => {
-    try {
-      const date = new Date(dateString)
-      // Format as "MMM d, yyyy h:mm AM/PM"
-      return date.toLocaleString('en-US', {
-        month: 'short',
-        day: 'numeric', 
-        year: 'numeric',
-        hour: 'numeric',
-        minute: 'numeric',
-        hour12: true
-      })
-    } catch {
-      return dateString
-    }
-  }
+  // Using formatDate from reportUtils
 
   return (
     <Box p={5}>
