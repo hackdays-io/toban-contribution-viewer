@@ -389,7 +389,7 @@ class IntegrationService {
     try {
       const headers = await this.getAuthHeaders()
       // Always exclude credentials for security
-      let url = `${this.apiUrl}/${integrationId}?include_credentials=false`
+      const url = `${this.apiUrl}/${integrationId}?include_credentials=false`
       
       const response = await fetch(url, {
         method: 'GET',
@@ -1244,7 +1244,8 @@ class IntegrationService {
         }
       }
 
-      return await response.json()
+      const result = await response.json()
+      return this.stripSensitiveCredentials(result)
     } catch (error) {
       return this.handleError(error, 'Failed to get cross-resource report')
     }
@@ -1297,7 +1298,8 @@ class IntegrationService {
         }
       }
 
-      return await response.json()
+      const result = await response.json()
+      return this.stripSensitiveCredentials(result)
     } catch (error) {
       return this.handleError(error, 'Failed to get cross-resource reports')
     }
