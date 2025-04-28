@@ -73,46 +73,50 @@ const Analytics: React.FC = () => {
           },
         })
         const teams = await teamsResponse.json()
-        
+
         if (teams.length === 0) {
           setRecentAnalyses([])
           setLoadingAnalyses(false)
           return
         }
-        
+
         // For each team, fetch recent reports
         const allReports: RecentAnalysis[] = []
-        
+
         for (const team of teams) {
           try {
             const response = await integrationService.getCrossResourceReports(
               team.id,
               1, // First page
-              5  // Limit to 5 most recent
+              5 // Limit to 5 most recent
             )
-            
+
             if (!integrationService.isApiError(response) && response.items) {
-              const teamReports = response.items.map((report: Record<string, unknown>) => ({
-                id: report.id,
-                title: report.title || 'Untitled Report',
-                date: report.created_at,
-                team_name: team.name,
-                team_id: team.id,
-                status: report.status,
-                resource_count: report.resource_count || 0
-              }))
+              const teamReports = response.items.map(
+                (report: Record<string, unknown>) => ({
+                  id: report.id,
+                  title: report.title || 'Untitled Report',
+                  date: report.created_at,
+                  team_name: team.name,
+                  team_id: team.id,
+                  status: report.status,
+                  resource_count: report.resource_count || 0,
+                })
+              )
               allReports.push(...teamReports)
             }
           } catch (error) {
             console.error(`Error fetching reports for team ${team.id}:`, error)
           }
         }
-        
+
         // Sort by date (newest first) and limit to 5
         const sortedReports = allReports
-          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+          .sort(
+            (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+          )
           .slice(0, 5)
-        
+
         setRecentAnalyses(sortedReports)
       } catch (error) {
         console.error('Error fetching recent analyses:', error)
@@ -474,7 +478,11 @@ const Analytics: React.FC = () => {
                   ))}
                   <Button
                     as={Link}
-                    to={recentAnalyses.length > 0 ? `/dashboard/teams/${recentAnalyses[0].team_id}/reports` : "#"}
+                    to={
+                      recentAnalyses.length > 0
+                        ? `/dashboard/teams/${recentAnalyses[0].team_id}/reports`
+                        : '#'
+                    }
                     variant="outline"
                     colorScheme="purple"
                     size="sm"

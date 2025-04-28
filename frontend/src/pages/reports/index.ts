@@ -1,5 +1,3 @@
-import CrossResourceReportsPage from './CrossResourceReportsPage';
+import CrossResourceReportsPage from './CrossResourceReportsPage'
 
-export {
-  CrossResourceReportsPage
-};
+export { CrossResourceReportsPage }

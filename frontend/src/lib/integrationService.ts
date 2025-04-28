@@ -1160,7 +1160,7 @@ class IntegrationService {
     try {
       const headers = await this.getAuthHeaders()
       let url = `${REPORTS_API_BASE}/${teamId}/cross-resource-reports?page=${page}&limit=${limit}`
-      
+
       if (status) {
         url += `&status=${status}`
       }

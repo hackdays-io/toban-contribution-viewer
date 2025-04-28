@@ -204,13 +204,15 @@ const Sidebar = ({ onClose, ...rest }: SidebarProps) => {
               Analysis Hub
             </NavItem>
           </ListItem>
-          
+
           {currentTeam && (
             <ListItem>
               <NavItem
                 to={`/dashboard/teams/${currentTeam.id}/reports`}
                 icon={FiFileText}
-                isActive={isActivePath(`/dashboard/teams/${currentTeam.id}/reports`)}
+                isActive={isActivePath(
+                  `/dashboard/teams/${currentTeam.id}/reports`
+                )}
               >
                 Analysis Reports
               </NavItem>
