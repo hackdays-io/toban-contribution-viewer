@@ -167,21 +167,40 @@ const TeamAnalysisHistoryPage: React.FC = () => {
           }
         }
 
+        // Log the first item to see its structure
+        if (reportItems.length > 0) {
+          console.log('First raw item structure:', reportItems[0]);
+        }
+        
         // Normalize the data format to match our expected structure
-        const normalizedReports = reportItems.map(item => ({
-          id: item.id,
-          title: item.title || item.name || 'Untitled Analysis',
-          description: item.description,
-          status: item.status || 'unknown',
-          resource_count: item.resource_count || item.resourceCount || item.resources?.length || 0,
-          created_at: item.created_at || item.createdAt || item.timestamp || new Date().toISOString(),
-          updated_at: item.updated_at || item.updatedAt || item.created_at || new Date().toISOString(),
-          created_by: {
-            id: item.created_by?.id || item.createdBy?.id || 'unknown',
-            name: item.created_by?.name || item.createdBy?.name,
-            email: item.created_by?.email || item.createdBy?.email
-          }
-        }));
+        const normalizedReports = reportItems.map(item => {
+          // Log any fields that might contain resource counts
+          const resourceFields = {};
+          ['resource_count', 'resourceCount', 'resources', 'total_resources', 'totalResources', 'channel_count'].forEach(field => {
+            if (item[field] !== undefined) {
+              resourceFields[field] = item[field];
+            }
+          });
+          console.log('Resource fields found:', resourceFields);
+          
+          return {
+            id: item.id,
+            title: item.title || item.name || 'Untitled Analysis',
+            description: item.description,
+            status: item.status || 'unknown',
+            // Look for resource count in more possible fields
+            resource_count: item.resource_count || item.resourceCount || item.total_resources || 
+                           item.totalResources || item.channel_count || 
+                           (Array.isArray(item.resources) ? item.resources.length : 0) || 0,
+            created_at: item.created_at || item.createdAt || item.timestamp || new Date().toISOString(),
+            updated_at: item.updated_at || item.updatedAt || item.created_at || new Date().toISOString(),
+            created_by: {
+              id: item.created_by?.id || item.createdBy?.id || 'unknown',
+              name: item.created_by?.name || item.createdBy?.name,
+              email: item.created_by?.email || item.createdBy?.email
+            }
+          };
+        });
         
         console.log('Normalized reports:', normalizedReports);
         setReports(normalizedReports);
@@ -390,7 +409,15 @@ const TeamAnalysisHistoryPage: React.FC = () => {
                           <Td fontWeight="medium">
                             {report.title || 'Untitled Analysis'}
                           </Td>
-                          <Td>{report.resource_count}</Td>
+                          <Td>
+                            {report.resource_count > 0 ? (
+                              <Badge colorScheme="blue" variant="subtle" borderRadius="full" px={2}>
+                                {report.resource_count}
+                              </Badge>
+                            ) : (
+                              <Text color="gray.400">-</Text>
+                            )}
+                          </Td>
                           <Td>{formatDate(report.created_at)}</Td>
                           <Td>
                             <Badge
