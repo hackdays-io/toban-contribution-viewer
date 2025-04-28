@@ -52,7 +52,8 @@ const TeamAnalysisHistoryPage: React.FC = () => {
   const toast = useToast() // Used for error notifications
   const { teamContext } = useAuth()
   
-  const [reports, setReports] = useState<AnalysisReport[]>([])
+  const [allReports, setAllReports] = useState<AnalysisReport[]>([])
+  const [displayedReports, setDisplayedReports] = useState<AnalysisReport[]>([])
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
   const [page, setPage] = useState<number>(0)
@@ -75,22 +76,32 @@ const TeamAnalysisHistoryPage: React.FC = () => {
     setError(null)
 
     try {
+      // Use server-side pagination with appropriate page and page_size parameters
       const response = await integrationService.getCrossResourceReports(
         teamId,
-        page + 1, // API uses 1-based indexing
-        rowsPerPage,
+        page + 1, // Convert 0-based page to 1-based for API
+        rowsPerPage, 
         statusFilter || undefined
       )
       
       if (integrationService.isApiError(response)) {
         setError(`Error loading reports: ${response.message}`)
-        setReports([])
+        setAllReports([])
+        setDisplayedReports([])
+        setTotalCount(0)
       } else {
         // Use the utility functions to normalize the data
         const normalizedReports = normalizeReportData(response);
+        
+        // Extract total count from the paginated response
         const totalItems = getTotalCount(response, normalizedReports);
         
-        setReports(normalizedReports);
+        // Set the normalized reports directly as displayed reports
+        // No need for client-side pagination since server is handling it
+        setDisplayedReports(normalizedReports);
+        setAllReports(normalizedReports); // Keep for consistency
+        
+        // Set the total count for pagination UI
         setTotalCount(totalItems);
       }
     } catch (err) {
@@ -102,10 +113,19 @@ const TeamAnalysisHistoryPage: React.FC = () => {
     }
   }
 
+  // Fetch reports when teamId or statusFilter changes
   useEffect(() => {
     fetchReports()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [teamId, page, rowsPerPage, statusFilter])
+  }, [teamId, statusFilter])
+  
+  // Refetch data when pagination parameters change
+  useEffect(() => {
+    if (teamId) {
+      fetchReports();
+    }
+  }, [page, rowsPerPage])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
 
   const handleChangeRowsPerPage = (
     event: React.ChangeEvent<HTMLSelectElement>
@@ -120,7 +140,8 @@ const TeamAnalysisHistoryPage: React.FC = () => {
   }
 
   const handlePageChange = (newPage: number) => {
-    setPage(newPage)
+    // Ensure we don't go below 0 as our frontend uses 0-based pagination
+    setPage(Math.max(0, newPage))
   }
 
   const handleStatusFilterChange = (
@@ -216,7 +237,7 @@ const TeamAnalysisHistoryPage: React.FC = () => {
         <Flex justify="center" py={10}>
           <Spinner size="xl" color="blue.500" thickness="4px" />
         </Flex>
-      ) : reports.length === 0 ? (
+      ) : displayedReports.length === 0 ? (
         <Card variant="outline">
           <CardBody>
             <Flex 
@@ -263,7 +284,7 @@ const TeamAnalysisHistoryPage: React.FC = () => {
                     </Tr>
                   </Thead>
                   <Tbody>
-                    {reports.map((report) => {
+                    {displayedReports.map((report) => {
                       const statusInfo = getStatusInfo(report.status)
                       return (
                         <Tr key={report.id} _hover={{ bg: 'gray.50' }}>
@@ -323,14 +344,16 @@ const TeamAnalysisHistoryPage: React.FC = () => {
               >
                 <option value="5">5</option>
                 <option value="10">10</option>
-                <option value="25">25</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
               </Select>
             </HStack>
             
             <HStack>
               <Text fontSize="sm">
-                {page * rowsPerPage + 1}-
-                {Math.min((page + 1) * rowsPerPage, totalCount)} of {totalCount}
+                {totalCount > 0 
+                  ? `${page * rowsPerPage + 1}-${Math.min((page + 1) * rowsPerPage, totalCount)} of ${totalCount}`
+                  : `0 of 0`}
               </Text>
               <Button
                 size="sm"
@@ -343,7 +366,7 @@ const TeamAnalysisHistoryPage: React.FC = () => {
               <Button
                 size="sm"
                 onClick={() => handlePageChange(page + 1)}
-                isDisabled={(page + 1) * rowsPerPage >= totalCount}
+                isDisabled={totalCount === 0 || (page + 1) * rowsPerPage >= totalCount}
                 variant="ghost"
               >
                 Next
