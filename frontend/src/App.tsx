@@ -32,7 +32,10 @@ import {
 import { TeamsPage, TeamDetailPage, TeamMembersPage } from './pages/team'
 
 // Report Pages
-import { CrossResourceReportsPage } from './pages/reports'
+import { 
+  CrossResourceReportsPage,
+  TeamAnalysisHistoryPage 
+} from './pages/reports'
 
 // Integration Pages
 import {
@@ -163,13 +166,37 @@ function App() {
                 }
               />
 
-              {/* Cross-Resource Reports History Page */}
+              {/* Analysis History Routes */}
               <Route
                 path="/dashboard/teams/:teamId/reports"
                 element={
                   <ProtectedRoute>
                     <AppLayout>
                       <CrossResourceReportsPage />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              
+              {/* New Analysis History Page */}
+              <Route
+                path="/dashboard/reports/:teamId/history"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <TeamAnalysisHistoryPage />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              
+              {/* Individual Report View */}
+              <Route
+                path="/dashboard/reports/:teamId/report/:reportId"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <TeamAnalysisResultPage />
                     </AppLayout>
                   </ProtectedRoute>
                 }

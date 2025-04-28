@@ -1,3 +1,7 @@
 import CrossResourceReportsPage from './CrossResourceReportsPage'
+import TeamAnalysisHistoryPage from './TeamAnalysisHistoryPage'
 
-export { CrossResourceReportsPage }
+export { 
+  CrossResourceReportsPage,
+  TeamAnalysisHistoryPage
+}
