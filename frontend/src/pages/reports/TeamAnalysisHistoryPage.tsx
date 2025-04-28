@@ -104,22 +104,12 @@ const TeamAnalysisHistoryPage: React.FC = () => {
     setError(null)
 
     try {
-      console.log('Fetching reports with params:', {
-        teamId,
-        page: page + 1,
-        rowsPerPage,
-        statusFilter: statusFilter || undefined
-      });
-      
       const response = await integrationService.getCrossResourceReports(
         teamId,
         page + 1, // API uses 1-based indexing
         rowsPerPage,
         statusFilter || undefined
       )
-
-      // Add debugging to understand the response structure
-      console.log('API Response:', response);
       
       if (integrationService.isApiError(response)) {
         setError(`Error loading reports: ${response.message}`)
@@ -131,17 +121,14 @@ const TeamAnalysisHistoryPage: React.FC = () => {
         
         if (Array.isArray(response)) {
           // Direct array response
-          console.log('Response is array with', response.length, 'items');
           reportItems = response;
           totalItems = response.length;
         } else if (response.items && Array.isArray(response.items)) {
           // Object with items array
-          console.log('Response has items array with', response.items.length, 'items');
           reportItems = response.items;
           totalItems = response.total || response.items.length;
         } else if (typeof response === 'object') {
           // Unknown structure - try to extract data intelligently
-          console.log('Complex response structure:', Object.keys(response));
           
           // Try different common property names for items
           const possibleArrayProps = ['data', 'reports', 'results', 'content', 'records'];
@@ -149,7 +136,6 @@ const TeamAnalysisHistoryPage: React.FC = () => {
             if (response[prop] && Array.isArray(response[prop])) {
               reportItems = response[prop];
               totalItems = response.total || response.count || reportItems.length;
-              console.log(`Found data in property "${prop}" with ${reportItems.length} items`);
               break;
             }
           }
@@ -160,28 +146,21 @@ const TeamAnalysisHistoryPage: React.FC = () => {
               if (Array.isArray(response[key]) && response[key].length > 0) {
                 reportItems = response[key];
                 totalItems = response.total || response.count || reportItems.length;
-                console.log(`Found data in array property "${key}" with ${reportItems.length} items`);
                 break;
               }
             }
           }
         }
-
-        // Log the first item to see its structure
-        if (reportItems.length > 0) {
-          console.log('First raw item structure:', reportItems[0]);
-        }
         
         // Normalize the data format to match our expected structure
         const normalizedReports = reportItems.map(item => {
-          // Log any fields that might contain resource counts
+          // Check for resource count fields without logging
           const resourceFields = {};
           ['resource_count', 'resourceCount', 'resources', 'total_resources', 'totalResources', 'channel_count'].forEach(field => {
             if (item[field] !== undefined) {
               resourceFields[field] = item[field];
             }
           });
-          console.log('Resource fields found:', resourceFields);
           
           return {
             id: item.id,
@@ -202,7 +181,6 @@ const TeamAnalysisHistoryPage: React.FC = () => {
           };
         });
         
-        console.log('Normalized reports:', normalizedReports);
         setReports(normalizedReports);
         setTotalCount(totalItems);
       }
@@ -339,17 +317,6 @@ const TeamAnalysisHistoryPage: React.FC = () => {
         </Box>
       )}
 
-      {/* Debug info - only shown in development */}
-      <Box mb={4} p={3} bg="gray.100" borderRadius="md" fontSize="sm" color="gray.700">
-        <Text fontWeight="bold">Debug Info:</Text>
-        <Text>Team ID: {teamId}</Text>
-        <Text>Reports count: {reports?.length || 0}</Text>
-        <Text>Loading: {loading ? 'true' : 'false'}</Text>
-        <Text>Total count: {totalCount}</Text>
-        {error && <Text color="red.500">Error: {error}</Text>}
-        <Text fontWeight="bold" mt={2}>First 2 reports data:</Text>
-        <pre>{JSON.stringify(reports?.slice(0, 2), null, 2)}</pre>
-      </Box>
       
       {loading ? (
         <Flex justify="center" py={10}>
