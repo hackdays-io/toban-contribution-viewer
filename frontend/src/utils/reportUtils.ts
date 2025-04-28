@@ -6,18 +6,46 @@
  * Report data structure from API
  */
 export interface AnalysisReport {
-  id: string;
-  title: string;
-  description?: string;
-  status: string;
-  resource_count: number;
-  created_at: string;
-  updated_at: string;
+  id: string
+  title: string
+  description?: string
+  status: string
+  resource_count: number
+  created_at: string
+  updated_at: string
   created_by?: {
-    id?: string;
-    name?: string;
-    email?: string;
-  };
+    id?: string
+    name?: string
+    email?: string
+  }
+}
+
+interface ResponseItem {
+  id?: string
+  title?: string
+  name?: string
+  description?: string
+  status?: string
+  resource_count?: number
+  resourceCount?: number
+  total_resources?: number
+  totalResources?: number
+  resources?: unknown[]
+  created_at?: string
+  createdAt?: string
+  updated_at?: string
+  updatedAt?: string
+}
+
+// Type that represents the backend paginated response structure
+// Used to guide implementation but not directly referenced
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+type _PaginatedResponse = {
+  items: ResponseItem[]
+  total: number
+  page: number
+  page_size: number
+  pages: number
 }
 
 /**
@@ -28,61 +56,78 @@ export interface AnalysisReport {
 export function normalizeReportData(rawData: unknown): AnalysisReport[] {
   // Handle empty or invalid data
   if (!rawData) {
-    return [];
+    return []
   }
-  
+
   // Extract the items array from the response
-  let items: any[] = [];
-  
+  let items: ResponseItem[] = []
+
   if (Array.isArray(rawData)) {
     // Direct array response
-    items = rawData;
+    items = rawData
   } else if (rawData && typeof rawData === 'object') {
     // Object with items array or other structure
-    const objData = rawData as Record<string, any>;
-    
+    const objData = rawData as Record<string, unknown>
+
     // Check for the new paginated response format first
     if (objData.items && Array.isArray(objData.items)) {
-      items = objData.items;
-    } 
+      items = objData.items as ResponseItem[]
+    }
     // Legacy format or other formats
     else {
       // Try common property names for arrays of items
-      const possibleArrayProps = ['data', 'reports', 'results', 'content', 'records'];
+      const possibleArrayProps = [
+        'data',
+        'reports',
+        'results',
+        'content',
+        'records',
+      ]
       for (const prop of possibleArrayProps) {
-        if (objData[prop] && Array.isArray(objData[prop])) {
-          items = objData[prop];
-          break;
+        if (
+          objData[prop] &&
+          Array.isArray(objData[prop]) &&
+          (objData[prop] as unknown[]).length > 0
+        ) {
+          items = objData[prop] as ResponseItem[]
+          break
         }
       }
-      
+
       // If we still don't have items, look for any array property
       if (items.length === 0) {
         for (const key in objData) {
-          if (Array.isArray(objData[key]) && objData[key].length > 0) {
-            items = objData[key];
-            break;
+          if (
+            Array.isArray(objData[key]) &&
+            (objData[key] as unknown[]).length > 0
+          ) {
+            items = objData[key] as ResponseItem[]
+            break
           }
         }
       }
     }
   }
-  
+
   // Map the items to a consistent format
-  return items.map(item => ({
+  return items.map((item) => ({
     id: item.id || '',
     title: item.title || item.name || 'Untitled Analysis',
     description: item.description,
     status: item.status || 'pending',
-    resource_count: 
-      item.resource_count || 
-      item.resourceCount || 
-      item.total_resources || 
-      item.totalResources || 
+    resource_count:
+      item.resource_count ||
+      item.resourceCount ||
+      item.total_resources ||
+      item.totalResources ||
       (Array.isArray(item.resources) ? item.resources.length : 0),
     created_at: item.created_at || item.createdAt || new Date().toISOString(),
-    updated_at: item.updated_at || item.updatedAt || item.created_at || new Date().toISOString(),
-  }));
+    updated_at:
+      item.updated_at ||
+      item.updatedAt ||
+      item.created_at ||
+      new Date().toISOString(),
+  }))
 }
 
 /**
@@ -97,8 +142,8 @@ export function paginateReports(
   page: number,
   pageSize: number
 ): AnalysisReport[] {
-  const startIndex = page * pageSize;
-  return reports.slice(startIndex, startIndex + pageSize);
+  const startIndex = page * pageSize
+  return reports.slice(startIndex, startIndex + pageSize)
 }
 
 /**
@@ -107,42 +152,46 @@ export function paginateReports(
  * @param items - The normalized items array
  * @returns The total count of items
  */
-export function getTotalCount(response: unknown, items: any[]): number {
+export function getTotalCount(
+  response: unknown,
+  items: AnalysisReport[]
+): number {
   if (!response || typeof response !== 'object') {
-    return items.length;
+    return items.length
   }
-  
-  const responseObj = response as Record<string, any>;
-  
+
+  const responseObj = response as Record<string, unknown>
+
   // Handle the new paginated response format
-  if (responseObj.total !== undefined) {
-    return responseObj.total;
+  if (
+    responseObj.total !== undefined &&
+    typeof responseObj.total === 'number'
+  ) {
+    return responseObj.total
   }
-  
+
   // Fallback to items length
-  return items.length;
+  return items.length
 }
 
 /**
  * Get a display-friendly status label and color for a report status
  */
-export function getStatusInfo(
-  status: string
-): {
-  colorScheme: 'green' | 'yellow' | 'blue' | 'red' | 'gray';
-  label: string;
+export function getStatusInfo(status: string): {
+  colorScheme: 'green' | 'yellow' | 'blue' | 'red' | 'gray'
+  label: string
 } {
   switch ((status || '').toLowerCase()) {
     case 'completed':
-      return { colorScheme: 'green', label: 'Completed' };
+      return { colorScheme: 'green', label: 'Completed' }
     case 'pending':
-      return { colorScheme: 'yellow', label: 'Pending' };
+      return { colorScheme: 'yellow', label: 'Pending' }
     case 'in_progress':
-      return { colorScheme: 'blue', label: 'In Progress' };
+      return { colorScheme: 'blue', label: 'In Progress' }
     case 'failed':
-      return { colorScheme: 'red', label: 'Failed' };
+      return { colorScheme: 'red', label: 'Failed' }
     default:
-      return { colorScheme: 'gray', label: status || 'Unknown' };
+      return { colorScheme: 'gray', label: status || 'Unknown' }
   }
 }
 
@@ -153,17 +202,17 @@ export function getStatusInfo(
  */
 export function formatDate(dateString: string): string {
   try {
-    const date = new Date(dateString);
+    const date = new Date(dateString)
     // Format as "MMM d, yyyy h:mm AM/PM"
     return date.toLocaleString('en-US', {
       month: 'short',
-      day: 'numeric', 
+      day: 'numeric',
       year: 'numeric',
       hour: 'numeric',
       minute: 'numeric',
-      hour12: true
-    });
+      hour12: true,
+    })
   } catch {
-    return dateString;
+    return dateString
   }
 }

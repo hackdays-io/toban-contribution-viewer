@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react'
-import { useParams, Link, useNavigate } from 'react-router-dom'
+import React, { useEffect, useState, useCallback } from 'react'
+import { useParams, Link } from 'react-router-dom'
 import {
   Box,
   Button,
@@ -24,35 +24,33 @@ import {
   Heading,
   Text,
   Select,
-  useToast,
   useColorModeValue,
 } from '@chakra-ui/react'
-import { 
-  FiRefreshCw, 
-  FiEye, 
-  FiChevronRight, 
-  FiPlusCircle, 
-  FiFileText, 
-  FiFilter
+import {
+  FiRefreshCw,
+  FiEye,
+  FiChevronRight,
+  FiPlusCircle,
+  FiFileText,
+  FiFilter,
 } from 'react-icons/fi'
 import PageTitle from '../../components/layout/PageTitle'
 import integrationService from '../../lib/integrationService'
 import useAuth from '../../context/useAuth'
-import { 
-  AnalysisReport, 
-  normalizeReportData, 
-  getTotalCount, 
+import {
+  AnalysisReport,
+  normalizeReportData,
+  getTotalCount,
   getStatusInfo,
-  formatDate
+  formatDate,
 } from '../../utils/reportUtils'
 
 const TeamAnalysisHistoryPage: React.FC = () => {
   const { teamId } = useParams<{ teamId: string }>()
-  const navigate = useNavigate() // Used in button click handlers 
-  const toast = useToast() // Used for error notifications
   const { teamContext } = useAuth()
-  
-  const [allReports, setAllReports] = useState<AnalysisReport[]>([])
+
+  // We only need the setter for allReports
+  const [, setAllReports] = useState<AnalysisReport[]>([])
   const [displayedReports, setDisplayedReports] = useState<AnalysisReport[]>([])
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
@@ -66,10 +64,10 @@ const TeamAnalysisHistoryPage: React.FC = () => {
   const errorTextColor = useColorModeValue('red.600', 'red.200')
 
   // Get current team name from team context
-  const currentTeam = teamContext.teams?.find(team => team.id === teamId)
+  const currentTeam = teamContext.teams?.find((team) => team.id === teamId)
   const teamName = currentTeam?.name || 'Team'
 
-  const fetchReports = async () => {
+  const fetchReports = useCallback(async () => {
     if (!teamId) return
 
     setLoading(true)
@@ -80,10 +78,10 @@ const TeamAnalysisHistoryPage: React.FC = () => {
       const response = await integrationService.getCrossResourceReports(
         teamId,
         page + 1, // Convert 0-based page to 1-based for API
-        rowsPerPage, 
+        rowsPerPage,
         statusFilter || undefined
       )
-      
+
       if (integrationService.isApiError(response)) {
         setError(`Error loading reports: ${response.message}`)
         setAllReports([])
@@ -91,18 +89,18 @@ const TeamAnalysisHistoryPage: React.FC = () => {
         setTotalCount(0)
       } else {
         // Use the utility functions to normalize the data
-        const normalizedReports = normalizeReportData(response);
-        
+        const normalizedReports = normalizeReportData(response)
+
         // Extract total count from the paginated response
-        const totalItems = getTotalCount(response, normalizedReports);
-        
+        const totalItems = getTotalCount(response, normalizedReports)
+
         // Set the normalized reports directly as displayed reports
         // No need for client-side pagination since server is handling it
-        setDisplayedReports(normalizedReports);
-        setAllReports(normalizedReports); // Keep for consistency
-        
+        setDisplayedReports(normalizedReports)
+        setAllReports(normalizedReports) // Keep for consistency
+
         // Set the total count for pagination UI
-        setTotalCount(totalItems);
+        setTotalCount(totalItems)
       }
     } catch (err) {
       setError('Failed to load analysis reports')
@@ -111,21 +109,20 @@ const TeamAnalysisHistoryPage: React.FC = () => {
       setLoading(false)
       setRefreshing(false)
     }
-  }
+  }, [teamId, page, rowsPerPage, statusFilter])
 
   // Fetch reports when teamId or statusFilter changes
   useEffect(() => {
     fetchReports()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [teamId, statusFilter])
-  
+
   // Refetch data when pagination parameters change
   useEffect(() => {
     if (teamId) {
-      fetchReports();
+      fetchReports()
     }
-  }, [page, rowsPerPage])
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, rowsPerPage, fetchReports, teamId])
 
   const handleChangeRowsPerPage = (
     event: React.ChangeEvent<HTMLSelectElement>
@@ -150,8 +147,6 @@ const TeamAnalysisHistoryPage: React.FC = () => {
     setStatusFilter(event.target.value)
     setPage(0) // Reset to first page when filter changes
   }
-
-  // Using formatDate from reportUtils
 
   return (
     <Box p={5}>
@@ -208,7 +203,7 @@ const TeamAnalysisHistoryPage: React.FC = () => {
           >
             Refresh
           </Button>
-          
+
           <Button
             colorScheme="blue"
             as={Link}
@@ -221,18 +216,17 @@ const TeamAnalysisHistoryPage: React.FC = () => {
       </Flex>
 
       {error && (
-        <Box 
-          p={4} 
+        <Box
+          p={4}
           mb={6}
-          bg={errorBgColor} 
-          color={errorTextColor} 
+          bg={errorBgColor}
+          color={errorTextColor}
           borderRadius="md"
         >
           {error}
         </Box>
       )}
 
-      
       {loading ? (
         <Flex justify="center" py={10}>
           <Spinner size="xl" color="blue.500" thickness="4px" />
@@ -240,11 +234,11 @@ const TeamAnalysisHistoryPage: React.FC = () => {
       ) : displayedReports.length === 0 ? (
         <Card variant="outline">
           <CardBody>
-            <Flex 
-              direction="column" 
-              align="center" 
-              justify="center" 
-              py={10} 
+            <Flex
+              direction="column"
+              align="center"
+              justify="center"
+              py={10}
               px={6}
             >
               <Icon as={FiFileText} boxSize={16} color="gray.300" mb={4} />
@@ -252,7 +246,8 @@ const TeamAnalysisHistoryPage: React.FC = () => {
                 No Analysis Reports Found
               </Heading>
               <Text color="gray.500" mb={5} textAlign="center">
-                Create a new analysis to generate insights across multiple resources.
+                Create a new analysis to generate insights across multiple
+                resources.
               </Text>
               <Button
                 colorScheme="blue"
@@ -293,7 +288,12 @@ const TeamAnalysisHistoryPage: React.FC = () => {
                           </Td>
                           <Td>
                             {report.resource_count > 0 ? (
-                              <Badge colorScheme="blue" variant="subtle" borderRadius="full" px={2}>
+                              <Badge
+                                colorScheme="blue"
+                                variant="subtle"
+                                borderRadius="full"
+                                px={2}
+                              >
                                 {report.resource_count}
                               </Badge>
                             ) : (
@@ -348,10 +348,10 @@ const TeamAnalysisHistoryPage: React.FC = () => {
                 <option value="50">50</option>
               </Select>
             </HStack>
-            
+
             <HStack>
               <Text fontSize="sm">
-                {totalCount > 0 
+                {totalCount > 0
                   ? `${page * rowsPerPage + 1}-${Math.min((page + 1) * rowsPerPage, totalCount)} of ${totalCount}`
                   : `0 of 0`}
               </Text>
@@ -366,7 +366,9 @@ const TeamAnalysisHistoryPage: React.FC = () => {
               <Button
                 size="sm"
                 onClick={() => handlePageChange(page + 1)}
-                isDisabled={totalCount === 0 || (page + 1) * rowsPerPage >= totalCount}
+                isDisabled={
+                  totalCount === 0 || (page + 1) * rowsPerPage >= totalCount
+                }
                 variant="ghost"
               >
                 Next
