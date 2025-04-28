@@ -91,9 +91,19 @@ const CrossResourceReportsPage: React.FC = () => {
       if (integrationService.isApiError(response)) {
         setError(`Error loading reports: ${response.message}`)
         setReports([])
+        setTotalCount(0)
       } else {
-        setReports(response.items || [])
-        setTotalCount(response.total || 0)
+        // Safely handle the response as it might be various formats
+        const responseObj = response as Record<string, unknown>
+        const items = Array.isArray(responseObj.items) ? responseObj.items : []
+        const total =
+          typeof responseObj.total === 'number'
+            ? responseObj.total
+            : items.length
+
+        // Type assertion is needed because we've validated the shape
+        setReports(items as unknown as CrossResourceReport[])
+        setTotalCount(total as number)
       }
     } catch (err) {
       setError('Failed to load cross-resource reports')
@@ -131,11 +141,11 @@ const CrossResourceReportsPage: React.FC = () => {
       // Format as "MMM d, yyyy h:mm AM/PM"
       return date.toLocaleString('en-US', {
         month: 'short',
-        day: 'numeric', 
+        day: 'numeric',
         year: 'numeric',
         hour: 'numeric',
         minute: 'numeric',
-        hour12: true
+        hour12: true,
       })
     } catch {
       return dateString

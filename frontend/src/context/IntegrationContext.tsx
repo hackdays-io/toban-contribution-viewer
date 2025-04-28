@@ -213,7 +213,7 @@ export const IntegrationProvider: React.FC<{ children: React.ReactNode }> = ({
    */
   const fetchIntegrations = useCallback(
     async (
-      teamId: string, 
+      teamId: string,
       serviceType?: IntegrationType,
       includeResources: boolean = true,
       includeDetails: boolean = true

@@ -155,10 +155,7 @@ async def get_team_reports(
 
     # Return paginated response
     return PaginatedResponse.create(
-        items=report_responses,
-        total=total_count,
-        page=filter_params.page,
-        page_size=filter_params.page_size
+        items=report_responses, total=total_count, page=filter_params.page, page_size=filter_params.page_size
     )
 
 

@@ -76,9 +76,7 @@ const IntegrationDetail: React.FC<IntegrationDetailProps> = ({
     try {
       await fetchIntegration(integrationId)
       // Only fetch channel resources, user data is not needed
-      await fetchResources(integrationId, [
-        ResourceType.SLACK_CHANNEL,
-      ])
+      await fetchResources(integrationId, [ResourceType.SLACK_CHANNEL])
       toast({
         title: 'Integration details refreshed',
         status: 'success',

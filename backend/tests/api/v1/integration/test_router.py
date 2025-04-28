@@ -121,7 +121,7 @@ class TestIntegrationAPI:
             assert len(response.json()) == 1
             assert response.json()[0]["name"] == test_integration.name
             mock_get_team_integrations.assert_called_once()
-    
+
     @patch("app.api.v1.integration.router.IntegrationService.get_team_integrations")
     @patch("app.api.v1.integration.router.prepare_integration_response")
     async def test_get_integrations_with_credentials_param(
@@ -145,15 +145,10 @@ class TestIntegrationAPI:
             created_at=datetime.utcnow(),
             updated_at=datetime.utcnow(),
         )
-        
+
         # Mock the response with credentials
-        from app.api.v1.integration.schemas import (
-            CredentialResponse, 
-            IntegrationResponse,
-            TeamInfo,
-            UserInfo
-        )
-        
+        from app.api.v1.integration.schemas import CredentialResponse, IntegrationResponse, TeamInfo, UserInfo
+
         mock_response = IntegrationResponse(
             id=test_integration.id,
             name="Test Integration",
@@ -170,9 +165,9 @@ class TestIntegrationAPI:
                     created_at=datetime.utcnow(),
                     updated_at=datetime.utcnow(),
                 )
-            ]
+            ],
         )
-        
+
         mock_prepare_response.return_value = mock_response
 
         with patch("app.api.v1.integration.router.has_team_permission", return_value=True), patch(
@@ -190,7 +185,7 @@ class TestIntegrationAPI:
             assert len(response.json()) == 1
             # Credentials should be empty by default
             assert response.json()[0].get("credentials") == []
-            
+
             # Case 2: Explicitly request credentials
             response = test_client.get(
                 f"/integrations?team_id={test_team_id}&include_credentials=true",
@@ -338,7 +333,7 @@ class TestIntegrationAPI:
             assert response.status_code == status.HTTP_200_OK
             assert response.json()["name"] == test_integration.name
             mock_get_integration.assert_called_once()
-            
+
     @patch("app.api.v1.integration.router.IntegrationService.get_integration")
     @patch("app.api.v1.integration.router.prepare_integration_response")
     async def test_get_integration_with_credentials_param(
@@ -363,15 +358,10 @@ class TestIntegrationAPI:
             created_at=datetime.utcnow(),
             updated_at=datetime.utcnow(),
         )
-        
+
         # Mock the response with credentials
-        from app.api.v1.integration.schemas import (
-            CredentialResponse, 
-            IntegrationResponse,
-            TeamInfo,
-            UserInfo
-        )
-        
+        from app.api.v1.integration.schemas import CredentialResponse, IntegrationResponse, TeamInfo, UserInfo
+
         mock_response = IntegrationResponse(
             id=test_integration_id,
             name="Test Integration",
@@ -388,9 +378,9 @@ class TestIntegrationAPI:
                     created_at=datetime.utcnow(),
                     updated_at=datetime.utcnow(),
                 )
-            ]
+            ],
         )
-        
+
         mock_prepare_response.return_value = mock_response
 
         with patch(
@@ -407,7 +397,7 @@ class TestIntegrationAPI:
             assert response.status_code == status.HTTP_200_OK
             # Credentials should be empty by default
             assert response.json().get("credentials") == []
-            
+
             # Case 2: Explicitly request credentials
             response = test_client.get(
                 f"/integrations/{test_integration_id}?include_credentials=true",

@@ -98,9 +98,7 @@ const ResourcesAnalysisTab: React.FC<ResourcesAnalysisTabProps> = ({
         try {
           // Sequential loading to avoid race conditions
           // Only request channel data, user data isn't needed
-          await fetchResources(integrationId, [
-            ResourceType.SLACK_CHANNEL,
-          ])
+          await fetchResources(integrationId, [ResourceType.SLACK_CHANNEL])
           await fetchSelectedChannels(integrationId)
 
           // Successfully initialized, don't need to log here

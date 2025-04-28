@@ -287,6 +287,13 @@ describe('TeamChannelSelector', () => {
     // Click the Private option - using getAllByText since there might be multiple elements with "Private" text
     const privateLabels = screen.getAllByText('Private')
     // Find the one that's inside a radio button (it should have chakra-radio__label in its class)
+    // Ensure privateLabels is an array before using find
+    if (!Array.isArray(privateLabels)) {
+      throw new Error(
+        'Expected privateLabels to be an array but got: ' + typeof privateLabels
+      )
+    }
+
     const privateRadio = privateLabels.find((el) =>
       el.className.includes('chakra-radio__label')
     )

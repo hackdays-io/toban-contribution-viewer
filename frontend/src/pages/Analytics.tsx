@@ -61,52 +61,53 @@ const Analytics: React.FC = () => {
   const [loadingAnalyses, setLoadingAnalyses] = useState<boolean>(true)
 
   // Get team context from auth
-  const { teamContext } = useAuth();
-  
+  const { teamContext } = useAuth()
+
   // Fetch recent analyses from API using team context
   useEffect(() => {
     const fetchRecentAnalyses = async () => {
       setLoadingAnalyses(true)
       try {
         // Use teams directly from team context
-        const teams = teamContext.teams;
-        
+        const teams = teamContext.teams
+
         // Add debugging to understand team context
-        console.log('Team Context:', teamContext);
-        
+        console.log('Team Context:', teamContext)
+
         if (!teams || teams.length === 0) {
-          console.log('No teams available in team context');
-          setRecentAnalyses([]);
-          setLoadingAnalyses(false);
-          return;
+          console.log('No teams available in team context')
+          setRecentAnalyses([])
+          setLoadingAnalyses(false)
+          return
         }
-        
+
         // For each team, fetch recent reports
-        const allReports: RecentAnalysis[] = [];
-        
+        const allReports: RecentAnalysis[] = []
+
         for (const team of teams) {
           try {
-            console.log(`Fetching reports for team: ${team.id} (${team.name})`);
-            
+            console.log(`Fetching reports for team: ${team.id} (${team.name})`)
+
             const response = await integrationService.getCrossResourceReports(
               team.id,
               1, // First page
-              5  // Limit to 5 most recent
+              5 // Limit to 5 most recent
             )
-            
+
             // Log what we received from the API
-            console.log(`Response for team ${team.id}:`, response);
-            
+            console.log(`Response for team ${team.id}:`, response)
+
             if (!integrationService.isApiError(response)) {
-              // Check different possible response structures 
+              // Check different possible response structures
               // The API might return either an 'items' array or a direct array
-              const items = Array.isArray(response) 
-                ? response 
-                : response.items || [];
-                
-              console.log(`Response items for team ${team.id}:`, items);
-              
-              if (items && items.length > 0) {
+              const responseData = response as Record<string, unknown>
+              const items = Array.isArray(response)
+                ? response
+                : Array.isArray(responseData.items) ? responseData.items : []
+
+              console.log(`Response items for team ${team.id}:`, items)
+
+              if (items.length > 0) {
                 const teamReports = items.map(
                   (report: Record<string, unknown>) => ({
                     id: report.id as string,
@@ -118,30 +119,36 @@ const Analytics: React.FC = () => {
                     resource_count: (report.resource_count as number) || 0,
                   })
                 )
-                console.log(`Found ${teamReports.length} reports for team ${team.name}`);
+                console.log(
+                  `Found ${teamReports.length} reports for team ${team.name}`
+                )
                 allReports.push(...teamReports)
               } else {
-                console.log(`No reports found for team ${team.id}`);
+                console.log(`No reports found for team ${team.id}`)
               }
             } else {
-              console.error(`API error for team ${team.id}: ${response.message}`);
+              console.error(
+                `API error for team ${team.id}: ${response.message}`
+              )
             }
           } catch (error) {
             console.error(`Error fetching reports for team ${team.id}:`, error)
           }
         }
-        
+
         // Log the combined reports
-        console.log(`Total reports found across all teams: ${allReports.length}`);
-        
+        console.log(
+          `Total reports found across all teams: ${allReports.length}`
+        )
+
         // Sort by date (newest first) and limit to 5
         const sortedReports = allReports
           .sort(
             (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
           )
           .slice(0, 5)
-        
-        console.log('Final sorted reports:', sortedReports);
+
+        console.log('Final sorted reports:', sortedReports)
         setRecentAnalyses(sortedReports)
       } catch (error) {
         console.error('Error fetching recent analyses:', error)
@@ -155,8 +162,8 @@ const Analytics: React.FC = () => {
     console.log('Analytics: teamContext effect running', {
       userExists: !!user,
       teamsExist: !!(teamContext.teams && teamContext.teams.length > 0),
-      teamCount: teamContext.teams?.length || 0
-    });
+      teamCount: teamContext.teams?.length || 0,
+    })
 
     // Only fetch analyses if the user is logged in and teams are available
     if (user && teamContext.teams && teamContext.teams.length > 0) {
@@ -280,10 +287,10 @@ const Analytics: React.FC = () => {
   const formatDate = (dateString: string) => {
     try {
       const date = new Date(dateString)
-      return date.toLocaleDateString('en-US', { 
-        month: 'short', 
-        day: 'numeric', 
-        year: 'numeric' 
+      return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
       })
     } catch {
       return dateString

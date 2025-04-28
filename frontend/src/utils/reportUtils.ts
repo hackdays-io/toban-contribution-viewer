@@ -37,10 +37,11 @@ interface ResponseItem {
   updatedAt?: string
 }
 
-// Type that represents the backend paginated response structure
-// Used to guide implementation but not directly referenced
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-type _PaginatedResponse = {
+/**
+ * Structure representing the backend paginated response.
+ * This type documents the expected response format.
+ */
+export interface PaginatedResponseFormat {
   items: ResponseItem[]
   total: number
   page: number
@@ -107,6 +108,12 @@ export function normalizeReportData(rawData: unknown): AnalysisReport[] {
         }
       }
     }
+  }
+
+  // Ensure items is an array before mapping
+  if (!Array.isArray(items)) {
+    console.warn('Expected items to be an array but got:', typeof items)
+    return []
   }
 
   // Map the items to a consistent format

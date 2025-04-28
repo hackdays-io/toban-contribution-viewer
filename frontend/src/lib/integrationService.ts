@@ -233,63 +233,71 @@ class IntegrationService {
   private stripSensitiveCredentials<T>(data: T): T {
     // If data is null or undefined, just return it
     if (data == null) {
-      return data;
+      return data
     }
 
     // Handle arrays by recursively filtering each item
     if (Array.isArray(data)) {
-      return data.map(item => this.stripSensitiveCredentials(item)) as unknown as T;
+      return data.map((item) =>
+        this.stripSensitiveCredentials(item)
+      ) as unknown as T
     }
 
     // Only process objects, not primitives
     if (typeof data !== 'object' || data === null) {
-      return data;
+      return data
     }
 
     // Create a shallow copy to avoid modifying the original
-    const result = { ...data as Record<string, unknown> };
+    const result = { ...(data as Record<string, unknown>) }
 
     // Known sensitive credential fields to remove
     const sensitiveKeys = [
-      'access_token', 
-      'token', 
-      'refresh_token', 
-      'bot_token', 
-      'user_token', 
-      'api_key', 
-      'client_secret', 
-      'credentials'
-    ];
+      'access_token',
+      'token',
+      'refresh_token',
+      'bot_token',
+      'user_token',
+      'api_key',
+      'client_secret',
+      'credentials',
+    ]
 
     // Remove any sensitive fields directly in the object
-    sensitiveKeys.forEach(key => {
+    sensitiveKeys.forEach((key) => {
       if (key in result) {
-        delete result[key];
+        delete result[key]
       }
-    });
+    })
 
     // If the object has a 'metadata' field, filter that too
-    if ('metadata' in result && result.metadata && typeof result.metadata === 'object') {
-      const filteredMetadata = { ...result.metadata as Record<string, unknown> };
-      
+    if (
+      'metadata' in result &&
+      result.metadata &&
+      typeof result.metadata === 'object'
+    ) {
+      const filteredMetadata = {
+        ...(result.metadata as Record<string, unknown>),
+      }
+
       // Remove sensitive keys from metadata
-      sensitiveKeys.forEach(key => {
+      sensitiveKeys.forEach((key) => {
         if (key in filteredMetadata) {
-          delete filteredMetadata[key];
+          delete filteredMetadata[key]
         }
-      });
-      
-      result.metadata = filteredMetadata;
+      })
+
+      result.metadata = filteredMetadata
     }
 
     // Process all nested objects recursively
     for (const key in result) {
       if (result[key] && typeof result[key] === 'object') {
-        result[key] = this.stripSensitiveCredentials(result[key]);
+        result[key] = this.stripSensitiveCredentials(result[key])
       }
     }
 
-    return result as unknown as T;
+    return result as unknown as T
   }
 
   /**
@@ -349,7 +357,7 @@ class IntegrationService {
       if (serviceType) {
         url += `&service_type=${serviceType}`
       }
-      
+
       // Add parameters to control response size
       url += `&include_resources=${includeResources}`
       url += `&include_details=${includeDetails}`
@@ -368,12 +376,12 @@ class IntegrationService {
 
       // Get the data
       const data = await response.json()
-      
+
       // Apply comprehensive security filtering to remove any credentials
       // This is a defense-in-depth measure in case the API still returns credentials
-      const safeData = this.stripSensitiveCredentials(data);
-      
-      return safeData;
+      const safeData = this.stripSensitiveCredentials(data)
+
+      return safeData
     } catch (error) {
       return this.handleError(error, 'Failed to fetch integrations')
     }
@@ -383,14 +391,12 @@ class IntegrationService {
    * Get a single integration by ID
    * @param integrationId The ID of the integration to fetch
    */
-  async getIntegration(
-    integrationId: string
-  ): Promise<Integration | ApiError> {
+  async getIntegration(integrationId: string): Promise<Integration | ApiError> {
     try {
       const headers = await this.getAuthHeaders()
       // Always exclude credentials for security
       const url = `${this.apiUrl}/${integrationId}?include_credentials=false`
-      
+
       const response = await fetch(url, {
         method: 'GET',
         headers,
@@ -403,12 +409,12 @@ class IntegrationService {
 
       // Get the data
       const data = await response.json()
-      
+
       // Apply comprehensive security filtering to remove any credentials
       // This is a defense-in-depth measure in case the API still returns credentials
-      const safeData = this.stripSensitiveCredentials(data);
-      
-      return safeData;
+      const safeData = this.stripSensitiveCredentials(data)
+
+      return safeData
     } catch (error) {
       return this.handleError(error, 'Failed to fetch integration')
     }
@@ -436,7 +442,7 @@ class IntegrationService {
       // Parse the response which may include an 'updated' field
       // to indicate if this was a reconnection
       const result = await response.json()
-      
+
       // Apply security filtering to ensure no credentials are exposed
       return this.stripSensitiveCredentials(result)
     } catch (error) {
@@ -464,7 +470,7 @@ class IntegrationService {
       }
 
       const result = await response.json()
-      
+
       // Apply security filtering to ensure no credentials are exposed
       return this.stripSensitiveCredentials(result)
     } catch (error) {
@@ -493,7 +499,7 @@ class IntegrationService {
       }
 
       const result = await response.json()
-      
+
       // Apply security filtering to ensure no credentials are exposed
       return this.stripSensitiveCredentials(result)
     } catch (error) {
@@ -530,7 +536,7 @@ class IntegrationService {
       }
 
       const result = await response.json()
-      
+
       // Apply security filtering to ensure no credentials are exposed in resource metadata
       return this.stripSensitiveCredentials(result)
     } catch (error) {
@@ -589,11 +595,11 @@ class IntegrationService {
       )
 
       const headers = await this.getAuthHeaders()
-      const url = `${this.apiUrl}/${integrationId}/sync` + (
-        resourceTypes && resourceTypes.length > 0 
-        ? `?${resourceTypes.map((type) => `resource_type=${type}`).join('&')}` 
-        : ''
-      )
+      const url =
+        `${this.apiUrl}/${integrationId}/sync` +
+        (resourceTypes && resourceTypes.length > 0
+          ? `?${resourceTypes.map((type) => `resource_type=${type}`).join('&')}`
+          : '')
 
       // Make the request with concise logging
       const response = await fetch(url, {
@@ -880,6 +886,15 @@ class IntegrationService {
       // Filter for channels with the is_selected_for_analysis flag
       // Check both the metadata.is_selected_for_analysis field and the top-level field
       // that might have been added by the backend
+      // Ensure resources is an array before filtering
+      if (!Array.isArray(resources)) {
+        console.error(
+          'Invalid resources data: Expected an array but got',
+          typeof resources
+        )
+        return []
+      }
+
       const selectedChannels = resources.filter((resource) => {
         const metadataSelected =
           resource.metadata?.is_selected_for_analysis === true

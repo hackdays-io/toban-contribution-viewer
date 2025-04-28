@@ -115,21 +115,29 @@ def prepare_integration_response(integration) -> IntegrationResponse:
 
     # Convert integration_metadata to metadata and ensure it's a dict
     metadata = integration.integration_metadata if integration.integration_metadata is not None else {}
-    
+
     # IMPORTANT: Remove any sensitive credentials from the metadata
     if metadata and isinstance(metadata, dict):
         # Debug log to help identify what's in the metadata before filtering
         logger.info(f"Integration {integration.id} metadata keys before filtering: {list(metadata.keys())}")
-        
+
         # Make a copy to avoid modifying during iteration
         metadata_copy = metadata.copy()
-        
+
         # Remove known sensitive fields from metadata
-        for sensitive_key in ['access_token', 'token', 'refresh_token', 'bot_token', 'user_token', 'api_key', 'client_secret']:
+        for sensitive_key in [
+            "access_token",
+            "token",
+            "refresh_token",
+            "bot_token",
+            "user_token",
+            "api_key",
+            "client_secret",
+        ]:
             if sensitive_key in metadata_copy:
                 logger.info(f"Removing sensitive key '{sensitive_key}' from integration {integration.id} metadata")
                 metadata.pop(sensitive_key, None)
-                
+
         logger.info(f"Integration {integration.id} metadata keys after filtering: {list(metadata.keys())}")
 
     # Convert credentials to the proper format
@@ -145,7 +153,7 @@ def prepare_integration_response(integration) -> IntegrationResponse:
                     "created_at": credential.created_at,
                     "updated_at": credential.updated_at,
                     # Never include the actual credential values
-                    # "encrypted_value": credential.encrypted_value, 
+                    # "encrypted_value": credential.encrypted_value,
                     # "refresh_token": credential.refresh_token
                 }
             )
@@ -270,21 +278,21 @@ async def get_integrations(
     responses = []
     for integration in integrations:
         response = prepare_integration_response(integration)
-        
+
         # Remove credentials if not explicitly requested
         if not include_credentials and response.credentials:
             response.credentials = []
-            
+
         # Remove resources if not requested
         if not include_resources:
             response.resources = []
-            
+
         # Remove detailed data if not requested
         if not include_details:
             response.shared_with = []
-            
+
         responses.append(response)
-        
+
     return responses
 
 
@@ -356,15 +364,15 @@ async def create_integration(
 
     # Convert to response format
     response_data = prepare_integration_response(loaded_integration)
-    
+
     # Remove credentials if not explicitly requested for security
     if not include_credentials and response_data.credentials:
         response_data.credentials = []
-        
+
     # Remove resources if not requested
     if not include_resources:
         response_data.resources = []
-        
+
     # Remove detailed data if not requested
     if not include_details:
         response_data.shared_with = []
@@ -444,15 +452,15 @@ async def create_slack_integration(
 
         # Prepare the response with the integration data
         response_data = prepare_integration_response(integration_result)
-        
+
         # Remove credentials if not explicitly requested for security
         if not include_credentials and response_data.credentials:
             response_data.credentials = []
-            
+
         # Remove resources if not requested
         if not include_resources:
             response_data.resources = []
-            
+
         # Remove detailed data if not requested
         if not include_details:
             response_data.shared_with = []
@@ -517,19 +525,19 @@ async def get_integration(
 
     # Prepare the response with all data
     response = prepare_integration_response(integration)
-    
+
     # Remove credentials if not explicitly requested for security
     if not include_credentials and response.credentials:
         response.credentials = []
-        
+
     # Remove resources if not requested
     if not include_resources:
         response.resources = []
-        
+
     # Remove detailed data if not requested
     if not include_details:
         response.shared_with = []
-        
+
     return response
 
 
@@ -598,19 +606,19 @@ async def update_integration(
 
     # Prepare the response with all data
     response = prepare_integration_response(updated_integration)
-    
+
     # Remove credentials if not explicitly requested for security
     if not include_credentials and response.credentials:
         response.credentials = []
-        
+
     # Remove resources if not requested
     if not include_resources:
         response.resources = []
-        
+
     # Remove detailed data if not requested
     if not include_details:
         response.shared_with = []
-        
+
     return response
 
 

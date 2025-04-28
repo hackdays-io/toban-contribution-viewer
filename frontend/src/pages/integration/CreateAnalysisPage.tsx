@@ -182,13 +182,18 @@ const CreateAnalysisPage: React.FC = () => {
         return
       }
 
-      // Extract the IDs of selected channels
-      const selectedIds = result.map((resource) => resource.id)
-      setSelectedChannels(selectedIds)
+      // Extract the IDs of selected channels, ensuring result is an array
+      if (Array.isArray(result)) {
+        const selectedIds = result.map((resource) => resource.id)
+        setSelectedChannels(selectedIds)
 
-      // If there's exactly one selected channel, pre-select it
-      if (selectedIds.length === 1) {
-        setSelectedChannel(selectedIds[0])
+        // If there's exactly one selected channel, pre-select it
+        if (selectedIds.length === 1) {
+          setSelectedChannel(selectedIds[0])
+        }
+      } else {
+        console.warn('Expected array of results but got', typeof result)
+        setSelectedChannels([])
       }
     } catch (error) {
       console.error('Error loading selected channels:', error)
@@ -533,6 +538,22 @@ const CreateAnalysisPage: React.FC = () => {
       }
 
       // Prepare channel data for the unified createChannelReport method
+      // Ensure selectedChannels is an array before mapping
+      if (!Array.isArray(selectedChannels)) {
+        console.error(
+          'Invalid selectedChannels: Expected array but got',
+          typeof selectedChannels
+        )
+        toast({
+          title: 'Selection Error',
+          description: 'Invalid channel selection format. Please try again.',
+          status: 'error',
+          duration: 5000,
+          isClosable: true,
+        })
+        return
+      }
+
       const channelsForReport = selectedChannels.map((channelId) => {
         const channel = allChannelResources.find((r) => r.id === channelId)
         if (!channel) {
