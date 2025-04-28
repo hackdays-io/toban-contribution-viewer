@@ -104,6 +104,13 @@ const TeamAnalysisHistoryPage: React.FC = () => {
     setError(null)
 
     try {
+      console.log('Fetching reports with params:', {
+        teamId,
+        page: page + 1,
+        rowsPerPage,
+        statusFilter: statusFilter || undefined
+      });
+      
       const response = await integrationService.getCrossResourceReports(
         teamId,
         page + 1, // API uses 1-based indexing
@@ -111,12 +118,74 @@ const TeamAnalysisHistoryPage: React.FC = () => {
         statusFilter || undefined
       )
 
+      // Add debugging to understand the response structure
+      console.log('API Response:', response);
+      
       if (integrationService.isApiError(response)) {
         setError(`Error loading reports: ${response.message}`)
         setReports([])
       } else {
-        setReports(response.items || [])
-        setTotalCount(response.total || 0)
+        // Handle different possible response structures
+        let reportItems = [];
+        let totalItems = 0;
+        
+        if (Array.isArray(response)) {
+          // Direct array response
+          console.log('Response is array with', response.length, 'items');
+          reportItems = response;
+          totalItems = response.length;
+        } else if (response.items && Array.isArray(response.items)) {
+          // Object with items array
+          console.log('Response has items array with', response.items.length, 'items');
+          reportItems = response.items;
+          totalItems = response.total || response.items.length;
+        } else if (typeof response === 'object') {
+          // Unknown structure - try to extract data intelligently
+          console.log('Complex response structure:', Object.keys(response));
+          
+          // Try different common property names for items
+          const possibleArrayProps = ['data', 'reports', 'results', 'content', 'records'];
+          for (const prop of possibleArrayProps) {
+            if (response[prop] && Array.isArray(response[prop])) {
+              reportItems = response[prop];
+              totalItems = response.total || response.count || reportItems.length;
+              console.log(`Found data in property "${prop}" with ${reportItems.length} items`);
+              break;
+            }
+          }
+          
+          // If we still don't have items, look for any array property
+          if (reportItems.length === 0) {
+            for (const key in response) {
+              if (Array.isArray(response[key]) && response[key].length > 0) {
+                reportItems = response[key];
+                totalItems = response.total || response.count || reportItems.length;
+                console.log(`Found data in array property "${key}" with ${reportItems.length} items`);
+                break;
+              }
+            }
+          }
+        }
+
+        // Normalize the data format to match our expected structure
+        const normalizedReports = reportItems.map(item => ({
+          id: item.id,
+          title: item.title || item.name || 'Untitled Analysis',
+          description: item.description,
+          status: item.status || 'unknown',
+          resource_count: item.resource_count || item.resourceCount || item.resources?.length || 0,
+          created_at: item.created_at || item.createdAt || item.timestamp || new Date().toISOString(),
+          updated_at: item.updated_at || item.updatedAt || item.created_at || new Date().toISOString(),
+          created_by: {
+            id: item.created_by?.id || item.createdBy?.id || 'unknown',
+            name: item.created_by?.name || item.createdBy?.name,
+            email: item.created_by?.email || item.createdBy?.email
+          }
+        }));
+        
+        console.log('Normalized reports:', normalizedReports);
+        setReports(normalizedReports);
+        setTotalCount(totalItems);
       }
     } catch (err) {
       setError('Failed to load analysis reports')
@@ -251,6 +320,18 @@ const TeamAnalysisHistoryPage: React.FC = () => {
         </Box>
       )}
 
+      {/* Debug info - only shown in development */}
+      <Box mb={4} p={3} bg="gray.100" borderRadius="md" fontSize="sm" color="gray.700">
+        <Text fontWeight="bold">Debug Info:</Text>
+        <Text>Team ID: {teamId}</Text>
+        <Text>Reports count: {reports?.length || 0}</Text>
+        <Text>Loading: {loading ? 'true' : 'false'}</Text>
+        <Text>Total count: {totalCount}</Text>
+        {error && <Text color="red.500">Error: {error}</Text>}
+        <Text fontWeight="bold" mt={2}>First 2 reports data:</Text>
+        <pre>{JSON.stringify(reports?.slice(0, 2), null, 2)}</pre>
+      </Box>
+      
       {loading ? (
         <Flex justify="center" py={10}>
           <Spinner size="xl" color="blue.500" thickness="4px" />
