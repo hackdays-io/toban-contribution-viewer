@@ -79,7 +79,6 @@ export function normalizeReportData(rawData: unknown): AnalysisReport[] {
       (Array.isArray(item.resources) ? item.resources.length : 0),
     created_at: item.created_at || item.createdAt || new Date().toISOString(),
     updated_at: item.updated_at || item.updatedAt || item.created_at || new Date().toISOString(),
-    created_by: undefined // Simplified: Omit creator info as it's not needed in the UI
   }));
 }
 
