@@ -48,7 +48,9 @@ interface IntegrationContextType extends IntegrationState {
   // CRUD operations
   fetchIntegrations: (
     teamId: string,
-    serviceType?: IntegrationType
+    serviceType?: IntegrationType,
+    includeResources?: boolean,
+    includeDetails?: boolean
   ) => Promise<void>
   fetchIntegration: (integrationId: string) => Promise<void>
   createIntegration: (
@@ -204,17 +206,29 @@ export const IntegrationProvider: React.FC<{ children: React.ReactNode }> = ({
 
   /**
    * Fetch all integrations for a team
+   * @param teamId Team ID to fetch integrations for
+   * @param serviceType Optional filter for specific integration type
+   * @param includeResources Whether to include resources in the response
+   * @param includeDetails Whether to include detailed data
    */
   const fetchIntegrations = useCallback(
-    async (teamId: string, serviceType?: IntegrationType) => {
+    async (
+      teamId: string, 
+      serviceType?: IntegrationType,
+      includeResources: boolean = true,
+      includeDetails: boolean = true
+    ) => {
       if (!session || !teamId) return
 
       setState((prev) => ({ ...prev, loading: true, error: null }))
 
       try {
+        // Use the new parameters to control response size
         const result = await integrationService.getIntegrations(
           teamId,
-          serviceType
+          serviceType,
+          includeResources,
+          includeDetails
         )
 
         if (integrationService.isApiError(result)) {
@@ -1146,7 +1160,10 @@ export const IntegrationProvider: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     const currentTeamId = teamContext?.currentTeamId
     if (currentTeamId && session) {
-      fetchIntegrations(currentTeamId)
+      // Initial load of integrations with minimal data
+      // This gives us the list of integrations without all the details
+      // Resources and details can be loaded as needed when specific integrations are accessed
+      fetchIntegrations(currentTeamId, undefined, false, false)
     }
   }, [teamContext?.currentTeamId, session, fetchIntegrations])
 

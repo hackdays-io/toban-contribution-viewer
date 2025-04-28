@@ -121,6 +121,85 @@ class TestIntegrationAPI:
             assert len(response.json()) == 1
             assert response.json()[0]["name"] == test_integration.name
             mock_get_team_integrations.assert_called_once()
+    
+    @patch("app.api.v1.integration.router.IntegrationService.get_team_integrations")
+    @patch("app.api.v1.integration.router.prepare_integration_response")
+    async def test_get_integrations_with_credentials_param(
+        self,
+        mock_prepare_response,
+        mock_get_team_integrations,
+        test_client,
+        test_team_id,
+        mock_current_user,
+        mock_db,
+    ):
+        """Test that include_credentials parameter is respected in the GET multiple integrations endpoint."""
+        # Setup
+        test_integration = Integration(
+            id=uuid.uuid4(),
+            name="Test Integration",
+            service_type=IntegrationType.SLACK,
+            status=IntegrationStatus.ACTIVE,
+            owner_team_id=test_team_id,
+            created_by_user_id=mock_current_user["id"],
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow(),
+        )
+        
+        # Mock the response with credentials
+        from app.api.v1.integration.schemas import (
+            CredentialResponse, 
+            IntegrationResponse,
+            TeamInfo,
+            UserInfo
+        )
+        
+        mock_response = IntegrationResponse(
+            id=test_integration.id,
+            name="Test Integration",
+            service_type=IntegrationType.SLACK,
+            status=IntegrationStatus.ACTIVE,
+            owner_team=TeamInfo(id=test_team_id, name="Test Team", slug="test-team"),
+            created_by=UserInfo(id=mock_current_user["id"]),
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow(),
+            credentials=[
+                CredentialResponse(
+                    id=uuid.uuid4(),
+                    credential_type="oauth_token",
+                    created_at=datetime.utcnow(),
+                    updated_at=datetime.utcnow(),
+                )
+            ]
+        )
+        
+        mock_prepare_response.return_value = mock_response
+
+        with patch("app.api.v1.integration.router.has_team_permission", return_value=True), patch(
+            "app.api.v1.integration.router.get_current_user",
+            return_value=mock_current_user,
+        ), patch("app.api.v1.integration.router.get_async_db", return_value=mock_db):
+            mock_get_team_integrations.return_value = [test_integration]
+
+            # Case 1: Default behavior (no credentials)
+            response = test_client.get(
+                f"/integrations?team_id={test_team_id}",
+                headers={"Authorization": "Bearer test_token"},
+            )
+            assert response.status_code == status.HTTP_200_OK
+            assert len(response.json()) == 1
+            # Credentials should be empty by default
+            assert response.json()[0].get("credentials") == []
+            
+            # Case 2: Explicitly request credentials
+            response = test_client.get(
+                f"/integrations?team_id={test_team_id}&include_credentials=true",
+                headers={"Authorization": "Bearer test_token"},
+            )
+            assert response.status_code == status.HTTP_200_OK
+            assert len(response.json()) == 1
+            # Credentials should be present when explicitly requested
+            assert len(response.json()[0].get("credentials", [])) == 1
 
     @patch("app.api.v1.integration.router.IntegrationService.create_integration")
     async def test_create_integration(
@@ -259,6 +338,84 @@ class TestIntegrationAPI:
             assert response.status_code == status.HTTP_200_OK
             assert response.json()["name"] == test_integration.name
             mock_get_integration.assert_called_once()
+            
+    @patch("app.api.v1.integration.router.IntegrationService.get_integration")
+    @patch("app.api.v1.integration.router.prepare_integration_response")
+    async def test_get_integration_with_credentials_param(
+        self,
+        mock_prepare_response,
+        mock_get_integration,
+        test_client,
+        test_integration_id,
+        test_team_id,
+        mock_current_user,
+        mock_db,
+    ):
+        """Test that include_credentials parameter is respected."""
+        # Setup
+        test_integration = Integration(
+            id=test_integration_id,
+            name="Test Integration",
+            service_type=IntegrationType.SLACK,
+            status=IntegrationStatus.ACTIVE,
+            owner_team_id=test_team_id,
+            created_by_user_id=mock_current_user["id"],
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow(),
+        )
+        
+        # Mock the response with credentials
+        from app.api.v1.integration.schemas import (
+            CredentialResponse, 
+            IntegrationResponse,
+            TeamInfo,
+            UserInfo
+        )
+        
+        mock_response = IntegrationResponse(
+            id=test_integration_id,
+            name="Test Integration",
+            service_type=IntegrationType.SLACK,
+            status=IntegrationStatus.ACTIVE,
+            owner_team=TeamInfo(id=test_team_id, name="Test Team", slug="test-team"),
+            created_by=UserInfo(id=mock_current_user["id"]),
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow(),
+            credentials=[
+                CredentialResponse(
+                    id=uuid.uuid4(),
+                    credential_type="oauth_token",
+                    created_at=datetime.utcnow(),
+                    updated_at=datetime.utcnow(),
+                )
+            ]
+        )
+        
+        mock_prepare_response.return_value = mock_response
+
+        with patch(
+            "app.api.v1.integration.router.get_current_user",
+            return_value=mock_current_user,
+        ), patch("app.api.v1.integration.router.get_async_db", return_value=mock_db):
+            mock_get_integration.return_value = test_integration
+
+            # Case 1: Default behavior (no credentials)
+            response = test_client.get(
+                f"/integrations/{test_integration_id}",
+                headers={"Authorization": "Bearer test_token"},
+            )
+            assert response.status_code == status.HTTP_200_OK
+            # Credentials should be empty by default
+            assert response.json().get("credentials") == []
+            
+            # Case 2: Explicitly request credentials
+            response = test_client.get(
+                f"/integrations/{test_integration_id}?include_credentials=true",
+                headers={"Authorization": "Bearer test_token"},
+            )
+            assert response.status_code == status.HTTP_200_OK
+            # Credentials should be present
+            assert len(response.json().get("credentials", [])) == 1
 
     @patch("app.api.v1.integration.router.IntegrationService.get_integration_resources")
     @patch("app.api.v1.integration.router.IntegrationService.get_integration")

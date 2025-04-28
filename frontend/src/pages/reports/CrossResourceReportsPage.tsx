@@ -23,11 +23,7 @@ import {
   Select,
   useColorModeValue,
 } from '@chakra-ui/react'
-import {
-  FiRefreshCw,
-  FiEye,
-} from 'react-icons/fi'
-import { format } from 'date-fns'
+import { FiRefreshCw, FiEye } from 'react-icons/fi'
 import PageTitle from '../../components/layout/PageTitle'
 import integrationService from '../../lib/integrationService'
 
@@ -75,7 +71,7 @@ const CrossResourceReportsPage: React.FC = () => {
   const [totalCount, setTotalCount] = useState<number>(0)
   const [rowsPerPage, setRowsPerPage] = useState<number>(10)
   const [refreshing, setRefreshing] = useState<boolean>(false)
-  
+
   const errorBgColor = useColorModeValue('red.50', 'red.900')
   const errorTextColor = useColorModeValue('red.600', 'red.200')
 
@@ -113,7 +109,9 @@ const CrossResourceReportsPage: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [teamId, page, rowsPerPage])
 
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleChangeRowsPerPage = (
+    event: React.ChangeEvent<HTMLSelectElement>
+  ) => {
     setRowsPerPage(parseInt(event.target.value, 10))
     setPage(0)
   }
@@ -122,14 +120,23 @@ const CrossResourceReportsPage: React.FC = () => {
     setRefreshing(true)
     fetchReports()
   }
-  
+
   const handlePageChange = (newPage: number) => {
     setPage(newPage)
   }
 
   const formatDate = (dateString: string) => {
     try {
-      return format(new Date(dateString), 'MMM d, yyyy h:mm a')
+      const date = new Date(dateString)
+      // Format as "MMM d, yyyy h:mm AM/PM"
+      return date.toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric', 
+        year: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+        hour12: true
+      })
     } catch {
       return dateString
     }
@@ -139,7 +146,7 @@ const CrossResourceReportsPage: React.FC = () => {
     <Box p={5}>
       <Flex justifyContent="space-between" alignItems="center" mb={6}>
         <PageTitle title="Cross-Resource Analysis Reports" />
-        
+
         <HStack spacing={3}>
           <Button
             variant="outline"
@@ -151,7 +158,7 @@ const CrossResourceReportsPage: React.FC = () => {
           >
             Refresh
           </Button>
-          
+
           <Button
             colorScheme="blue"
             as={Link}
@@ -180,7 +187,8 @@ const CrossResourceReportsPage: React.FC = () => {
               No cross-resource reports found
             </Text>
             <Text color="gray.500" mb={5}>
-              Create a new analysis to generate insights across multiple resources.
+              Create a new analysis to generate insights across multiple
+              resources.
             </Text>
             <Button
               colorScheme="blue"
@@ -222,7 +230,13 @@ const CrossResourceReportsPage: React.FC = () => {
                       </Td>
                       <Td>{formatDate(report.created_at)}</Td>
                       <Td>
-                        <Badge colorScheme={statusInfo.colorScheme} variant="subtle" px={2} py={1} borderRadius="full">
+                        <Badge
+                          colorScheme={statusInfo.colorScheme}
+                          variant="subtle"
+                          px={2}
+                          py={1}
+                          borderRadius="full"
+                        >
                           {statusInfo.label}
                         </Badge>
                       </Td>
@@ -251,12 +265,12 @@ const CrossResourceReportsPage: React.FC = () => {
               </Tbody>
             </Table>
           </TableContainer>
-          
+
           <Flex justify="space-between" align="center">
             <HStack>
               <Text fontSize="sm">Rows per page:</Text>
-              <Select 
-                size="sm" 
+              <Select
+                size="sm"
                 width="70px"
                 value={rowsPerPage}
                 onChange={handleChangeRowsPerPage}
@@ -266,7 +280,7 @@ const CrossResourceReportsPage: React.FC = () => {
                 <option value="25">25</option>
               </Select>
             </HStack>
-            
+
             <HStack>
               <Text fontSize="sm">
                 {page * rowsPerPage + 1}-
