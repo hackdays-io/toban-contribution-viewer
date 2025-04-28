@@ -496,7 +496,7 @@ const Analytics: React.FC = () => {
                       variant="outline"
                       _hover={{ bg: cardBgHover }}
                       as={Link}
-                      to={`/dashboard/reports/${analysis.team_id}/report/${analysis.id}`}
+                      to={`/dashboard/teams/${analysis.team_id}/reports/${analysis.id}`}
                       cursor="pointer"
                     >
                       <CardBody py={3}>
@@ -525,7 +525,7 @@ const Analytics: React.FC = () => {
                     as={Link}
                     to={
                       recentAnalyses.length > 0
-                        ? `/dashboard/reports/${recentAnalyses[0].team_id}/history`
+                        ? `/dashboard/teams/${recentAnalyses[0].team_id}/reports/history`
                         : '#'
                     }
                     variant="outline"

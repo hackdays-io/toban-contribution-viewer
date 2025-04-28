@@ -178,7 +178,19 @@ function App() {
                 }
               />
 
-              {/* New Analysis History Page */}
+              {/* New Analysis History Page - Team-centric approach */}
+              <Route
+                path="/dashboard/teams/:teamId/reports/history"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <TeamAnalysisHistoryPage />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              
+              {/* Legacy route for backward compatibility */}
               <Route
                 path="/dashboard/reports/:teamId/history"
                 element={
@@ -190,7 +202,19 @@ function App() {
                 }
               />
 
-              {/* Individual Report View */}
+              {/* Individual Report View - Team-centric approach */}
+              <Route
+                path="/dashboard/teams/:teamId/reports/:reportId"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <TeamAnalysisResultPage />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              
+              {/* Legacy route for backward compatibility */}
               <Route
                 path="/dashboard/reports/:teamId/report/:reportId"
                 element={
@@ -205,6 +229,18 @@ function App() {
               {/* Create Analysis page */}
               <Route
                 path="/dashboard/analysis/create"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <CreateAnalysisPage />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              
+              {/* Team-centric Create Analysis page */}
+              <Route
+                path="/dashboard/teams/:teamId/reports/create"
                 element={
                   <ProtectedRoute>
                     <AppLayout>
@@ -312,6 +348,18 @@ function App() {
               {/* Route for team/cross-resource analysis results */}
               <Route
                 path="/dashboard/integrations/:integrationId/team-analysis/:analysisId"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <TeamAnalysisResultPage />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              
+              {/* Team-centric approach for analysis detail */}
+              <Route
+                path="/dashboard/teams/:teamId/reports/:reportId/analysis/:analysisId"
                 element={
                   <ProtectedRoute>
                     <AppLayout>
