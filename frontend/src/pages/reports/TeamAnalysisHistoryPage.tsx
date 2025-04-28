@@ -68,8 +68,8 @@ interface AnalysisReport {
   resource_count: number
   created_at: string
   updated_at: string
-  created_by: {
-    id: string
+  created_by?: {
+    id?: string
     name?: string
     email?: string
   }
@@ -173,10 +173,21 @@ const TeamAnalysisHistoryPage: React.FC = () => {
                            (Array.isArray(item.resources) ? item.resources.length : 0) || 0,
             created_at: item.created_at || item.createdAt || item.timestamp || new Date().toISOString(),
             updated_at: item.updated_at || item.updatedAt || item.created_at || new Date().toISOString(),
-            created_by: {
-              id: item.created_by?.id || item.createdBy?.id || 'unknown',
-              name: item.created_by?.name || item.createdBy?.name,
-              email: item.created_by?.email || item.createdBy?.email
+            created_by: item.created_by_user ? {
+              // Handle flat structure where creator info is directly in the item
+              id: item.created_by_user || item.created_by || item.user_id || '',
+              name: item.creator_name || item.user_name || '',
+              email: item.creator_email || item.user_email || ''
+            } : (item.created_by || item.createdBy) ? {
+              // Handle nested structure with created_by or createdBy object
+              id: item.created_by?.id || item.createdBy?.id || '',
+              name: item.created_by?.name || item.createdBy?.name || '',
+              email: item.created_by?.email || item.createdBy?.email || ''
+            } : {
+              // Fallback with empty values instead of 'unknown'
+              id: '',
+              name: '',
+              email: ''
             }
           };
         });
