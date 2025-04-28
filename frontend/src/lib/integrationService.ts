@@ -225,6 +225,82 @@ class IntegrationService {
   }
 
   /**
+   * Helper method to strip sensitive credentials from any response data
+   * This is a defense-in-depth measure to ensure sensitive data never reaches the frontend
+   * @param data Any response data that might contain sensitive information
+   * @returns The same data structure with sensitive fields removed
+   */
+  private stripSensitiveCredentials<T>(data: T): T {
+    // If data is null or undefined, just return it
+    if (data == null) {
+      return data
+    }
+
+    // Handle arrays by recursively filtering each item
+    if (Array.isArray(data)) {
+      return data.map((item) =>
+        this.stripSensitiveCredentials(item)
+      ) as unknown as T
+    }
+
+    // Only process objects, not primitives
+    if (typeof data !== 'object' || data === null) {
+      return data
+    }
+
+    // Create a shallow copy to avoid modifying the original
+    const result = { ...(data as Record<string, unknown>) }
+
+    // Known sensitive credential fields to remove
+    const sensitiveKeys = [
+      'access_token',
+      'token',
+      'refresh_token',
+      'bot_token',
+      'user_token',
+      'api_key',
+      'client_secret',
+      'credentials',
+    ]
+
+    // Remove any sensitive fields directly in the object
+    sensitiveKeys.forEach((key) => {
+      if (key in result) {
+        delete result[key]
+      }
+    })
+
+    // If the object has a 'metadata' field, filter that too
+    if (
+      'metadata' in result &&
+      result.metadata &&
+      typeof result.metadata === 'object'
+    ) {
+      const filteredMetadata = {
+        ...(result.metadata as Record<string, unknown>),
+      }
+
+      // Remove sensitive keys from metadata
+      sensitiveKeys.forEach((key) => {
+        if (key in filteredMetadata) {
+          delete filteredMetadata[key]
+        }
+      })
+
+      result.metadata = filteredMetadata
+    }
+
+    // Process all nested objects recursively
+    for (const key in result) {
+      if (result[key] && typeof result[key] === 'object') {
+        result[key] = this.stripSensitiveCredentials(result[key])
+      }
+    }
+
+    return result as unknown as T
+  }
+
+  /**
    * Helper method to handle API errors
    */
   private handleError(error: unknown, defaultMessage: string): ApiError {
@@ -263,10 +339,16 @@ class IntegrationService {
 
   /**
    * Get all integrations for a team
+   * @param teamId The team ID to fetch integrations for
+   * @param serviceType Optional filter for specific integration type
+   * @param includeResources Whether to include resources in the response (default: true)
+   * @param includeDetails Whether to include detailed data like sharing info (default: true)
    */
   async getIntegrations(
     teamId: string,
-    serviceType?: IntegrationType
+    serviceType?: IntegrationType,
+    includeResources: boolean = true,
+    includeDetails: boolean = true
   ): Promise<Integration[] | ApiError> {
     try {
       const headers = await this.getAuthHeaders()
@@ -275,6 +357,12 @@ class IntegrationService {
       if (serviceType) {
         url += `&service_type=${serviceType}`
       }
+
+      // Add parameters to control response size
+      url += `&include_resources=${includeResources}`
+      url += `&include_details=${includeDetails}`
+      // Always set include_credentials to false for security
+      url += '&include_credentials=false'
 
       const response = await fetch(url, {
         method: 'GET',
@@ -286,8 +374,14 @@ class IntegrationService {
         throw response
       }
 
+      // Get the data
       const data = await response.json()
-      return data
+
+      // Apply comprehensive security filtering to remove any credentials
+      // This is a defense-in-depth measure in case the API still returns credentials
+      const safeData = this.stripSensitiveCredentials(data)
+
+      return safeData
     } catch (error) {
       return this.handleError(error, 'Failed to fetch integrations')
     }
@@ -295,11 +389,15 @@ class IntegrationService {
 
   /**
    * Get a single integration by ID
+   * @param integrationId The ID of the integration to fetch
    */
   async getIntegration(integrationId: string): Promise<Integration | ApiError> {
     try {
       const headers = await this.getAuthHeaders()
-      const response = await fetch(`${this.apiUrl}/${integrationId}`, {
+      // Always exclude credentials for security
+      const url = `${this.apiUrl}/${integrationId}?include_credentials=false`
+
+      const response = await fetch(url, {
         method: 'GET',
         headers,
         credentials: 'include',
@@ -309,7 +407,14 @@ class IntegrationService {
         throw response
       }
 
-      return await response.json()
+      // Get the data
+      const data = await response.json()
+
+      // Apply comprehensive security filtering to remove any credentials
+      // This is a defense-in-depth measure in case the API still returns credentials
+      const safeData = this.stripSensitiveCredentials(data)
+
+      return safeData
     } catch (error) {
       return this.handleError(error, 'Failed to fetch integration')
     }
@@ -337,7 +442,9 @@ class IntegrationService {
       // Parse the response which may include an 'updated' field
       // to indicate if this was a reconnection
       const result = await response.json()
-      return result
+
+      // Apply security filtering to ensure no credentials are exposed
+      return this.stripSensitiveCredentials(result)
     } catch (error) {
       return this.handleError(error, 'Failed to create integration')
     }
@@ -362,7 +469,10 @@ class IntegrationService {
         throw response
       }
 
-      return await response.json()
+      const result = await response.json()
+
+      // Apply security filtering to ensure no credentials are exposed
+      return this.stripSensitiveCredentials(result)
     } catch (error) {
       return this.handleError(error, 'Failed to create Slack integration')
     }
@@ -388,7 +498,10 @@ class IntegrationService {
         throw response
       }
 
-      return await response.json()
+      const result = await response.json()
+
+      // Apply security filtering to ensure no credentials are exposed
+      return this.stripSensitiveCredentials(result)
     } catch (error) {
       return this.handleError(error, 'Failed to update integration')
     }
@@ -422,7 +535,10 @@ class IntegrationService {
         throw response
       }
 
-      return await response.json()
+      const result = await response.json()
+
+      // Apply security filtering to ensure no credentials are exposed in resource metadata
+      return this.stripSensitiveCredentials(result)
     } catch (error) {
       return this.handleError(error, 'Failed to fetch resources')
     }
@@ -479,15 +595,11 @@ class IntegrationService {
       )
 
       const headers = await this.getAuthHeaders()
-      let url = `${this.apiUrl}/${integrationId}/sync`
-
-      if (resourceTypes && resourceTypes.length > 0) {
-        // Using resource_type (singular) to match the API's expected parameter name
-        const resourceTypeParams = resourceTypes
-          .map((type) => `resource_type=${type}`)
-          .join('&')
-        url += `?${resourceTypeParams}`
-      }
+      const url =
+        `${this.apiUrl}/${integrationId}/sync` +
+        (resourceTypes && resourceTypes.length > 0
+          ? `?${resourceTypes.map((type) => `resource_type=${type}`).join('&')}`
+          : '')
 
       // Make the request with concise logging
       const response = await fetch(url, {
@@ -774,6 +886,15 @@ class IntegrationService {
       // Filter for channels with the is_selected_for_analysis flag
       // Check both the metadata.is_selected_for_analysis field and the top-level field
       // that might have been added by the backend
+      // Ensure resources is an array before filtering
+      if (!Array.isArray(resources)) {
+        console.error(
+          'Invalid resources data: Expected an array but got',
+          typeof resources
+        )
+        return []
+      }
+
       const selectedChannels = resources.filter((resource) => {
         const metadataSelected =
           resource.metadata?.is_selected_for_analysis === true
@@ -1138,9 +1259,66 @@ class IntegrationService {
         }
       }
 
-      return await response.json()
+      const result = await response.json()
+      return this.stripSensitiveCredentials(result)
     } catch (error) {
       return this.handleError(error, 'Failed to get cross-resource report')
+    }
+  }
+
+  /**
+   * Get cross-resource reports history for a team
+   * @param teamId Team UUID
+   * @param page Page number (optional, defaults to 1)
+   * @param limit Number of reports per page (optional, defaults to 10)
+   * @param status Filter by report status (optional)
+   * @returns Paginated response with items, total, page, page_size, and pages
+   */
+  async getCrossResourceReports(
+    teamId: string,
+    page: number = 1,
+    limit: number = 10,
+    status?: string
+  ): Promise<Record<string, unknown> | ApiError> {
+    try {
+      const headers = await this.getAuthHeaders()
+      // Use page_size instead of limit to match the backend parameter name
+      let url = `${REPORTS_API_BASE}/${teamId}/cross-resource-reports?page=${page}&page_size=${limit}`
+
+      if (status) {
+        url += `&status=${status}`
+      }
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          ...headers,
+          Accept: 'application/json',
+        },
+        credentials: 'include',
+      })
+
+      if (!response.ok) {
+        let errorDetail = ''
+        try {
+          const errorText = await response.text()
+          const errorJson = JSON.parse(errorText)
+          errorDetail = errorJson.detail || errorText
+        } catch {
+          errorDetail = response.statusText
+        }
+
+        return {
+          status: response.status,
+          message: `Failed to retrieve reports: ${response.status} ${response.statusText}`,
+          detail: errorDetail,
+        }
+      }
+
+      const result = await response.json()
+      return this.stripSensitiveCredentials(result)
+    } catch (error) {
+      return this.handleError(error, 'Failed to get cross-resource reports')
     }
   }
 }

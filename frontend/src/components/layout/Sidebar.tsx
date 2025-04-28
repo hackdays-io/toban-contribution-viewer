@@ -23,6 +23,7 @@ import {
   FiExternalLink,
   FiUser,
   FiBox,
+  FiFileText,
 } from 'react-icons/fi'
 import useAuth from '../../context/useAuth'
 
@@ -180,7 +181,7 @@ const Sidebar = ({ onClose, ...rest }: SidebarProps) => {
               textTransform="uppercase"
               color="gray.500"
             >
-              Integrations
+              Integrations & Analysis
             </Text>
           </Box>
 
@@ -200,9 +201,23 @@ const Sidebar = ({ onClose, ...rest }: SidebarProps) => {
               icon={FiBarChart2}
               isActive={isActivePath('/dashboard/analytics')}
             >
-              Analysis
+              Analysis Hub
             </NavItem>
           </ListItem>
+
+          {currentTeam && (
+            <ListItem>
+              <NavItem
+                to={`/dashboard/teams/${currentTeam.id}/reports`}
+                icon={FiFileText}
+                isActive={isActivePath(
+                  `/dashboard/teams/${currentTeam.id}/reports`
+                )}
+              >
+                Analysis Reports
+              </NavItem>
+            </ListItem>
+          )}
 
           <Divider my={3} />
 

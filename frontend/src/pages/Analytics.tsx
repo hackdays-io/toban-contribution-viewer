@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   Box,
   Button,
@@ -35,42 +35,141 @@ import {
   FiUsers,
 } from 'react-icons/fi'
 import { Link, useNavigate } from 'react-router-dom'
+import integrationService from '../lib/integrationService'
+import useAuth from '../context/useAuth'
+
+// Types for recent analyses
+interface RecentAnalysis {
+  id: string
+  title: string
+  date: string
+  team_name: string
+  team_id: string
+  status: string
+  resource_count: number
+}
 
 /**
  * Main Analytics page component with improved accessibility.
  */
 const Analytics: React.FC = () => {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const cardBgHover = useColorModeValue('purple.50', 'purple.900')
   const highlightBg = useColorModeValue('purple.50', 'purple.800')
+  const [recentAnalyses, setRecentAnalyses] = useState<RecentAnalysis[]>([])
+  const [loadingAnalyses, setLoadingAnalyses] = useState<boolean>(true)
 
-  // Recent analyses (would be fetched from API in real implementation)
-  const recentAnalyses = [
-    {
-      id: 'a1',
-      title: 'general',
-      date: '2023-04-20',
-      workspace: 'Toban Team',
-      type: 'slack',
-      path: '/dashboard/integrations',
-    },
-    {
-      id: 'a2',
-      title: 'dev-frontend',
-      date: '2023-04-18',
-      workspace: 'Toban Team',
-      type: 'slack',
-      path: '/dashboard/integrations',
-    },
-    {
-      id: 'a3',
-      title: 'announcements',
-      date: '2023-04-15',
-      workspace: 'Toban Team',
-      type: 'slack',
-      path: '/dashboard/integrations',
-    },
-  ]
+  // Get team context from auth
+  const { teamContext } = useAuth()
+
+  // Fetch recent analyses from API using team context
+  useEffect(() => {
+    const fetchRecentAnalyses = async () => {
+      setLoadingAnalyses(true)
+      try {
+        // Use teams directly from team context
+        const teams = teamContext.teams
+
+        // Add debugging to understand team context
+        console.log('Team Context:', teamContext)
+
+        if (!teams || teams.length === 0) {
+          console.log('No teams available in team context')
+          setRecentAnalyses([])
+          setLoadingAnalyses(false)
+          return
+        }
+
+        // For each team, fetch recent reports
+        const allReports: RecentAnalysis[] = []
+
+        for (const team of teams) {
+          try {
+            console.log(`Fetching reports for team: ${team.id} (${team.name})`)
+
+            const response = await integrationService.getCrossResourceReports(
+              team.id,
+              1, // First page
+              5 // Limit to 5 most recent
+            )
+
+            // Log what we received from the API
+            console.log(`Response for team ${team.id}:`, response)
+
+            if (!integrationService.isApiError(response)) {
+              // Check different possible response structures
+              // The API might return either an 'items' array or a direct array
+              const responseData = response as Record<string, unknown>
+              const items = Array.isArray(response)
+                ? response
+                : Array.isArray(responseData.items) ? responseData.items : []
+
+              console.log(`Response items for team ${team.id}:`, items)
+
+              if (items.length > 0) {
+                const teamReports = items.map(
+                  (report: Record<string, unknown>) => ({
+                    id: report.id as string,
+                    title: (report.title as string) || 'Untitled Report',
+                    date: report.created_at as string,
+                    team_name: team.name,
+                    team_id: team.id,
+                    status: report.status as string,
+                    resource_count: (report.resource_count as number) || 0,
+                  })
+                )
+                console.log(
+                  `Found ${teamReports.length} reports for team ${team.name}`
+                )
+                allReports.push(...teamReports)
+              } else {
+                console.log(`No reports found for team ${team.id}`)
+              }
+            } else {
+              console.error(
+                `API error for team ${team.id}: ${response.message}`
+              )
+            }
+          } catch (error) {
+            console.error(`Error fetching reports for team ${team.id}:`, error)
+          }
+        }
+
+        // Log the combined reports
+        console.log(
+          `Total reports found across all teams: ${allReports.length}`
+        )
+
+        // Sort by date (newest first) and limit to 5
+        const sortedReports = allReports
+          .sort(
+            (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+          )
+          .slice(0, 5)
+
+        console.log('Final sorted reports:', sortedReports)
+        setRecentAnalyses(sortedReports)
+      } catch (error) {
+        console.error('Error fetching recent analyses:', error)
+        setRecentAnalyses([])
+      } finally {
+        setLoadingAnalyses(false)
+      }
+    }
+
+    // Add debugging for when this effect runs
+    console.log('Analytics: teamContext effect running', {
+      userExists: !!user,
+      teamsExist: !!(teamContext.teams && teamContext.teams.length > 0),
+      teamCount: teamContext.teams?.length || 0,
+    })
+
+    // Only fetch analyses if the user is logged in and teams are available
+    if (user && teamContext.teams && teamContext.teams.length > 0) {
+      fetchRecentAnalyses()
+    }
+  }, [user, teamContext, teamContext.teams])
 
   // Analysis features available for connected platforms
   const analyticsFeatures = [
@@ -103,8 +202,8 @@ const Analytics: React.FC = () => {
       description: 'Compare activity across multiple channels',
       icon: FiBarChart2,
       color: 'orange.500',
-      available: false,
-      path: '#',
+      available: true,
+      path: '/dashboard/analysis/create',
     },
     {
       title: 'Trend Reports',
@@ -183,6 +282,36 @@ const Analytics: React.FC = () => {
       </CardFooter>
     </Card>
   )
+
+  // Format date helper
+  const formatDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString)
+      return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      })
+    } catch {
+      return dateString
+    }
+  }
+
+  // Get status color
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'completed':
+        return 'green.500'
+      case 'in_progress':
+        return 'blue.500'
+      case 'pending':
+        return 'orange.500'
+      case 'failed':
+        return 'red.500'
+      default:
+        return 'gray.500'
+    }
+  }
 
   return (
     <Box width="100%">
@@ -354,7 +483,11 @@ const Analytics: React.FC = () => {
               </HStack>
             </CardHeader>
             <CardBody pt={2}>
-              {recentAnalyses.length > 0 ? (
+              {loadingAnalyses ? (
+                <Box textAlign="center" py={4}>
+                  <Text color="gray.500">Loading recent analyses...</Text>
+                </Box>
+              ) : recentAnalyses.length > 0 ? (
                 <VStack align="stretch" spacing={3}>
                   {recentAnalyses.map((analysis) => (
                     <Card
@@ -363,29 +496,25 @@ const Analytics: React.FC = () => {
                       variant="outline"
                       _hover={{ bg: cardBgHover }}
                       as={Link}
-                      to={analysis.path}
+                      to={`/dashboard/reports/${analysis.team_id}/report/${analysis.id}`}
                       cursor="pointer"
                     >
                       <CardBody py={3}>
                         <Flex justify="space-between" align="center">
                           <VStack align="start" spacing={0}>
-                            <Heading size="xs">#{analysis.title}</Heading>
+                            <Heading size="xs">{analysis.title}</Heading>
                             <Text fontSize="xs" color="gray.500">
-                              {analysis.workspace}
+                              {analysis.team_name}
                             </Text>
                           </VStack>
                           <HStack>
                             <Icon
-                              as={
-                                analysis.type === 'slack'
-                                  ? FiMessageSquare
-                                  : FiBarChart2
-                              }
-                              color="purple.500"
+                              as={FiBarChart2}
+                              color={getStatusColor(analysis.status)}
                               boxSize={4}
                             />
                             <Text fontSize="xs" color="gray.500">
-                              {new Date(analysis.date).toLocaleDateString()}
+                              {formatDate(analysis.date)}
                             </Text>
                           </HStack>
                         </Flex>
@@ -394,7 +523,11 @@ const Analytics: React.FC = () => {
                   ))}
                   <Button
                     as={Link}
-                    to="/dashboard/integrations"
+                    to={
+                      recentAnalyses.length > 0
+                        ? `/dashboard/reports/${recentAnalyses[0].team_id}/history`
+                        : '#'
+                    }
                     variant="outline"
                     colorScheme="purple"
                     size="sm"
@@ -406,6 +539,16 @@ const Analytics: React.FC = () => {
               ) : (
                 <Box textAlign="center" py={4}>
                   <Text color="gray.500">No recent analyses</Text>
+                  <Button
+                    as={Link}
+                    to="/dashboard/analysis/create"
+                    variant="outline"
+                    colorScheme="purple"
+                    size="sm"
+                    mt={3}
+                  >
+                    Create Your First Analysis
+                  </Button>
                 </Box>
               )}
             </CardBody>

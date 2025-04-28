@@ -116,6 +116,30 @@ def prepare_integration_response(integration) -> IntegrationResponse:
     # Convert integration_metadata to metadata and ensure it's a dict
     metadata = integration.integration_metadata if integration.integration_metadata is not None else {}
 
+    # IMPORTANT: Remove any sensitive credentials from the metadata
+    if metadata and isinstance(metadata, dict):
+        # Debug log to help identify what's in the metadata before filtering
+        logger.info(f"Integration {integration.id} metadata keys before filtering: {list(metadata.keys())}")
+
+        # Make a copy to avoid modifying during iteration
+        metadata_copy = metadata.copy()
+
+        # Remove known sensitive fields from metadata
+        for sensitive_key in [
+            "access_token",
+            "token",
+            "refresh_token",
+            "bot_token",
+            "user_token",
+            "api_key",
+            "client_secret",
+        ]:
+            if sensitive_key in metadata_copy:
+                logger.info(f"Removing sensitive key '{sensitive_key}' from integration {integration.id} metadata")
+                metadata.pop(sensitive_key, None)
+
+        logger.info(f"Integration {integration.id} metadata keys after filtering: {list(metadata.keys())}")
+
     # Convert credentials to the proper format
     credentials_list = []
     if hasattr(integration, "credentials") and integration.credentials:
@@ -128,6 +152,9 @@ def prepare_integration_response(integration) -> IntegrationResponse:
                     "scopes": credential.scopes,
                     "created_at": credential.created_at,
                     "updated_at": credential.updated_at,
+                    # Never include the actual credential values
+                    # "encrypted_value": credential.encrypted_value,
+                    # "refresh_token": credential.refresh_token
                 }
             )
 
@@ -201,6 +228,9 @@ async def get_integrations(
     team_id: Optional[uuid.UUID] = None,
     service_type: Optional[IntegrationTypeEnum] = None,
     include_shared: bool = True,
+    include_resources: bool = True,
+    include_details: bool = True,
+    include_credentials: bool = False,
     db: AsyncSession = Depends(get_async_db),
     current_user: Dict = Depends(get_current_user),
 ):
@@ -211,6 +241,9 @@ async def get_integrations(
         team_id: Optional team ID to filter by
         service_type: Optional service type to filter by
         include_shared: Whether to include integrations shared with the user's teams
+        include_resources: Whether to include resources in the response
+        include_details: Whether to include detailed data like sharing info
+        include_credentials: Whether to include credential data in the response (default: False for security)
         db: Database session
         current_user: Current authenticated user
 
@@ -242,12 +275,33 @@ async def get_integrations(
         )
 
     # Convert each integration to a proper response
-    return [prepare_integration_response(integration) for integration in integrations]
+    responses = []
+    for integration in integrations:
+        response = prepare_integration_response(integration)
+
+        # Remove credentials if not explicitly requested
+        if not include_credentials and response.credentials:
+            response.credentials = []
+
+        # Remove resources if not requested
+        if not include_resources:
+            response.resources = []
+
+        # Remove detailed data if not requested
+        if not include_details:
+            response.shared_with = []
+
+        responses.append(response)
+
+    return responses
 
 
 @router.post("", response_model=IntegrationResponse, status_code=status.HTTP_201_CREATED)
 async def create_integration(
     integration: IntegrationCreate,
+    include_credentials: bool = False,
+    include_resources: bool = True,
+    include_details: bool = True,
     db: AsyncSession = Depends(get_async_db),
     current_user: Dict = Depends(get_current_user),
 ):
@@ -256,6 +310,9 @@ async def create_integration(
 
     Args:
         integration: Integration data
+        include_credentials: Whether to include credential data in the response (default: False for security)
+        include_resources: Whether to include resources in the response (default: True)
+        include_details: Whether to include detailed data like sharing info (default: True)
         db: Database session
         current_user: Current authenticated user
 
@@ -308,6 +365,18 @@ async def create_integration(
     # Convert to response format
     response_data = prepare_integration_response(loaded_integration)
 
+    # Remove credentials if not explicitly requested for security
+    if not include_credentials and response_data.credentials:
+        response_data.credentials = []
+
+    # Remove resources if not requested
+    if not include_resources:
+        response_data.resources = []
+
+    # Remove detailed data if not requested
+    if not include_details:
+        response_data.shared_with = []
+
     # Add the updated flag to the response
     response_dict = response_data.dict()
     response_dict["updated"] = was_updated
@@ -318,6 +387,9 @@ async def create_integration(
 @router.post("/slack", response_model=IntegrationResponse)
 async def create_slack_integration(
     integration: SlackIntegrationCreate,
+    include_credentials: bool = False,
+    include_resources: bool = True,
+    include_details: bool = True,
     db: AsyncSession = Depends(get_async_db),
     current_user: Dict = Depends(get_current_user),
 ):
@@ -331,6 +403,9 @@ async def create_slack_integration(
 
     Args:
         integration: Slack integration data including OAuth code
+        include_credentials: Whether to include credential data in the response (default: False for security)
+        include_resources: Whether to include resources in the response (default: True)
+        include_details: Whether to include detailed data like sharing info (default: True)
         db: Database session
         current_user: Current authenticated user
 
@@ -378,6 +453,18 @@ async def create_slack_integration(
         # Prepare the response with the integration data
         response_data = prepare_integration_response(integration_result)
 
+        # Remove credentials if not explicitly requested for security
+        if not include_credentials and response_data.credentials:
+            response_data.credentials = []
+
+        # Remove resources if not requested
+        if not include_resources:
+            response_data.resources = []
+
+        # Remove detailed data if not requested
+        if not include_details:
+            response_data.shared_with = []
+
         # Convert to dict to allow adding fields not in the model
         response_dict = response_data.dict()
 
@@ -403,6 +490,9 @@ async def create_slack_integration(
 @router.get("/{integration_id}", response_model=IntegrationResponse)
 async def get_integration(
     integration_id: uuid.UUID,
+    include_credentials: bool = False,
+    include_resources: bool = True,
+    include_details: bool = True,
     db: AsyncSession = Depends(get_async_db),
     current_user: Dict = Depends(get_current_user),
 ):
@@ -411,6 +501,9 @@ async def get_integration(
 
     Args:
         integration_id: UUID of the integration to retrieve
+        include_credentials: Whether to include credential data in the response (default: False for security)
+        include_resources: Whether to include resources in the response (default: True)
+        include_details: Whether to include detailed data like sharing info (default: True)
         db: Database session
         current_user: Current authenticated user
 
@@ -430,13 +523,31 @@ async def get_integration(
             detail="Integration not found",
         )
 
-    return prepare_integration_response(integration)
+    # Prepare the response with all data
+    response = prepare_integration_response(integration)
+
+    # Remove credentials if not explicitly requested for security
+    if not include_credentials and response.credentials:
+        response.credentials = []
+
+    # Remove resources if not requested
+    if not include_resources:
+        response.resources = []
+
+    # Remove detailed data if not requested
+    if not include_details:
+        response.shared_with = []
+
+    return response
 
 
 @router.put("/{integration_id}", response_model=IntegrationResponse)
 async def update_integration(
     integration_id: uuid.UUID,
     update_data: IntegrationUpdate,
+    include_credentials: bool = False,
+    include_resources: bool = True,
+    include_details: bool = True,
     db: AsyncSession = Depends(get_async_db),
     current_user: Dict = Depends(get_current_user),
 ):
@@ -446,6 +557,9 @@ async def update_integration(
     Args:
         integration_id: UUID of the integration to update
         update_data: Data to update
+        include_credentials: Whether to include credential data in the response (default: False for security)
+        include_resources: Whether to include resources in the response (default: True)
+        include_details: Whether to include detailed data like sharing info (default: True)
         db: Database session
         current_user: Current authenticated user
 
@@ -490,7 +604,22 @@ async def update_integration(
     # Commit the transaction
     await db.commit()
 
-    return prepare_integration_response(updated_integration)
+    # Prepare the response with all data
+    response = prepare_integration_response(updated_integration)
+
+    # Remove credentials if not explicitly requested for security
+    if not include_credentials and response.credentials:
+        response.credentials = []
+
+    # Remove resources if not requested
+    if not include_resources:
+        response.resources = []
+
+    # Remove detailed data if not requested
+    if not include_details:
+        response.shared_with = []
+
+    return response
 
 
 @router.get("/{integration_id}/resources", response_model=List[ServiceResourceResponse])

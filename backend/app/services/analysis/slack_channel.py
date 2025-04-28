@@ -270,7 +270,7 @@ class SlackChannelAnalysisService(ResourceAnalysisService):
         data["messages"] = filtered_messages
         data["metadata"]["message_count"] = filtered_count
 
-       # Basic channel info is always included
+        # Basic channel info is always included
         prepared_data = {
             "channel_name": data["channel"]["name"],
             "channel_purpose": data["channel"]["purpose"],

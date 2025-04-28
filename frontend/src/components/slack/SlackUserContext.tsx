@@ -1,30 +1,9 @@
-import React, { useState, useContext, createContext } from 'react'
-import { BaseSlackUser } from '../../lib/slackApiClient'
-
-// Interface for Slack user data from API
-export interface SlackUser extends BaseSlackUser {
-  slack_id: string
-  profile_image_url: string | null
-}
-
-// Context type for the UserCache
-interface UserCacheContextType {
-  users: Map<string, SlackUser>
-  loading: Set<string>
-  errors: Set<string>
-  fetchUser: (
-    userId: string,
-    workspaceId?: string
-  ) => Promise<SlackUser | undefined>
-  getUser: (userId: string) => SlackUser | undefined
-  isLoading: (userId: string) => boolean
-  hasError: (userId: string) => boolean
-}
-
-// Create context for the user cache
-export const UserCacheContext = createContext<UserCacheContextType | undefined>(
-  undefined
-)
+import React, { useState } from 'react'
+import {
+  UserCacheContext,
+  SlackUser,
+  UserCacheContextType,
+} from './SlackUserContextExports'
 
 // Provider component for the UserCache
 export const SlackUserCacheProvider: React.FC<{
@@ -194,11 +173,5 @@ export const SlackUserCacheProvider: React.FC<{
   )
 }
 
-// Hook to use the UserCache context
-export const useUserCache = () => {
-  const context = useContext(UserCacheContext)
-  if (context === undefined) {
-    throw new Error('useUserCache must be used within a SlackUserCacheProvider')
-  }
-  return context
-}
+// No additional exports here - only exporting the provider component
+// All other exports are from SlackUserContextExports.ts

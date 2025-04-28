@@ -80,17 +80,23 @@ vi.mock('@chakra-ui/react', async () => {
   }
 })
 
-// Mock SlackUserDisplay and SlackUserCacheProvider components
+// Mock SlackUserDisplay component
 vi.mock('../../../components/slack/SlackUserDisplay', () => ({
   default: ({ userId }: { userId: string }) => (
     <div data-testid="slack-user-display">{userId}</div>
   ),
 }))
 
+// Mock SlackUserContext exports
 vi.mock('../../../components/slack/SlackUserContext', () => ({
   SlackUserCacheProvider: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="slack-user-cache-provider">{children}</div>
   ),
+}))
+
+// Mock SlackUserContextExports
+vi.mock('../../../components/slack/SlackUserContextExports', () => ({
+  UserCacheContext: React.createContext(undefined),
 }))
 
 // Mock MessageText component

@@ -92,10 +92,8 @@ const IntegrationDetailPage: React.FC = () => {
     setIsRefreshing(true)
     try {
       await fetchIntegration(integrationId)
-      await fetchResources(integrationId, [
-        ResourceType.SLACK_CHANNEL,
-        ResourceType.SLACK_USER,
-      ])
+      // Only fetch channel resources, user data is not needed for UI
+      await fetchResources(integrationId, [ResourceType.SLACK_CHANNEL])
       toast({
         title: 'Integration details refreshed',
         status: 'success',
@@ -120,9 +118,9 @@ const IntegrationDetailPage: React.FC = () => {
 
     setIsSyncing(true)
     try {
+      // Only sync channel resources to reduce network traffic
       const success = await syncResources(integrationId, [
         ResourceType.SLACK_CHANNEL,
-        ResourceType.SLACK_USER,
       ])
 
       if (success) {

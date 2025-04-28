@@ -271,6 +271,7 @@ const ChannelAnalysisList: FC<ChannelAnalysisListProps> = ({
   }
 
   // Filter analyses using the provided filter function
+  // First ensure resource_analyses exists and is an array before filtering
   const filteredAnalyses =
     reportResult?.resource_analyses &&
     Array.isArray(reportResult.resource_analyses)
@@ -1017,7 +1018,7 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
         reportStatus.resource_analyses &&
         Array.isArray(reportStatus.resource_analyses)
       ) {
-        // Count pending analyses
+        // Count pending analyses - make sure we're filtering an array
         pendingCount = reportStatus.resource_analyses.filter(
           (analysis: Record<string, unknown>) => analysis.status === 'PENDING'
         ).length
@@ -1061,41 +1062,49 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
           )
 
           // Look for counts in the results field (where they're actually stored in database)
-          completedAnalyses.forEach((a, index) => {
-            // Log the first analysis record structure for debugging
-            if (index === 0) {
-              console.log(
-                'RESOURCE ANALYSIS DEBUG - First analysis structure:',
-                {
-                  hasResults: Boolean(a.results),
-                  resultsKeys:
-                    a.results && typeof a.results === 'object'
-                      ? Object.keys(a.results as Record<string, unknown>)
-                      : [],
-                  hasMetadata:
-                    a.results &&
-                    typeof a.results === 'object' &&
-                    (a.results as Record<string, unknown>).metadata
-                      ? true
-                      : false,
-                  metadataKeys:
-                    a.results &&
-                    typeof a.results === 'object' &&
-                    (a.results as Record<string, unknown>).metadata &&
-                    typeof (a.results as Record<string, unknown>).metadata ===
-                      'object'
-                      ? Object.keys(
-                          (a.results as Record<string, unknown>)
-                            .metadata as Record<string, unknown>
-                        )
-                      : [],
-                  hasMessageCount: Boolean(a.message_count),
-                  hasParticipantCount: Boolean(a.participant_count),
-                  resourceName: a.resource_name,
-                }
-              )
-            }
-          })
+          // Ensure completedAnalyses is an array before calling forEach
+          if (Array.isArray(completedAnalyses)) {
+            completedAnalyses.forEach((a, index) => {
+              // Log the first analysis record structure for debugging
+              if (index === 0) {
+                console.log(
+                  'RESOURCE ANALYSIS DEBUG - First analysis structure:',
+                  {
+                    hasResults: Boolean(a.results),
+                    resultsKeys:
+                      a.results && typeof a.results === 'object'
+                        ? Object.keys(a.results as Record<string, unknown>)
+                        : [],
+                    hasMetadata:
+                      a.results &&
+                      typeof a.results === 'object' &&
+                      (a.results as Record<string, unknown>).metadata
+                        ? true
+                        : false,
+                    metadataKeys:
+                      a.results &&
+                      typeof a.results === 'object' &&
+                      (a.results as Record<string, unknown>).metadata &&
+                      typeof (a.results as Record<string, unknown>).metadata ===
+                        'object'
+                        ? Object.keys(
+                            (a.results as Record<string, unknown>)
+                              .metadata as Record<string, unknown>
+                          )
+                        : [],
+                    hasMessageCount: Boolean(a.message_count),
+                    hasParticipantCount: Boolean(a.participant_count),
+                    resourceName: a.resource_name,
+                  }
+                )
+              }
+            })
+          } else {
+            console.warn(
+              'completedAnalyses is not an array:',
+              typeof completedAnalyses
+            )
+          }
           setAnalysis(updatedAnalysis)
         }
       }

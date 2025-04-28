@@ -31,6 +31,12 @@ import {
 // Team Pages
 import { TeamsPage, TeamDetailPage, TeamMembersPage } from './pages/team'
 
+// Report Pages
+import {
+  CrossResourceReportsPage,
+  TeamAnalysisHistoryPage,
+} from './pages/reports'
+
 // Integration Pages
 import {
   IntegrationsPage,
@@ -155,6 +161,42 @@ function App() {
                   <ProtectedRoute>
                     <AppLayout>
                       <Analytics />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Analysis History Routes */}
+              <Route
+                path="/dashboard/teams/:teamId/reports"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <CrossResourceReportsPage />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* New Analysis History Page */}
+              <Route
+                path="/dashboard/reports/:teamId/history"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <TeamAnalysisHistoryPage />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Individual Report View */}
+              <Route
+                path="/dashboard/reports/:teamId/report/:reportId"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <TeamAnalysisResultPage />
                     </AppLayout>
                   </ProtectedRoute>
                 }
