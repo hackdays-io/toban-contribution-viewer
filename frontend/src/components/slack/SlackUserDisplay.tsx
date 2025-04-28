@@ -11,8 +11,8 @@ import {
   useColorModeValue,
 } from '@chakra-ui/react'
 
-// Import the context types from separate file
-import { UserCacheContext, SlackUser } from './SlackUserContext'
+// Import the context types from exports file
+import { UserCacheContext, SlackUser } from './SlackUserContextExports'
 
 // Interface for the component props
 export interface SlackUserDisplayProps {

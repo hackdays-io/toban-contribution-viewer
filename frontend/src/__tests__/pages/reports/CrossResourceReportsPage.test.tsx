@@ -1,11 +1,18 @@
 import React from 'react'
 import { render, screen, waitFor } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
+// userEvent is imported but not used in this test file
+// import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import CrossResourceReportsPage from '../../../pages/reports/CrossResourceReportsPage'
 import integrationService from '../../../lib/integrationService'
 import { ChakraProvider } from '@chakra-ui/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+
+// Define a type for the mocked integration service methods
+type MockedIntegrationService = {
+  getCrossResourceReports: ReturnType<typeof vi.fn>
+  isApiError: ReturnType<typeof vi.fn>
+}
 
 // Mock the integration service
 vi.mock('../../../lib/integrationService', async () => {
@@ -13,17 +20,23 @@ vi.mock('../../../lib/integrationService', async () => {
     default: {
       getCrossResourceReports: vi.fn(),
       isApiError: vi.fn(
-        (response) => 'status' in response && typeof response.status === 'number'
+        (response) =>
+          'status' in response && typeof response.status === 'number'
       ),
-    }
+    },
   }
 })
 
+// Get the mocked integration service with the proper type
+const mockedIntegrationService =
+  integrationService as unknown as MockedIntegrationService
+
 // Mock for useParams
 vi.mock('react-router-dom', async (importOriginal) => {
-  const actual = await importOriginal()
+  const original = await importOriginal()
   return {
-    ...actual,
+    // Use type casting to avoid spread operator type error
+    ...(original as object),
     useParams: () => ({ teamId: 'team-123' }),
   }
 })
@@ -57,7 +70,7 @@ const mockReports = {
   total: 2,
 }
 
-const renderWithProviders = (ui) => {
+const renderWithProviders = (ui: React.ReactElement) => {
   return render(
     <ChakraProvider>
       <MemoryRouter>{ui}</MemoryRouter>
@@ -68,9 +81,10 @@ const renderWithProviders = (ui) => {
 describe('CrossResourceReportsPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    ;(
-      integrationService.getCrossResourceReports as any
-    ).mockResolvedValue(mockReports)
+    // Use the properly typed mock function
+    mockedIntegrationService.getCrossResourceReports.mockResolvedValue(
+      mockReports
+    )
   })
 
   it('renders the page title correctly', async () => {
@@ -85,10 +99,12 @@ describe('CrossResourceReportsPage', () => {
 
   it('displays loading state initially', async () => {
     // Mock the integration service to never resolve, keeping the component in loading state
-    (integrationService.getCrossResourceReports as any).mockImplementation(() => new Promise(() => {}))
-    
+    mockedIntegrationService.getCrossResourceReports.mockImplementation(
+      () => new Promise(() => {})
+    )
+
     renderWithProviders(<CrossResourceReportsPage />)
-    
+
     // In Chakra UI, Spinner doesn't have an accessible text by default
     // Instead, let's check if the Refresh button is visible (which is shown during loading)
     const refreshButton = await screen.findByText('Refresh')
@@ -111,10 +127,10 @@ describe('CrossResourceReportsPage', () => {
     expect(screen.getByText('John Doe')).toBeInTheDocument()
     expect(screen.getByText('jane@example.com')).toBeInTheDocument()
   })
-  
+
   it('formats dates correctly using native JavaScript', async () => {
     renderWithProviders(<CrossResourceReportsPage />)
-    
+
     // The first report has a date of '2025-04-15T10:30:00Z'
     // After formatting it should appear in the format "MMM D, YYYY h:mm AM/PM"
     // Exact format depends on timezone, so use partial matching
@@ -122,7 +138,7 @@ describe('CrossResourceReportsPage', () => {
       const dateCell = screen.getByText(/Apr 15, 2025/i)
       expect(dateCell).toBeInTheDocument()
     })
-    
+
     // The second report has a date of '2025-04-10T09:15:00Z'
     await waitFor(() => {
       const dateCell = screen.getByText(/Apr 10, 2025/i)
@@ -145,9 +161,9 @@ describe('CrossResourceReportsPage', () => {
       message: 'Server error',
     }
 
-    ;(
-      integrationService.getCrossResourceReports as any
-    ).mockResolvedValue(errorResponse)
+    mockedIntegrationService.getCrossResourceReports.mockResolvedValue(
+      errorResponse
+    )
 
     renderWithProviders(<CrossResourceReportsPage />)
 
@@ -159,9 +175,7 @@ describe('CrossResourceReportsPage', () => {
   })
 
   it('displays empty state when no reports are found', async () => {
-    ;(
-      integrationService.getCrossResourceReports as any
-    ).mockResolvedValue({
+    mockedIntegrationService.getCrossResourceReports.mockResolvedValue({
       items: [],
       total: 0,
     })
@@ -182,10 +196,10 @@ describe('CrossResourceReportsPage', () => {
 
   it('shows pagination UI correctly', async () => {
     // Reset the mock before this test
-    (integrationService.getCrossResourceReports as any).mockClear()
-    
+    mockedIntegrationService.getCrossResourceReports.mockClear()
+
     // Set up the mock response with multiple pages
-    ;(integrationService.getCrossResourceReports as any).mockResolvedValue({
+    mockedIntegrationService.getCrossResourceReports.mockResolvedValue({
       items: [
         {
           id: 'report-1',
@@ -202,7 +216,7 @@ describe('CrossResourceReportsPage', () => {
       ],
       total: 15, // Total of 15 reports, so pagination is definitely needed
     })
-    
+
     renderWithProviders(<CrossResourceReportsPage />)
 
     // Wait for the page to load
@@ -214,11 +228,11 @@ describe('CrossResourceReportsPage', () => {
     const nextPageButton = await screen.findByRole('button', { name: /next/i })
     expect(nextPageButton).toBeInTheDocument()
     expect(nextPageButton).not.toBeDisabled()
-    
+
     const prevPageButton = screen.getByRole('button', { name: /previous/i })
     expect(prevPageButton).toBeInTheDocument()
     expect(prevPageButton).toBeDisabled() // Should be disabled on the first page
-    
+
     // Check that the pagination text shows the correct range
     expect(screen.getByText(/1-10 of 15/i)).toBeInTheDocument()
   })

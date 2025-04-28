@@ -180,11 +180,18 @@ describe('IntegrationList', () => {
 
     // Find the refresh button and click it
     const refreshButton = screen.getByText('Refresh')
-    fireEvent.click(refreshButton)
 
-    expect(mockIntegrationContext.fetchIntegrations).toHaveBeenCalledTimes(2)
-    expect(mockIntegrationContext.fetchIntegrations).toHaveBeenCalledWith(
-      'team-1'
-    )
+    // Use waitFor to wrap the click event - this automatically wraps updates in act(...)
+    await waitFor(() => {
+      fireEvent.click(refreshButton)
+    })
+
+    // Use another waitFor to ensure state updates are processed
+    await waitFor(() => {
+      expect(mockIntegrationContext.fetchIntegrations).toHaveBeenCalledTimes(2)
+      expect(mockIntegrationContext.fetchIntegrations).toHaveBeenCalledWith(
+        'team-1'
+      )
+    })
   })
 })
