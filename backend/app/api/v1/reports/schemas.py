@@ -4,10 +4,11 @@ Pydantic schemas for cross-resource reports API endpoints.
 
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any, Generic, TypeVar
 from uuid import UUID
 
 from pydantic import BaseModel, Field, validator
+from pydantic.generics import GenericModel
 
 
 class ResourceTypeEnum(str, Enum):
@@ -219,3 +220,28 @@ class ChannelReportCreate(BaseModel):
     include_threads: bool = Field(True, description="Whether to include thread replies")
     include_reactions: bool = Field(True, description="Whether to include reactions")
     analysis_type: str = Field("CONTRIBUTION", description="Type of analysis to perform")
+
+
+# Generic paginated response type
+T = TypeVar('T')
+
+class PaginatedResponse(GenericModel, Generic[T]):
+    """Generic paginated response."""
+
+    items: List[T]
+    total: int
+    page: int
+    page_size: int
+    pages: int
+
+    @classmethod
+    def create(cls, items: List[T], total: int, page: int, page_size: int):
+        """Create a paginated response."""
+        pages = (total + page_size - 1) // page_size if page_size > 0 else 0
+        return cls(
+            items=items,
+            total=total,
+            page=page,
+            page_size=page_size,
+            pages=pages
+        )

@@ -16,6 +16,7 @@ from app.api.v1.reports.schemas import (
     CrossResourceReportDetailResponse,
     CrossResourceReportResponse,
     CrossResourceReportUpdate,
+    PaginatedResponse,
     ReportFilterParams,
     ReportGenerationResponse,
     ResourceAnalysisFilterParams,
@@ -41,7 +42,7 @@ router = APIRouter()
 
 @router.get(
     "/{team_id}/cross-resource-reports",
-    response_model=List[CrossResourceReportResponse],
+    response_model=PaginatedResponse[CrossResourceReportResponse],
 )
 async def get_team_reports(
     team_id: UUID = Path(..., description="Team ID"),
@@ -106,6 +107,11 @@ async def get_team_reports(
     else:
         query = query.order_by(getattr(CrossResourceReport, filter_params.sort_by))
 
+    # Get total count before applying pagination
+    count_query = select(func.count()).select_from(query.subquery())
+    total_result = await db.execute(count_query)
+    total_count = total_result.scalar_one()
+
     # Apply pagination
     offset = (filter_params.page - 1) * filter_params.page_size
     query = query.offset(offset).limit(filter_params.page_size)
@@ -147,7 +153,13 @@ async def get_team_reports(
 
         report_responses.append(report_dict)
 
-    return report_responses
+    # Return paginated response
+    return PaginatedResponse.create(
+        items=report_responses,
+        total=total_count,
+        page=filter_params.page,
+        page_size=filter_params.page_size
+    )
 
 
 @router.post(

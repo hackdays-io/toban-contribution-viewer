@@ -41,9 +41,12 @@ export function normalizeReportData(rawData: unknown): AnalysisReport[] {
     // Object with items array or other structure
     const objData = rawData as Record<string, any>;
     
+    // Check for the new paginated response format first
     if (objData.items && Array.isArray(objData.items)) {
       items = objData.items;
-    } else {
+    } 
+    // Legacy format or other formats
+    else {
       // Try common property names for arrays of items
       const possibleArrayProps = ['data', 'reports', 'results', 'content', 'records'];
       for (const prop of possibleArrayProps) {
@@ -83,6 +86,22 @@ export function normalizeReportData(rawData: unknown): AnalysisReport[] {
 }
 
 /**
+ * Apply pagination to data client-side
+ * @param reports All reports from the API
+ * @param page Current page (0-based for client-side)
+ * @param pageSize Number of items per page
+ * @returns Paginated array of reports
+ */
+export function paginateReports(
+  reports: AnalysisReport[],
+  page: number,
+  pageSize: number
+): AnalysisReport[] {
+  const startIndex = page * pageSize;
+  return reports.slice(startIndex, startIndex + pageSize);
+}
+
+/**
  * Gets the total count from a paginated response
  * @param response - The API response
  * @param items - The normalized items array
@@ -94,7 +113,14 @@ export function getTotalCount(response: unknown, items: any[]): number {
   }
   
   const responseObj = response as Record<string, any>;
-  return responseObj.total || responseObj.count || items.length;
+  
+  // Handle the new paginated response format
+  if (responseObj.total !== undefined) {
+    return responseObj.total;
+  }
+  
+  // Fallback to items length
+  return items.length;
 }
 
 /**

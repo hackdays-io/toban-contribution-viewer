@@ -1257,6 +1257,7 @@ class IntegrationService {
    * @param page Page number (optional, defaults to 1)
    * @param limit Number of reports per page (optional, defaults to 10)
    * @param status Filter by report status (optional)
+   * @returns Paginated response with items, total, page, page_size, and pages
    */
   async getCrossResourceReports(
     teamId: string,
@@ -1266,7 +1267,8 @@ class IntegrationService {
   ): Promise<Record<string, unknown> | ApiError> {
     try {
       const headers = await this.getAuthHeaders()
-      let url = `${REPORTS_API_BASE}/${teamId}/cross-resource-reports?page=${page}&limit=${limit}`
+      // Use page_size instead of limit to match the backend parameter name
+      let url = `${REPORTS_API_BASE}/${teamId}/cross-resource-reports?page=${page}&page_size=${limit}`
 
       if (status) {
         url += `&status=${status}`
