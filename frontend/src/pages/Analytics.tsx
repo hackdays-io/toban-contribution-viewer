@@ -103,7 +103,9 @@ const Analytics: React.FC = () => {
               const responseData = response as Record<string, unknown>
               const items = Array.isArray(response)
                 ? response
-                : Array.isArray(responseData.items) ? responseData.items : []
+                : Array.isArray(responseData.items)
+                  ? responseData.items
+                  : []
 
               console.log(`Response items for team ${team.id}:`, items)
 
@@ -496,7 +498,7 @@ const Analytics: React.FC = () => {
                       variant="outline"
                       _hover={{ bg: cardBgHover }}
                       as={Link}
-                      to={`/dashboard/reports/${analysis.team_id}/report/${analysis.id}`}
+                      to={`/dashboard/teams/${analysis.team_id}/reports/${analysis.id}`}
                       cursor="pointer"
                     >
                       <CardBody py={3}>
@@ -525,15 +527,15 @@ const Analytics: React.FC = () => {
                     as={Link}
                     to={
                       recentAnalyses.length > 0
-                        ? `/dashboard/reports/${recentAnalyses[0].team_id}/history`
-                        : '#'
+                        ? `/dashboard/teams/${recentAnalyses[0].team_id}/reports/history`
+                        : '/dashboard/teams'
                     }
                     variant="outline"
                     colorScheme="purple"
                     size="sm"
                     width="100%"
                   >
-                    View All History
+                    View All Reports
                   </Button>
                 </VStack>
               ) : (

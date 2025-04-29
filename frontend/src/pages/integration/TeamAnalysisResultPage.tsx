@@ -398,10 +398,12 @@ const ChannelAnalysisList: FC<ChannelAnalysisListProps> = ({
  * and feature-rich way to view analysis results.
  */
 const TeamAnalysisResultPage: React.FC = () => {
-  const { integrationId, channelId, analysisId } = useParams<{
+  const { integrationId, channelId, analysisId, teamId, reportId } = useParams<{
     integrationId: string
     channelId: string
     analysisId: string
+    teamId: string
+    reportId: string
   }>()
 
   const navigate = useNavigate()
@@ -429,18 +431,39 @@ const TeamAnalysisResultPage: React.FC = () => {
   // Fix for multi-channel analysis - also check if analysisId is a cross-resource report ID
   const isTeamAnalysis =
     window.location.pathname.includes('/team-analysis/') ||
+    window.location.pathname.includes('/teams/') ||
     (analysisId && !channelId) // If we have an analysisId but no channelId, it's likely a team analysis
 
+  // Check if this is using the team-centric URL pattern
+  const isTeamCentricUrl = Boolean(teamId && reportId)
+
   // Create share URL for the current analysis based on URL type
-  const shareUrl = isTeamAnalysis
-    ? `${window.location.origin}/dashboard/integrations/${integrationId}/team-analysis/${analysisId}`
-    : `${window.location.origin}/dashboard/integrations/${integrationId}/channels/${channelId}/analysis/${analysisId}`
+  let shareUrl = ''
+
+  if (isTeamCentricUrl) {
+    // Use the team-centric URL pattern
+    shareUrl = `${window.location.origin}/dashboard/teams/${teamId}/reports/${reportId}`
+  } else if (isTeamAnalysis) {
+    // Use the legacy team analysis URL
+    shareUrl = `${window.location.origin}/dashboard/integrations/${integrationId}/team-analysis/${analysisId}`
+  } else {
+    // Use the channel analysis URL
+    shareUrl = `${window.location.origin}/dashboard/integrations/${integrationId}/channels/${channelId}/analysis/${analysisId}`
+  }
   const { hasCopied, onCopy } = useClipboard(shareUrl)
 
   useEffect(() => {
     // Different conditions for team analysis vs channel analysis
-    if (isTeamAnalysis) {
-      // For team analysis, we only need integrationId and analysisId
+    if (isTeamCentricUrl) {
+      // For team-centric URL, we need teamId and reportId
+      if (teamId && reportId) {
+        fetchData()
+        // Start checking for pending analyses after initial data load
+        setIsRefreshing(true)
+        checkReportStatus()
+      }
+    } else if (isTeamAnalysis) {
+      // For legacy team analysis, we need integrationId and analysisId
       if (integrationId && analysisId) {
         fetchData()
         // Start checking for pending analyses after initial data load
@@ -454,7 +477,15 @@ const TeamAnalysisResultPage: React.FC = () => {
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [integrationId, channelId, analysisId, isTeamAnalysis])
+  }, [
+    integrationId,
+    channelId,
+    analysisId,
+    teamId,
+    reportId,
+    isTeamAnalysis,
+    isTeamCentricUrl,
+  ])
 
   // Format date for display
   const formatDate = (dateString: string) => {
@@ -472,34 +503,49 @@ const TeamAnalysisResultPage: React.FC = () => {
    * Handle team analysis (cross-resource report)
    */
   const handleTeamAnalysis = useCallback(async () => {
-    // Get team ID from the integration
-    let teamId = currentIntegration?.owner_team?.id
+    // Try to get integration data through context or direct API call
+    let effectiveTeamId
+    let directIntegration = null
+    let effectiveReportId
 
-    // If not available in context, get it directly
-    if (!teamId) {
-      const integrationResult = await integrationService.getIntegration(
-        integrationId ?? ''
-      )
-
-      if (!integrationService.isApiError(integrationResult)) {
-        teamId = integrationResult.owner_team.id
+    // If using team-centric URL, use those params directly
+    if (isTeamCentricUrl && teamId) {
+      effectiveTeamId = teamId
+      effectiveReportId = reportId
+    } else {
+      // Legacy URL pattern - get team ID from integration
+      // First try context
+      if (currentIntegration) {
+        effectiveTeamId = currentIntegration.owner_team.id
       } else {
-        // Failed to get integration data
-        toast({
-          title: 'Error',
-          description: 'Failed to load integration data for analysis.',
-          status: 'error',
-          duration: 5000,
-          isClosable: true,
-        })
-        return
+        // If context doesn't have it yet, get it directly
+        const integrationResult = await integrationService.getIntegration(
+          integrationId ?? ''
+        )
+
+        if (!integrationService.isApiError(integrationResult)) {
+          directIntegration = integrationResult
+          effectiveTeamId = directIntegration.owner_team.id
+        } else {
+          // Failed to get integration data
+          toast({
+            title: 'Error',
+            description: 'Failed to load integration data for analysis.',
+            status: 'error',
+            duration: 5000,
+            isClosable: true,
+          })
+          return
+        }
       }
+
+      effectiveReportId = analysisId
     }
 
     // Now fetch the cross-resource report
     const crossResourceReport = await integrationService.getCrossResourceReport(
-      teamId,
-      analysisId ?? '',
+      effectiveTeamId,
+      effectiveReportId ?? '',
       true // includeAnalyses=true to get all the resource analyses
     )
 
@@ -955,33 +1001,44 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
    * Checks the status of a cross-resource report and counts pending analyses
    */
   const checkReportStatus = useCallback(async () => {
-    if (!analysisId || !isTeamAnalysis) return
+    // For team-centric URL, we already have teamId and reportId
+    if (isTeamCentricUrl && (!teamId || !reportId)) return
+
+    // For legacy team analysis URL
+    if (!isTeamCentricUrl && (!analysisId || !isTeamAnalysis)) return
 
     try {
-      // Get the team ID from the current integration or direct API call
-      let teamId = currentIntegration?.owner_team?.id
+      // Use teamId from URL params if available, otherwise get from context/API
+      let effectiveTeamId = teamId
+      const effectiveReportId = reportId || analysisId
 
-      if (!teamId) {
-        // Try to get it directly if not available in context
-        const integrationResult = await integrationService.getIntegration(
-          integrationId ?? ''
-        )
+      // If not using team-centric URL, we need to get the teamId
+      if (!effectiveTeamId) {
+        // Get the team ID from the current integration or direct API call
+        effectiveTeamId = currentIntegration?.owner_team?.id
 
-        if (!integrationService.isApiError(integrationResult)) {
-          teamId = integrationResult.owner_team.id
-        } else {
-          console.error(
-            'Could not get team ID for status check',
-            integrationResult
+        if (!effectiveTeamId) {
+          // Try to get it directly if not available in context
+          const integrationResult = await integrationService.getIntegration(
+            integrationId ?? ''
           )
-          return
+
+          if (!integrationService.isApiError(integrationResult)) {
+            effectiveTeamId = integrationResult.owner_team.id
+          } else {
+            console.error(
+              'Could not get team ID for status check',
+              integrationResult
+            )
+            return
+          }
         }
       }
 
       // Get the latest report status
       const reportStatus = await integrationService.getCrossResourceReport(
-        teamId,
-        analysisId,
+        effectiveTeamId,
+        effectiveReportId || '',
         true // includeAnalyses=true to check individual resource analyses
       )
 
@@ -1132,6 +1189,9 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
     integrationId,
     isRefreshing,
     isTeamAnalysis,
+    isTeamCentricUrl,
+    teamId,
+    reportId,
     fetchData,
     analysis,
   ])
@@ -1583,9 +1643,43 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
       <style>{customStyles}</style>
       <Box width="100%">
         {/* Breadcrumb navigation */}
-        {/* Different breadcrumb paths for team vs. channel analysis */}
-        {window.location.pathname.includes('/team-analysis/') ? (
-          // Team analysis breadcrumb
+        {/* Different breadcrumb paths based on URL pattern */}
+        {isTeamCentricUrl ? (
+          // Team-centric URL breadcrumb
+          <Breadcrumb
+            spacing="8px"
+            separator={<Icon as={FiChevronRight} color="gray.500" />}
+            mb={4}
+          >
+            <BreadcrumbItem>
+              <BreadcrumbLink as={Link} to="/dashboard">
+                Dashboard
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbItem>
+              <BreadcrumbLink as={Link} to="/dashboard/teams">
+                Teams
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbItem>
+              <BreadcrumbLink as={Link} to={`/dashboard/teams/${teamId}`}>
+                {currentIntegration?.owner_team?.name || 'Team'}
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbItem>
+              <BreadcrumbLink
+                as={Link}
+                to={`/dashboard/teams/${teamId}/reports/history`}
+              >
+                Reports
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbItem isCurrentPage>
+              <BreadcrumbLink>Report Details</BreadcrumbLink>
+            </BreadcrumbItem>
+          </Breadcrumb>
+        ) : window.location.pathname.includes('/team-analysis/') ? (
+          // Legacy team analysis breadcrumb
           <Breadcrumb
             spacing="8px"
             separator={<Icon as={FiChevronRight} color="gray.500" />}
@@ -1688,7 +1782,18 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
               mt={{ base: 2, md: 0 }}
             >
               <HStack spacing={2}>
-                {window.location.pathname.includes('/team-analysis/') ? (
+                {isTeamCentricUrl ? (
+                  <Button
+                    leftIcon={<Icon as={FiArrowLeft} />}
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      navigate(`/dashboard/teams/${teamId}/reports/history`)
+                    }
+                  >
+                    Back to Reports
+                  </Button>
+                ) : window.location.pathname.includes('/team-analysis/') ? (
                   <Button
                     leftIcon={<Icon as={FiArrowLeft} />}
                     variant="outline"
@@ -2114,8 +2219,22 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
 
         {/* Action buttons for navigation */}
         <Flex justifyContent="space-between" mt={6}>
-          {window.location.pathname.includes('/team-analysis/') ? (
-            /* Team analysis navigation buttons */
+          {isTeamCentricUrl ? (
+            /* Team-centric URL navigation buttons */
+            <Flex justifyContent="center" width="100%">
+              <Button
+                leftIcon={<Icon as={FiArrowLeft} />}
+                onClick={() =>
+                  navigate(`/dashboard/teams/${teamId}/reports/history`)
+                }
+                variant="outline"
+                colorScheme="purple"
+              >
+                Back to Reports
+              </Button>
+            </Flex>
+          ) : window.location.pathname.includes('/team-analysis/') ? (
+            /* Legacy team analysis navigation buttons */
             <Flex justifyContent="center" width="100%">
               <Button
                 leftIcon={<Icon as={FiArrowLeft} />}
