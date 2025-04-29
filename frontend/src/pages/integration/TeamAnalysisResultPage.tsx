@@ -433,8 +433,8 @@ const TeamAnalysisResultPage: React.FC = () => {
   const isTeamCentricUrl = Boolean(teamId && reportId)
 
   // Create share URL for the current analysis based on URL type
-  let shareUrl = '';
-  
+  let shareUrl = ''
+
   if (isTeamCentricUrl) {
     // Use the team-centric URL pattern
     shareUrl = `${window.location.origin}/dashboard/teams/${teamId}/reports/${reportId}`
@@ -472,7 +472,15 @@ const TeamAnalysisResultPage: React.FC = () => {
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [integrationId, channelId, analysisId, teamId, reportId, isTeamAnalysis, isTeamCentricUrl])
+  }, [
+    integrationId,
+    channelId,
+    analysisId,
+    teamId,
+    reportId,
+    isTeamAnalysis,
+    isTeamCentricUrl,
+  ])
 
   // Format date for display
   const formatDate = (dateString: string) => {
@@ -525,7 +533,7 @@ const TeamAnalysisResultPage: React.FC = () => {
           return
         }
       }
-      
+
       effectiveReportId = analysisId
     }
 
@@ -993,15 +1001,15 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
   const checkReportStatus = useCallback(async () => {
     // For team-centric URL, we already have teamId and reportId
     if (isTeamCentricUrl && (!teamId || !reportId)) return
-    
+
     // For legacy team analysis URL
     if (!isTeamCentricUrl && (!analysisId || !isTeamAnalysis)) return
 
     try {
       // Use teamId from URL params if available, otherwise get from context/API
       let effectiveTeamId = teamId
-      let effectiveReportId = reportId || analysisId
-      
+      const effectiveReportId = reportId || analysisId
+
       // If not using team-centric URL, we need to get the teamId
       if (!effectiveTeamId) {
         // Get the team ID from the current integration or direct API call
@@ -1657,7 +1665,10 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbItem>
-              <BreadcrumbLink as={Link} to={`/dashboard/teams/${teamId}/reports/history`}>
+              <BreadcrumbLink
+                as={Link}
+                to={`/dashboard/teams/${teamId}/reports/history`}
+              >
                 Reports
               </BreadcrumbLink>
             </BreadcrumbItem>

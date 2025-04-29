@@ -70,13 +70,13 @@ const CreateAnalysisPage: React.FC = () => {
   const [searchParams] = useSearchParams()
   const teamIdFromQuery = searchParams.get('team')
   const { teamContext } = useAuth()
-  
+
   // Use teamId from path params if available, otherwise from query params
   const teamIdFromUrl = teamIdFromPath || teamIdFromQuery
-  
+
   // Try to get the team name if we have a team ID from the URL
-  const currentTeam = teamIdFromUrl 
-    ? teamContext.teams?.find(team => team.id === teamIdFromUrl)
+  const currentTeam = teamIdFromUrl
+    ? teamContext.teams?.find((team) => team.id === teamIdFromUrl)
     : null
   const teamName = currentTeam?.name || 'Team'
   const { integrations, fetchIntegrations } = useIntegration()
@@ -617,7 +617,7 @@ const CreateAnalysisPage: React.FC = () => {
       // Always go to team-analysis page
       const reportId = result.report_id || result.id
       const effectiveTeamId = teamId // We already have the validated teamId from above
-      
+
       // Use the team-centric URL structure
       const redirectPath = `/dashboard/teams/${effectiveTeamId}/reports/${reportId}`
 
@@ -754,7 +754,7 @@ const CreateAnalysisPage: React.FC = () => {
             Dashboard
           </BreadcrumbLink>
         </BreadcrumbItem>
-        
+
         {teamIdFromUrl ? (
           <>
             <BreadcrumbItem>
@@ -763,12 +763,18 @@ const CreateAnalysisPage: React.FC = () => {
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbItem>
-              <BreadcrumbLink as={Link} to={`/dashboard/teams/${teamIdFromUrl}`}>
+              <BreadcrumbLink
+                as={Link}
+                to={`/dashboard/teams/${teamIdFromUrl}`}
+              >
                 {teamName}
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbItem>
-              <BreadcrumbLink as={Link} to={`/dashboard/teams/${teamIdFromUrl}/reports/history`}>
+              <BreadcrumbLink
+                as={Link}
+                to={`/dashboard/teams/${teamIdFromUrl}/reports/history`}
+              >
                 Analysis History
               </BreadcrumbLink>
             </BreadcrumbItem>
@@ -780,7 +786,7 @@ const CreateAnalysisPage: React.FC = () => {
             </BreadcrumbLink>
           </BreadcrumbItem>
         )}
-        
+
         <BreadcrumbItem isCurrentPage>
           <BreadcrumbLink>Create Analysis</BreadcrumbLink>
         </BreadcrumbItem>

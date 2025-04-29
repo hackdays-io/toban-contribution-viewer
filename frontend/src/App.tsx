@@ -213,7 +213,7 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-              
+
               {/* Team-centric Create Analysis page */}
               <Route
                 path="/dashboard/teams/:teamId/reports/create"
@@ -332,7 +332,7 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-              
+
               {/* Team-centric approach for analysis detail */}
               <Route
                 path="/dashboard/teams/:teamId/reports/:reportId/analysis/:analysisId"

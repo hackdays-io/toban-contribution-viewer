@@ -103,7 +103,9 @@ const Analytics: React.FC = () => {
               const responseData = response as Record<string, unknown>
               const items = Array.isArray(response)
                 ? response
-                : Array.isArray(responseData.items) ? responseData.items : []
+                : Array.isArray(responseData.items)
+                  ? responseData.items
+                  : []
 
               console.log(`Response items for team ${team.id}:`, items)
 
