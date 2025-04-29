@@ -41,7 +41,7 @@ import {
   FiSlack,
   FiUsers,
 } from 'react-icons/fi'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import useAuth from '../../context/useAuth'
 import useIntegration from '../../context/useIntegration'
 import integrationService, {
@@ -66,7 +66,19 @@ interface ChannelResource extends ServiceResource {
 const CreateAnalysisPage: React.FC = () => {
   const toast = useToast()
   const navigate = useNavigate()
+  const { teamId: teamIdFromPath } = useParams<{ teamId: string }>()
+  const [searchParams] = useSearchParams()
+  const teamIdFromQuery = searchParams.get('team')
   const { teamContext } = useAuth()
+
+  // Use teamId from path params if available, otherwise from query params
+  const teamIdFromUrl = teamIdFromPath || teamIdFromQuery
+
+  // Try to get the team name if we have a team ID from the URL
+  const currentTeam = teamIdFromUrl
+    ? teamContext.teams?.find((team) => team.id === teamIdFromUrl)
+    : null
+  const teamName = currentTeam?.name || 'Team'
   const { integrations, fetchIntegrations } = useIntegration()
 
   // UI state
@@ -144,8 +156,10 @@ const CreateAnalysisPage: React.FC = () => {
 
   // Load available integrations on page load
   useEffect(() => {
-    void fetchIntegrations(teamContext?.currentTeamId || '')
-  }, [fetchIntegrations, teamContext?.currentTeamId])
+    // Use teamId from URL if available, otherwise fallback to current team from context
+    const effectiveTeamId = teamIdFromUrl || teamContext?.currentTeamId || ''
+    void fetchIntegrations(effectiveTeamId)
+  }, [fetchIntegrations, teamContext?.currentTeamId, teamIdFromUrl])
 
   // Format date for input fields
   const formatDateForInput = (date: Date) => {
@@ -581,7 +595,8 @@ const CreateAnalysisPage: React.FC = () => {
       })
 
       // Use the unified method to create either a single or multi-channel report
-      const teamId = teamContext?.currentTeamId
+      // First use teamId from URL if available, otherwise fallback to current team from context
+      const teamId = teamIdFromUrl || teamContext?.currentTeamId
       if (!teamId) {
         throw new Error('No team ID available')
       }
@@ -601,7 +616,10 @@ const CreateAnalysisPage: React.FC = () => {
 
       // Always go to team-analysis page
       const reportId = result.report_id || result.id
-      const redirectPath = `/dashboard/integrations/${selectedIntegration}/team-analysis/${reportId}`
+      const effectiveTeamId = teamId // We already have the validated teamId from above
+
+      // Use the team-centric URL structure
+      const redirectPath = `/dashboard/teams/${effectiveTeamId}/reports/${reportId}`
 
       // Notify user and redirect
       toast({
@@ -736,11 +754,39 @@ const CreateAnalysisPage: React.FC = () => {
             Dashboard
           </BreadcrumbLink>
         </BreadcrumbItem>
-        <BreadcrumbItem>
-          <BreadcrumbLink as={Link} to="/dashboard/analytics">
-            Analytics
-          </BreadcrumbLink>
-        </BreadcrumbItem>
+
+        {teamIdFromUrl ? (
+          <>
+            <BreadcrumbItem>
+              <BreadcrumbLink as={Link} to="/dashboard/teams">
+                Teams
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbItem>
+              <BreadcrumbLink
+                as={Link}
+                to={`/dashboard/teams/${teamIdFromUrl}`}
+              >
+                {teamName}
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbItem>
+              <BreadcrumbLink
+                as={Link}
+                to={`/dashboard/teams/${teamIdFromUrl}/reports/history`}
+              >
+                Analysis History
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+          </>
+        ) : (
+          <BreadcrumbItem>
+            <BreadcrumbLink as={Link} to="/dashboard/analytics">
+              Analytics
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+        )}
+
         <BreadcrumbItem isCurrentPage>
           <BreadcrumbLink>Create Analysis</BreadcrumbLink>
         </BreadcrumbItem>

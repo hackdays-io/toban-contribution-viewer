@@ -178,9 +178,9 @@ function App() {
                 }
               />
 
-              {/* New Analysis History Page */}
+              {/* Team-centric Analysis History Page */}
               <Route
-                path="/dashboard/reports/:teamId/history"
+                path="/dashboard/teams/:teamId/reports/history"
                 element={
                   <ProtectedRoute>
                     <AppLayout>
@@ -190,9 +190,9 @@ function App() {
                 }
               />
 
-              {/* Individual Report View */}
+              {/* Team-centric Individual Report View */}
               <Route
-                path="/dashboard/reports/:teamId/report/:reportId"
+                path="/dashboard/teams/:teamId/reports/:reportId"
                 element={
                   <ProtectedRoute>
                     <AppLayout>
@@ -205,6 +205,18 @@ function App() {
               {/* Create Analysis page */}
               <Route
                 path="/dashboard/analysis/create"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <CreateAnalysisPage />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Team-centric Create Analysis page */}
+              <Route
+                path="/dashboard/teams/:teamId/reports/create"
                 element={
                   <ProtectedRoute>
                     <AppLayout>
@@ -312,6 +324,18 @@ function App() {
               {/* Route for team/cross-resource analysis results */}
               <Route
                 path="/dashboard/integrations/:integrationId/team-analysis/:analysisId"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <TeamAnalysisResultPage />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Team-centric approach for analysis detail */}
+              <Route
+                path="/dashboard/teams/:teamId/reports/:reportId/analysis/:analysisId"
                 element={
                   <ProtectedRoute>
                     <AppLayout>

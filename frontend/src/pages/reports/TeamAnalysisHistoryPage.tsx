@@ -207,7 +207,7 @@ const TeamAnalysisHistoryPage: React.FC = () => {
           <Button
             colorScheme="blue"
             as={Link}
-            to={`/dashboard/analysis/create?team=${teamId}`}
+            to={`/dashboard/teams/${teamId}/reports/create`}
             leftIcon={<FiPlusCircle />}
           >
             New Analysis
@@ -252,7 +252,7 @@ const TeamAnalysisHistoryPage: React.FC = () => {
               <Button
                 colorScheme="blue"
                 as={Link}
-                to={`/dashboard/analysis/create?team=${teamId}`}
+                to={`/dashboard/teams/${teamId}/reports/create`}
                 leftIcon={<FiPlusCircle />}
               >
                 Create New Analysis
@@ -315,7 +315,7 @@ const TeamAnalysisHistoryPage: React.FC = () => {
                           <Td textAlign="right">
                             <Button
                               as={Link}
-                              to={`/dashboard/reports/${teamId}/report/${report.id}`}
+                              to={`/dashboard/teams/${teamId}/reports/${report.id}`}
                               size="sm"
                               colorScheme="blue"
                               variant="outline"

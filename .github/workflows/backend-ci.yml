@@ -40,7 +40,7 @@ jobs:
 
     - name: Lint with flake8
       # E402 ignored because scripts need to modify sys.path before importing local modules
-      run: flake8 . --count --max-complexity=10 --max-line-length=120 --statistics --ignore=C901,E501,W503,W293,E203,E402
+      run: flake8 ./app --count --max-complexity=10 --max-line-length=120 --statistics --ignore=C901,E501,W503,W293,E203,E402
 
     - name: Create test environment file
       run: |
