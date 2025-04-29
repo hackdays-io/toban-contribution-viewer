@@ -446,7 +446,7 @@ nano .env.docker  # or use any text editor
 Required Docker environment variables:
 - `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`: Database connection settings
 - `SUPABASE_URL`, `SUPABASE_KEY`, `SUPABASE_JWT_SECRET`, `SUPABASE_ANON_KEY`: Supabase authentication settings
-- `OPENAI_API_KEY`: For AI-powered analysis
+- `OPENROUTER_API_KEY`: For AI-powered analysis
 - Integration variables (as needed):
   - Note: Slack credentials are now entered directly in the UI and not required as environment variables
   - `NGROK_URL`: Your ngrok HTTPS URL for development with Slack OAuth
@@ -465,7 +465,6 @@ Required backend environment variables:
 - `SUPABASE_URL`, `SUPABASE_KEY`, `SUPABASE_JWT_SECRET`: Supabase authentication settings
 - `OPENROUTER_API_KEY`: API key for LLM access via OpenRouter
 - `OPENROUTER_DEFAULT_MODEL`: Default LLM model to use (e.g., `anthropic/claude-3-opus:20240229`)
-- Note: `SECRET_KEY` is defined in the config but not currently used by the application
 - Note: Slack credentials are now entered directly in the UI and not required as environment variables
 
 ### Frontend Environment Variables

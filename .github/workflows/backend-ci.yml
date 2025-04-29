@@ -47,11 +47,10 @@ jobs:
         mkdir -p /tmp
         echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/test_db" > .env.test
         echo "DATABASE_TEST_URL=postgresql://postgres:postgres@localhost:5432/test_db" >> .env.test
-        echo "SECRET_KEY=test-secret-key-for-ci" >> .env.test
         echo "SUPABASE_URL=https://example.supabase.co" >> .env.test
         echo "SUPABASE_KEY=test-supabase-key" >> .env.test
         echo "SUPABASE_JWT_SECRET=test-jwt-secret" >> .env.test
-        echo "OPENAI_API_KEY=sk-test-key" >> .env.test
+        echo "OPENROUTER_API_KEY=sk-test-key" >> .env.test
 
     - name: Check environment variables
       env:
@@ -59,11 +58,10 @@ jobs:
         TESTING: "True"
         DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/test_db"
         DATABASE_TEST_URL: "postgresql://postgres:postgres@localhost:5432/test_db"
-        SECRET_KEY: "test-secret-key-for-ci"
         SUPABASE_URL: "https://example.supabase.co"
         SUPABASE_KEY: "test-supabase-key"
         SUPABASE_JWT_SECRET: "test-jwt-secret"
-        OPENAI_API_KEY: "sk-test-key"
+        OPENROUTER_API_KEY: "sk-test-key"
       run: python scripts/check_env.py --env-file .env.test --no-exit
 
     - name: Run tests with pytest
@@ -71,11 +69,10 @@ jobs:
         TESTING: "True"
         DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/test_db"
         DATABASE_TEST_URL: "postgresql://postgres:postgres@localhost:5432/test_db"
-        SECRET_KEY: "test-secret-key-for-ci-environment"
         SUPABASE_URL: "https://example.supabase.co"
         SUPABASE_KEY: "test-supabase-key"
         SUPABASE_JWT_SECRET: "test-jwt-secret"
-        OPENAI_API_KEY: "sk-test-key"
+        OPENROUTER_API_KEY: "sk-test-key"
       run: pytest --cov=app --cov-report=xml
 
     - name: Upload coverage to Codecov
