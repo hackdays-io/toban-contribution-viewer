@@ -503,7 +503,6 @@ const TeamAnalysisResultPage: React.FC = () => {
    * Handle team analysis (cross-resource report)
    */
   const handleTeamAnalysis = useCallback(async () => {
-<<<<<<< HEAD
     // Try to get integration data through context or direct API call
     let effectiveTeamId
     let directIntegration = null
@@ -518,19 +517,6 @@ const TeamAnalysisResultPage: React.FC = () => {
       // First try context
       if (currentIntegration) {
         effectiveTeamId = currentIntegration.owner_team.id
-=======
-    // Get team ID from the integration
-    let teamId = currentIntegration?.owner_team?.id
-
-    // If not available in context, get it directly
-    if (!teamId) {
-      const integrationResult = await integrationService.getIntegration(
-        integrationId ?? ''
-      )
-
-      if (!integrationService.isApiError(integrationResult)) {
-        teamId = integrationResult.owner_team.id
->>>>>>> b9d3935 (Remove directIntegration variable and simplify workspace_id handling in TeamAnalysisResultPage)
       } else {
         // If context doesn't have it yet, get it directly
         const integrationResult = await integrationService.getIntegration(
