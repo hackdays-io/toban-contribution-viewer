@@ -262,20 +262,22 @@ class SlackApiClient extends ApiClient {
       // Directly use the path that will match the backend route
       const path = `/workspaces/${workspaceId}/users`
 
-      // Create params object
-      const params: Record<string, string> = {
-        fetch_from_slack: fetchFromSlack.toString(),
-      }
-
-      // Add user_ids[] parameter
-      // Add the same parameter multiple times for array values
+      // Create URLSearchParams object to properly handle multiple parameters with the same name
+      const searchParams = new URLSearchParams();
+      
+      // Add fetch_from_slack parameter
+      searchParams.append('fetch_from_slack', fetchFromSlack.toString());
+      
+      // Add user_ids[] parameter for each user ID
       userIds.forEach((id) => {
-        // This correctly adds multiple entries with the same key
-        params['user_ids[]'] = id
-      })
+        searchParams.append('user_ids[]', id);
+      });
+      
+      const params = Object.fromEntries(searchParams.entries());
 
       console.log('[SlackApiClient] getUsersByIds - Using path:', path)
       console.log('[SlackApiClient] getUsersByIds - Using params:', params)
+      console.log('[SlackApiClient] getUsersByIds - URLSearchParams:', searchParams.toString())
 
       return this.get<{ users: BaseSlackUser[] }>(path, params)
     } catch (error) {
