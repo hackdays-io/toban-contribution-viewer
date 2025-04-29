@@ -67,9 +67,6 @@ class Settings(BaseSettings):
         # Convert back to list for return
         return list(unique_hosts)
 
-    # Secret Keys
-    SECRET_KEY: str
-
     # Database Settings
     DATABASE_URL: PostgresDsn
     DATABASE_TEST_URL: Optional[PostgresDsn] = None
@@ -80,8 +77,7 @@ class Settings(BaseSettings):
     SUPABASE_JWT_SECRET: str
 
     # Third-Party API Keys
-    OPENAI_API_KEY: SecretStr
-    OPENROUTER_API_KEY: Optional[SecretStr] = None
+    OPENROUTER_API_KEY: SecretStr
     OPENROUTER_DEFAULT_MODEL: str = "anthropic/claude-3-sonnet:20240229"
     OPENROUTER_MAX_TOKENS: int = 4000
     OPENROUTER_TEMPERATURE: float = 0.7
