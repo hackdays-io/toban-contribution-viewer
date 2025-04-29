@@ -178,7 +178,7 @@ function App() {
                 }
               />
 
-              {/* New Analysis History Page - Team-centric approach */}
+              {/* Team-centric Analysis History Page */}
               <Route
                 path="/dashboard/teams/:teamId/reports/history"
                 element={
@@ -189,34 +189,10 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-              
-              {/* Legacy route for backward compatibility */}
-              <Route
-                path="/dashboard/reports/:teamId/history"
-                element={
-                  <ProtectedRoute>
-                    <AppLayout>
-                      <TeamAnalysisHistoryPage />
-                    </AppLayout>
-                  </ProtectedRoute>
-                }
-              />
 
-              {/* Individual Report View - Team-centric approach */}
+              {/* Team-centric Individual Report View */}
               <Route
                 path="/dashboard/teams/:teamId/reports/:reportId"
-                element={
-                  <ProtectedRoute>
-                    <AppLayout>
-                      <TeamAnalysisResultPage />
-                    </AppLayout>
-                  </ProtectedRoute>
-                }
-              />
-              
-              {/* Legacy route for backward compatibility */}
-              <Route
-                path="/dashboard/reports/:teamId/report/:reportId"
                 element={
                   <ProtectedRoute>
                     <AppLayout>

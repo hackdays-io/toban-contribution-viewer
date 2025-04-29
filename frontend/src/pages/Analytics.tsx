@@ -526,14 +526,14 @@ const Analytics: React.FC = () => {
                     to={
                       recentAnalyses.length > 0
                         ? `/dashboard/teams/${recentAnalyses[0].team_id}/reports/history`
-                        : '#'
+                        : '/dashboard/teams'
                     }
                     variant="outline"
                     colorScheme="purple"
                     size="sm"
                     width="100%"
                   >
-                    View All History
+                    View All Reports
                   </Button>
                 </VStack>
               ) : (
