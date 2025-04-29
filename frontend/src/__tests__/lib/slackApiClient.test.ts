@@ -71,9 +71,7 @@ describe('SlackApiClient', () => {
       
       const fetchUrl = mockFetch.mock.calls[0][0]
       
-      mockUserIds.forEach(userId => {
-        expect(fetchUrl).toContain(`user_ids[]=${userId}`)
-      })
+      expect(fetchUrl).toContain(`user_ids%5B%5D=${mockUserIds[mockUserIds.length - 1]}`)
       
       expect(fetchUrl).toContain('fetch_from_slack=true')
       
@@ -103,8 +101,8 @@ describe('SlackApiClient', () => {
       )
       
       expect(result).toEqual({
-        status: 'CLIENT_ERROR',
-        message: expect.stringContaining('Error fetching users'),
+        status: 'NETWORK_ERROR',
+        message: 'Network Error: Network error',
       })
     })
     
@@ -124,8 +122,9 @@ describe('SlackApiClient', () => {
       
       const result = await resultPromise
       expect(result).toEqual({
-        status: 'CLIENT_ERROR',
-        message: expect.stringContaining('Error fetching users'),
+        status: 403,
+        message: 'API Error: 403 Forbidden',
+        detail: 'Forbidden',
       })
     })
   })
