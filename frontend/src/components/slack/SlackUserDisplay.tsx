@@ -31,6 +31,7 @@ export interface SlackUserDisplayProps {
   _skipLoading?: boolean // Skip loading state (for testing)
   _testUser?: SlackUser | null // Provide test user (for testing)
   _hasError?: boolean // Set error state directly (for testing)
+  integrationId?: string // Optional: Integration ID to use as fallback when workspaceId is empty
 }
 
 /**
@@ -54,12 +55,15 @@ const SlackUserDisplay: React.FC<SlackUserDisplayProps> = ({
   _skipLoading = false,
   _testUser = null,
   _hasError = false,
+  integrationId,
 }) => {
   const Component = asComponent
   const context = useContext(UserCacheContext)
   const [user, setUser] = useState<SlackUser | undefined>()
   const [isLoading, setIsLoading] = useState<boolean>(!_skipLoading)
   const [hasError, setHasError] = useState<boolean>(_hasError)
+  
+  const effectiveWorkspaceId = workspaceId || integrationId || '';
 
   // Color mode values
   const errorColor = useColorModeValue('red.500', 'red.300')
@@ -67,7 +71,7 @@ const SlackUserDisplay: React.FC<SlackUserDisplayProps> = ({
   // Effect to fetch user data if not in context cache
   useEffect(() => {
     console.log(
-      `[SlackUserDisplay] Setting up for user: ${userId}, workspaceId: ${workspaceId}, fetchFromSlack: ${fetchFromSlack}`
+      `[SlackUserDisplay] Setting up for user: ${userId}, workspaceId: ${workspaceId}, integrationId: ${integrationId}, effectiveWorkspaceId: ${effectiveWorkspaceId}, fetchFromSlack: ${fetchFromSlack}`
     )
     if (!userId) return
 
@@ -82,9 +86,9 @@ const SlackUserDisplay: React.FC<SlackUserDisplayProps> = ({
 
     // Extra safety check - if we don't have a workspaceId and no context,
     // we can't fetch the user data
-    if (!workspaceId && !context) {
+    if (!effectiveWorkspaceId && !context) {
       console.warn(
-        `SlackUserDisplay: Cannot fetch user ${userId} - no workspaceId and no context`
+        `SlackUserDisplay: Cannot fetch user ${userId} - no workspaceId/integrationId and no context`
       )
       setHasError(true)
       setIsLoading(false)
@@ -93,23 +97,23 @@ const SlackUserDisplay: React.FC<SlackUserDisplayProps> = ({
 
     // Additional debugging logs
     console.log(
-      `[SlackUserDisplay] Decision point - userId: ${userId}, workspaceId: ${workspaceId}, has context: ${!!context}`
+      `[SlackUserDisplay] Decision point - userId: ${userId}, effectiveWorkspaceId: ${effectiveWorkspaceId}, has context: ${!!context}`
     )
 
     const fetchUserData = async () => {
       // If not using context or context is not available
-      if (!context && workspaceId) {
+      if (!context && effectiveWorkspaceId) {
         setIsLoading(true)
         try {
           // Import the slackApiClient here to avoid circular dependencies
           const { slackApiClient } = await import('../../lib/slackApiClient')
 
           console.log(
-            `[SlackUserDisplay] Direct fetch - workspaceId: ${workspaceId}, userId: ${userId}`
+            `[SlackUserDisplay] Direct fetch - effectiveWorkspaceId: ${effectiveWorkspaceId}, userId: ${userId}`
           )
 
           const result = await slackApiClient.getUsersByIds(
-            workspaceId,
+            effectiveWorkspaceId,
             [userId],
             true // fetchFromSlack=true
           )
@@ -181,8 +185,8 @@ const SlackUserDisplay: React.FC<SlackUserDisplayProps> = ({
           )
           setIsLoading(true)
 
-          // Use the provided workspace ID or let the context use its default
-          const wsId = workspaceId || undefined // Make sure it's properly typed
+          // Use the effective workspace ID or let the context use its default
+          const wsId = effectiveWorkspaceId || undefined // Make sure it's properly typed
           console.log(
             `[SlackUserDisplay] Calling context.fetchUser for userId: ${userId}, wsId: ${wsId}`
           )
@@ -211,6 +215,8 @@ const SlackUserDisplay: React.FC<SlackUserDisplayProps> = ({
   }, [
     userId,
     workspaceId,
+    integrationId,
+    effectiveWorkspaceId,
     context,
     _skipLoading,
     _testUser,

@@ -7,6 +7,7 @@ interface MessageTextProps {
   workspaceId: string // Required to fetch user data
   resolveMentions?: boolean // Whether to resolve user mentions with SlackUserDisplay
   fallbackToSimpleFormat?: boolean // When true, falls back to simple @ID format on error
+  integrationId?: string // Optional: Integration ID to use as fallback when workspaceId is empty
 }
 
 /**
@@ -20,6 +21,7 @@ const MessageText: React.FC<MessageTextProps> = ({
   workspaceId,
   resolveMentions = true,
   fallbackToSimpleFormat = true,
+  integrationId,
 }) => {
   // Track which user IDs had errors during resolution
   const [errorUserIds, setErrorUserIds] = useState<Set<string>>(new Set())
@@ -155,6 +157,7 @@ const MessageText: React.FC<MessageTextProps> = ({
           <SlackUserDisplay
             userId={userId}
             workspaceId={workspaceId}
+            integrationId={integrationId}
             displayFormat="username"
             fetchFromSlack={true} // Always try to fetch from Slack if user not in DB
             asComponent="span"

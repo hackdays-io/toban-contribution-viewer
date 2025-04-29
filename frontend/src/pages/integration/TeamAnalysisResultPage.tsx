@@ -148,6 +148,7 @@ const ChannelAnalysisList: FC<ChannelAnalysisListProps> = ({
                 <MessageText
                   text={paragraph}
                   workspaceId={workspaceId ?? ''}
+                  integrationId={integrationId}
                   resolveMentions={true}
                   fallbackToSimpleFormat={true}
                 />
@@ -1579,7 +1580,7 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
   return (
     <SlackUserCacheProvider
       workspaceId={
-        effectiveWorkspaceId || (isTeamAnalysis ? integrationId || '' : '')
+        effectiveWorkspaceId || integrationId || ''
       }
     >
       {/* Apply custom CSS to hide duplicate headings */}
