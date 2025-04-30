@@ -472,22 +472,17 @@ const TeamAnalysisResultPage: React.FC = () => {
    * Handle team analysis (cross-resource report)
    */
   const handleTeamAnalysis = useCallback(async () => {
-    // Try to get integration data through context or direct API call
-    let teamId
-    let directIntegration = null
+    // Get team ID from the integration
+    let teamId = currentIntegration?.owner_team?.id
 
-    // First try context
-    if (currentIntegration) {
-      teamId = currentIntegration.owner_team.id
-    } else {
-      // If context doesn't have it yet, get it directly
+    // If not available in context, get it directly
+    if (!teamId) {
       const integrationResult = await integrationService.getIntegration(
         integrationId ?? ''
       )
 
       if (!integrationService.isApiError(integrationResult)) {
-        directIntegration = integrationResult
-        teamId = directIntegration.owner_team.id
+        teamId = integrationResult.owner_team.id
       } else {
         // Failed to get integration data
         toast({
@@ -574,9 +569,7 @@ const TeamAnalysisResultPage: React.FC = () => {
         generated_at: String(
           crossResourceReport.created_at || new Date().toISOString()
         ),
-        workspace_id: directIntegration
-          ? directIntegration.id
-          : currentIntegration?.id || '', // Use integration ID as workspace ID for display
+        workspace_id: currentIntegration?.id || integrationId || '', // Use integration ID as workspace ID for display
       }
 
       console.log('Created adapted analysis for team report:', adaptedAnalysis)
@@ -616,9 +609,7 @@ const TeamAnalysisResultPage: React.FC = () => {
         generated_at: String(
           crossResourceReport.created_at || new Date().toISOString()
         ),
-        workspace_id: directIntegration
-          ? directIntegration.id
-          : currentIntegration?.id || '',
+        workspace_id: currentIntegration?.id || integrationId || '',
       }
 
       setAnalysis(emptyAnalysis)
