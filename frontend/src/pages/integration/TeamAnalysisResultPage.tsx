@@ -113,7 +113,7 @@ const ChannelAnalysisList: FC<ChannelAnalysisListProps> = ({
   // Use react-router's useNavigate hook for navigation
   const navigate = useNavigate()
   // Function to format plain text with proper formatting and support for markdown-like syntax
-  const renderPlainText = (text: string | unknown) => {
+  const renderPlainText = (text: string | unknown, channelIntegrationId?: string) => {
     // Convert to string and handle undefined or empty text
     const textStr = typeof text === 'string' ? text : String(text || '')
     if (!textStr || textStr.trim().length === 0) {
@@ -261,6 +261,7 @@ const ChannelAnalysisList: FC<ChannelAnalysisListProps> = ({
               <MessageText
                 text={paragraph}
                 workspaceId={workspaceId ?? ''}
+                integrationId={integrationId}
                 resolveMentions={true}
                 fallbackToSimpleFormat={true}
               />
@@ -338,13 +339,16 @@ const ChannelAnalysisList: FC<ChannelAnalysisListProps> = ({
             <CardBody pt={2}>
               {channelAnalysis[contentField] ? (
                 <Box className="analysis-content">
+                  {/* Extract channel-specific integration_id if available */}
                   {renderPlainText(
                     typeof channelAnalysis[contentField] === 'string'
                       ? channelAnalysis[contentField].replace(
                           /(\d+\.\s)/g,
                           '\n$1'
                         )
-                      : 'No content available'
+                      : 'No content available',
+                    // Pass channel-specific integration_id if available
+                    channelAnalysis.integration_id || integrationId
                   )}
                 </Box>
               ) : (
@@ -790,7 +794,7 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
   /**
    * Render plain text with proper formatting and support for markdown-like syntax
    */
-  const renderPlainText = (text: string | unknown) => {
+  const renderPlainText = (text: string | unknown, channelIntegrationId?: string) => {
     // Convert to string and handle undefined or empty text
     const textStr = typeof text === 'string' ? text : String(text || '')
     if (!textStr || textStr.trim().length === 0) {
@@ -826,6 +830,7 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
                 <MessageText
                   text={paragraph}
                   workspaceId={effectiveWorkspaceId ?? ''}
+                  integrationId={channelIntegrationId}
                   resolveMentions={true}
                   fallbackToSimpleFormat={true}
                 />

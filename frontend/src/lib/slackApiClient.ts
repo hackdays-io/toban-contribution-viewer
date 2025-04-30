@@ -345,6 +345,62 @@ class SlackApiClient extends ApiClient {
   ): Promise<Record<string, unknown> | ApiError> {
     return this.post<Record<string, unknown>>(`workspaces/${workspaceId}/sync`)
   }
+
+  /**
+   * Get workspace ID from integration ID
+   * This is useful when we only have an integration ID but need to fetch user data
+   * @param integrationId The integration ID
+   * @returns Promise with the workspace ID or ApiError
+   */
+  async getWorkspaceIdFromIntegration(
+    integrationId: string
+  ): Promise<string | ApiError> {
+    if (!integrationId) {
+      console.warn('[SlackApiClient] getWorkspaceIdFromIntegration - No integrationId provided')
+      return ''
+    }
+
+    try {
+      // Use the integration endpoint to get the integration details
+      const apiUrl = `${env.apiUrl}/integrations/${integrationId}`
+      
+      console.log(`[SlackApiClient] getWorkspaceIdFromIntegration - Fetching from ${apiUrl}`)
+      
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      })
+
+      if (!response.ok) {
+        return {
+          status: response.status,
+          message: `Failed to get workspace ID: ${response.status} ${response.statusText}`,
+        }
+      }
+
+      const integration = await response.json()
+      
+      if (integration && 
+          integration.metadata && 
+          integration.metadata.workspace_id) {
+        console.log(`[SlackApiClient] getWorkspaceIdFromIntegration - Found workspace_id: ${integration.metadata.workspace_id}`)
+        return integration.metadata.workspace_id
+      }
+      
+      console.warn('[SlackApiClient] getWorkspaceIdFromIntegration - No workspace_id found in integration metadata')
+      return ''
+    } catch (error) {
+      console.error('[SlackApiClient] getWorkspaceIdFromIntegration - Error:', error)
+      return {
+        status: 'CLIENT_ERROR',
+        message: `Error fetching workspace ID: ${error instanceof Error ? error.message : String(error)}`,
+      }
+    }
+  }
 }
 
 // Export singleton instance
