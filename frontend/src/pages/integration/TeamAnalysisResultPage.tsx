@@ -148,7 +148,7 @@ const ChannelAnalysisList: FC<ChannelAnalysisListProps> = ({
                 <MessageText
                   text={paragraph}
                   workspaceId={workspaceId ?? ''}
-                  integrationId={integrationId}
+                  integrationId={channelIntegrationId || integrationId}
                   resolveMentions={true}
                   fallbackToSimpleFormat={true}
                 />
