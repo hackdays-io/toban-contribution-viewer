@@ -11,6 +11,15 @@ from pydantic import BaseModel, Field, validator
 from pydantic.generics import GenericModel
 
 
+class WorkspaceIdResponse(BaseModel):
+    """Response schema for workspace ID lookup."""
+
+    workspace_id: UUID = Field(..., description="SlackWorkspace UUID")
+    slack_workspace_id: str = Field(..., description="Slack workspace ID (string)")
+    workspace_name: Optional[str] = Field(None, description="Workspace name")
+    integration_id: UUID = Field(..., description="Integration ID")
+
+
 class ResourceTypeEnum(str, Enum):
     """Resource types enum for API schemas."""
 

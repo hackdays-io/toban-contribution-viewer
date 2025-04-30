@@ -21,10 +21,12 @@ from app.api.v1.reports.schemas import (
     ReportGenerationResponse,
     ResourceAnalysisFilterParams,
     ResourceAnalysisResponse,
+    WorkspaceIdResponse,
 )
 from app.core.auth import get_current_user
 from app.core.team_scoped_access import check_team_access
 from app.db.session import get_async_db
+from app.models.integration import Integration
 from app.models.reports import (
     AnalysisResourceType,
     AnalysisType,
@@ -32,6 +34,7 @@ from app.models.reports import (
     ReportStatus,
     ResourceAnalysis,
 )
+from app.models.slack import SlackWorkspace
 from app.models.team import Team, TeamMemberRole
 from app.services.slack.utils import get_channel_message_stats
 
@@ -537,6 +540,102 @@ async def delete_team_report(
     await db.commit()
 
     return {"message": "Report deleted successfully"}
+
+
+@router.get(
+    "/resource-analyses/{analysis_id}/workspace",
+    response_model=WorkspaceIdResponse,
+    summary="Get workspace ID for a resource analysis",
+    description="Retrieves the SlackWorkspace UUID for a given resource analysis ID",
+)
+async def get_workspace_id_for_analysis(
+    analysis_id: UUID,
+    db: AsyncSession = Depends(get_async_db),
+    current_user: Dict = Depends(get_current_user),
+):
+    """
+    Get the SlackWorkspace UUID for a resource analysis.
+    
+    This endpoint joins ResourceAnalysis with Integration to get the workspace_id,
+    then joins with SlackWorkspace to get the actual workspace UUID.
+    
+    Args:
+        analysis_id: Resource analysis ID
+        db: Database session
+        current_user: Current authenticated user
+        
+    Returns:
+        SlackWorkspace UUID and related information
+    """
+    logger.debug(f"Getting workspace ID for analysis {analysis_id}, user {current_user['id']}")
+    
+    analysis_result = await db.execute(
+        select(ResourceAnalysis)
+        .where(ResourceAnalysis.id == analysis_id)
+    )
+    analysis = analysis_result.scalar_one_or_none()
+    
+    if not analysis:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Resource analysis not found",
+        )
+    
+    # Check if user has access to the team that owns this report
+    report_result = await db.execute(
+        select(CrossResourceReport)
+        .where(CrossResourceReport.id == analysis.cross_resource_report_id)
+    )
+    report = report_result.scalar_one_or_none()
+    
+    if not report:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Associated report not found",
+        )
+    
+    # Check if user has access to this team
+    has_access = await check_team_access(
+        team_id=report.team_id, 
+        user_id=current_user["id"], 
+        db=db
+    )
+    
+    if not has_access:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You don't have access to this resource",
+        )
+    
+    # Get the integration and workspace information
+    result = await db.execute(
+        select(
+            ResourceAnalysis.id,
+            ResourceAnalysis.integration_id,
+            Integration.workspace_id,
+            SlackWorkspace.id.label("slack_workspace_id"),
+            SlackWorkspace.name.label("workspace_name")
+        )
+        .join(Integration, ResourceAnalysis.integration_id == Integration.id)
+        .join(SlackWorkspace, Integration.workspace_id == SlackWorkspace.slack_id)
+        .where(ResourceAnalysis.id == analysis_id)
+    )
+    
+    workspace_info = result.one_or_none()
+    
+    if not workspace_info:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Workspace information not found for this resource analysis",
+        )
+    
+    # Return the workspace ID and related information
+    return {
+        "workspace_id": workspace_info.slack_workspace_id,
+        "slack_workspace_id": workspace_info.workspace_id,
+        "workspace_name": workspace_info.workspace_name,
+        "integration_id": workspace_info.integration_id,
+    }
 
 
 @router.get(
