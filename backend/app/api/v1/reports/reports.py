@@ -26,6 +26,7 @@ from app.api.v1.reports.schemas import (
 from app.core.auth import get_current_user
 from app.core.team_scoped_access import check_team_access
 from app.db.session import get_async_db
+from app.models.integration import Integration
 from app.models.reports import (
     AnalysisResourceType,
     AnalysisType,
@@ -33,10 +34,9 @@ from app.models.reports import (
     ReportStatus,
     ResourceAnalysis,
 )
+from app.models.slack import SlackWorkspace
 from app.models.team import Team, TeamMemberRole
 from app.services.slack.utils import get_channel_message_stats
-from app.models.integration import Integration
-from app.models.slack import SlackWorkspace
 
 logger = logging.getLogger(__name__)
 
