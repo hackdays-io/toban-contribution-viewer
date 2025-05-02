@@ -1376,6 +1376,51 @@ class IntegrationService {
       return this.handleError(error, 'Failed to get cross-resource reports')
     }
   }
+  /**
+   * Get workspace ID by resource analysis ID
+   * @param resourceAnalysisId Analysis UUID
+   * @returns workspace_id
+   */
+  async getWorkspaceIdByResourceAnalysisId(
+    resourceAnalysisId: string
+  ): Promise<Record<string, unknown> | ApiError> {
+    try {
+      const headers = await this.getAuthHeaders()
+      // Use page_size instead of limit to match the backend parameter name
+      const url = `${REPORTS_API_BASE}/resource-analyses/${resourceAnalysisId}/workspace`
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          ...headers,
+          Accept: 'application/json',
+        },
+        credentials: 'include',
+      })
+
+      if (!response.ok) {
+        let errorDetail = ''
+        try {
+          const errorText = await response.text()
+          const errorJson = JSON.parse(errorText)
+          errorDetail = errorJson.detail || errorText
+        } catch {
+          errorDetail = response.statusText
+        }
+
+        return {
+          status: response.status,
+          message: `Failed to retrieve reports: ${response.status} ${response.statusText}`,
+          detail: errorDetail,
+        }
+      }
+
+      const result = await response.json()
+      return this.stripSensitiveCredentials(result)
+    } catch (error) {
+      return this.handleError(error, 'Failed to get cross-resource reports')
+    }
+  }
 }
 
 // Export singleton instance

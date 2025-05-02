@@ -1,13 +1,13 @@
 import React, { useState, useCallback } from 'react'
 import { Box } from '@chakra-ui/react'
 import SlackUserDisplay from './SlackUserDisplay'
-
+import { SlackUserCacheProvider } from './SlackUserContext'
 interface MessageTextProps {
   text: string
   workspaceId: string // Required to fetch user data
   resolveMentions?: boolean // Whether to resolve user mentions with SlackUserDisplay
   fallbackToSimpleFormat?: boolean // When true, falls back to simple @ID format on error
-  integrationId?: string // Optional: Integration ID to use as fallback when workspaceId is empty
+  resourceAnalysisId?: string // Optional: ChannelAnalysis ID to use as fallback when workspaceId is empty
 }
 
 /**
@@ -21,7 +21,7 @@ const MessageText: React.FC<MessageTextProps> = ({
   workspaceId,
   resolveMentions = true,
   fallbackToSimpleFormat = true,
-  integrationId,
+  resourceAnalysisId,
 }) => {
   // Track which user IDs had errors during resolution
   const [errorUserIds, setErrorUserIds] = useState<Set<string>>(new Set())
@@ -154,17 +154,20 @@ const MessageText: React.FC<MessageTextProps> = ({
         >
           {/* Don't add @ prefix if it was already in @userId format */}
           {!wasSimpleFormat && '@'}
-          <SlackUserDisplay
-            userId={userId}
+          <SlackUserCacheProvider
             workspaceId={workspaceId}
-            integrationId={integrationId}
-            displayFormat="username"
-            fetchFromSlack={true} // Always try to fetch from Slack if user not in DB
-            asComponent="span"
-            fallback={userId} // Use the user ID as fallback if user data can't be fetched
-            hideOnError={false} // Always show something, even on error
-            onError={() => handleUserError(userId)} // Handle errors
-          />
+          >
+            <SlackUserDisplay
+              userId={userId}
+              workspaceId={workspaceId}
+              displayFormat="username"
+              fetchFromSlack={true} // Always try to fetch from Slack if user not in DB
+              asComponent="span"
+              fallback={userId} // Use the user ID as fallback if user data can't be fetched
+              hideOnError={false} // Always show something, even on error
+              onError={() => handleUserError(userId)} // Handle errors
+            />
+          </SlackUserCacheProvider>
           {/* Log that we're trying to display a user */}
           {/* Log attempt to display user */}
           {(() => {

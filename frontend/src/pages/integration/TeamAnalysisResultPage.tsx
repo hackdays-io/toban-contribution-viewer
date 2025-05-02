@@ -46,7 +46,6 @@ import {
 } from 'react-icons/fi'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import MessageText from '../../components/slack/MessageText'
-import { SlackUserCacheProvider } from '../../components/slack/SlackUserContext'
 import useIntegration from '../../context/useIntegration'
 import integrationService, {
   ServiceResource,
@@ -113,7 +112,7 @@ const ChannelAnalysisList: FC<ChannelAnalysisListProps> = ({
   // Use react-router's useNavigate hook for navigation
   const navigate = useNavigate()
   // Function to format plain text with proper formatting and support for markdown-like syntax
-  const renderPlainText = (text: string | unknown, channelIntegrationId?: string) => {
+  const renderPlainText = (text: string | unknown) => {
     // Convert to string and handle undefined or empty text
     const textStr = typeof text === 'string' ? text : String(text || '')
     if (!textStr || textStr.trim().length === 0) {
@@ -148,7 +147,6 @@ const ChannelAnalysisList: FC<ChannelAnalysisListProps> = ({
                 <MessageText
                   text={paragraph}
                   workspaceId={workspaceId ?? ''}
-                  integrationId={channelIntegrationId || integrationId}
                   resolveMentions={true}
                   fallbackToSimpleFormat={true}
                 />
@@ -261,7 +259,6 @@ const ChannelAnalysisList: FC<ChannelAnalysisListProps> = ({
               <MessageText
                 text={paragraph}
                 workspaceId={workspaceId ?? ''}
-                integrationId={integrationId}
                 resolveMentions={true}
                 fallbackToSimpleFormat={true}
               />
@@ -347,8 +344,6 @@ const ChannelAnalysisList: FC<ChannelAnalysisListProps> = ({
                           '\n$1'
                         )
                       : 'No content available',
-                    // Pass channel-specific integration_id if available
-                    channelAnalysis.integration_id || integrationId
                   )}
                 </Box>
               ) : (
@@ -831,7 +826,7 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
   /**
    * Render plain text with proper formatting and support for markdown-like syntax
    */
-  const renderPlainText = (text: string | unknown, channelIntegrationId?: string) => {
+  const renderPlainText = (text: string | unknown) => {
     // Convert to string and handle undefined or empty text
     const textStr = typeof text === 'string' ? text : String(text || '')
     if (!textStr || textStr.trim().length === 0) {
@@ -867,7 +862,7 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
                 <MessageText
                   text={paragraph}
                   workspaceId={effectiveWorkspaceId ?? ''}
-                  integrationId={channelIntegrationId}
+                  resourceAnalysisId={analysisId}
                   resolveMentions={true}
                   fallbackToSimpleFormat={true}
                 />
@@ -966,6 +961,7 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
                   <MessageText
                     text={paragraph.trim().substring(2)}
                     workspaceId={effectiveWorkspaceId ?? ''}
+                    resourceAnalysisId={analysisId}
                     resolveMentions={true}
                     fallbackToSimpleFormat={true}
                   />
@@ -980,6 +976,7 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
               <MessageText
                 text={paragraph}
                 workspaceId={effectiveWorkspaceId ?? ''}
+                resourceAnalysisId={analysisId}
                 resolveMentions={true}
                 fallbackToSimpleFormat={true}
               />
@@ -1634,11 +1631,7 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
   }
 
   return (
-    <SlackUserCacheProvider
-      workspaceId={
-        effectiveWorkspaceId || integrationId || ''
-      }
-    >
+    <>
       {/* Apply custom CSS to hide duplicate headings */}
       <style>{customStyles}</style>
       <Box width="100%">
@@ -2278,7 +2271,7 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
           )}
         </Flex>
       </Box>
-    </SlackUserCacheProvider>
+    </>
   )
 }
 
