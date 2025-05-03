@@ -13,6 +13,7 @@ import integrationService, {
   ResourceType,
   ResourceAccessRequest,
   AnalysisOptions,
+  WorkspaceIdResponse,
 } from '../lib/integrationService'
 
 /**
@@ -73,6 +74,11 @@ interface IntegrationContextType extends IntegrationState {
     integrationId: string,
     resourceTypes?: string[]
   ) => Promise<boolean>
+  
+  // Workspace operations
+  getWorkspaceIdForAnalysis: (
+    analysisId: string
+  ) => Promise<WorkspaceIdResponse | null>
 
   // Sharing operations
   shareIntegration: (
@@ -138,6 +144,9 @@ const IntegrationContext = createContext<IntegrationContextType>({
   // Resource operations
   fetchResources: async () => {},
   syncResources: async () => false,
+  
+  // Workspace operations
+  getWorkspaceIdForAnalysis: async () => null,
 
   // Sharing operations
   shareIntegration: async () => null,
@@ -1153,6 +1162,46 @@ export const IntegrationProvider: React.FC<{ children: React.ReactNode }> = ({
     },
     [session]
   )
+  
+  /**
+   * Get workspace ID for a resource analysis
+   * @param analysisId Resource analysis UUID
+   * @returns Promise with workspace ID information or null on error
+   */
+  const getWorkspaceIdForAnalysis = useCallback(
+    async (analysisId: string): Promise<WorkspaceIdResponse | null> => {
+      if (!session || !analysisId) return null
+
+      setState((prev) => ({ ...prev, loading: true, error: null }))
+
+      try {
+        const result = await integrationService.getWorkspaceIdForAnalysis(analysisId)
+
+        if (integrationService.isApiError(result)) {
+          setState((prev) => ({
+            ...prev,
+            loading: false,
+            error: result,
+          }))
+          return null
+        }
+
+        setState((prev) => ({ ...prev, loading: false }))
+        return result
+      } catch (error) {
+        setState((prev) => ({
+          ...prev,
+          loading: false,
+          error:
+            error instanceof Error
+              ? error
+              : new Error('Failed to get workspace ID for analysis'),
+        }))
+        return null
+      }
+    },
+    [session]
+  )
 
   /**
    * Load integrations when the current team changes
@@ -1176,6 +1225,7 @@ export const IntegrationProvider: React.FC<{ children: React.ReactNode }> = ({
     updateIntegration,
     fetchResources,
     syncResources,
+    getWorkspaceIdForAnalysis,
     shareIntegration,
     revokeShare,
     grantResourceAccess,
