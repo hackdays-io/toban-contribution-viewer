@@ -197,6 +197,16 @@ export interface ApiError {
 }
 
 /**
+ * Response type for workspace ID lookup
+ */
+export interface WorkspaceIdResponse {
+  workspace_id: string
+  slack_workspace_id: string
+  workspace_name?: string
+  integration_id: string
+}
+
+/**
  * Integration Service class
  */
 class IntegrationService {
@@ -1274,6 +1284,51 @@ class IntegrationService {
    * @param status Filter by report status (optional)
    * @returns Paginated response with items, total, page, page_size, and pages
    */
+  /**
+   * Get workspace ID for a resource analysis
+   * @param analysisId Resource analysis UUID
+   * @returns Promise with workspace ID information or ApiError
+   */
+  async getWorkspaceIdForAnalysis(
+    analysisId: string
+  ): Promise<WorkspaceIdResponse | ApiError> {
+    try {
+      const headers = await this.getAuthHeaders()
+      const url = `${env.apiUrl}/reports/resource-analyses/${analysisId}/workspace`
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          ...headers,
+          Accept: 'application/json',
+        },
+        credentials: 'include',
+      })
+
+      if (!response.ok) {
+        // Try to extract more detailed error information
+        let errorDetail = ''
+        try {
+          const errorText = await response.text()
+          const errorJson = JSON.parse(errorText)
+          errorDetail = errorJson.detail || errorText
+        } catch {
+          errorDetail = response.statusText
+        }
+
+        return {
+          status: response.status,
+          message: `Failed to retrieve workspace ID: ${response.status} ${response.statusText}`,
+          detail: errorDetail,
+        }
+      }
+
+      return await response.json()
+    } catch (error) {
+      return this.handleError(error, 'Failed to get workspace ID for analysis')
+    }
+  }
+
   async getCrossResourceReports(
     teamId: string,
     page: number = 1,
