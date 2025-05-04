@@ -1,62 +1,62 @@
-# Docker Compose統合テストフレームワーク実装戦略
+# Docker Compose Integration Testing Framework Implementation Strategy
 
-このドキュメントは、Toban Contribution Viewerプロジェクト用の統合テストフレームワークの実装戦略を詳細に説明します。
+This document details the implementation strategy for the integration testing framework for the Toban Contribution Viewer project.
 
-## 1. 目的
+## 1. Purpose
 
-このフレームワークの主な目的は以下の通りです：
+The main purposes of this framework are:
 
-- フロントエンドとバックエンドを連携させた完全なエンドツーエンドテストを可能にする
-- 実際のユーザーフローを自動的に検証する
-- 外部依存関係（SlackAPI、OpenRouter API）をモック化して安定したテスト環境を提供する
-- CI/CDパイプラインに統合して継続的な品質保証を実現する
+- Enable complete end-to-end testing that connects frontend and backend
+- Automatically verify actual user flows
+- Provide a stable testing environment by mocking external dependencies (Slack API, OpenRouter API)
+- Integrate with CI/CD pipelines for continuous quality assurance
 
-## 2. アーキテクチャ
+## 2. Architecture
 
-提案する統合テストフレームワークは以下のコンポーネントで構成されます：
+The proposed integration testing framework consists of the following components:
 
 ```
 integration-tests/
-├── docker-compose.test.yml     # テスト用Docker Compose設定
-├── setup/                      # テスト環境セットアップスクリプト
-│   ├── init-db.sh              # テストデータベース初期化
-│   └── wait-for-services.sh    # サービス起動待機
-├── mocks/                      # 外部サービスモック
-│   ├── slack-api/              # SlackAPIモック
-│   │   ├── server.js           # モックサーバー
-│   │   ├── data/               # テストデータ
-│   │   └── Dockerfile          # コンテナ定義
-│   └── openrouter-api/         # OpenRouter APIモック
-│       ├── server.js           # モックサーバー
-│       ├── data/               # テストデータ
-│       └── Dockerfile          # コンテナ定義
-├── tests/                      # テストケース
-│   ├── e2e/                    # E2Eテスト
-│   │   ├── auth.spec.js        # 認証フロー
-│   │   ├── slack.spec.js       # Slack統合フロー
-│   │   └── analysis.spec.js    # 分析フロー
-│   └── api/                    # APIテスト
-│       ├── slack.spec.js       # SlackAPI統合
-│       └── teams.spec.js       # チーム管理API
-├── utils/                      # ユーティリティ関数
-│   ├── test-data-generator.js  # テストデータ生成
-│   ├── auth-helper.js          # 認証ヘルパー
-│   └── slack-data-fetcher.js   # 実際のSlackデータ取得
-├── Dockerfile.test-runner      # テストランナーコンテナ定義
-└── run-tests.sh                # テスト実行スクリプト
+├── docker-compose.test.yml     # Docker Compose configuration for testing
+├── setup/                      # Test environment setup scripts
+│   ├── init-db.sh              # Test database initialization
+│   └── wait-for-services.sh    # Service startup wait script
+├── mocks/                      # External service mocks
+│   ├── slack-api/              # Slack API mock
+│   │   ├── server.js           # Mock server
+│   │   ├── data/               # Test data
+│   │   └── Dockerfile          # Container definition
+│   └── openrouter-api/         # OpenRouter API mock
+│       ├── server.js           # Mock server
+│       ├── data/               # Test data
+│       └── Dockerfile          # Container definition
+├── tests/                      # Test cases
+│   ├── e2e/                    # E2E tests
+│   │   ├── auth.spec.js        # Authentication flow
+│   │   ├── slack.spec.js       # Slack integration flow
+│   │   └── analysis.spec.js    # Analysis flow
+│   └── api/                    # API tests
+│       ├── slack.spec.js       # Slack API integration
+│       └── teams.spec.js       # Team management API
+├── utils/                      # Utility functions
+│   ├── test-data-generator.js  # Test data generation
+│   ├── auth-helper.js          # Authentication helper
+│   └── slack-data-fetcher.js   # Actual Slack data fetching
+├── Dockerfile.test-runner      # Test runner container definition
+└── run-tests.sh                # Test execution script
 ```
 
-## 3. 実装詳細
+## 3. Implementation Details
 
-### 3.1 Docker Compose設定
+### 3.1 Docker Compose Configuration
 
-`docker-compose.test.yml`ファイルは、テスト環境用の完全なスタックを定義します：
+The `docker-compose.test.yml` file defines a complete stack for the test environment:
 
 ```yaml
 version: '3.8'
 
 services:
-  # テスト用PostgreSQLデータベース
+  # Test PostgreSQL database
   postgres-test:
     image: postgres:13
     environment:
@@ -64,14 +64,14 @@ services:
       - POSTGRES_PASSWORD=test_password
       - POSTGRES_DB=test_db
     ports:
-      - "5433:5432"  # 通常のDBと競合しないポート
+      - "5433:5432"  # Port that doesn't conflict with the regular DB
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U test_user -d test_db"]
       interval: 5s
       timeout: 5s
       retries: 5
 
-  # モックSlack API
+  # Mock Slack API
   slack-api-mock:
     build: ./mocks/slack-api
     ports:
@@ -84,7 +84,7 @@ services:
       timeout: 5s
       retries: 5
 
-  # モックOpenRouter API
+  # Mock OpenRouter API
   openrouter-api-mock:
     build: ./mocks/openrouter-api
     ports:
@@ -95,7 +95,7 @@ services:
       timeout: 5s
       retries: 5
 
-  # バックエンドサービス（テストモード）
+  # Backend service (test mode)
   backend-test:
     build:
       context: ../backend
@@ -107,7 +107,7 @@ services:
       - OPENROUTER_API_URL=http://openrouter-api-mock:3002
       - FRONTEND_URL=http://frontend-test:5173
     ports:
-      - "8001:8000"  # 通常のバックエンドと競合しないポート
+      - "8001:8000"  # Port that doesn't conflict with the regular backend
     depends_on:
       postgres-test:
         condition: service_healthy
@@ -119,7 +119,7 @@ services:
       - ../backend:/app:cached
       - /app/__pycache__
 
-  # フロントエンドサービス（テストモード）
+  # Frontend service (test mode)
   frontend-test:
     build:
       context: ../frontend
@@ -130,14 +130,14 @@ services:
       - VITE_SUPABASE_URL=http://supabase-mock:9000
       - VITE_SUPABASE_ANON_KEY=test-key
     ports:
-      - "5174:5173"  # 通常のフロントエンドと競合しないポート
+      - "5174:5173"  # Port that doesn't conflict with the regular frontend
     depends_on:
       - backend-test
     volumes:
       - ../frontend:/app:cached
       - /app/node_modules
 
-  # テストランナー
+  # Test runner
   test-runner:
     build:
       context: .
@@ -151,37 +151,37 @@ services:
     command: ["./wait-for-services.sh", "npm", "run", "test"]
 ```
 
-### 3.2 テストランナー
+### 3.2 Test Runner
 
-Playwrightを使用してE2Eテストを実装します。テストランナーのDockerfileは以下のようになります：
+We'll implement E2E tests using Playwright. The test runner Dockerfile will be as follows:
 
 ```dockerfile
 FROM mcr.microsoft.com/playwright:latest
 
 WORKDIR /app
 
-# 依存関係をインストール
+# Install dependencies
 COPY package.json package-lock.json ./
 RUN npm install
 
-# テストスクリプトとユーティリティをコピー
+# Copy test scripts and utilities
 COPY tests/ ./tests/
 COPY utils/ ./utils/
 COPY setup/ ./setup/
 COPY playwright.config.js ./
 
-# 実行権限を付与
+# Grant execution permissions
 RUN chmod +x ./setup/wait-for-services.sh
 
-# レポートディレクトリを作成
+# Create reports directory
 RUN mkdir -p /reports
 
 CMD ["npm", "run", "test"]
 ```
 
-### 3.3 Slack APIモック
+### 3.3 Slack API Mock
 
-Slack APIモックサーバーは、実際のSlack APIと同じレスポンス形式を返すExpressサーバーとして実装します：
+The Slack API mock server will be implemented as an Express server that returns responses in the same format as the actual Slack API:
 
 ```javascript
 // mocks/slack-api/server.js
@@ -191,7 +191,7 @@ const path = require('path');
 const app = express();
 app.use(express.json());
 
-// テストデータを読み込む
+// Load test data
 const loadTestData = (filename) => {
   try {
     const dataPath = path.join(__dirname, 'data', filename);
@@ -206,7 +206,7 @@ const loadTestData = (filename) => {
   }
 };
 
-// チャンネル一覧エンドポイント
+// Channels list endpoint
 app.get('/api/conversations.list', (req, res) => {
   const channelsData = loadTestData('channels.json') || {
     ok: true,
@@ -220,7 +220,7 @@ app.get('/api/conversations.list', (req, res) => {
   res.json(channelsData);
 });
 
-// メッセージ履歴エンドポイント
+// Message history endpoint
 app.get('/api/conversations.history', (req, res) => {
   const channelId = req.query.channel;
   const messagesData = loadTestData(`messages_${channelId}.json`) || {
@@ -235,7 +235,7 @@ app.get('/api/conversations.history', (req, res) => {
   res.json(messagesData);
 });
 
-// ユーザー情報エンドポイント
+// User information endpoint
 app.get('/api/users.info', (req, res) => {
   const userId = req.query.user;
   const usersData = loadTestData('users.json') || {
@@ -257,7 +257,7 @@ app.get('/api/users.info', (req, res) => {
   });
 });
 
-// OAuth認証エンドポイント
+// OAuth authentication endpoint
 app.post('/api/oauth.v2.access', (req, res) => {
   const oauthData = loadTestData('oauth.json') || {
     ok: true,
@@ -274,7 +274,7 @@ app.post('/api/oauth.v2.access', (req, res) => {
   res.json(oauthData);
 });
 
-// ヘルスチェックエンドポイント
+// Health check endpoint
 app.get('/health', (req, res) => {
   res.status(200).send('OK');
 });
@@ -285,9 +285,9 @@ app.listen(PORT, () => {
 });
 ```
 
-### 3.4 Slackデータ取得スクリプト
+### 3.4 Slack Data Fetching Script
 
-実際のSlack APIからテストデータを取得するスクリプトを実装します：
+We'll implement a script to fetch test data from the actual Slack API:
 
 ```javascript
 // utils/slack-data-fetcher.js
@@ -295,23 +295,23 @@ const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
 
-// 設定
+// Configuration
 const SLACK_TOKEN = process.env.SLACK_TOKEN;
 const OUTPUT_DIR = path.join(__dirname, '..', 'mocks', 'slack-api', 'data');
 
-// 出力ディレクトリが存在しない場合は作成
+// Create output directory if it doesn't exist
 if (!fs.existsSync(OUTPUT_DIR)) {
   fs.mkdirSync(OUTPUT_DIR, { recursive: true });
 }
 
-// データをJSONファイルとして保存
+// Save data as JSON file
 const saveData = (filename, data) => {
   const filePath = path.join(OUTPUT_DIR, filename);
   fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
   console.log(`Saved data to ${filePath}`);
 };
 
-// Slack APIクライアント
+// Slack API client
 const slackClient = axios.create({
   baseURL: 'https://slack.com/api',
   headers: {
@@ -320,7 +320,7 @@ const slackClient = axios.create({
   },
 });
 
-// チャンネル一覧を取得
+// Fetch channel list
 const fetchChannels = async () => {
   try {
     const response = await slackClient.get('/conversations.list', {
@@ -343,7 +343,7 @@ const fetchChannels = async () => {
   }
 };
 
-// チャンネルのメッセージを取得
+// Fetch channel messages
 const fetchMessages = async (channelId) => {
   try {
     const response = await slackClient.get('/conversations.history', {
@@ -366,7 +366,7 @@ const fetchMessages = async (channelId) => {
   }
 };
 
-// ユーザー情報を取得
+// Fetch user information
 const fetchUsers = async (userIds) => {
   const users = [];
   
@@ -392,7 +392,7 @@ const fetchUsers = async (userIds) => {
   return users;
 };
 
-// OAuth情報を取得（モック用）
+// Create OAuth mock data
 const createOAuthMock = () => {
   const oauthData = {
     ok: true,
@@ -409,7 +409,7 @@ const createOAuthMock = () => {
   saveData('oauth.json', oauthData);
 };
 
-// メイン関数
+// Main function
 const main = async () => {
   if (!SLACK_TOKEN) {
     console.error('Error: SLACK_TOKEN environment variable is required');
@@ -418,11 +418,11 @@ const main = async () => {
   
   console.log('Fetching Slack data for testing...');
   
-  // チャンネル一覧を取得
+  // Fetch channel list
   const channels = await fetchChannels();
   console.log(`Fetched ${channels.length} channels`);
   
-  // 最大5つのチャンネルからメッセージを取得
+  // Fetch messages from up to 5 channels
   const channelsToFetch = channels.slice(0, 5);
   const userIds = new Set();
   
@@ -431,7 +431,7 @@ const main = async () => {
     const messages = await fetchMessages(channel.id);
     console.log(`Fetched ${messages.length} messages`);
     
-    // メッセージからユーザーIDを収集
+    // Collect user IDs from messages
     messages.forEach(msg => {
       if (msg.user) {
         userIds.add(msg.user);
@@ -439,17 +439,17 @@ const main = async () => {
     });
   }
   
-  // ユーザー情報を取得
+  // Fetch user information
   console.log(`Fetching information for ${userIds.size} users`);
   await fetchUsers([...userIds]);
   
-  // OAuth情報を作成
+  // Create OAuth mock data
   createOAuthMock();
   
   console.log('Data fetching complete!');
 };
 
-// スクリプトが直接実行された場合のみ実行
+// Only run if script is executed directly
 if (require.main === module) {
   main().catch(error => {
     console.error('Error in main function:', error);
@@ -465,16 +465,16 @@ module.exports = {
 };
 ```
 
-### 3.5 テスト実行スクリプト
+### 3.5 Test Execution Script
 
 ```bash
 #!/bin/bash
 # run-tests.sh
 
-# 環境変数設定
+# Set environment variables
 export TEST_ENV=integration
 
-# 引数解析
+# Parse arguments
 SKIP_DATA_FETCH=false
 SKIP_CLEANUP=false
 
@@ -487,7 +487,7 @@ while [[ "$#" -gt 0 ]]; do
   shift
 done
 
-# テストデータ取得（スキップされない場合）
+# Fetch test data (unless skipped)
 if [ "$SKIP_DATA_FETCH" = false ]; then
   echo "Fetching test data from Slack API..."
   
@@ -506,25 +506,25 @@ if [ "$SKIP_DATA_FETCH" = false ]; then
   fi
 fi
 
-# Docker Composeでテスト環境を起動
+# Start test environment with Docker Compose
 echo "Starting test environment..."
 docker-compose -f docker-compose.test.yml up -d
 
-# サービスの起動を待機
+# Wait for services to be ready
 echo "Waiting for services to be ready..."
 ./setup/wait-for-services.sh
 
-# テストを実行
+# Run tests
 echo "Running tests..."
 docker-compose -f docker-compose.test.yml run test-runner
 
-# テスト結果を保存
+# Save test results
 TEST_EXIT_CODE=$?
 echo "Saving test reports..."
 mkdir -p ./reports
 docker cp test-runner:/reports ./reports
 
-# テスト環境をクリーンアップ（スキップされない場合）
+# Clean up test environment (unless skipped)
 if [ "$SKIP_CLEANUP" = false ]; then
   echo "Cleaning up test environment..."
   docker-compose -f docker-compose.test.yml down -v
@@ -534,17 +534,17 @@ echo "Test execution complete!"
 exit $TEST_EXIT_CODE
 ```
 
-### 3.6 サービス待機スクリプト
+### 3.6 Service Wait Script
 
 ```bash
 #!/bin/bash
 # setup/wait-for-services.sh
 
-# 最大待機時間（秒）
+# Maximum wait time (seconds)
 MAX_WAIT=120
 INTERVAL=5
 
-# バックエンドの準備ができているか確認
+# Check if backend is ready
 wait_for_backend() {
   local url="http://backend-test:8000/api/v1/health"
   local elapsed=0
@@ -566,7 +566,7 @@ wait_for_backend() {
   return 1
 }
 
-# フロントエンドの準備ができているか確認
+# Check if frontend is ready
 wait_for_frontend() {
   local url="http://frontend-test:5173"
   local elapsed=0
@@ -588,7 +588,7 @@ wait_for_frontend() {
   return 1
 }
 
-# すべてのサービスを待機
+# Wait for all services
 wait_for_backend && wait_for_frontend
 
 if [ $? -eq 0 ]; then
@@ -600,38 +600,38 @@ else
 fi
 ```
 
-## 4. テスト対象ユーザーフロー
+## 4. User Flows to Test
 
-以下の主要なユーザーフローをテスト対象とします：
+The following key user flows will be targeted for testing:
 
-### 4.1 認証フロー
+### 4.1 Authentication Flow
 
-- ユーザー登録
-- ログイン
-- チーム切り替え
+- User registration
+- Login
+- Team switching
 
-### 4.2 Slack統合フロー
+### 4.2 Slack Integration Flow
 
-- Slackワークスペース接続
-- チャンネル同期
-- チャンネル選択
-- メッセージ取得
+- Connecting Slack workspace
+- Channel synchronization
+- Channel selection
+- Message retrieval
 
-### 4.3 分析フロー
+### 4.3 Analysis Flow
 
-- チャンネル分析実行
-- 分析結果表示
-- レポート生成
+- Running channel analysis
+- Displaying analysis results
+- Report generation
 
-### 4.4 チーム管理フロー
+### 4.4 Team Management Flow
 
-- チーム作成
-- メンバー招待
-- 権限管理
+- Team creation
+- Member invitation
+- Permission management
 
-## 5. CI/CD統合
+## 5. CI/CD Integration
 
-GitHub Actionsワークフローに統合テストを追加します：
+We'll add integration tests to the GitHub Actions workflow:
 
 ```yaml
 name: Integration Tests
@@ -665,67 +665,67 @@ jobs:
           path: integration-tests/reports
 ```
 
-## 6. 実装ステップ
+## 6. Implementation Steps
 
-統合テストフレームワークの実装は、以下のステップで進めます：
+The implementation of the integration testing framework will proceed in the following steps:
 
-1. 基本構造のセットアップ
-   - `integration-tests`ディレクトリの作成
-   - 必要なサブディレクトリとファイルの作成
+1. Set up the basic structure
+   - Create the `integration-tests` directory
+   - Create necessary subdirectories and files
 
-2. モックサービスの実装
-   - Slack APIモックサーバーの実装
-   - OpenRouter APIモックサーバーの実装
+2. Implement mock services
+   - Implement Slack API mock server
+   - Implement OpenRouter API mock server
 
-3. テストデータ取得スクリプトの実装
-   - Slack APIからのデータ取得機能
-   - テストデータの保存と管理
+3. Implement test data fetching script
+   - Implement data retrieval functionality from Slack API
+   - Manage and store test data
 
-4. Docker Compose設定の作成
-   - テスト環境用のサービス定義
-   - ヘルスチェックと依存関係の設定
+4. Create Docker Compose configuration
+   - Define services for the test environment
+   - Configure health checks and dependencies
 
-5. テストランナーの設定
-   - Playwrightの設定
-   - テスト実行環境の構築
+5. Configure the test runner
+   - Set up Playwright
+   - Build the test execution environment
 
-6. E2Eテストケースの実装
-   - 認証フローのテスト
-   - Slack統合フローのテスト
-   - 分析フローのテスト
+6. Implement E2E test cases
+   - Test authentication flow
+   - Test Slack integration flow
+   - Test analysis flow
 
-7. APIテストケースの実装
-   - バックエンドAPIのテスト
-   - 外部サービス統合のテスト
+7. Implement API test cases
+   - Test backend APIs
+   - Test external service integrations
 
-8. CI/CD統合
-   - GitHub Actionsワークフローの作成
-   - テスト結果のレポート設定
+8. Integrate with CI/CD
+   - Create GitHub Actions workflow
+   - Configure test result reporting
 
-## 7. 注意点
+## 7. Considerations
 
-- **モックの正確性**: モックサービスは実際のAPIと完全に一致するように維持する必要があります。APIの仕様変更があった場合は、モックも更新する必要があります。
+- **Mock Accuracy**: Mock services must be maintained to exactly match the actual APIs. When API specifications change, the mocks must also be updated.
 
-- **テストデータの鮮度**: テストデータは定期的に更新して実際のユースケースを反映させる必要があります。CI/CDパイプラインでは、定期的にテストデータを再取得するジョブを設定することを検討してください。
+- **Test Data Freshness**: Test data needs to be updated periodically to reflect actual use cases. Consider setting up jobs in the CI/CD pipeline to periodically refresh test data.
 
-- **環境変数の管理**: テスト環境で使用する環境変数は、`.env.test`ファイルで管理し、機密情報はCI/CDシステムのシークレットとして保存します。
+- **Environment Variable Management**: Environment variables used in the test environment should be managed in a `.env.test` file, with sensitive information stored as secrets in the CI/CD system.
 
-- **テスト実行時間**: CI環境ではテスト実行時間を最適化するための戦略が必要です。長時間実行されるテストは分割するか、並列実行を検討してください。
+- **Test Execution Time**: Strategies for optimizing test execution time are needed in the CI environment. Consider splitting or running in parallel tests that take a long time to execute.
 
-- **フロントエンドのレンダリング**: ヘッドレスブラウザでのテスト実行時に、一部のUIコンポーネントが正しくレンダリングされない場合があります。そのような場合は、テスト環境固有の調整が必要になることがあります。
+- **Frontend Rendering**: Some UI components may not render correctly during test execution in headless browsers. In such cases, test environment-specific adjustments may be necessary.
 
-## 8. メリット
+## 8. Benefits
 
-- **完全なエンドツーエンドテスト**: フロントエンドからバックエンド、データベースまでの全フローをテスト
-- **安定したテスト環境**: モックサービスにより外部依存関係を制御
-- **CI/CD統合**: 自動化されたテスト実行とレポート生成
-- **並行開発サポート**: 開発環境に影響を与えずにテストを実行可能
-- **包括的なカバレッジ**: 主要なユーザーフローをすべてカバー
+- **Complete End-to-End Testing**: Test the entire flow from frontend to backend and database
+- **Stable Test Environment**: Control external dependencies through mock services
+- **CI/CD Integration**: Automated test execution and report generation
+- **Parallel Development Support**: Run tests without affecting the development environment
+- **Comprehensive Coverage**: Cover all key user flows
 
-## 9. 将来の拡張
+## 9. Future Extensions
 
-- **パフォーマンステスト**: 負荷テストと応答時間測定の追加
-- **アクセシビリティテスト**: UIコンポーネントのアクセシビリティチェック
-- **セキュリティテスト**: 脆弱性スキャンとペネトレーションテスト
-- **ビジュアルリグレッションテスト**: UIの視覚的変更を検出するスナップショットテスト
-- **クロスブラウザテスト**: 複数のブラウザでのテスト実行
+- **Performance Testing**: Add load testing and response time measurement
+- **Accessibility Testing**: Accessibility checks for UI components
+- **Security Testing**: Vulnerability scanning and penetration testing
+- **Visual Regression Testing**: Snapshot testing to detect visual changes in the UI
+- **Cross-Browser Testing**: Test execution across multiple browsers
