@@ -1209,7 +1209,7 @@ Generated using Toban Contribution Viewer with ${modelUsed}
                   reportResult={reportResult}
                   currentResources={[]}
                   integrationId=""
-                  contentField="resource_topic_analysis"
+                  contentField="topic_analysis"
                   emptyMessage="No topic analyses available for individual channels."
                 />
               )}
@@ -1239,7 +1239,7 @@ Generated using Toban Contribution Viewer with ${modelUsed}
                   reportResult={reportResult}
                   currentResources={[]}
                   integrationId=""
-                  contentField="resource_contributor_insights"
+                  contentField="contributor_insights"
                   emptyMessage="No contributor insights available for individual channels."
                 />
               )}
@@ -1268,7 +1268,7 @@ Generated using Toban Contribution Viewer with ${modelUsed}
                   reportResult={reportResult}
                   currentResources={[]}
                   integrationId=""
-                  contentField="resource_key_highlights"
+                  contentField="key_highlights"
                   emptyMessage="No highlights available for individual channels."
                 />
               )}
