@@ -8,11 +8,14 @@ import {
 // Provider component for the UserCache
 export const SlackUserCacheProvider: React.FC<{
   children: React.ReactNode
-  workspaceId: string
-}> = ({ children, workspaceId }) => {
+  workspaceId?: string
+  workspaceUuid?: string
+}> = ({ children, workspaceId, workspaceUuid }) => {
+  // Use workspaceUuid if provided, otherwise fall back to workspaceId
+  const effectiveWorkspaceId = workspaceUuid || workspaceId || ''
   console.log(
     'SlackUserCacheProvider initialized with workspace ID:',
-    workspaceId
+    effectiveWorkspaceId
   )
   const [users, setUsers] = useState<Map<string, SlackUser>>(new Map())
   const [loading, setLoading] = useState<Set<string>>(new Set())
@@ -24,7 +27,7 @@ export const SlackUserCacheProvider: React.FC<{
     wsId?: string
   ): Promise<SlackUser | undefined> => {
     // Use provided workspace ID or fall back to the provider's workspaceId
-    const targetWorkspaceId = wsId || workspaceId
+    const targetWorkspaceId = wsId || effectiveWorkspaceId
 
     console.log(
       `fetchUser called for userId: ${userId}, wsId: ${wsId}, using targetWorkspaceId: ${targetWorkspaceId}`

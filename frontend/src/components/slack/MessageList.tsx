@@ -75,7 +75,8 @@ interface PaginationInfo {
 }
 
 interface MessageListProps {
-  workspaceId: string
+  workspaceId?: string
+  workspaceUuid?: string
   channelId: string
   channelName?: string
 }
@@ -85,9 +86,11 @@ interface MessageListProps {
  */
 const MessageList: React.FC<MessageListProps> = ({
   workspaceId,
+  workspaceUuid,
   channelId,
   channelName,
 }) => {
+  const effectiveWorkspaceId = workspaceUuid || workspaceId || ''
   const [messages, setMessages] = useState<SlackMessage[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isSyncing, setIsSyncing] = useState(false)
@@ -109,7 +112,7 @@ const MessageList: React.FC<MessageListProps> = ({
   useEffect(() => {
     fetchMessages()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [workspaceId, channelId, cursor])
+  }, [effectiveWorkspaceId, channelId, cursor])
 
   /**
    * Fetch channel messages from the API.
@@ -119,7 +122,7 @@ const MessageList: React.FC<MessageListProps> = ({
       setIsLoading(true)
 
       // Construct the URL with query parameters
-      let url = `${env.apiUrl}/slack/workspaces/${workspaceId}/channels/${channelId}/messages?include_replies=${includeReplies}`
+      let url = `${env.apiUrl}/slack/workspaces/${effectiveWorkspaceId}/channels/${channelId}/messages?include_replies=${includeReplies}`
 
       if (startDate) {
         // Create a date at the beginning of the selected day (00:00:00)
@@ -214,7 +217,7 @@ const MessageList: React.FC<MessageListProps> = ({
         thread_days: 30, // Sync last 30 days of threads by default
       }
 
-      const syncUrl = `${env.apiUrl}/slack/workspaces/${workspaceId}/channels/${channelId}/sync`
+      const syncUrl = `${env.apiUrl}/slack/workspaces/${effectiveWorkspaceId}/channels/${channelId}/sync`
       // Start the sync process
 
       const response = await fetch(syncUrl, {
@@ -318,7 +321,7 @@ const MessageList: React.FC<MessageListProps> = ({
   )
 
   return (
-    <SlackUserCacheProvider workspaceId={workspaceId}>
+    <SlackUserCacheProvider workspaceUuid={effectiveWorkspaceId}>
       <Box p={6} width="100%" maxWidth="1000px" mx="auto">
         <HStack justifyContent="space-between" mb={6}>
           <Heading size="lg">
@@ -444,7 +447,7 @@ const MessageList: React.FC<MessageListProps> = ({
                           <Box>
                             <SlackUserDisplay
                               userId={message.user_id || ''}
-                              workspaceId={workspaceId}
+                              workspaceUuid={effectiveWorkspaceId}
                               showAvatar={true}
                               displayFormat="real_name"
                               fetchFromSlack={true}
@@ -466,7 +469,7 @@ const MessageList: React.FC<MessageListProps> = ({
                         <Box pl={10} pr={2}>
                           <MessageText
                             text={message.text}
-                            workspaceId={workspaceId}
+                            workspaceUuid={workspaceId}
                             resolveMentions={true}
                             fallbackToSimpleFormat={true}
                           />
@@ -535,7 +538,7 @@ const MessageList: React.FC<MessageListProps> = ({
         <ThreadView
           isOpen={isThreadViewOpen}
           onClose={() => setIsThreadViewOpen(false)}
-          workspaceId={workspaceId}
+          workspaceId={effectiveWorkspaceId}
           channelId={channelId}
           threadTs={selectedThreadTs}
           parentMessage={selectedThreadParent}

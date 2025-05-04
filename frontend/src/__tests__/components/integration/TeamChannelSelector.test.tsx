@@ -158,6 +158,9 @@ const mockIntegrationContext = {
   // Analysis operations
   analyzeChannel: vi.fn(),
 
+  // Workspace operations
+  getWorkspaceIdForAnalysis: vi.fn().mockResolvedValue(null),
+
   // Error handling
   clearErrors: vi.fn(),
   clearChannelSelectionError: vi.fn(),
@@ -377,6 +380,7 @@ describe('TeamChannelSelector', () => {
           last_synced_at: '2023-01-01T00:00:00Z',
         },
       ],
+      getWorkspaceIdForAnalysis: vi.fn().mockResolvedValue(null),
     }
 
     // Re-render with updated mock context
@@ -417,6 +421,7 @@ describe('TeamChannelSelector', () => {
           last_synced_at: '2023-01-01T00:00:00Z',
         },
       ],
+      getWorkspaceIdForAnalysis: vi.fn().mockResolvedValue(null),
     }
 
     // Re-render with updated mock
@@ -498,6 +503,7 @@ describe('TeamChannelSelector', () => {
     const loadingMock = {
       ...mockIntegrationContext,
       loadingChannelSelection: true,
+      getWorkspaceIdForAnalysis: vi.fn().mockResolvedValue(null),
     }
 
     await act(async () => {

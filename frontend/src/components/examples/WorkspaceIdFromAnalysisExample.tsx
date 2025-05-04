@@ -1,11 +1,20 @@
 import React, { useContext, useEffect, useState } from 'react'
-import { Box, Button, Text, VStack, Code, Spinner, Alert, AlertIcon } from '@chakra-ui/react'
+import {
+  Box,
+  Button,
+  Text,
+  VStack,
+  Code,
+  Spinner,
+  Alert,
+  AlertIcon,
+} from '@chakra-ui/react'
 import IntegrationContext from '../../context/IntegrationContext'
 import { WorkspaceIdResponse } from '../../lib/integrationService'
 
 /**
  * Example component demonstrating how to retrieve workspace ID from a resource analysis ID
- * 
+ *
  * This component shows:
  * 1. How to access the IntegrationContext
  * 2. How to call the getWorkspaceIdForAnalysis method
@@ -16,12 +25,13 @@ interface WorkspaceIdFromAnalysisExampleProps {
   analysisId: string
 }
 
-const WorkspaceIdFromAnalysisExample: React.FC<WorkspaceIdFromAnalysisExampleProps> = ({
-  analysisId
-}) => {
+const WorkspaceIdFromAnalysisExample: React.FC<
+  WorkspaceIdFromAnalysisExampleProps
+> = ({ analysisId }) => {
   const integrationContext = useContext(IntegrationContext)
-  
-  const [workspaceData, setWorkspaceData] = useState<WorkspaceIdResponse | null>(null)
+
+  const [workspaceData, setWorkspaceData] =
+    useState<WorkspaceIdResponse | null>(null)
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -36,9 +46,10 @@ const WorkspaceIdFromAnalysisExample: React.FC<WorkspaceIdFromAnalysisExamplePro
 
     try {
       console.log(`Fetching workspace ID for analysis: ${analysisId}`)
-      
-      const result = await integrationContext.getWorkspaceIdForAnalysis(analysisId)
-      
+
+      const result =
+        await integrationContext.getWorkspaceIdForAnalysis(analysisId)
+
       if (result) {
         console.log('Workspace data retrieved:', result)
         setWorkspaceData(result)
@@ -60,10 +71,18 @@ const WorkspaceIdFromAnalysisExample: React.FC<WorkspaceIdFromAnalysisExamplePro
   }, [analysisId])
 
   return (
-    <Box p={4} borderWidth="1px" borderRadius="lg" width="100%" maxWidth="600px">
+    <Box
+      p={4}
+      borderWidth="1px"
+      borderRadius="lg"
+      width="100%"
+      maxWidth="600px"
+    >
       <VStack spacing={4} align="stretch">
-        <Text fontSize="xl" fontWeight="bold">Workspace ID from Analysis Example</Text>
-        
+        <Text fontSize="xl" fontWeight="bold">
+          Workspace ID from Analysis Example
+        </Text>
+
         <Box>
           <Text fontWeight="medium">Analysis ID:</Text>
           <Code p={2} borderRadius="md" width="100%">
@@ -72,9 +91,9 @@ const WorkspaceIdFromAnalysisExample: React.FC<WorkspaceIdFromAnalysisExamplePro
         </Box>
 
         {/* Manual fetch button */}
-        <Button 
-          colorScheme="blue" 
-          onClick={fetchWorkspaceId} 
+        <Button
+          colorScheme="blue"
+          onClick={fetchWorkspaceId}
           isLoading={isLoading}
           isDisabled={!analysisId}
         >
@@ -100,7 +119,9 @@ const WorkspaceIdFromAnalysisExample: React.FC<WorkspaceIdFromAnalysisExamplePro
         {/* Results display */}
         {workspaceData && (
           <Box borderWidth="1px" borderRadius="md" p={3} bg="gray.50">
-            <Text fontWeight="bold" mb={2}>Workspace Information:</Text>
+            <Text fontWeight="bold" mb={2}>
+              Workspace Information:
+            </Text>
             <VStack align="stretch" spacing={2}>
               <Box>
                 <Text fontWeight="medium">Workspace ID:</Text>

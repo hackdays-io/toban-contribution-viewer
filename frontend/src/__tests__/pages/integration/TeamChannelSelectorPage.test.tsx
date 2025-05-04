@@ -117,6 +117,7 @@ const mockIntegrationContext = {
   analyzeChannel: vi.fn(),
   clearErrors: vi.fn(),
   clearChannelSelectionError: vi.fn(),
+  getWorkspaceIdForAnalysis: vi.fn().mockResolvedValue(null),
 }
 
 describe('TeamChannelSelectorPage', () => {

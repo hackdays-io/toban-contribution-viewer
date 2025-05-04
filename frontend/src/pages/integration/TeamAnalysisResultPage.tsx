@@ -110,7 +110,10 @@ const ChannelAnalysisList: FC<ChannelAnalysisListProps> = ({
   // Use react-router's useNavigate hook for navigation
   const navigate = useNavigate()
   // Function to format plain text with proper formatting and support for markdown-like syntax
-  const renderPlainText = (text: string | unknown, workspaceUuid: string | undefined) => {
+  const renderPlainText = (
+    text: string | unknown,
+    workspaceUuid: string | undefined
+  ) => {
     // Convert to string and handle undefined or empty text
     const textStr = typeof text === 'string' ? text : String(text || '')
     if (!textStr || textStr.trim().length === 0) {
@@ -608,7 +611,7 @@ const TeamAnalysisResultPage: React.FC = () => {
         model_used: String(firstAnalysis.model_used || 'N/A'),
         generated_at: String(
           crossResourceReport.created_at || new Date().toISOString()
-        )
+        ),
       }
 
       console.log('Created adapted analysis for team report:', adaptedAnalysis)
@@ -647,7 +650,7 @@ const TeamAnalysisResultPage: React.FC = () => {
         model_used: 'N/A',
         generated_at: String(
           crossResourceReport.created_at || new Date().toISOString()
-        )
+        ),
       }
 
       setAnalysis(emptyAnalysis)
@@ -1896,8 +1899,8 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
                           ? fixedChannelSummary
                           : typeof analysis?.channel_summary === 'string'
                             ? analysis.channel_summary
-                            : 'No summary available'
-                        , ''
+                            : 'No summary available',
+                      ''
                     )}
                   </Box>
                 </CardBody>

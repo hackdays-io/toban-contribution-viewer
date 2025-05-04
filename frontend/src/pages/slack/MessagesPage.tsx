@@ -179,7 +179,7 @@ const MessagesPage: React.FC = () => {
       {/* Message list */}
       {workspaceId && channelId && (
         <MessageList
-          workspaceId={workspaceId}
+          workspaceUuid={workspaceId}
           channelId={channelId}
           channelName={channel?.name}
         />

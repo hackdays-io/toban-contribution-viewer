@@ -153,11 +153,11 @@ const MessageText: React.FC<MessageTextProps> = ({
           {/* Don't add @ prefix if it was already in @userId format */}
           {!wasSimpleFormat && '@'}
           <SlackUserCacheProvider
-            workspaceId={workspaceUuid ||''} // Use workspaceUuid if provided, otherwise fallback to workspaceId
+            workspaceUuid={workspaceUuid || ''} // Use workspaceUuid if provided, otherwise fallback to workspaceId
           >
             <SlackUserDisplay
               userId={userId}
-              workspaceId={workspaceUuid}
+              workspaceUuid={workspaceUuid}
               displayFormat="username"
               fetchFromSlack={true} // Always try to fetch from Slack if user not in DB
               asComponent="span"

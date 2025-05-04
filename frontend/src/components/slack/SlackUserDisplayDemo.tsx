@@ -37,7 +37,7 @@ const SlackUserDisplayDemo: React.FC = () => {
         workspace IDs with real ones to see actual data.
       </Text>
 
-      <SlackUserCacheProvider workspaceId={demoWorkspaceId}>
+      <SlackUserCacheProvider workspaceUuid={demoWorkspaceId}>
         <Card mb={8}>
           <CardHeader>
             <Heading size="md">Basic Usage</Heading>
