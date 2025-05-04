@@ -1,1 +1,10 @@
 import '@testing-library/jest-dom'
+
+process.env.VITE_API_URL = 'http://localhost:8000/api/v1'
+process.env.VITE_SUPABASE_URL = 'http://localhost:54321'
+process.env.VITE_SUPABASE_ANON_KEY = 'test-anon-key'
+process.env.VITE_AUTH_REDIRECT_URI = 'http://localhost:5173/auth/callback'
+process.env.VITE_DEV_MODE = 'true'
+process.env.VITE_ENABLE_NOTION_INTEGRATION = 'true'
+process.env.VITE_ENABLE_SLACK_INTEGRATION = 'true'
+process.env.VITE_ENABLE_GITHUB_INTEGRATION = 'true'

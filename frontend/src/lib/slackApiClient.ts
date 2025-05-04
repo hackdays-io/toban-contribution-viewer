@@ -262,20 +262,22 @@ class SlackApiClient extends ApiClient {
       // Directly use the path that will match the backend route
       const path = `/workspaces/${workspaceId}/users`
 
-      // Create params object
-      const params: Record<string, string> = {
-        fetch_from_slack: fetchFromSlack.toString(),
-      }
-
-      // Add user_ids[] parameter
-      // Add the same parameter multiple times for array values
+      // Create URLSearchParams object to properly handle multiple parameters with the same name
+      const searchParams = new URLSearchParams();
+      
+      // Add fetch_from_slack parameter
+      searchParams.append('fetch_from_slack', fetchFromSlack.toString());
+      
+      // Add user_ids[] parameter for each user ID
       userIds.forEach((id) => {
-        // This correctly adds multiple entries with the same key
-        params['user_ids[]'] = id
-      })
+        searchParams.append('user_ids[]', id);
+      });
+      
+      const params = Object.fromEntries(searchParams.entries());
 
       console.log('[SlackApiClient] getUsersByIds - Using path:', path)
       console.log('[SlackApiClient] getUsersByIds - Using params:', params)
+      console.log('[SlackApiClient] getUsersByIds - URLSearchParams:', searchParams.toString())
 
       return this.get<{ users: BaseSlackUser[] }>(path, params)
     } catch (error) {
@@ -342,6 +344,62 @@ class SlackApiClient extends ApiClient {
     workspaceId: string
   ): Promise<Record<string, unknown> | ApiError> {
     return this.post<Record<string, unknown>>(`workspaces/${workspaceId}/sync`)
+  }
+
+  /**
+   * Get workspace ID from integration ID
+   * This is useful when we only have an integration ID but need to fetch user data
+   * @param integrationId The integration ID
+   * @returns Promise with the workspace ID or ApiError
+   */
+  async getWorkspaceIdFromIntegration(
+    integrationId: string
+  ): Promise<string | ApiError> {
+    if (!integrationId) {
+      console.warn('[SlackApiClient] getWorkspaceIdFromIntegration - No integrationId provided')
+      return ''
+    }
+
+    try {
+      // Use the integration endpoint to get the integration details
+      const apiUrl = `${env.apiUrl}/integrations/${integrationId}`
+      
+      console.log(`[SlackApiClient] getWorkspaceIdFromIntegration - Fetching from ${apiUrl}`)
+      
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      })
+
+      if (!response.ok) {
+        return {
+          status: response.status,
+          message: `Failed to get workspace ID: ${response.status} ${response.statusText}`,
+        }
+      }
+
+      const integration = await response.json()
+      
+      if (integration && 
+          integration.metadata && 
+          integration.metadata.workspace_id) {
+        console.log(`[SlackApiClient] getWorkspaceIdFromIntegration - Found workspace_id: ${integration.metadata.workspace_id}`)
+        return integration.metadata.workspace_id
+      }
+      
+      console.warn('[SlackApiClient] getWorkspaceIdFromIntegration - No workspace_id found in integration metadata')
+      return ''
+    } catch (error) {
+      console.error('[SlackApiClient] getWorkspaceIdFromIntegration - Error:', error)
+      return {
+        status: 'CLIENT_ERROR',
+        message: `Error fetching workspace ID: ${error instanceof Error ? error.message : String(error)}`,
+      }
+    }
   }
 }
 

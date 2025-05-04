@@ -60,7 +60,7 @@ const SlackUserDisplay: React.FC<SlackUserDisplayProps> = ({
   const [user, setUser] = useState<SlackUser | undefined>()
   const [isLoading, setIsLoading] = useState<boolean>(!_skipLoading)
   const [hasError, setHasError] = useState<boolean>(_hasError)
-
+  
   // Color mode values
   const errorColor = useColorModeValue('red.500', 'red.300')
 
@@ -84,7 +84,7 @@ const SlackUserDisplay: React.FC<SlackUserDisplayProps> = ({
     // we can't fetch the user data
     if (!workspaceId && !context) {
       console.warn(
-        `SlackUserDisplay: Cannot fetch user ${userId} - no workspaceId and no context`
+        `SlackUserDisplay: Cannot fetch user ${userId} - no workspaceId/integrationId and no context`
       )
       setHasError(true)
       setIsLoading(false)
@@ -93,7 +93,7 @@ const SlackUserDisplay: React.FC<SlackUserDisplayProps> = ({
 
     // Additional debugging logs
     console.log(
-      `[SlackUserDisplay] Decision point - userId: ${userId}, workspaceId: ${workspaceId}, has context: ${!!context}`
+      `[SlackUserDisplay] Decision point - userId: ${userId}, effectiveWorkspaceId: ${workspaceId}, has context: ${!!context}`
     )
 
     const fetchUserData = async () => {
@@ -181,12 +181,7 @@ const SlackUserDisplay: React.FC<SlackUserDisplayProps> = ({
           )
           setIsLoading(true)
 
-          // Use the provided workspace ID or let the context use its default
-          const wsId = workspaceId || undefined // Make sure it's properly typed
-          console.log(
-            `[SlackUserDisplay] Calling context.fetchUser for userId: ${userId}, wsId: ${wsId}`
-          )
-          const fetchedUser = await context.fetchUser(userId, wsId)
+          const fetchedUser = await context.fetchUser(userId, workspaceId)
 
           if (fetchedUser) {
             console.log(
