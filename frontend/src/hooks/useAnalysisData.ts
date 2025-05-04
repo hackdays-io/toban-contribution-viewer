@@ -1,6 +1,6 @@
 /**
  * useAnalysisData Hook
- * 
+ *
  * Custom hook for handling data fetching logic for TeamAnalysisResultPage
  * Extracts URL pattern detection, integration and resource fetching,
  * team analysis handling, channel analysis handling, and error handling
@@ -31,7 +31,7 @@ interface AnalysisResponse {
   team_id?: string
   report_id?: string
   is_unified_report?: boolean
-  
+
   fixedChannelSummary?: string
   fixedTopicAnalysis?: string
   fixedContributorInsights?: string
@@ -67,7 +67,7 @@ const useAnalysisData = () => {
   }>()
 
   const toast = useToast()
-  
+
   const {
     currentResources,
     currentIntegration,
@@ -78,7 +78,10 @@ const useAnalysisData = () => {
   const [channel, setChannel] = useState<Channel | null>(null)
   const [analysis, setAnalysis] = useState<AnalysisResponse | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [reportResult, setReportResult] = useState<Record<string, unknown> | null>(null)
+  const [reportResult, setReportResult] = useState<Record<
+    string,
+    unknown
+  > | null>(null)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [pendingAnalyses, setPendingAnalyses] = useState<number>(0)
 
@@ -251,7 +254,15 @@ const useAnalysisData = () => {
 
       setAnalysis(emptyAnalysis)
     }
-  }, [analysisId, currentIntegration, integrationId, isTeamCentricUrl, reportId, teamId, toast])
+  }, [
+    analysisId,
+    currentIntegration,
+    integrationId,
+    isTeamCentricUrl,
+    reportId,
+    teamId,
+    toast,
+  ])
 
   /**
    * Handle channel analysis flow
@@ -556,17 +567,17 @@ const useAnalysisData = () => {
     reportResult,
     pendingAnalyses,
     isRefreshing,
-    
+
     isTeamAnalysis,
     isTeamCentricUrl,
     shareUrl,
-    
+
     formatDate,
     formatDateTime,
-    
+
     fetchData,
     checkReportStatus,
-    
+
     setIsRefreshing,
   }
 }
