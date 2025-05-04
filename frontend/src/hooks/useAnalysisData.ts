@@ -11,6 +11,7 @@ import { useParams } from 'react-router-dom'
 import { useToast } from '@chakra-ui/react'
 import useIntegration from '../context/useIntegration'
 import integrationService from '../lib/integrationService'
+import useReportStatus from './useReportStatus'
 
 interface AnalysisResponse {
   id: string
@@ -78,12 +79,6 @@ const useAnalysisData = () => {
   const [channel, setChannel] = useState<Channel | null>(null)
   const [analysis, setAnalysis] = useState<AnalysisResponse | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [reportResult, setReportResult] = useState<Record<
-    string,
-    unknown
-  > | null>(null)
-  const [isRefreshing, setIsRefreshing] = useState(false)
-  const [pendingAnalyses, setPendingAnalyses] = useState<number>(0)
 
   const isTeamAnalysis =
     window.location.pathname.includes('/team-analysis/') ||
@@ -110,6 +105,30 @@ const useAnalysisData = () => {
     const date = new Date(dateString)
     return date.toLocaleString()
   }
+
+  const initialFetchData = useCallback(async () => {
+    console.log('Initial fetch data called')
+  }, [])
+
+  const {
+    reportResult,
+    pendingAnalyses,
+    isRefreshing,
+    setReportResult,
+    setIsRefreshing,
+    checkReportStatus,
+  } = useReportStatus({
+    teamId,
+    reportId,
+    analysisId,
+    integrationId,
+    isTeamAnalysis: Boolean(isTeamAnalysis),
+    isTeamCentricUrl,
+    currentIntegrationTeamId: currentIntegration?.owner_team?.id,
+    fetchData: initialFetchData,
+    analysis: analysis as Record<string, unknown> | null,
+    setAnalysis: setAnalysis as (analysis: Record<string, unknown> | null) => void,
+  })
 
   /**
    * Handle team analysis (cross-resource report)
@@ -262,6 +281,7 @@ const useAnalysisData = () => {
     reportId,
     teamId,
     toast,
+    setReportResult,
   ])
 
   /**
@@ -355,195 +375,17 @@ const useAnalysisData = () => {
     toast,
   ])
 
-  /**
-   * Checks the status of a cross-resource report and counts pending analyses
-   */
-  const checkReportStatus = useCallback(async () => {
-    if (isTeamCentricUrl && (!teamId || !reportId)) return
-
-    if (!isTeamCentricUrl && (!analysisId || !isTeamAnalysis)) return
-
-    try {
-      let effectiveTeamId = teamId
-      const effectiveReportId = reportId || analysisId
-
-      if (!effectiveTeamId) {
-        effectiveTeamId = currentIntegration?.owner_team?.id
-
-        if (!effectiveTeamId) {
-          const integrationResult = await integrationService.getIntegration(
-            integrationId ?? ''
-          )
-
-          if (!integrationService.isApiError(integrationResult)) {
-            effectiveTeamId = integrationResult.owner_team.id
-          } else {
-            console.error(
-              'Could not get team ID for status check',
-              integrationResult
-            )
-            return
-          }
-        }
-      }
-
-      const reportStatus = await integrationService.getCrossResourceReport(
-        effectiveTeamId,
-        effectiveReportId || '',
-        true // includeAnalyses=true to check individual resource analyses
-      )
-
-      if (integrationService.isApiError(reportStatus)) {
-        console.error('Error checking report status:', reportStatus)
-        return
-      }
-
-      if (
-        reportStatus.resource_analyses &&
-        Array.isArray(reportStatus.resource_analyses) &&
-        reportStatus.resource_analyses.length > 0
-      ) {
-        const firstAnalysis = reportStatus.resource_analyses[0]
-        console.log('FIRST ANALYSIS FIELD KEYS:', Object.keys(firstAnalysis))
-
-        if (firstAnalysis.results) {
-          console.log('RESULTS FIELD KEYS:', Object.keys(firstAnalysis.results))
-        }
-      }
-
-      setReportResult(reportStatus)
-
-      let pendingCount = 0
-      let completedCount = 0
-
-      if (
-        reportStatus.resource_analyses &&
-        Array.isArray(reportStatus.resource_analyses)
-      ) {
-        pendingCount = reportStatus.resource_analyses.filter(
-          (analysis: Record<string, unknown>) => analysis.status === 'PENDING'
-        ).length
-
-        reportStatus.resource_analyses.forEach(
-          (analysis: Record<string, unknown>, index: number) => {
-            if (index === 0) {
-              console.log('ANALYSIS DETAILS:', {
-                id: analysis.id,
-                resourceId: analysis.resource_id,
-                resourceName: analysis.resource_name,
-                status: analysis.status,
-                hasParticipantCount: Boolean(analysis.participant_count),
-                participantCount: analysis.participant_count,
-                hasParticipants: Boolean(analysis.participants),
-                participantsIsArray:
-                  analysis.participants && Array.isArray(analysis.participants),
-                participantsLength:
-                  analysis.participants && Array.isArray(analysis.participants)
-                    ? analysis.participants.length
-                    : 0,
-                keys: Object.keys(analysis),
-              })
-            }
-
-            if (analysis.status === 'COMPLETED') {
-              completedCount++
-            }
-          }
-        )
-
-        if (completedCount > 0 && analysis) {
-          const updatedAnalysis = { ...analysis }
-
-          const completedAnalyses = reportStatus.resource_analyses.filter(
-            (a: Record<string, unknown>) => a.status === 'COMPLETED'
-          )
-
-          if (Array.isArray(completedAnalyses)) {
-            completedAnalyses.forEach((a, index) => {
-              if (index === 0) {
-                console.log(
-                  'RESOURCE ANALYSIS DEBUG - First analysis structure:',
-                  {
-                    hasResults: Boolean(a.results),
-                    resultsKeys:
-                      a.results && typeof a.results === 'object'
-                        ? Object.keys(a.results as Record<string, unknown>)
-                        : [],
-                    hasMetadata:
-                      a.results &&
-                      typeof a.results === 'object' &&
-                      (a.results as Record<string, unknown>).metadata
-                        ? true
-                        : false,
-                    metadataKeys:
-                      a.results &&
-                      typeof a.results === 'object' &&
-                      (a.results as Record<string, unknown>).metadata &&
-                      typeof (a.results as Record<string, unknown>).metadata ===
-                        'object'
-                        ? Object.keys(
-                            (a.results as Record<string, unknown>)
-                              .metadata as Record<string, unknown>
-                          )
-                        : [],
-                    hasMessageCount: Boolean(a.message_count),
-                    hasParticipantCount: Boolean(a.participant_count),
-                    resourceName: a.resource_name,
-                  }
-                )
-              }
-            })
-          } else {
-            console.warn(
-              'completedAnalyses is not an array:',
-              typeof completedAnalyses
-            )
-          }
-          setAnalysis(updatedAnalysis)
-        }
-      }
-
-      setPendingAnalyses(pendingCount)
-
-      if (pendingCount > 0) {
-        setTimeout(() => {
-          checkReportStatus()
-        }, 5000) // Check every 5 seconds
-      } else {
-        setIsRefreshing(false)
-
-        if (isRefreshing) {
-          fetchData()
-        }
-      }
-    } catch (error) {
-      console.error('Error checking report status:', error)
-    }
-  }, [
-    analysisId,
-    currentIntegration?.owner_team?.id,
-    integrationId,
-    isRefreshing,
-    isTeamAnalysis,
-    isTeamCentricUrl,
-    teamId,
-    reportId,
-    fetchData,
-    analysis,
-  ])
 
   useEffect(() => {
     if (isTeamCentricUrl) {
       if (teamId && reportId) {
         fetchData()
         setIsRefreshing(true)
-        checkReportStatus()
       }
     } else if (isTeamAnalysis) {
       if (integrationId && analysisId) {
         fetchData()
         setIsRefreshing(true)
-        checkReportStatus()
       }
     } else {
       if (integrationId && channelId && analysisId) {
@@ -558,6 +400,8 @@ const useAnalysisData = () => {
     reportId,
     isTeamAnalysis,
     isTeamCentricUrl,
+    fetchData,
+    setIsRefreshing,
   ])
 
   return {
