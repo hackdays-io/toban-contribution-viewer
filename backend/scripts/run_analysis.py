@@ -10,14 +10,12 @@ import logging
 import os
 import sys
 from datetime import datetime, timedelta, timezone
-from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 from uuid import UUID, uuid4
 
 import uvloop
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import selectinload, sessionmaker
 from sqlalchemy.orm import selectinload, sessionmaker
 
 # Add the backend directory to the Python path
@@ -151,7 +149,6 @@ async def run_debug_analysis(
         logger.debug(f"Sample messages: {json.dumps(sample_messages, indent=2)}")
 
         # Count messages with system text
-        system_count = 0
         system_count = 0
         join_count = 0
         empty_count = 0
