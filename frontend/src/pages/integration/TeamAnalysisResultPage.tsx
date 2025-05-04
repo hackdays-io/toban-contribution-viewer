@@ -29,7 +29,6 @@ import {
   Tabs,
   Text,
   Tooltip,
-  VStack,
   useClipboard,
   useColorModeValue,
   useToast,
@@ -40,9 +39,7 @@ import {
   FiClock,
   FiDownload,
   FiFileText,
-  FiMessageSquare,
   FiShare2,
-  FiUsers,
 } from 'react-icons/fi'
 import { Link, useNavigate } from 'react-router-dom'
 import MessageText from '../../components/slack/MessageText'
@@ -337,7 +334,7 @@ const ChannelAnalysisList: FC<ChannelAnalysisListProps> = ({
 const TeamAnalysisResultPage: React.FC = () => {
   const navigate = useNavigate()
   const toast = useToast()
-  
+
   const {
     analysis,
     channel,
@@ -346,17 +343,22 @@ const TeamAnalysisResultPage: React.FC = () => {
     pendingAnalyses,
     isRefreshing,
     isTeamAnalysis,
-    isTeamCentricUrl,
+    // isTeamCentricUrl, // Unused
     shareUrl,
     formatDate,
     formatDateTime,
     setIsRefreshing,
-    fetchData,
+    // fetchData, // Unused
     checkReportStatus,
   } = useAnalysisData()
 
   const [activeTab, setActiveTab] = useState(0)
-  const highlightBg = useColorModeValue('purple.50', 'purple.800')
+  // const highlightBg = useColorModeValue('purple.50', 'purple.800') // Unused
+
+  const cardBg = useColorModeValue('white', 'gray.800')
+  const borderColor = useColorModeValue('gray.200', 'gray.700')
+  const breadcrumbColor = useColorModeValue('gray.600', 'gray.400')
+
   const { hasCopied, onCopy } = useClipboard(shareUrl)
 
   /**
@@ -597,7 +599,8 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
     fixedAnalysis
   ) {
     fixedAnalysis.fixedContributorInsights =
-      fixedAnalysis.fixedContributorInsights || fixedAnalysis.contributor_insights
+      fixedAnalysis.fixedContributorInsights ||
+      fixedAnalysis.contributor_insights
   }
 
   const extractSectionContent = (text: string, sectionName: string) => {
@@ -655,11 +658,7 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
         <Text mb={4}>
           The requested analysis could not be found or has been deleted.
         </Text>
-        <Button
-          as={Link}
-          to="/dashboard"
-          colorScheme="purple"
-        >
+        <Button as={Link} to="/dashboard" colorScheme="purple">
           Return to Dashboard
         </Button>
       </Box>
@@ -677,13 +676,13 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
 
   const customStyles = {
     statCard: {
-      bg: useColorModeValue('white', 'gray.800'),
+      bg: cardBg,
       borderRadius: 'lg',
       boxShadow: 'sm',
       p: 4,
       textAlign: 'center' as const,
       borderWidth: '1px',
-      borderColor: useColorModeValue('gray.200', 'gray.700'),
+      borderColor: borderColor,
     },
     tabPanel: {
       pt: 6,
@@ -693,7 +692,7 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
     breadcrumb: {
       mb: 4,
       fontSize: 'sm',
-      color: useColorModeValue('gray.600', 'gray.400'),
+      color: breadcrumbColor,
     },
     backButton: {
       mb: 4,
@@ -706,14 +705,26 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
     },
   }
 
-  function extractMissingFields(analysis: any) {
+  type AnalysisData = {
+    fixedTopicAnalysis?: string
+    fixedContributorInsights?: string
+    fixedKeyHighlights?: string
+    fixedChannelSummary?: string
+    channel_summary?: string
+    topic_analysis?: string
+    contributor_insights?: string
+    key_highlights?: string
+    [key: string]: unknown
+  }
+
+  function extractMissingFields(analysis: AnalysisData) {
     const hasEmptyFields =
-      (!analysis.fixedTopicAnalysis ||
-        analysis.fixedTopicAnalysis.trim() === '') ||
-      (!analysis.fixedContributorInsights ||
-        analysis.fixedContributorInsights.trim() === '') ||
-      (!analysis.fixedKeyHighlights ||
-        analysis.fixedKeyHighlights.trim() === '')
+      !analysis.fixedTopicAnalysis ||
+      analysis.fixedTopicAnalysis.trim() === '' ||
+      !analysis.fixedContributorInsights ||
+      analysis.fixedContributorInsights.trim() === '' ||
+      !analysis.fixedKeyHighlights ||
+      analysis.fixedKeyHighlights.trim() === ''
 
     if (!hasEmptyFields) return analysis
 
@@ -731,21 +742,30 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
     if (isLikelyPlainText) {
       const extracted = { ...analysis }
 
-      if (!extracted.fixedTopicAnalysis || extracted.fixedTopicAnalysis.trim() === '') {
+      if (
+        !extracted.fixedTopicAnalysis ||
+        extracted.fixedTopicAnalysis.trim() === ''
+      ) {
         extracted.fixedTopicAnalysis = extractSectionContent(
           analysis.channel_summary,
           'Topics'
         )
       }
 
-      if (!extracted.fixedContributorInsights || extracted.fixedContributorInsights.trim() === '') {
+      if (
+        !extracted.fixedContributorInsights ||
+        extracted.fixedContributorInsights.trim() === ''
+      ) {
         extracted.fixedContributorInsights = extractSectionContent(
           analysis.channel_summary,
           'Contributors'
         )
       }
 
-      if (!extracted.fixedKeyHighlights || extracted.fixedKeyHighlights.trim() === '') {
+      if (
+        !extracted.fixedKeyHighlights ||
+        extracted.fixedKeyHighlights.trim() === ''
+      ) {
         extracted.fixedKeyHighlights = extractSectionContent(
           analysis.channel_summary,
           'Highlights'
@@ -758,7 +778,9 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
     return analysis
   }
 
-  const processedAnalysis = fixedAnalysis ? extractMissingFields(fixedAnalysis) : null
+  const processedAnalysis = fixedAnalysis
+    ? extractMissingFields(fixedAnalysis)
+    : null
 
   return (
     <Box>
@@ -781,7 +803,10 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbItem>
-              <BreadcrumbLink as={Link} to={`/dashboard/teams/${analysis.team_id || ''}`}>
+              <BreadcrumbLink
+                as={Link}
+                to={`/dashboard/teams/${analysis.team_id || ''}`}
+              >
                 {analysis.team_id ? 'Team' : 'Team Analysis'}
               </BreadcrumbLink>
             </BreadcrumbItem>
@@ -805,7 +830,10 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbItem>
-              <BreadcrumbLink as={Link} to={`/dashboard/integrations/${analysis.channel_id?.split(':')[0] || ''}`}>
+              <BreadcrumbLink
+                as={Link}
+                to={`/dashboard/integrations/${analysis.channel_id?.split(':')[0] || ''}`}
+              >
                 {channel?.name || 'Workspace'}
               </BreadcrumbLink>
             </BreadcrumbItem>
@@ -833,10 +861,7 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
       </Breadcrumb>
 
       {/* Back button */}
-      <Button
-        onClick={() => navigate(-1)}
-        sx={customStyles.backButton}
-      >
+      <Button onClick={() => navigate(-1)} sx={customStyles.backButton}>
         Back
       </Button>
 
@@ -958,17 +983,15 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
           <TabPanel sx={customStyles.tabPanel}>
             <Card variant="outline">
               <CardBody>
-                {processedAnalysis?.fixedChannelSummary ? (
-                  renderPlainText(
-                    processedAnalysis.fixedChannelSummary,
-                    channel?.metadata?.workspace_uuid || ''
-                  )
-                ) : (
-                  renderPlainText(
-                    analysis.channel_summary,
-                    channel?.metadata?.workspace_uuid || ''
-                  )
-                )}
+                {processedAnalysis?.fixedChannelSummary
+                  ? renderPlainText(
+                      processedAnalysis.fixedChannelSummary,
+                      String(channel?.metadata?.workspace_uuid || '')
+                    )
+                  : renderPlainText(
+                      analysis.channel_summary,
+                      String(channel?.metadata?.workspace_uuid || '')
+                    )}
               </CardBody>
             </Card>
 
@@ -989,17 +1012,15 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
           <TabPanel sx={customStyles.tabPanel}>
             <Card variant="outline">
               <CardBody>
-                {processedAnalysis?.fixedTopicAnalysis ? (
-                  renderPlainText(
-                    processedAnalysis.fixedTopicAnalysis,
-                    channel?.metadata?.workspace_uuid || ''
-                  )
-                ) : (
-                  renderPlainText(
-                    analysis.topic_analysis,
-                    channel?.metadata?.workspace_uuid || ''
-                  )
-                )}
+                {processedAnalysis?.fixedTopicAnalysis
+                  ? renderPlainText(
+                      processedAnalysis.fixedTopicAnalysis,
+                      String(channel?.metadata?.workspace_uuid || '')
+                    )
+                  : renderPlainText(
+                      analysis.topic_analysis,
+                      String(channel?.metadata?.workspace_uuid || '')
+                    )}
               </CardBody>
             </Card>
 
@@ -1020,17 +1041,15 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
           <TabPanel sx={customStyles.tabPanel}>
             <Card variant="outline">
               <CardBody>
-                {processedAnalysis?.fixedContributorInsights ? (
-                  renderPlainText(
-                    processedAnalysis.fixedContributorInsights,
-                    channel?.metadata?.workspace_uuid || ''
-                  )
-                ) : (
-                  renderPlainText(
-                    analysis.contributor_insights,
-                    channel?.metadata?.workspace_uuid || ''
-                  )
-                )}
+                {processedAnalysis?.fixedContributorInsights
+                  ? renderPlainText(
+                      processedAnalysis.fixedContributorInsights,
+                      String(channel?.metadata?.workspace_uuid || '')
+                    )
+                  : renderPlainText(
+                      analysis.contributor_insights,
+                      String(channel?.metadata?.workspace_uuid || '')
+                    )}
               </CardBody>
             </Card>
 
@@ -1051,17 +1070,15 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
           <TabPanel sx={customStyles.tabPanel}>
             <Card variant="outline">
               <CardBody>
-                {processedAnalysis?.fixedKeyHighlights ? (
-                  renderPlainText(
-                    processedAnalysis.fixedKeyHighlights,
-                    channel?.metadata?.workspace_uuid || ''
-                  )
-                ) : (
-                  renderPlainText(
-                    analysis.key_highlights,
-                    channel?.metadata?.workspace_uuid || ''
-                  )
-                )}
+                {processedAnalysis?.fixedKeyHighlights
+                  ? renderPlainText(
+                      processedAnalysis.fixedKeyHighlights,
+                      String(channel?.metadata?.workspace_uuid || '')
+                    )
+                  : renderPlainText(
+                      analysis.key_highlights,
+                      String(channel?.metadata?.workspace_uuid || '')
+                    )}
               </CardBody>
             </Card>
 
@@ -1082,16 +1099,11 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
 
       {/* Footer section with metadata */}
       <Box mt={8} mb={4} fontSize="sm" color="gray.500">
-        <Grid
-          templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }}
-          gap={4}
-        >
+        <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={4}>
           <GridItem>
             <HStack>
               <Icon as={FiClock} />
-              <Text>
-                Generated on {formatDateTime(analysis.generated_at)}
-              </Text>
+              <Text>Generated on {formatDateTime(analysis.generated_at)}</Text>
             </HStack>
           </GridItem>
           <GridItem>
