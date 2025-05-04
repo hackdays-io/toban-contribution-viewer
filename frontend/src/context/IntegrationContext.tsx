@@ -74,7 +74,7 @@ interface IntegrationContextType extends IntegrationState {
     integrationId: string,
     resourceTypes?: string[]
   ) => Promise<boolean>
-  
+
   // Workspace operations
   getWorkspaceIdForAnalysis: (
     analysisId: string
@@ -144,7 +144,7 @@ const IntegrationContext = createContext<IntegrationContextType>({
   // Resource operations
   fetchResources: async () => {},
   syncResources: async () => false,
-  
+
   // Workspace operations
   getWorkspaceIdForAnalysis: async () => null,
 
@@ -1162,7 +1162,7 @@ export const IntegrationProvider: React.FC<{ children: React.ReactNode }> = ({
     },
     [session]
   )
-  
+
   /**
    * Get workspace ID for a resource analysis
    * @param analysisId Resource analysis UUID
@@ -1175,7 +1175,8 @@ export const IntegrationProvider: React.FC<{ children: React.ReactNode }> = ({
       setState((prev) => ({ ...prev, loading: true, error: null }))
 
       try {
-        const result = await integrationService.getWorkspaceIdForAnalysis(analysisId)
+        const result =
+          await integrationService.getWorkspaceIdForAnalysis(analysisId)
 
         if (integrationService.isApiError(result)) {
           setState((prev) => ({

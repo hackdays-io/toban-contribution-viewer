@@ -451,7 +451,7 @@ const TeamChannelAnalysisPage: React.FC = () => {
         {paragraph.trim() ? (
           <MessageText
             text={paragraph}
-            workspaceId={channel?.external_id || ''}
+            workspaceUuid={channel?.external_id || ''}
             resolveMentions={true}
             fallbackToSimpleFormat={true}
           />

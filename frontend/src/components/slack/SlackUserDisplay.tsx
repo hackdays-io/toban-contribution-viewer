@@ -18,6 +18,7 @@ import { UserCacheContext, SlackUser } from './SlackUserContextExports'
 export interface SlackUserDisplayProps {
   userId: string // Required: Slack user ID (e.g., database UUID)
   workspaceId?: string // Optional: Workspace ID (if not provided, will use context)
+  workspaceUuid?: string // Optional: Workspace UUID (alternative to workspaceId)
   showAvatar?: boolean // Optional: Whether to show the user's avatar (default: false)
   avatarSize?: 'xs' | 'sm' | 'md' | 'lg' // Optional: Size of the avatar (default: 'sm')
   displayFormat?: 'username' | 'real_name' | 'both' // Optional: Display format (default: 'username')
@@ -41,6 +42,7 @@ export interface SlackUserDisplayProps {
 const SlackUserDisplay: React.FC<SlackUserDisplayProps> = ({
   userId,
   workspaceId,
+  workspaceUuid,
   showAvatar = false,
   avatarSize = 'sm',
   displayFormat = 'username',
@@ -55,19 +57,20 @@ const SlackUserDisplay: React.FC<SlackUserDisplayProps> = ({
   _testUser = null,
   _hasError = false,
 }) => {
+  const effectiveWorkspaceId = workspaceUuid || workspaceId
   const Component = asComponent
   const context = useContext(UserCacheContext)
   const [user, setUser] = useState<SlackUser | undefined>()
   const [isLoading, setIsLoading] = useState<boolean>(!_skipLoading)
   const [hasError, setHasError] = useState<boolean>(_hasError)
-  
+
   // Color mode values
   const errorColor = useColorModeValue('red.500', 'red.300')
 
   // Effect to fetch user data if not in context cache
   useEffect(() => {
     console.log(
-      `[SlackUserDisplay] Setting up for user: ${userId}, workspaceId: ${workspaceId}, fetchFromSlack: ${fetchFromSlack}`
+      `[SlackUserDisplay] Setting up for user: ${userId}, workspaceId: ${effectiveWorkspaceId}, fetchFromSlack: ${fetchFromSlack}`
     )
     if (!userId) return
 
@@ -82,7 +85,7 @@ const SlackUserDisplay: React.FC<SlackUserDisplayProps> = ({
 
     // Extra safety check - if we don't have a workspaceId and no context,
     // we can't fetch the user data
-    if (!workspaceId && !context) {
+    if (!effectiveWorkspaceId && !context) {
       console.warn(
         `SlackUserDisplay: Cannot fetch user ${userId} - no workspaceId/integrationId and no context`
       )
@@ -93,23 +96,23 @@ const SlackUserDisplay: React.FC<SlackUserDisplayProps> = ({
 
     // Additional debugging logs
     console.log(
-      `[SlackUserDisplay] Decision point - userId: ${userId}, effectiveWorkspaceId: ${workspaceId}, has context: ${!!context}`
+      `[SlackUserDisplay] Decision point - userId: ${userId}, effectiveWorkspaceId: ${effectiveWorkspaceId}, has context: ${!!context}`
     )
 
     const fetchUserData = async () => {
       // If not using context or context is not available
-      if (!context && workspaceId) {
+      if (!context && effectiveWorkspaceId) {
         setIsLoading(true)
         try {
           // Import the slackApiClient here to avoid circular dependencies
           const { slackApiClient } = await import('../../lib/slackApiClient')
 
           console.log(
-            `[SlackUserDisplay] Direct fetch - workspaceId: ${workspaceId}, userId: ${userId}`
+            `[SlackUserDisplay] Direct fetch - workspaceId: ${effectiveWorkspaceId}, userId: ${userId}`
           )
 
           const result = await slackApiClient.getUsersByIds(
-            workspaceId,
+            effectiveWorkspaceId,
             [userId],
             true // fetchFromSlack=true
           )
@@ -177,11 +180,14 @@ const SlackUserDisplay: React.FC<SlackUserDisplayProps> = ({
         } else {
           // This is the case where we need to fetch the user
           console.log(
-            `[SlackUserDisplay] Need to fetch user ${userId} from context. Workspace ID: ${workspaceId}, fetchFromSlack: ${fetchFromSlack}`
+            `[SlackUserDisplay] Need to fetch user ${userId} from context. Workspace ID: ${effectiveWorkspaceId}, fetchFromSlack: ${fetchFromSlack}`
           )
           setIsLoading(true)
 
-          const fetchedUser = await context.fetchUser(userId, workspaceId)
+          const fetchedUser = await context.fetchUser(
+            userId,
+            effectiveWorkspaceId
+          )
 
           if (fetchedUser) {
             console.log(
@@ -205,7 +211,7 @@ const SlackUserDisplay: React.FC<SlackUserDisplayProps> = ({
     fetchUserData()
   }, [
     userId,
-    workspaceId,
+    effectiveWorkspaceId,
     context,
     _skipLoading,
     _testUser,

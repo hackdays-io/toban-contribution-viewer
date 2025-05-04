@@ -177,7 +177,7 @@ const ThreadView: React.FC<ThreadViewProps> = ({
           <Box>
             <SlackUserDisplay
               userId={parentMessage.user_id || ''}
-              workspaceId={workspaceId}
+              workspaceUuid={workspaceId}
               showAvatar={true}
               displayFormat="real_name"
               fetchFromSlack={true}
@@ -199,7 +199,7 @@ const ThreadView: React.FC<ThreadViewProps> = ({
         <Box pl={10} pr={2}>
           <MessageText
             text={parentMessage.text}
-            workspaceId={workspaceId}
+            workspaceUuid={workspaceId}
             resolveMentions={true}
             fallbackToSimpleFormat={true}
           />
@@ -237,7 +237,7 @@ const ThreadView: React.FC<ThreadViewProps> = ({
           <Box>
             <SlackUserDisplay
               userId={message.user_id || ''}
-              workspaceId={workspaceId}
+              workspaceUuid={workspaceId}
               showAvatar={true}
               displayFormat="real_name"
               fetchFromSlack={true}
@@ -259,7 +259,7 @@ const ThreadView: React.FC<ThreadViewProps> = ({
         <Box pl={10} pr={2}>
           <MessageText
             text={message.text}
-            workspaceId={workspaceId}
+            workspaceUuid={workspaceId}
             resolveMentions={true}
             fallbackToSimpleFormat={true}
           />
@@ -279,7 +279,7 @@ const ThreadView: React.FC<ThreadViewProps> = ({
   }
 
   return (
-    <SlackUserCacheProvider workspaceId={workspaceId}>
+    <SlackUserCacheProvider workspaceUuid={workspaceId}>
       <Modal
         isOpen={isOpen}
         onClose={onClose}

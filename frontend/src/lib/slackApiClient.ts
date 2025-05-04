@@ -263,21 +263,24 @@ class SlackApiClient extends ApiClient {
       const path = `/workspaces/${workspaceId}/users`
 
       // Create URLSearchParams object to properly handle multiple parameters with the same name
-      const searchParams = new URLSearchParams();
-      
+      const searchParams = new URLSearchParams()
+
       // Add fetch_from_slack parameter
-      searchParams.append('fetch_from_slack', fetchFromSlack.toString());
-      
+      searchParams.append('fetch_from_slack', fetchFromSlack.toString())
+
       // Add user_ids[] parameter for each user ID
       userIds.forEach((id) => {
-        searchParams.append('user_ids[]', id);
-      });
-      
-      const params = Object.fromEntries(searchParams.entries());
+        searchParams.append('user_ids[]', id)
+      })
+
+      const params = Object.fromEntries(searchParams.entries())
 
       console.log('[SlackApiClient] getUsersByIds - Using path:', path)
       console.log('[SlackApiClient] getUsersByIds - Using params:', params)
-      console.log('[SlackApiClient] getUsersByIds - URLSearchParams:', searchParams.toString())
+      console.log(
+        '[SlackApiClient] getUsersByIds - URLSearchParams:',
+        searchParams.toString()
+      )
 
       return this.get<{ users: BaseSlackUser[] }>(path, params)
     } catch (error) {
@@ -356,16 +359,20 @@ class SlackApiClient extends ApiClient {
     integrationId: string
   ): Promise<string | ApiError> {
     if (!integrationId) {
-      console.warn('[SlackApiClient] getWorkspaceIdFromIntegration - No integrationId provided')
+      console.warn(
+        '[SlackApiClient] getWorkspaceIdFromIntegration - No integrationId provided'
+      )
       return ''
     }
 
     try {
       // Use the integration endpoint to get the integration details
       const apiUrl = `${env.apiUrl}/integrations/${integrationId}`
-      
-      console.log(`[SlackApiClient] getWorkspaceIdFromIntegration - Fetching from ${apiUrl}`)
-      
+
+      console.log(
+        `[SlackApiClient] getWorkspaceIdFromIntegration - Fetching from ${apiUrl}`
+      )
+
       const response = await fetch(apiUrl, {
         method: 'GET',
         headers: {
@@ -383,18 +390,27 @@ class SlackApiClient extends ApiClient {
       }
 
       const integration = await response.json()
-      
-      if (integration && 
-          integration.metadata && 
-          integration.metadata.workspace_id) {
-        console.log(`[SlackApiClient] getWorkspaceIdFromIntegration - Found workspace_id: ${integration.metadata.workspace_id}`)
+
+      if (
+        integration &&
+        integration.metadata &&
+        integration.metadata.workspace_id
+      ) {
+        console.log(
+          `[SlackApiClient] getWorkspaceIdFromIntegration - Found workspace_id: ${integration.metadata.workspace_id}`
+        )
         return integration.metadata.workspace_id
       }
-      
-      console.warn('[SlackApiClient] getWorkspaceIdFromIntegration - No workspace_id found in integration metadata')
+
+      console.warn(
+        '[SlackApiClient] getWorkspaceIdFromIntegration - No workspace_id found in integration metadata'
+      )
       return ''
     } catch (error) {
-      console.error('[SlackApiClient] getWorkspaceIdFromIntegration - Error:', error)
+      console.error(
+        '[SlackApiClient] getWorkspaceIdFromIntegration - Error:',
+        error
+      )
       return {
         status: 'CLIENT_ERROR',
         message: `Error fetching workspace ID: ${error instanceof Error ? error.message : String(error)}`,

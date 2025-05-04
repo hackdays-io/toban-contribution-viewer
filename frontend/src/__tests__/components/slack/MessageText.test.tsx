@@ -37,7 +37,7 @@ describe('MessageText', () => {
   it('renders plain text correctly', () => {
     render(
       <ChakraProvider>
-        <MessageText text="Hello, world!" workspaceId={mockWorkspaceId} />
+        <MessageText text="Hello, world!" workspaceUuid={mockWorkspaceId} />
       </ChakraProvider>
     )
 
@@ -47,7 +47,7 @@ describe('MessageText', () => {
   it('handles newlines correctly', () => {
     render(
       <ChakraProvider>
-        <MessageText text="Line 1\nLine 2" workspaceId={mockWorkspaceId} />
+        <MessageText text="Line 1\nLine 2" workspaceUuid={mockWorkspaceId} />
       </ChakraProvider>
     )
 
@@ -64,7 +64,7 @@ describe('MessageText', () => {
       <ChakraProvider>
         <MessageText
           text="Hello <@U12345>!"
-          workspaceId={mockWorkspaceId}
+          workspaceUuid={mockWorkspaceId}
           resolveMentions={true}
         />
       </ChakraProvider>
@@ -74,7 +74,7 @@ describe('MessageText', () => {
     expect(SlackUserDisplayMock).toHaveBeenCalledWith(
       expect.objectContaining({
         userId: 'U12345',
-        workspaceId: mockWorkspaceId,
+        workspaceUuid: mockWorkspaceId,
         displayFormat: 'username',
         fetchFromSlack: true,
         asComponent: 'span',
@@ -95,7 +95,7 @@ describe('MessageText', () => {
       <ChakraProvider>
         <MessageText
           text="Hello <@U12345>!"
-          workspaceId={mockWorkspaceId}
+          workspaceUuid={mockWorkspaceId}
           resolveMentions={false}
         />
       </ChakraProvider>
@@ -113,7 +113,7 @@ describe('MessageText', () => {
       <ChakraProvider>
         <MessageText
           text="Hello <@U12345> and <@U67890>!"
-          workspaceId={mockWorkspaceId}
+          workspaceUuid={mockWorkspaceId}
           resolveMentions={false}
         />
       </ChakraProvider>
@@ -127,7 +127,7 @@ describe('MessageText', () => {
       <ChakraProvider>
         <MessageText
           text="Hello <@U12345>\nHow are you?"
-          workspaceId={mockWorkspaceId}
+          workspaceUuid={mockWorkspaceId}
           resolveMentions={false}
         />
       </ChakraProvider>
@@ -141,7 +141,7 @@ describe('MessageText', () => {
   it('renders null for empty text', () => {
     // Render without ChakraProvider to avoid the Chakra env span
     const { container } = render(
-      <MessageText text="" workspaceId={mockWorkspaceId} />
+      <MessageText text="" workspaceUuid={mockWorkspaceId} />
     )
 
     // Check that our component didn't render anything
@@ -154,7 +154,7 @@ describe('MessageText', () => {
       <ChakraProvider>
         <MessageText
           text="Hello <@ERROR_USER>!"
-          workspaceId={mockWorkspaceId}
+          workspaceUuid={mockWorkspaceId}
           resolveMentions={false}
         />
       </ChakraProvider>
