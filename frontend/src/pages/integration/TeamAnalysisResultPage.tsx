@@ -1,4 +1,5 @@
 import React, { useEffect, useState, FC, useCallback } from 'react'
+import useReportStatus from '../../hooks/useReportStatus'
 import {
   Badge,
   Box,
@@ -416,12 +417,6 @@ const TeamAnalysisResultPage: React.FC = () => {
   const [analysis, setAnalysis] = useState<AnalysisResponse | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [activeTab, setActiveTab] = useState(0)
-  const [reportResult, setReportResult] = useState<Record<
-    string,
-    unknown
-  > | null>(null)
-  const [isRefreshing, setIsRefreshing] = useState(false)
-  const [pendingAnalyses, setPendingAnalyses] = useState<number>(0)
   const highlightBg = useColorModeValue('purple.50', 'purple.800')
 
   // Check if this is a team analysis by URL pattern
@@ -456,7 +451,6 @@ const TeamAnalysisResultPage: React.FC = () => {
       if (teamId && reportId) {
         fetchData()
         // Start checking for pending analyses after initial data load
-        setIsRefreshing(true)
         checkReportStatus()
       }
     } else if (isTeamAnalysis) {
@@ -464,7 +458,6 @@ const TeamAnalysisResultPage: React.FC = () => {
       if (integrationId && analysisId) {
         fetchData()
         // Start checking for pending analyses after initial data load
-        setIsRefreshing(true)
         checkReportStatus()
       }
     } else {
@@ -756,6 +749,25 @@ const TeamAnalysisResultPage: React.FC = () => {
     handleChannelAnalysis,
     toast,
   ])
+  // Use the custom hook for report status checking
+  const { 
+    pendingAnalyses, 
+    isRefreshing, 
+    reportResult,
+    setReportResult,
+    checkReportStatus 
+  } = useReportStatus({
+    teamId,
+    reportId,
+    analysisId,
+    integrationId,
+    isTeamAnalysis: Boolean(isTeamAnalysis),
+    isTeamCentricUrl,
+    currentIntegrationTeamId: currentIntegration?.owner_team?.id,
+    fetchData,
+    setAnalysis
+  });
+
 
   /**
    * Handle share button click
@@ -991,204 +1003,6 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
 
   // Note: renderSection functionality has been integrated into renderPlainText for simplicity
 
-  /**
-   * Checks the status of a cross-resource report and counts pending analyses
-   */
-  const checkReportStatus = useCallback(async () => {
-    // For team-centric URL, we already have teamId and reportId
-    if (isTeamCentricUrl && (!teamId || !reportId)) return
-
-    // For legacy team analysis URL
-    if (!isTeamCentricUrl && (!analysisId || !isTeamAnalysis)) return
-
-    try {
-      // Use teamId from URL params if available, otherwise get from context/API
-      let effectiveTeamId = teamId
-      const effectiveReportId = reportId || analysisId
-
-      // If not using team-centric URL, we need to get the teamId
-      if (!effectiveTeamId) {
-        // Get the team ID from the current integration or direct API call
-        effectiveTeamId = currentIntegration?.owner_team?.id
-
-        if (!effectiveTeamId) {
-          // Try to get it directly if not available in context
-          const integrationResult = await integrationService.getIntegration(
-            integrationId ?? ''
-          )
-
-          if (!integrationService.isApiError(integrationResult)) {
-            effectiveTeamId = integrationResult.owner_team.id
-          } else {
-            console.error(
-              'Could not get team ID for status check',
-              integrationResult
-            )
-            return
-          }
-        }
-      }
-
-      // Get the latest report status
-      const reportStatus = await integrationService.getCrossResourceReport(
-        effectiveTeamId,
-        effectiveReportId || '',
-        true // includeAnalyses=true to check individual resource analyses
-      )
-
-      if (integrationService.isApiError(reportStatus)) {
-        console.error('Error checking report status:', reportStatus)
-        return
-      }
-
-      // Inspect the first analysis for debugging
-      if (
-        reportStatus.resource_analyses &&
-        Array.isArray(reportStatus.resource_analyses) &&
-        reportStatus.resource_analyses.length > 0
-      ) {
-        const firstAnalysis = reportStatus.resource_analyses[0]
-        console.log('FIRST ANALYSIS FIELD KEYS:', Object.keys(firstAnalysis))
-
-        if (firstAnalysis.results) {
-          console.log('RESULTS FIELD KEYS:', Object.keys(firstAnalysis.results))
-        }
-      }
-
-      // Update the report result state
-      setReportResult(reportStatus)
-
-      // Count pending analyses and update statistics
-      let pendingCount = 0
-      let completedCount = 0
-
-      if (
-        reportStatus.resource_analyses &&
-        Array.isArray(reportStatus.resource_analyses)
-      ) {
-        // Count pending analyses - make sure we're filtering an array
-        pendingCount = reportStatus.resource_analyses.filter(
-          (analysis: Record<string, unknown>) => analysis.status === 'PENDING'
-        ).length
-
-        // Count completed analyses and gather statistics
-        reportStatus.resource_analyses.forEach(
-          (analysis: Record<string, unknown>, index: number) => {
-            // Log detailed information about each analysis
-            if (index === 0) {
-              console.log('ANALYSIS DETAILS:', {
-                id: analysis.id,
-                resourceId: analysis.resource_id,
-                resourceName: analysis.resource_name,
-                status: analysis.status,
-                hasParticipantCount: Boolean(analysis.participant_count),
-                participantCount: analysis.participant_count,
-                hasParticipants: Boolean(analysis.participants),
-                participantsIsArray:
-                  analysis.participants && Array.isArray(analysis.participants),
-                participantsLength:
-                  analysis.participants && Array.isArray(analysis.participants)
-                    ? analysis.participants.length
-                    : 0,
-                keys: Object.keys(analysis),
-              })
-            }
-
-            if (analysis.status === 'COMPLETED') {
-              completedCount++
-            }
-          }
-        )
-
-        // Update analysis statistics if we have completed analyses and current analysis data
-        if (completedCount > 0 && analysis) {
-          const updatedAnalysis = { ...analysis }
-
-          // Get message, participant, thread, and reaction counts from results field in database
-          const completedAnalyses = reportStatus.resource_analyses.filter(
-            (a: Record<string, unknown>) => a.status === 'COMPLETED'
-          )
-
-          // Look for counts in the results field (where they're actually stored in database)
-          // Ensure completedAnalyses is an array before calling forEach
-          if (Array.isArray(completedAnalyses)) {
-            completedAnalyses.forEach((a, index) => {
-              // Log the first analysis record structure for debugging
-              if (index === 0) {
-                console.log(
-                  'RESOURCE ANALYSIS DEBUG - First analysis structure:',
-                  {
-                    hasResults: Boolean(a.results),
-                    resultsKeys:
-                      a.results && typeof a.results === 'object'
-                        ? Object.keys(a.results as Record<string, unknown>)
-                        : [],
-                    hasMetadata:
-                      a.results &&
-                      typeof a.results === 'object' &&
-                      (a.results as Record<string, unknown>).metadata
-                        ? true
-                        : false,
-                    metadataKeys:
-                      a.results &&
-                      typeof a.results === 'object' &&
-                      (a.results as Record<string, unknown>).metadata &&
-                      typeof (a.results as Record<string, unknown>).metadata ===
-                        'object'
-                        ? Object.keys(
-                            (a.results as Record<string, unknown>)
-                              .metadata as Record<string, unknown>
-                          )
-                        : [],
-                    hasMessageCount: Boolean(a.message_count),
-                    hasParticipantCount: Boolean(a.participant_count),
-                    resourceName: a.resource_name,
-                  }
-                )
-              }
-            })
-          } else {
-            console.warn(
-              'completedAnalyses is not an array:',
-              typeof completedAnalyses
-            )
-          }
-          setAnalysis(updatedAnalysis)
-        }
-      }
-
-      // Update the pending count
-      setPendingAnalyses(pendingCount)
-
-      // If there are still pending analyses, check again after a delay
-      if (pendingCount > 0) {
-        setTimeout(() => {
-          checkReportStatus()
-        }, 5000) // Check every 5 seconds
-      } else {
-        // No more pending analyses, stop refreshing
-        setIsRefreshing(false)
-
-        // If we were explicitly refreshing, reload the data to get final results
-        if (isRefreshing) {
-          fetchData()
-        }
-      }
-    } catch (error) {
-      console.error('Error checking report status:', error)
-    }
-  }, [
-    analysisId,
-    currentIntegration?.owner_team?.id,
-    integrationId,
-    isRefreshing,
-    isTeamAnalysis,
-    isTeamCentricUrl,
-    teamId,
-    reportId,
-    fetchData,
-    analysis,
-  ])
 
   // Check for null analysis state before continuing (safety check)
   const hasAnalysisData = analysis !== null
@@ -1795,7 +1609,6 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
                       size="sm"
                       colorScheme={pendingAnalyses > 0 ? 'yellow' : 'gray'}
                       onClick={() => {
-                        setIsRefreshing(true)
                         checkReportStatus()
                       }}
                       isDisabled={isRefreshing}
