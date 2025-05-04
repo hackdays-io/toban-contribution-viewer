@@ -383,32 +383,93 @@ const TeamAnalysisResultPage: React.FC = () => {
   const handleExport = () => {
     if (!analysis) return
 
+    const channelName =
+      typeof analysis.channel_name === 'string'
+        ? analysis.channel_name
+        : 'Channel'
+
+    const workspaceType = analysis.team_id
+      ? 'Team Analysis'
+      : 'Channel Analysis'
+
+    const startDate =
+      typeof analysis.start_date === 'string'
+        ? formatDate(analysis.start_date)
+        : 'Unknown'
+
+    const endDate =
+      typeof analysis.end_date === 'string'
+        ? formatDate(analysis.end_date)
+        : 'Unknown'
+
+    const generatedAt =
+      typeof analysis.generated_at === 'string'
+        ? formatDateTime(analysis.generated_at)
+        : 'Unknown'
+
+    const messageCount =
+      typeof analysis.message_count === 'number' ? analysis.message_count : 0
+
+    const participantCount =
+      typeof analysis.participant_count === 'number'
+        ? analysis.participant_count
+        : 0
+
+    const threadCount =
+      typeof analysis.thread_count === 'number' ? analysis.thread_count : 0
+
+    const reactionCount =
+      typeof analysis.reaction_count === 'number' ? analysis.reaction_count : 0
+
+    const channelSummary =
+      typeof analysis.channel_summary === 'string'
+        ? analysis.channel_summary
+        : 'No summary available'
+
+    const topicAnalysis =
+      typeof analysis.topic_analysis === 'string'
+        ? analysis.topic_analysis
+        : 'No topic analysis available'
+
+    const contributorInsights =
+      typeof analysis.contributor_insights === 'string'
+        ? analysis.contributor_insights
+        : 'No contributor insights available'
+
+    const keyHighlights =
+      typeof analysis.key_highlights === 'string'
+        ? analysis.key_highlights
+        : 'No highlights available'
+
+    const modelUsed =
+      typeof analysis.model_used === 'string' ? analysis.model_used : 'AI'
+
     const content = `
-# Channel Analysis: #${analysis?.channel_name || 'Channel'}
-Workspace: ${analysis?.team_id ? 'Team Analysis' : 'Channel Analysis'}
-Period: ${formatDate(analysis?.start_date || '')} to ${formatDate(analysis?.end_date || '')}
-Generated: ${formatDateTime(analysis?.generated_at || '')}
+# Channel Analysis: #${channelName}
+Workspace: ${workspaceType}
+Period: ${startDate} to ${endDate}
+Generated: ${generatedAt}
 
 ## Statistics
-- Messages: ${analysis?.message_count || 0}
-- Participants: ${analysis?.participant_count || 0}
-- Threads: ${analysis?.thread_count || 0}
-- Reactions: ${analysis?.reaction_count || 0}
+- Messages: ${messageCount}
+- Participants: ${participantCount}
+- Threads: ${threadCount}
+- Reactions: ${reactionCount}
 
 ## Channel Summary
-${analysis?.channel_summary || 'No summary available'}
+${channelSummary}
 
 ## Topic Analysis
-${analysis?.topic_analysis || 'No topic analysis available'}
+${topicAnalysis}
 
 ## Contributor Insights
-${analysis?.contributor_insights || 'No contributor insights available'}
+${contributorInsights}
 
 ## Key Highlights
-${analysis?.key_highlights || 'No highlights available'}
+${keyHighlights}
 
 ---
-Generated using Toban Contribution Viewer with ${analysis?.model_used || 'AI'}
+Generated using Toban Contribution Viewer with ${modelUsed}
     `.trim()
 
     const element = document.createElement('a')
@@ -668,7 +729,8 @@ Generated using Toban Contribution Viewer with ${analysis?.model_used || 'AI'}
   }
 
   const channelName = analysis?.channel_name
-    ? typeof analysis.channel_name === 'string' && analysis.channel_name.startsWith('#')
+    ? typeof analysis.channel_name === 'string' &&
+      analysis.channel_name.startsWith('#')
       ? analysis.channel_name
       : `#${analysis.channel_name}`
     : 'Channel'
@@ -784,12 +846,16 @@ Generated using Toban Contribution Viewer with ${analysis?.model_used || 'AI'}
     ? extractMissingFields(fixedAnalysis)
     : null
 
+  if (!customStyles || !customStyles.backButton) {
+    console.error('customStyles or backButton style is undefined')
+  }
+
   if (isLoading || !analysis) {
     return (
       <Box p={5}>
         <Button
           onClick={() => navigate(-1)}
-          sx={customStyles.backButton}
+          sx={customStyles?.backButton || { mb: 4 }}
           mb={4}
         >
           Back
@@ -883,7 +949,10 @@ Generated using Toban Contribution Viewer with ${analysis?.model_used || 'AI'}
       </Breadcrumb>
 
       {/* Back button */}
-      <Button onClick={() => navigate(-1)} sx={customStyles.backButton}>
+      <Button
+        onClick={() => navigate(-1)}
+        sx={customStyles?.backButton || { mb: 4 }}
+      >
         Back
       </Button>
 
@@ -910,7 +979,7 @@ Generated using Toban Contribution Viewer with ${analysis?.model_used || 'AI'}
 
           {/* Action buttons */}
           <HStack spacing={2}>
-            {pendingAnalyses > 0 && (
+            {typeof pendingAnalyses === 'number' && pendingAnalyses > 0 && (
               <Badge colorScheme="yellow" p={2} borderRadius="md">
                 <HStack spacing={2}>
                   <Spinner size="xs" />
@@ -922,65 +991,122 @@ Generated using Toban Contribution Viewer with ${analysis?.model_used || 'AI'}
               </Badge>
             )}
 
-            <Tooltip label="Share analysis">
-              <IconButton
-                aria-label="Share analysis"
-                icon={<FiShare2 />}
-                onClick={handleShare}
-                colorScheme={hasCopied ? 'green' : 'gray'}
-              />
-            </Tooltip>
+            {/* Only render buttons if analysis data is available */}
+            {analysis && (
+              <>
+                <Tooltip label="Share analysis">
+                  <IconButton
+                    aria-label="Share analysis"
+                    icon={<FiShare2 />}
+                    onClick={handleShare}
+                    colorScheme={hasCopied ? 'green' : 'gray'}
+                    isDisabled={!shareUrl}
+                  />
+                </Tooltip>
 
-            <Tooltip label="Export as text">
-              <IconButton
-                aria-label="Export analysis"
-                icon={<FiDownload />}
-                onClick={handleExport}
-              />
-            </Tooltip>
-
-            {isRefreshing && (
-              <Button
-                leftIcon={<FiClock />}
-                onClick={() => {
-                  setIsRefreshing(false)
-                  checkReportStatus()
-                }}
-                size="sm"
-                colorScheme="purple"
-                variant="outline"
-              >
-                Refresh Status
-              </Button>
+                <Tooltip label="Export as text">
+                  <IconButton
+                    aria-label="Export analysis"
+                    icon={<FiDownload />}
+                    onClick={handleExport}
+                    isDisabled={!analysis}
+                  />
+                </Tooltip>
+              </>
             )}
+
+            {typeof isRefreshing === 'boolean' &&
+              isRefreshing &&
+              typeof setIsRefreshing === 'function' && (
+                <Button
+                  leftIcon={<FiClock />}
+                  onClick={() => {
+                    setIsRefreshing(false)
+                    if (typeof checkReportStatus === 'function') {
+                      checkReportStatus()
+                    }
+                  }}
+                  size="sm"
+                  colorScheme="purple"
+                  variant="outline"
+                >
+                  Refresh Status
+                </Button>
+              )}
           </HStack>
         </Flex>
 
         {/* Statistics section */}
         <SimpleGrid columns={{ base: 2, md: 4 }} spacing={4} mb={6}>
-          <Stat sx={customStyles.statCard}>
+          <Stat
+            sx={
+              customStyles?.statCard || {
+                p: 4,
+                borderRadius: 'md',
+                boxShadow: 'sm',
+              }
+            }
+          >
             <StatLabel>Messages</StatLabel>
-            <StatNumber>{(analysis?.message_count || 0).toLocaleString()}</StatNumber>
+            <StatNumber>
+              {typeof analysis?.message_count === 'number'
+                ? analysis.message_count.toLocaleString()
+                : '0'}
+            </StatNumber>
             <StatHelpText>Total messages analyzed</StatHelpText>
           </Stat>
 
-          <Stat sx={customStyles.statCard}>
+          <Stat
+            sx={
+              customStyles?.statCard || {
+                p: 4,
+                borderRadius: 'md',
+                boxShadow: 'sm',
+              }
+            }
+          >
             <StatLabel>Participants</StatLabel>
             <StatNumber>
-              {(analysis?.participant_count || 0).toLocaleString()}
+              {typeof analysis?.participant_count === 'number'
+                ? analysis.participant_count.toLocaleString()
+                : '0'}
             </StatNumber>
             <StatHelpText>Unique contributors</StatHelpText>
           </Stat>
 
-          <Stat sx={customStyles.statCard}>
+          <Stat
+            sx={
+              customStyles?.statCard || {
+                p: 4,
+                borderRadius: 'md',
+                boxShadow: 'sm',
+              }
+            }
+          >
             <StatLabel>Threads</StatLabel>
-            <StatNumber>{(analysis?.thread_count || 0).toLocaleString()}</StatNumber>
+            <StatNumber>
+              {typeof analysis?.thread_count === 'number'
+                ? analysis.thread_count.toLocaleString()
+                : '0'}
+            </StatNumber>
             <StatHelpText>Conversation threads</StatHelpText>
           </Stat>
 
-          <Stat sx={customStyles.statCard}>
+          <Stat
+            sx={
+              customStyles?.statCard || {
+                p: 4,
+                borderRadius: 'md',
+                boxShadow: 'sm',
+              }
+            }
+          >
             <StatLabel>Reactions</StatLabel>
-            <StatNumber>{(analysis?.reaction_count || 0).toLocaleString()}</StatNumber>
+            <StatNumber>
+              {typeof analysis?.reaction_count === 'number'
+                ? analysis.reaction_count.toLocaleString()
+                : '0'}
+            </StatNumber>
             <StatHelpText>Total emoji reactions</StatHelpText>
           </Stat>
         </SimpleGrid>
@@ -1069,7 +1195,8 @@ Generated using Toban Contribution Viewer with ${analysis?.model_used || 'AI'}
                       String(channel?.metadata?.workspace_uuid || '')
                     )
                   : renderPlainText(
-                      analysis?.contributor_insights || 'No contributor insights available',
+                      analysis?.contributor_insights ||
+                        'No contributor insights available',
                       String(channel?.metadata?.workspace_uuid || '')
                     )}
               </CardBody>
@@ -1125,13 +1252,27 @@ Generated using Toban Contribution Viewer with ${analysis?.model_used || 'AI'}
           <GridItem>
             <HStack>
               <Icon as={FiClock} />
-              <Text>Generated on {formatDateTime(analysis?.generated_at || '')}</Text>
+              <Text>
+                Generated on{' '}
+                {typeof formatDateTime === 'function'
+                  ? formatDateTime(
+                      typeof analysis?.generated_at === 'string'
+                        ? analysis.generated_at
+                        : ''
+                    )
+                  : 'Unknown date'}
+              </Text>
             </HStack>
           </GridItem>
           <GridItem>
             <HStack>
               <Icon as={FiFileText} />
-              <Text>Model: {analysis?.model_used || 'Unknown'}</Text>
+              <Text>
+                Model:{' '}
+                {typeof analysis?.model_used === 'string'
+                  ? analysis.model_used
+                  : 'Unknown'}
+              </Text>
             </HStack>
           </GridItem>
         </Grid>
