@@ -787,7 +787,11 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
   if (isLoading || !analysis) {
     return (
       <Box p={5}>
-        <Button onClick={() => navigate(-1)} sx={customStyles.backButton} mb={4}>
+        <Button
+          onClick={() => navigate(-1)}
+          sx={customStyles.backButton}
+          mb={4}
+        >
           Back
         </Button>
         <Center h="50vh">
@@ -797,7 +801,7 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
           </VStack>
         </Center>
       </Box>
-    );
+    )
   }
 
   return (
