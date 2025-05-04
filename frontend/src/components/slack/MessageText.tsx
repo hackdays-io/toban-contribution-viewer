@@ -4,10 +4,9 @@ import SlackUserDisplay from './SlackUserDisplay'
 import { SlackUserCacheProvider } from './SlackUserContext'
 interface MessageTextProps {
   text: string
-  workspaceId: string // Required to fetch user data
   resolveMentions?: boolean // Whether to resolve user mentions with SlackUserDisplay
   fallbackToSimpleFormat?: boolean // When true, falls back to simple @ID format on error
-  resourceAnalysisId?: string // Optional: ChannelAnalysis ID to use as fallback when workspaceId is empty
+  workspaceUuid?: string // Optional: ChannelAnalysis ID to use as fallback when workspaceId is empty
 }
 
 /**
@@ -18,10 +17,9 @@ interface MessageTextProps {
  */
 const MessageText: React.FC<MessageTextProps> = ({
   text,
-  workspaceId,
   resolveMentions = true,
   fallbackToSimpleFormat = true,
-  resourceAnalysisId,
+  workspaceUuid,
 }) => {
   // Track which user IDs had errors during resolution
   const [errorUserIds, setErrorUserIds] = useState<Set<string>>(new Set())
@@ -51,7 +49,7 @@ const MessageText: React.FC<MessageTextProps> = ({
     '[MessageText] Processing text:',
     text.substring(0, 100) + (text.length > 100 ? '...' : '')
   )
-  console.log('[MessageText] Using workspaceId:', workspaceId)
+  console.log('[MessageText] Using workspaceId:', workspaceUuid)
 
   while ((match = mentionRegex.exec(text)) !== null) {
     if (!userMentions.includes(match[1])) {
@@ -155,11 +153,11 @@ const MessageText: React.FC<MessageTextProps> = ({
           {/* Don't add @ prefix if it was already in @userId format */}
           {!wasSimpleFormat && '@'}
           <SlackUserCacheProvider
-            workspaceId={workspaceId}
+            workspaceId={workspaceUuid ||''} // Use workspaceUuid if provided, otherwise fallback to workspaceId
           >
             <SlackUserDisplay
               userId={userId}
-              workspaceId={workspaceId}
+              workspaceId={workspaceUuid}
               displayFormat="username"
               fetchFromSlack={true} // Always try to fetch from Slack if user not in DB
               asComponent="span"
@@ -172,7 +170,7 @@ const MessageText: React.FC<MessageTextProps> = ({
           {/* Log attempt to display user */}
           {(() => {
             console.log(
-              `[MessageText] Attempting to display user ${userId} from workspace ${workspaceId}`
+              `[MessageText] Attempting to display user ${userId} from workspace ${workspaceUuid}`
             )
             return null
           })()}

@@ -67,7 +67,6 @@ interface AnalysisResponse {
   key_highlights: string
   model_used: string
   generated_at: string
-  workspace_id?: string // Added for Slack user display support
   team_id?: string // Team ID for the analysis
   report_id?: string // CrossResourceReport ID for unified flow
   is_unified_report?: boolean // Flag indicating this uses the unified report system
@@ -93,7 +92,7 @@ interface ChannelAnalysisListProps {
   filterFn?: (analysis: Record<string, unknown>) => boolean
   contentField: string
   emptyMessage?: string
-  workspaceId?: string
+  workspaceUuid?: string
 }
 
 /**
@@ -107,12 +106,11 @@ const ChannelAnalysisList: FC<ChannelAnalysisListProps> = ({
   filterFn = () => true,
   contentField,
   emptyMessage = 'No information available.',
-  workspaceId,
 }) => {
   // Use react-router's useNavigate hook for navigation
   const navigate = useNavigate()
   // Function to format plain text with proper formatting and support for markdown-like syntax
-  const renderPlainText = (text: string | unknown) => {
+  const renderPlainText = (text: string | unknown, workspaceUuid: string | undefined) => {
     // Convert to string and handle undefined or empty text
     const textStr = typeof text === 'string' ? text : String(text || '')
     if (!textStr || textStr.trim().length === 0) {
@@ -146,7 +144,7 @@ const ChannelAnalysisList: FC<ChannelAnalysisListProps> = ({
               {paragraph.trim() ? (
                 <MessageText
                   text={paragraph}
-                  workspaceId={workspaceId ?? ''}
+                  workspaceUuid={workspaceUuid ?? ''}
                   resolveMentions={true}
                   fallbackToSimpleFormat={true}
                 />
@@ -244,7 +242,7 @@ const ChannelAnalysisList: FC<ChannelAnalysisListProps> = ({
                 <Box flex="1">
                   <MessageText
                     text={paragraph.trim().substring(2)}
-                    workspaceId={workspaceId ?? ''}
+                    workspaceUuid={workspaceUuid ?? ''}
                     resolveMentions={true}
                     fallbackToSimpleFormat={true}
                   />
@@ -258,7 +256,7 @@ const ChannelAnalysisList: FC<ChannelAnalysisListProps> = ({
             <Box key={index} mb={2}>
               <MessageText
                 text={paragraph}
-                workspaceId={workspaceId ?? ''}
+                workspaceUuid={workspaceUuid ?? ''}
                 resolveMentions={true}
                 fallbackToSimpleFormat={true}
               />
@@ -344,6 +342,7 @@ const ChannelAnalysisList: FC<ChannelAnalysisListProps> = ({
                           '\n$1'
                         )
                       : 'No content available',
+                    channelAnalysis.workspace_uuid
                   )}
                 </Box>
               ) : (
@@ -609,8 +608,7 @@ const TeamAnalysisResultPage: React.FC = () => {
         model_used: String(firstAnalysis.model_used || 'N/A'),
         generated_at: String(
           crossResourceReport.created_at || new Date().toISOString()
-        ),
-        workspace_id: currentIntegration?.id || integrationId || '', // Use integration ID as workspace ID for display
+        )
       }
 
       console.log('Created adapted analysis for team report:', adaptedAnalysis)
@@ -649,8 +647,7 @@ const TeamAnalysisResultPage: React.FC = () => {
         model_used: 'N/A',
         generated_at: String(
           crossResourceReport.created_at || new Date().toISOString()
-        ),
-        workspace_id: currentIntegration?.id || integrationId || '',
+        )
       }
 
       setAnalysis(emptyAnalysis)
@@ -826,7 +823,7 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
   /**
    * Render plain text with proper formatting and support for markdown-like syntax
    */
-  const renderPlainText = (text: string | unknown) => {
+  const renderPlainText = (text: string | unknown, workspace_uuid: string) => {
     // Convert to string and handle undefined or empty text
     const textStr = typeof text === 'string' ? text : String(text || '')
     if (!textStr || textStr.trim().length === 0) {
@@ -861,10 +858,9 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
               {paragraph.trim() ? (
                 <MessageText
                   text={paragraph}
-                  workspaceId={effectiveWorkspaceId ?? ''}
-                  resourceAnalysisId={analysisId}
                   resolveMentions={true}
                   fallbackToSimpleFormat={true}
+                  workspaceUuid={workspace_uuid ?? ''}
                 />
               ) : (
                 <Box height="0.7em" />
@@ -960,8 +956,7 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
                 <Box flex="1">
                   <MessageText
                     text={paragraph.trim().substring(2)}
-                    workspaceId={effectiveWorkspaceId ?? ''}
-                    resourceAnalysisId={analysisId}
+                    workspaceUuid={workspace_uuid ?? ''}
                     resolveMentions={true}
                     fallbackToSimpleFormat={true}
                   />
@@ -975,8 +970,7 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
             <Box key={index} mb={2}>
               <MessageText
                 text={paragraph}
-                workspaceId={effectiveWorkspaceId ?? ''}
-                resourceAnalysisId={analysisId}
+                workspaceUuid={workspace_uuid ?? ''}
                 resolveMentions={true}
                 fallbackToSimpleFormat={true}
               />
@@ -1193,25 +1187,6 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
     analysis,
   ])
 
-  // Try to get the workspace ID from different sources
-  const workspaceId = analysis?.workspace_id || currentIntegration?.id
-
-  // Check if we have the workspace ID (try to get from currentIntegration.metadata if needed)
-  const effectiveWorkspaceId =
-    workspaceId ||
-    (currentIntegration?.metadata?.id as string) ||
-    (currentIntegration?.metadata?.workspace_id as string)
-
-  // Log workspace ID detection for debugging
-  console.log('Workspace ID detection:', {
-    fromAnalysis: analysis?.workspace_id,
-    fromIntegration: currentIntegration?.id,
-    fromMetadata:
-      currentIntegration?.metadata?.workspace_id ||
-      currentIntegration?.metadata?.id,
-    effective: effectiveWorkspaceId,
-  })
-
   // Check for null analysis state before continuing (safety check)
   const hasAnalysisData = analysis !== null
   console.log('Analysis data available:', hasAnalysisData)
@@ -1320,37 +1295,6 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
     }
 
     enrichedAnalysis = fixedAnalysis
-  }
-
-  // For team analyses, we can proceed even without a workspace ID
-  // For channel analyses, we need the workspace ID
-  const shouldShowErrorScreen =
-    !effectiveWorkspaceId && !isLoading && !isTeamAnalysis
-
-  // Don't render slack components if no workspace ID is available and it's not a team analysis
-  if (shouldShowErrorScreen) {
-    return (
-      <Box p={4}>
-        {/* Render the same content without the SlackUserCacheProvider */}
-        <Flex
-          justifyContent="center"
-          alignItems="center"
-          direction="column"
-          py={8}
-        >
-          <Icon as={FiFileText} boxSize={12} color="gray.400" mb={4} />
-          <Heading as="h2" size="lg" mb={4}>
-            Integration Data Unavailable
-          </Heading>
-          <Text mb={6}>
-            Unable to load Slack workspace data for this analysis.
-          </Text>
-          <Button as={Link} to="/dashboard/integrations" colorScheme="purple">
-            Return to Integrations
-          </Button>
-        </Flex>
-      </Box>
-    )
   }
 
   /**
@@ -1953,6 +1897,7 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
                           : typeof analysis?.channel_summary === 'string'
                             ? analysis.channel_summary
                             : 'No summary available'
+                        , ''
                     )}
                   </Box>
                 </CardBody>
@@ -1967,7 +1912,6 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
                   integrationId={integrationId || ''}
                   contentField="resource_summary"
                   emptyMessage="No summary available for this channel."
-                  workspaceId={effectiveWorkspaceId}
                 />
               )}
             </TabPanel>
@@ -2006,7 +1950,8 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
                           : typeof enrichedAnalysis.topic_analysis === 'string'
                             ? enrichedAnalysis.topic_analysis
                             : 'No topic analysis available'
-                        ).replace(/(\d+\.\s)/g, '\n$1')
+                        ).replace(/(\d+\.\s)/g, '\n$1'),
+                        ''
                       )}
                     </Box>
                   ) : window.location.pathname.includes('/team-analysis/') ? (
@@ -2036,7 +1981,6 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
                   }
                   contentField="topic_analysis"
                   emptyMessage="No topic analysis available for this channel."
-                  workspaceId={effectiveWorkspaceId}
                 />
               )}
             </TabPanel>
@@ -2077,7 +2021,8 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
                               'string'
                             ? enrichedAnalysis.contributor_insights
                             : 'No contributor insights available'
-                        ).replace(/(\d+\.\s)/g, '\n$1')
+                        ).replace(/(\d+\.\s)/g, '\n$1'),
+                        ''
                       )}
                     </Box>
                   ) : window.location.pathname.includes('/team-analysis/') ? (
@@ -2107,7 +2052,6 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
                   }
                   contentField="contributor_insights"
                   emptyMessage="No contributor insights available for this channel."
-                  workspaceId={effectiveWorkspaceId}
                 />
               )}
             </TabPanel>
@@ -2146,7 +2090,8 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
                           : typeof enrichedAnalysis.key_highlights === 'string'
                             ? enrichedAnalysis.key_highlights
                             : 'No key highlights available'
-                        ).replace(/(\d+\.\s)/g, '\n$1')
+                        ).replace(/(\d+\.\s)/g, '\n$1'),
+                        ''
                       )}
                     </Box>
                   ) : window.location.pathname.includes('/team-analysis/') ? (
@@ -2175,7 +2120,6 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
                   }
                   contentField="key_highlights"
                   emptyMessage="No key highlights available for this channel."
-                  workspaceId={effectiveWorkspaceId}
                 />
               )}
             </TabPanel>
