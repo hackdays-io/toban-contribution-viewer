@@ -9,6 +9,7 @@ import {
   Card,
   CardBody,
   CardHeader,
+  Center,
   Flex,
   Grid,
   GridItem,
@@ -32,6 +33,7 @@ import {
   useClipboard,
   useColorModeValue,
   useToast,
+  VStack,
 } from '@chakra-ui/react'
 import {
   FiArrowLeft,
@@ -782,6 +784,22 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
     ? extractMissingFields(fixedAnalysis)
     : null
 
+  if (isLoading || !analysis) {
+    return (
+      <Box p={5}>
+        <Button onClick={() => navigate(-1)} sx={customStyles.backButton} mb={4}>
+          Back
+        </Button>
+        <Center h="50vh">
+          <VStack spacing={4}>
+            <Spinner size="xl" color="purple.500" />
+            <Text>Loading analysis data...</Text>
+          </VStack>
+        </Center>
+      </Box>
+    );
+  }
+
   return (
     <Box>
       {/* Breadcrumb navigation */}
@@ -805,15 +823,15 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
             <BreadcrumbItem>
               <BreadcrumbLink
                 as={Link}
-                to={`/dashboard/teams/${analysis.team_id || ''}`}
+                to={`/dashboard/teams/${analysis?.team_id || ''}`}
               >
-                {analysis.team_id ? 'Team' : 'Team Analysis'}
+                {analysis?.team_id ? 'Team' : 'Team Analysis'}
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbItem>
               <BreadcrumbLink
                 as={Link}
-                to={`/dashboard/teams/${analysis.team_id || ''}/reports/history`}
+                to={`/dashboard/teams/${analysis?.team_id || ''}/reports/history`}
               >
                 Reports
               </BreadcrumbLink>
@@ -832,7 +850,7 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
             <BreadcrumbItem>
               <BreadcrumbLink
                 as={Link}
-                to={`/dashboard/integrations/${analysis.channel_id?.split(':')[0] || ''}`}
+                to={`/dashboard/integrations/${analysis?.channel_id?.split(':')[0] || ''}`}
               >
                 {channel?.name || 'Workspace'}
               </BreadcrumbLink>
@@ -840,7 +858,7 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
             <BreadcrumbItem>
               <BreadcrumbLink
                 as={Link}
-                to={`/dashboard/integrations/${analysis.channel_id?.split(':')[0] || ''}/channels`}
+                to={`/dashboard/integrations/${analysis?.channel_id?.split(':')[0] || ''}/channels`}
               >
                 Channels
               </BreadcrumbLink>
@@ -848,7 +866,7 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
             <BreadcrumbItem>
               <BreadcrumbLink
                 as={Link}
-                to={`/dashboard/integrations/${analysis.channel_id?.split(':')[0] || ''}/channels/${analysis.channel_id || ''}`}
+                to={`/dashboard/integrations/${analysis?.channel_id?.split(':')[0] || ''}/channels/${analysis?.channel_id || ''}`}
               >
                 {channelName}
               </BreadcrumbLink>
