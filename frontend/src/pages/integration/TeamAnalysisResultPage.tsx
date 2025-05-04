@@ -384,31 +384,31 @@ const TeamAnalysisResultPage: React.FC = () => {
     if (!analysis) return
 
     const content = `
-# Channel Analysis: #${analysis.channel_name}
-Workspace: ${analysis.team_id ? 'Team Analysis' : 'Channel Analysis'}
-Period: ${formatDate(analysis.start_date)} to ${formatDate(analysis.end_date)}
-Generated: ${formatDateTime(analysis.generated_at)}
+# Channel Analysis: #${analysis?.channel_name || 'Channel'}
+Workspace: ${analysis?.team_id ? 'Team Analysis' : 'Channel Analysis'}
+Period: ${formatDate(analysis?.start_date || '')} to ${formatDate(analysis?.end_date || '')}
+Generated: ${formatDateTime(analysis?.generated_at || '')}
 
 ## Statistics
-- Messages: ${analysis.message_count}
-- Participants: ${analysis.participant_count}
-- Threads: ${analysis.thread_count}
-- Reactions: ${analysis.reaction_count}
+- Messages: ${analysis?.message_count || 0}
+- Participants: ${analysis?.participant_count || 0}
+- Threads: ${analysis?.thread_count || 0}
+- Reactions: ${analysis?.reaction_count || 0}
 
 ## Channel Summary
-${analysis.channel_summary}
+${analysis?.channel_summary || 'No summary available'}
 
 ## Topic Analysis
-${analysis.topic_analysis}
+${analysis?.topic_analysis || 'No topic analysis available'}
 
 ## Contributor Insights
-${analysis.contributor_insights}
+${analysis?.contributor_insights || 'No contributor insights available'}
 
 ## Key Highlights
-${analysis.key_highlights}
+${analysis?.key_highlights || 'No highlights available'}
 
 ---
-Generated using Toban Contribution Viewer with ${analysis.model_used}
+Generated using Toban Contribution Viewer with ${analysis?.model_used || 'AI'}
     `.trim()
 
     const element = document.createElement('a')
@@ -667,8 +667,8 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
     )
   }
 
-  const channelName = analysis.channel_name
-    ? analysis.channel_name.startsWith('#')
+  const channelName = analysis?.channel_name
+    ? typeof analysis.channel_name === 'string' && analysis.channel_name.startsWith('#')
       ? analysis.channel_name
       : `#${analysis.channel_name}`
     : 'Channel'
@@ -903,8 +903,8 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
                 : `Channel Analysis: ${channelName}`}
             </Heading>
             <Text color="gray.600">
-              {formatDate(analysis.start_date)} to{' '}
-              {formatDate(analysis.end_date)}
+              {formatDate(analysis?.start_date || '')} to{' '}
+              {formatDate(analysis?.end_date || '')}
             </Text>
           </Box>
 
@@ -960,27 +960,27 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
         <SimpleGrid columns={{ base: 2, md: 4 }} spacing={4} mb={6}>
           <Stat sx={customStyles.statCard}>
             <StatLabel>Messages</StatLabel>
-            <StatNumber>{analysis.message_count.toLocaleString()}</StatNumber>
+            <StatNumber>{(analysis?.message_count || 0).toLocaleString()}</StatNumber>
             <StatHelpText>Total messages analyzed</StatHelpText>
           </Stat>
 
           <Stat sx={customStyles.statCard}>
             <StatLabel>Participants</StatLabel>
             <StatNumber>
-              {analysis.participant_count.toLocaleString()}
+              {(analysis?.participant_count || 0).toLocaleString()}
             </StatNumber>
             <StatHelpText>Unique contributors</StatHelpText>
           </Stat>
 
           <Stat sx={customStyles.statCard}>
             <StatLabel>Threads</StatLabel>
-            <StatNumber>{analysis.thread_count.toLocaleString()}</StatNumber>
+            <StatNumber>{(analysis?.thread_count || 0).toLocaleString()}</StatNumber>
             <StatHelpText>Conversation threads</StatHelpText>
           </Stat>
 
           <Stat sx={customStyles.statCard}>
             <StatLabel>Reactions</StatLabel>
-            <StatNumber>{analysis.reaction_count.toLocaleString()}</StatNumber>
+            <StatNumber>{(analysis?.reaction_count || 0).toLocaleString()}</StatNumber>
             <StatHelpText>Total emoji reactions</StatHelpText>
           </Stat>
         </SimpleGrid>
@@ -1011,7 +1011,7 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
                       String(channel?.metadata?.workspace_uuid || '')
                     )
                   : renderPlainText(
-                      analysis.channel_summary,
+                      analysis?.channel_summary || 'No summary available',
                       String(channel?.metadata?.workspace_uuid || '')
                     )}
               </CardBody>
@@ -1040,7 +1040,7 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
                       String(channel?.metadata?.workspace_uuid || '')
                     )
                   : renderPlainText(
-                      analysis.topic_analysis,
+                      analysis?.topic_analysis || 'No topic analysis available',
                       String(channel?.metadata?.workspace_uuid || '')
                     )}
               </CardBody>
@@ -1069,7 +1069,7 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
                       String(channel?.metadata?.workspace_uuid || '')
                     )
                   : renderPlainText(
-                      analysis.contributor_insights,
+                      analysis?.contributor_insights || 'No contributor insights available',
                       String(channel?.metadata?.workspace_uuid || '')
                     )}
               </CardBody>
@@ -1098,7 +1098,7 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
                       String(channel?.metadata?.workspace_uuid || '')
                     )
                   : renderPlainText(
-                      analysis.key_highlights,
+                      analysis?.key_highlights || 'No highlights available',
                       String(channel?.metadata?.workspace_uuid || '')
                     )}
               </CardBody>
@@ -1125,13 +1125,13 @@ Generated using Toban Contribution Viewer with ${analysis.model_used}
           <GridItem>
             <HStack>
               <Icon as={FiClock} />
-              <Text>Generated on {formatDateTime(analysis.generated_at)}</Text>
+              <Text>Generated on {formatDateTime(analysis?.generated_at || '')}</Text>
             </HStack>
           </GridItem>
           <GridItem>
             <HStack>
               <Icon as={FiFileText} />
-              <Text>Model: {analysis.model_used}</Text>
+              <Text>Model: {analysis?.model_used || 'Unknown'}</Text>
             </HStack>
           </GridItem>
         </Grid>
