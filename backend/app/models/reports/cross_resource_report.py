@@ -3,7 +3,7 @@ SQLAlchemy models for cross-resource reports functionality.
 """
 
 import enum
-from typing import List
+from typing import List, Optional
 
 from sqlalchemy import (
     Column,
@@ -142,6 +142,21 @@ class ResourceAnalysis(Base, BaseModel):
     # Relationships
     cross_resource_report = relationship("CrossResourceReport", back_populates="resource_analyses")
     integration = relationship("Integration")
+    
+    @property
+    def workspace_uuid(self) -> Optional[UUID]:
+        """
+        Get the SlackWorkspace UUID (not the integration.workspace_id string).
+        
+        This property is intended to be used with objects loaded using the
+        get_resource_analysis_with_workspace_uuid function to avoid N+1 query problems.
+        
+        Returns:
+            Optional[UUID]: The UUID of the associated SlackWorkspace, or None if not available
+        """
+        if hasattr(self, "_workspace_uuid"):
+            return self._workspace_uuid
+        return None
 
     # Indexes
     __table_args__ = (
