@@ -1,5 +1,3 @@
-import { useState, useEffect } from 'react'
-
 /**
  * Hook for fetching and managing analysis data
  */

@@ -1,5 +1,3 @@
-import { useState, useEffect } from 'react'
-
 /**
  * Hook for tracking report status
  */
