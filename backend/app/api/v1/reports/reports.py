@@ -394,11 +394,11 @@ async def get_team_report(
             }
             
             # Set workspace_uuid for each analysis in the response
-            for analysis_dict in response_dict["resource_analyses"]:
-                if hasattr(analysis_dict, "integration") and analysis_dict.integration and analysis_dict.integration.workspace_id:
-                    workspace_id = analysis_dict.integration.workspace_id
+            for analysis in response_dict["resource_analyses"]:
+                if hasattr(analysis, "integration") and analysis.integration and analysis.integration.workspace_id:
+                    workspace_id = analysis.integration.workspace_id
                     if workspace_id in workspace_uuid_map:
-                        analysis_dict["workspace_uuid"] = workspace_uuid_map[workspace_id]
+                        setattr(analysis, "_workspace_uuid", workspace_uuid_map[workspace_id])
 
     return response_dict
 
