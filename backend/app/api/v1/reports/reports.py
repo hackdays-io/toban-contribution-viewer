@@ -32,6 +32,7 @@ from app.models.reports import (
     ReportStatus,
     ResourceAnalysis,
 )
+from app.models.slack import SlackWorkspace
 from app.models.team import Team, TeamMemberRole
 from app.services.slack.utils import get_channel_message_stats
 
@@ -319,7 +320,9 @@ async def get_team_report(
 
     # Include resource analyses if requested
     if include_analyses:
-        query = query.options(selectinload(CrossResourceReport.resource_analyses))
+        query = query.options(
+            selectinload(CrossResourceReport.resource_analyses).joinedload(ResourceAnalysis.integration)
+        )
 
     # Execute the query
     result = await db.execute(query)
@@ -366,6 +369,34 @@ async def get_team_report(
     response_dict["total_participants"] = stats.total_participants or 0
     response_dict["total_threads"] = stats.total_threads or 0
     response_dict["total_reactions"] = stats.total_reactions or 0
+    
+    # If analyses are included, set workspace_uuid for each analysis
+    if include_analyses and "resource_analyses" in response_dict:
+        workspace_ids = {
+            analysis.integration.workspace_id
+            for analysis in report.resource_analyses
+            if analysis.integration and analysis.integration.workspace_id
+        }
+        
+        # If there are workspace IDs, fetch the corresponding SlackWorkspace UUIDs
+        if workspace_ids:
+            workspace_result = await db.execute(
+                select(SlackWorkspace.slack_id, SlackWorkspace.id)
+                .where(SlackWorkspace.slack_id.in_(workspace_ids))
+            )
+            
+            # Create a mapping of workspace_id (string) to UUID
+            workspace_uuid_map = {
+                slack_id: uuid 
+                for slack_id, uuid in workspace_result.all()
+            }
+            
+            # Set workspace_uuid for each analysis in the response
+            for analysis_dict in response_dict["resource_analyses"]:
+                if hasattr(analysis_dict, "integration") and analysis_dict.integration and analysis_dict.integration.workspace_id:
+                    workspace_id = analysis_dict.integration.workspace_id
+                    if workspace_id in workspace_uuid_map:
+                        analysis_dict["workspace_uuid"] = workspace_uuid_map[workspace_id]
 
     return response_dict
 

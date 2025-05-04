@@ -125,6 +125,7 @@ class ResourceAnalysisResponse(ResourceAnalysisBase):
     participant_count: Optional[int] = Field(None, description="Number of participants in this resource")
     thread_count: Optional[int] = Field(None, description="Number of threads in this resource")
     reaction_count: Optional[int] = Field(None, description="Number of reactions in this resource")
+    workspace_uuid: Optional[UUID] = Field(None, description="UUID of the associated SlackWorkspace")
     created_at: datetime = Field(..., description="Creation timestamp")
     updated_at: datetime = Field(..., description="Last update timestamp")
 

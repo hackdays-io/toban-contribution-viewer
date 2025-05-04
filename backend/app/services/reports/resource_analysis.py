@@ -14,51 +14,6 @@ from app.models.reports import ResourceAnalysis
 from app.models.slack import SlackWorkspace
 
 
-async def get_resource_analysis_with_workspace_uuid(
-    db: AsyncSession, analysis_id: UUID
-) -> Optional[ResourceAnalysis]:
-    """
-    Load a ResourceAnalysis with its associated SlackWorkspace UUID efficiently using joinedload.
-    
-    This function avoids N+1 query problems by loading the Integration and SlackWorkspace
-    in a single query, then setting the workspace_uuid property on the ResourceAnalysis.
-    
-    Args:
-        db: AsyncSession for database access
-        analysis_id: UUID of the ResourceAnalysis to load
-        
-    Returns:
-        ResourceAnalysis with workspace_uuid property set, or None if not found
-    """
-    stmt = (
-        select(ResourceAnalysis)
-        .options(
-            joinedload(ResourceAnalysis.integration)
-        )
-        .where(ResourceAnalysis.id == analysis_id)
-    )
-    
-    result = await db.execute(stmt)
-    analysis = result.unique().scalar_one_or_none()
-    
-    if not analysis:
-        return None
-    
-    if analysis.integration and analysis.integration.workspace_id:
-        workspace_stmt = (
-            select(SlackWorkspace.id)
-            .where(SlackWorkspace.slack_id == analysis.integration.workspace_id)
-        )
-        
-        workspace_result = await db.execute(workspace_stmt)
-        workspace_uuid = workspace_result.scalar_one_or_none()
-        
-        if workspace_uuid:
-            setattr(analysis, "_workspace_uuid", workspace_uuid)
-    
-    return analysis
-
-
 async def get_resource_analyses_with_workspace_uuid(
     db: AsyncSession, report_id: UUID
 ) -> list[ResourceAnalysis]:
