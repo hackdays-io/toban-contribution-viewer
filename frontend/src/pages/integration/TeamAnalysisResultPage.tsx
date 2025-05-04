@@ -45,6 +45,7 @@ import {
 } from 'react-icons/fi'
 import { Link, useNavigate } from 'react-router-dom'
 import MessageText from '../../components/slack/MessageText'
+import ErrorBoundary from '../../components/common/ErrorBoundary'
 import { useAnalysisData } from '../../hooks'
 import { ServiceResource } from '../../lib/integrationService'
 
@@ -850,434 +851,470 @@ Generated using Toban Contribution Viewer with ${modelUsed}
     console.error('customStyles or backButton style is undefined')
   }
 
+  const safeCustomStyles = customStyles || {
+    backButton: {
+      mb: 4,
+      size: 'sm',
+      leftIcon: <FiArrowLeft />,
+      variant: 'outline',
+    },
+  }
+
   if (isLoading || !analysis) {
     return (
       <Box p={5}>
-        <Button
-          onClick={() => navigate(-1)}
-          sx={customStyles?.backButton || { mb: 4 }}
-          mb={4}
-        >
-          Back
-        </Button>
-        <Center h="50vh">
-          <VStack spacing={4}>
-            <Spinner size="xl" color="purple.500" />
-            <Text>Loading analysis data...</Text>
-          </VStack>
-        </Center>
+        <ErrorBoundary>
+          <Button
+            onClick={() => navigate(-1)}
+            sx={safeCustomStyles.backButton}
+            mb={4}
+          >
+            Back
+          </Button>
+          <Center h="50vh">
+            <VStack spacing={4}>
+              <Spinner size="xl" color="purple.500" />
+              <Text>Loading analysis data...</Text>
+            </VStack>
+          </Center>
+        </ErrorBoundary>
       </Box>
     )
   }
 
-  return (
-    <Box>
-      {/* Breadcrumb navigation */}
-      <Breadcrumb
-        separator={<FiChevronRight color="gray.500" />}
-        sx={customStyles.breadcrumb}
-      >
-        <BreadcrumbItem>
-          <BreadcrumbLink as={Link} to="/dashboard">
-            Dashboard
-          </BreadcrumbLink>
-        </BreadcrumbItem>
+  const renderActionButtons = () => {
+    if (!analysis) return null
 
-        {isTeamAnalysis ? (
-          <>
-            <BreadcrumbItem>
-              <BreadcrumbLink as={Link} to="/dashboard/teams">
-                Teams
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbItem>
-              <BreadcrumbLink
-                as={Link}
-                to={`/dashboard/teams/${analysis?.team_id || ''}`}
-              >
-                {analysis?.team_id ? 'Team' : 'Team Analysis'}
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbItem>
-              <BreadcrumbLink
-                as={Link}
-                to={`/dashboard/teams/${analysis?.team_id || ''}/reports/history`}
-              >
-                Reports
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbItem isCurrentPage>
-              <BreadcrumbLink>Analysis</BreadcrumbLink>
-            </BreadcrumbItem>
-          </>
-        ) : (
-          <>
-            <BreadcrumbItem>
-              <BreadcrumbLink as={Link} to="/dashboard/integrations">
-                Integrations
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbItem>
-              <BreadcrumbLink
-                as={Link}
-                to={`/dashboard/integrations/${analysis?.channel_id?.split(':')[0] || ''}`}
-              >
-                {channel?.name || 'Workspace'}
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbItem>
-              <BreadcrumbLink
-                as={Link}
-                to={`/dashboard/integrations/${analysis?.channel_id?.split(':')[0] || ''}/channels`}
-              >
-                Channels
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbItem>
-              <BreadcrumbLink
-                as={Link}
-                to={`/dashboard/integrations/${analysis?.channel_id?.split(':')[0] || ''}/channels/${analysis?.channel_id || ''}`}
-              >
-                {channelName}
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbItem isCurrentPage>
-              <BreadcrumbLink>Analysis</BreadcrumbLink>
-            </BreadcrumbItem>
-          </>
-        )}
-      </Breadcrumb>
-
-      {/* Back button */}
-      <Button
-        onClick={() => navigate(-1)}
-        sx={customStyles?.backButton || { mb: 4 }}
-      >
-        Back
-      </Button>
-
-      {/* Header section with title and actions */}
-      <Box sx={customStyles.headerSection}>
-        <Flex
-          justify="space-between"
-          align={{ base: 'flex-start', md: 'center' }}
-          direction={{ base: 'column', md: 'row' }}
-          mb={4}
-          gap={4}
-        >
-          <Box>
-            <Heading size="lg" mb={1}>
-              {isTeamAnalysisTitle
-                ? 'Team Analysis'
-                : `Channel Analysis: ${channelName}`}
-            </Heading>
-            <Text color="gray.600">
-              {formatDate(analysis?.start_date || '')} to{' '}
-              {formatDate(analysis?.end_date || '')}
-            </Text>
+    return (
+      <ErrorBoundary
+        fallback={
+          <Box p={2} borderWidth="1px" borderRadius="md" bg="red.50">
+            <Text fontSize="sm">Error rendering action buttons</Text>
           </Box>
+        }
+      >
+        <HStack spacing={2}>
+          {typeof pendingAnalyses === 'number' && pendingAnalyses > 0 && (
+            <Badge colorScheme="yellow" p={2} borderRadius="md">
+              <HStack spacing={2}>
+                <Spinner size="xs" />
+                <Text>
+                  {pendingAnalyses} pending{' '}
+                  {pendingAnalyses === 1 ? 'analysis' : 'analyses'}
+                </Text>
+              </HStack>
+            </Badge>
+          )}
 
-          {/* Action buttons */}
-          <HStack spacing={2}>
-            {typeof pendingAnalyses === 'number' && pendingAnalyses > 0 && (
-              <Badge colorScheme="yellow" p={2} borderRadius="md">
-                <HStack spacing={2}>
-                  <Spinner size="xs" />
+          <Tooltip label="Share analysis">
+            <IconButton
+              aria-label="Share analysis"
+              icon={<FiShare2 />}
+              onClick={handleShare}
+              colorScheme={hasCopied ? 'green' : 'gray'}
+              isDisabled={!shareUrl}
+            />
+          </Tooltip>
+
+          <Tooltip label="Export as text">
+            <IconButton
+              aria-label="Export analysis"
+              icon={<FiDownload />}
+              onClick={handleExport}
+              isDisabled={!analysis}
+            />
+          </Tooltip>
+
+          {typeof isRefreshing === 'boolean' &&
+            isRefreshing === true &&
+            typeof setIsRefreshing === 'function' && (
+              <Button
+                leftIcon={<FiClock />}
+                onClick={() => {
+                  setIsRefreshing(false)
+                  if (typeof checkReportStatus === 'function') {
+                    checkReportStatus()
+                  }
+                }}
+                size="sm"
+                colorScheme="purple"
+                variant="outline"
+              >
+                Refresh Status
+              </Button>
+            )}
+        </HStack>
+      </ErrorBoundary>
+    )
+  }
+
+  return (
+    <ErrorBoundary>
+      <Box>
+        {/* Breadcrumb navigation */}
+        <Breadcrumb
+          separator={<FiChevronRight color="gray.500" />}
+          sx={customStyles.breadcrumb}
+        >
+          <BreadcrumbItem>
+            <BreadcrumbLink as={Link} to="/dashboard">
+              Dashboard
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+
+          {isTeamAnalysis ? (
+            <>
+              <BreadcrumbItem>
+                <BreadcrumbLink as={Link} to="/dashboard/teams">
+                  Teams
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbItem>
+                <BreadcrumbLink
+                  as={Link}
+                  to={`/dashboard/teams/${analysis?.team_id || ''}`}
+                >
+                  {analysis?.team_id ? 'Team' : 'Team Analysis'}
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbItem>
+                <BreadcrumbLink
+                  as={Link}
+                  to={`/dashboard/teams/${analysis?.team_id || ''}/reports/history`}
+                >
+                  Reports
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbItem isCurrentPage>
+                <BreadcrumbLink>Analysis</BreadcrumbLink>
+              </BreadcrumbItem>
+            </>
+          ) : (
+            <>
+              <BreadcrumbItem>
+                <BreadcrumbLink as={Link} to="/dashboard/integrations">
+                  Integrations
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbItem>
+                <BreadcrumbLink
+                  as={Link}
+                  to={`/dashboard/integrations/${analysis?.channel_id?.split(':')[0] || ''}`}
+                >
+                  {channel?.name || 'Workspace'}
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbItem>
+                <BreadcrumbLink
+                  as={Link}
+                  to={`/dashboard/integrations/${analysis?.channel_id?.split(':')[0] || ''}/channels`}
+                >
+                  Channels
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbItem>
+                <BreadcrumbLink
+                  as={Link}
+                  to={`/dashboard/integrations/${analysis?.channel_id?.split(':')[0] || ''}/channels/${analysis?.channel_id || ''}`}
+                >
+                  {channelName}
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbItem isCurrentPage>
+                <BreadcrumbLink>Analysis</BreadcrumbLink>
+              </BreadcrumbItem>
+            </>
+          )}
+        </Breadcrumb>
+
+        {/* Back button */}
+        <ErrorBoundary
+          fallback={
+            <Button onClick={() => navigate(-1)} mb={4}>
+              Back
+            </Button>
+          }
+        >
+          <Button onClick={() => navigate(-1)} sx={safeCustomStyles.backButton}>
+            Back
+          </Button>
+        </ErrorBoundary>
+
+        {/* Header section with title and actions */}
+        <Box sx={customStyles.headerSection}>
+          <Flex
+            justify="space-between"
+            align={{ base: 'flex-start', md: 'center' }}
+            direction={{ base: 'column', md: 'row' }}
+            mb={4}
+            gap={4}
+          >
+            <Box>
+              <Heading size="lg" mb={1}>
+                {isTeamAnalysisTitle
+                  ? 'Team Analysis'
+                  : `Channel Analysis: ${channelName}`}
+              </Heading>
+              <Text color="gray.600">
+                {formatDate(analysis?.start_date || '')} to{' '}
+                {formatDate(analysis?.end_date || '')}
+              </Text>
+            </Box>
+
+            {/* Action buttons */}
+            {renderActionButtons()}
+          </Flex>
+
+          {/* Statistics section */}
+          <SimpleGrid columns={{ base: 2, md: 4 }} spacing={4} mb={6}>
+            <Stat
+              sx={
+                customStyles?.statCard || {
+                  p: 4,
+                  borderRadius: 'md',
+                  boxShadow: 'sm',
+                }
+              }
+            >
+              <StatLabel>Messages</StatLabel>
+              <StatNumber>
+                {typeof analysis?.message_count === 'number'
+                  ? analysis.message_count.toLocaleString()
+                  : '0'}
+              </StatNumber>
+              <StatHelpText>Total messages analyzed</StatHelpText>
+            </Stat>
+
+            <Stat
+              sx={
+                customStyles?.statCard || {
+                  p: 4,
+                  borderRadius: 'md',
+                  boxShadow: 'sm',
+                }
+              }
+            >
+              <StatLabel>Participants</StatLabel>
+              <StatNumber>
+                {typeof analysis?.participant_count === 'number'
+                  ? analysis.participant_count.toLocaleString()
+                  : '0'}
+              </StatNumber>
+              <StatHelpText>Unique contributors</StatHelpText>
+            </Stat>
+
+            <Stat
+              sx={
+                customStyles?.statCard || {
+                  p: 4,
+                  borderRadius: 'md',
+                  boxShadow: 'sm',
+                }
+              }
+            >
+              <StatLabel>Threads</StatLabel>
+              <StatNumber>
+                {typeof analysis?.thread_count === 'number'
+                  ? analysis.thread_count.toLocaleString()
+                  : '0'}
+              </StatNumber>
+              <StatHelpText>Conversation threads</StatHelpText>
+            </Stat>
+
+            <Stat
+              sx={
+                customStyles?.statCard || {
+                  p: 4,
+                  borderRadius: 'md',
+                  boxShadow: 'sm',
+                }
+              }
+            >
+              <StatLabel>Reactions</StatLabel>
+              <StatNumber>
+                {typeof analysis?.reaction_count === 'number'
+                  ? analysis.reaction_count.toLocaleString()
+                  : '0'}
+              </StatNumber>
+              <StatHelpText>Total emoji reactions</StatHelpText>
+            </Stat>
+          </SimpleGrid>
+        </Box>
+
+        {/* Main content tabs */}
+        <Tabs
+          colorScheme="purple"
+          variant="enclosed"
+          onChange={setActiveTab}
+          defaultIndex={activeTab}
+        >
+          <TabList>
+            <Tab>Summary</Tab>
+            <Tab>Topics</Tab>
+            <Tab>Contributors</Tab>
+            <Tab>Highlights</Tab>
+          </TabList>
+
+          <TabPanels>
+            {/* Summary Tab */}
+            <TabPanel sx={customStyles.tabPanel}>
+              <Card variant="outline">
+                <CardBody>
+                  {processedAnalysis?.fixedChannelSummary
+                    ? renderPlainText(
+                        processedAnalysis.fixedChannelSummary,
+                        String(channel?.metadata?.workspace_uuid || '')
+                      )
+                    : renderPlainText(
+                        analysis?.channel_summary || 'No summary available',
+                        String(channel?.metadata?.workspace_uuid || '')
+                      )}
+                </CardBody>
+              </Card>
+
+              {/* For team analysis, show individual channel summaries */}
+              {isTeamAnalysis && reportResult && (
+                <ChannelAnalysisList
+                  title="Channel Summaries"
+                  reportResult={reportResult}
+                  currentResources={[]}
+                  integrationId=""
+                  contentField="channel_summary"
+                  emptyMessage="No channel summaries available."
+                />
+              )}
+            </TabPanel>
+
+            {/* Topics Tab */}
+            <TabPanel sx={customStyles.tabPanel}>
+              <Card variant="outline">
+                <CardBody>
+                  {processedAnalysis?.fixedTopicAnalysis
+                    ? renderPlainText(
+                        processedAnalysis.fixedTopicAnalysis,
+                        String(channel?.metadata?.workspace_uuid || '')
+                      )
+                    : renderPlainText(
+                        analysis?.topic_analysis ||
+                          'No topic analysis available',
+                        String(channel?.metadata?.workspace_uuid || '')
+                      )}
+                </CardBody>
+              </Card>
+
+              {/* For team analysis, show individual channel topic analyses */}
+              {isTeamAnalysis && reportResult && (
+                <ChannelAnalysisList
+                  title="Channel Topic Analyses"
+                  reportResult={reportResult}
+                  currentResources={[]}
+                  integrationId=""
+                  contentField="topic_analysis"
+                  emptyMessage="No topic analyses available for individual channels."
+                />
+              )}
+            </TabPanel>
+
+            {/* Contributors Tab */}
+            <TabPanel sx={customStyles.tabPanel}>
+              <Card variant="outline">
+                <CardBody>
+                  {processedAnalysis?.fixedContributorInsights
+                    ? renderPlainText(
+                        processedAnalysis.fixedContributorInsights,
+                        String(channel?.metadata?.workspace_uuid || '')
+                      )
+                    : renderPlainText(
+                        analysis?.contributor_insights ||
+                          'No contributor insights available',
+                        String(channel?.metadata?.workspace_uuid || '')
+                      )}
+                </CardBody>
+              </Card>
+
+              {/* For team analysis, show individual channel contributor insights */}
+              {isTeamAnalysis && reportResult && (
+                <ChannelAnalysisList
+                  title="Channel Contributor Insights"
+                  reportResult={reportResult}
+                  currentResources={[]}
+                  integrationId=""
+                  contentField="contributor_insights"
+                  emptyMessage="No contributor insights available for individual channels."
+                />
+              )}
+            </TabPanel>
+
+            {/* Highlights Tab */}
+            <TabPanel sx={customStyles.tabPanel}>
+              <Card variant="outline">
+                <CardBody>
+                  {processedAnalysis?.fixedKeyHighlights
+                    ? renderPlainText(
+                        processedAnalysis.fixedKeyHighlights,
+                        String(channel?.metadata?.workspace_uuid || '')
+                      )
+                    : renderPlainText(
+                        analysis?.key_highlights || 'No highlights available',
+                        String(channel?.metadata?.workspace_uuid || '')
+                      )}
+                </CardBody>
+              </Card>
+
+              {/* For team analysis, show individual channel highlights */}
+              {isTeamAnalysis && reportResult && (
+                <ChannelAnalysisList
+                  title="Channel Highlights"
+                  reportResult={reportResult}
+                  currentResources={[]}
+                  integrationId=""
+                  contentField="key_highlights"
+                  emptyMessage="No highlights available for individual channels."
+                />
+              )}
+            </TabPanel>
+          </TabPanels>
+        </Tabs>
+
+        {/* Footer section with metadata */}
+        <Box mt={8} mb={4} fontSize="sm" color="gray.500">
+          <ErrorBoundary>
+            <Grid
+              templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }}
+              gap={4}
+            >
+              <GridItem>
+                <HStack>
+                  <Icon as={FiClock} />
                   <Text>
-                    {pendingAnalyses} pending{' '}
-                    {pendingAnalyses === 1 ? 'analysis' : 'analyses'}
+                    Generated on{' '}
+                    {typeof formatDateTime === 'function' &&
+                    analysis?.generated_at
+                      ? formatDateTime(
+                          typeof analysis.generated_at === 'string'
+                            ? analysis.generated_at
+                            : ''
+                        )
+                      : 'Unknown date'}
                   </Text>
                 </HStack>
-              </Badge>
-            )}
-
-            {/* Only render buttons if analysis data is available */}
-            {analysis && (
-              <>
-                <Tooltip label="Share analysis">
-                  <IconButton
-                    aria-label="Share analysis"
-                    icon={<FiShare2 />}
-                    onClick={handleShare}
-                    colorScheme={hasCopied ? 'green' : 'gray'}
-                    isDisabled={!shareUrl}
-                  />
-                </Tooltip>
-
-                <Tooltip label="Export as text">
-                  <IconButton
-                    aria-label="Export analysis"
-                    icon={<FiDownload />}
-                    onClick={handleExport}
-                    isDisabled={!analysis}
-                  />
-                </Tooltip>
-              </>
-            )}
-
-            {typeof isRefreshing === 'boolean' &&
-              isRefreshing &&
-              typeof setIsRefreshing === 'function' && (
-                <Button
-                  leftIcon={<FiClock />}
-                  onClick={() => {
-                    setIsRefreshing(false)
-                    if (typeof checkReportStatus === 'function') {
-                      checkReportStatus()
-                    }
-                  }}
-                  size="sm"
-                  colorScheme="purple"
-                  variant="outline"
-                >
-                  Refresh Status
-                </Button>
-              )}
-          </HStack>
-        </Flex>
-
-        {/* Statistics section */}
-        <SimpleGrid columns={{ base: 2, md: 4 }} spacing={4} mb={6}>
-          <Stat
-            sx={
-              customStyles?.statCard || {
-                p: 4,
-                borderRadius: 'md',
-                boxShadow: 'sm',
-              }
-            }
-          >
-            <StatLabel>Messages</StatLabel>
-            <StatNumber>
-              {typeof analysis?.message_count === 'number'
-                ? analysis.message_count.toLocaleString()
-                : '0'}
-            </StatNumber>
-            <StatHelpText>Total messages analyzed</StatHelpText>
-          </Stat>
-
-          <Stat
-            sx={
-              customStyles?.statCard || {
-                p: 4,
-                borderRadius: 'md',
-                boxShadow: 'sm',
-              }
-            }
-          >
-            <StatLabel>Participants</StatLabel>
-            <StatNumber>
-              {typeof analysis?.participant_count === 'number'
-                ? analysis.participant_count.toLocaleString()
-                : '0'}
-            </StatNumber>
-            <StatHelpText>Unique contributors</StatHelpText>
-          </Stat>
-
-          <Stat
-            sx={
-              customStyles?.statCard || {
-                p: 4,
-                borderRadius: 'md',
-                boxShadow: 'sm',
-              }
-            }
-          >
-            <StatLabel>Threads</StatLabel>
-            <StatNumber>
-              {typeof analysis?.thread_count === 'number'
-                ? analysis.thread_count.toLocaleString()
-                : '0'}
-            </StatNumber>
-            <StatHelpText>Conversation threads</StatHelpText>
-          </Stat>
-
-          <Stat
-            sx={
-              customStyles?.statCard || {
-                p: 4,
-                borderRadius: 'md',
-                boxShadow: 'sm',
-              }
-            }
-          >
-            <StatLabel>Reactions</StatLabel>
-            <StatNumber>
-              {typeof analysis?.reaction_count === 'number'
-                ? analysis.reaction_count.toLocaleString()
-                : '0'}
-            </StatNumber>
-            <StatHelpText>Total emoji reactions</StatHelpText>
-          </Stat>
-        </SimpleGrid>
+              </GridItem>
+              <GridItem>
+                <HStack>
+                  <Icon as={FiFileText} />
+                  <Text>
+                    Model:{' '}
+                    {typeof analysis?.model_used === 'string'
+                      ? analysis.model_used
+                      : 'Unknown'}
+                  </Text>
+                </HStack>
+              </GridItem>
+            </Grid>
+          </ErrorBoundary>
+        </Box>
       </Box>
-
-      {/* Main content tabs */}
-      <Tabs
-        colorScheme="purple"
-        variant="enclosed"
-        onChange={setActiveTab}
-        defaultIndex={activeTab}
-      >
-        <TabList>
-          <Tab>Summary</Tab>
-          <Tab>Topics</Tab>
-          <Tab>Contributors</Tab>
-          <Tab>Highlights</Tab>
-        </TabList>
-
-        <TabPanels>
-          {/* Summary Tab */}
-          <TabPanel sx={customStyles.tabPanel}>
-            <Card variant="outline">
-              <CardBody>
-                {processedAnalysis?.fixedChannelSummary
-                  ? renderPlainText(
-                      processedAnalysis.fixedChannelSummary,
-                      String(channel?.metadata?.workspace_uuid || '')
-                    )
-                  : renderPlainText(
-                      analysis?.channel_summary || 'No summary available',
-                      String(channel?.metadata?.workspace_uuid || '')
-                    )}
-              </CardBody>
-            </Card>
-
-            {/* For team analysis, show individual channel summaries */}
-            {isTeamAnalysis && reportResult && (
-              <ChannelAnalysisList
-                title="Channel Summaries"
-                reportResult={reportResult}
-                currentResources={[]}
-                integrationId=""
-                contentField="channel_summary"
-                emptyMessage="No channel summaries available."
-              />
-            )}
-          </TabPanel>
-
-          {/* Topics Tab */}
-          <TabPanel sx={customStyles.tabPanel}>
-            <Card variant="outline">
-              <CardBody>
-                {processedAnalysis?.fixedTopicAnalysis
-                  ? renderPlainText(
-                      processedAnalysis.fixedTopicAnalysis,
-                      String(channel?.metadata?.workspace_uuid || '')
-                    )
-                  : renderPlainText(
-                      analysis?.topic_analysis || 'No topic analysis available',
-                      String(channel?.metadata?.workspace_uuid || '')
-                    )}
-              </CardBody>
-            </Card>
-
-            {/* For team analysis, show individual channel topic analyses */}
-            {isTeamAnalysis && reportResult && (
-              <ChannelAnalysisList
-                title="Channel Topic Analyses"
-                reportResult={reportResult}
-                currentResources={[]}
-                integrationId=""
-                contentField="topic_analysis"
-                emptyMessage="No topic analyses available for individual channels."
-              />
-            )}
-          </TabPanel>
-
-          {/* Contributors Tab */}
-          <TabPanel sx={customStyles.tabPanel}>
-            <Card variant="outline">
-              <CardBody>
-                {processedAnalysis?.fixedContributorInsights
-                  ? renderPlainText(
-                      processedAnalysis.fixedContributorInsights,
-                      String(channel?.metadata?.workspace_uuid || '')
-                    )
-                  : renderPlainText(
-                      analysis?.contributor_insights ||
-                        'No contributor insights available',
-                      String(channel?.metadata?.workspace_uuid || '')
-                    )}
-              </CardBody>
-            </Card>
-
-            {/* For team analysis, show individual channel contributor insights */}
-            {isTeamAnalysis && reportResult && (
-              <ChannelAnalysisList
-                title="Channel Contributor Insights"
-                reportResult={reportResult}
-                currentResources={[]}
-                integrationId=""
-                contentField="contributor_insights"
-                emptyMessage="No contributor insights available for individual channels."
-              />
-            )}
-          </TabPanel>
-
-          {/* Highlights Tab */}
-          <TabPanel sx={customStyles.tabPanel}>
-            <Card variant="outline">
-              <CardBody>
-                {processedAnalysis?.fixedKeyHighlights
-                  ? renderPlainText(
-                      processedAnalysis.fixedKeyHighlights,
-                      String(channel?.metadata?.workspace_uuid || '')
-                    )
-                  : renderPlainText(
-                      analysis?.key_highlights || 'No highlights available',
-                      String(channel?.metadata?.workspace_uuid || '')
-                    )}
-              </CardBody>
-            </Card>
-
-            {/* For team analysis, show individual channel highlights */}
-            {isTeamAnalysis && reportResult && (
-              <ChannelAnalysisList
-                title="Channel Highlights"
-                reportResult={reportResult}
-                currentResources={[]}
-                integrationId=""
-                contentField="key_highlights"
-                emptyMessage="No highlights available for individual channels."
-              />
-            )}
-          </TabPanel>
-        </TabPanels>
-      </Tabs>
-
-      {/* Footer section with metadata */}
-      <Box mt={8} mb={4} fontSize="sm" color="gray.500">
-        <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={4}>
-          <GridItem>
-            <HStack>
-              <Icon as={FiClock} />
-              <Text>
-                Generated on{' '}
-                {typeof formatDateTime === 'function'
-                  ? formatDateTime(
-                      typeof analysis?.generated_at === 'string'
-                        ? analysis.generated_at
-                        : ''
-                    )
-                  : 'Unknown date'}
-              </Text>
-            </HStack>
-          </GridItem>
-          <GridItem>
-            <HStack>
-              <Icon as={FiFileText} />
-              <Text>
-                Model:{' '}
-                {typeof analysis?.model_used === 'string'
-                  ? analysis.model_used
-                  : 'Unknown'}
-              </Text>
-            </HStack>
-          </GridItem>
-        </Grid>
-      </Box>
-    </Box>
+    </ErrorBoundary>
   )
 }
 
