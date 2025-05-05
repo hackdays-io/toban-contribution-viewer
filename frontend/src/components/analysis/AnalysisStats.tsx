@@ -13,12 +13,12 @@ interface AnalysisStatsProps {
     participant_count?: number;
     thread_count?: number;
     reaction_count?: number;
-    [key: string]: any;
+    [key: string]: unknown;
   };
   isTeamAnalysis?: boolean | string;
   customStyles?: {
-    statCard?: Record<string, any>;
-    [key: string]: any;
+    statCard?: Record<string, unknown>;
+    [key: string]: unknown;
   };
 }
 
