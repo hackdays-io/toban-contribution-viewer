@@ -11,12 +11,7 @@ import {
   HStack,
   Icon,
   IconButton,
-  SimpleGrid,
   Spinner,
-  Stat,
-  StatHelpText,
-  StatLabel,
-  StatNumber,
   Tab,
   TabList,
   TabPanel,
@@ -40,6 +35,7 @@ import ErrorBoundary from '../../components/common/ErrorBoundary'
 import { useAnalysisData } from '../../hooks'
 import { extractSectionContent, isObviouslyNotJson } from '../../utils/textRenderer'
 import { SummaryTab, TopicsTab, ContributorsTab, HighlightsTab } from '../../components/analysis/TabContent'
+import AnalysisStats from '../../components/analysis/AnalysisStats'
 
 
 /**
@@ -534,79 +530,11 @@ Generated using Toban Contribution Viewer with ${modelUsed}
           </Flex>
 
           {/* Statistics section */}
-          <SimpleGrid columns={{ base: 2, md: 4 }} spacing={4} mb={6}>
-            <Stat
-              sx={
-                customStyles?.statCard || {
-                  p: 4,
-                  borderRadius: 'md',
-                  boxShadow: 'sm',
-                }
-              }
-            >
-              <StatLabel>Messages</StatLabel>
-              <StatNumber>
-                {typeof analysis?.message_count === 'number'
-                  ? analysis.message_count.toLocaleString()
-                  : '0'}
-              </StatNumber>
-              <StatHelpText>Total messages analyzed</StatHelpText>
-            </Stat>
-
-            <Stat
-              sx={
-                customStyles?.statCard || {
-                  p: 4,
-                  borderRadius: 'md',
-                  boxShadow: 'sm',
-                }
-              }
-            >
-              <StatLabel>Participants</StatLabel>
-              <StatNumber>
-                {typeof analysis?.participant_count === 'number'
-                  ? analysis.participant_count.toLocaleString()
-                  : '0'}
-              </StatNumber>
-              <StatHelpText>Unique contributors</StatHelpText>
-            </Stat>
-
-            <Stat
-              sx={
-                customStyles?.statCard || {
-                  p: 4,
-                  borderRadius: 'md',
-                  boxShadow: 'sm',
-                }
-              }
-            >
-              <StatLabel>Threads</StatLabel>
-              <StatNumber>
-                {typeof analysis?.thread_count === 'number'
-                  ? analysis.thread_count.toLocaleString()
-                  : '0'}
-              </StatNumber>
-              <StatHelpText>Conversation threads</StatHelpText>
-            </Stat>
-
-            <Stat
-              sx={
-                customStyles?.statCard || {
-                  p: 4,
-                  borderRadius: 'md',
-                  boxShadow: 'sm',
-                }
-              }
-            >
-              <StatLabel>Reactions</StatLabel>
-              <StatNumber>
-                {typeof analysis?.reaction_count === 'number'
-                  ? analysis.reaction_count.toLocaleString()
-                  : '0'}
-              </StatNumber>
-              <StatHelpText>Total emoji reactions</StatHelpText>
-            </Stat>
-          </SimpleGrid>
+          <AnalysisStats 
+            analysis={analysis} 
+            isTeamAnalysis={isTeamAnalysis} 
+            customStyles={customStyles} 
+          />
         </Box>
 
         {/* Main content tabs */}
