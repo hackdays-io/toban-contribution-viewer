@@ -2,9 +2,6 @@ import React, { useState } from 'react'
 import {
   Badge,
   Box,
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
   Button,
   Center,
   Flex,
@@ -33,8 +30,6 @@ import {
   VStack,
 } from '@chakra-ui/react'
 import {
-  FiArrowLeft,
-  FiChevronRight,
   FiClock,
   FiDownload,
   FiFileText,
@@ -325,7 +320,6 @@ Generated using Toban Contribution Viewer with ${modelUsed}
     backButton: {
       mb: 4,
       size: 'sm',
-      leftIcon: <FiArrowLeft />,
       variant: 'outline',
     },
     headerSection: {
@@ -418,7 +412,6 @@ Generated using Toban Contribution Viewer with ${modelUsed}
     backButton: {
       mb: 4,
       size: 'sm',
-      leftIcon: <FiArrowLeft />,
       variant: 'outline',
     },
   }
@@ -514,94 +507,6 @@ Generated using Toban Contribution Viewer with ${modelUsed}
   return (
     <ErrorBoundary>
       <Box>
-        {/* Breadcrumb navigation */}
-        <Breadcrumb
-          separator={<FiChevronRight color="gray.500" />}
-          sx={customStyles.breadcrumb}
-        >
-          <BreadcrumbItem>
-            <BreadcrumbLink as={Link} to="/dashboard">
-              Dashboard
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-
-          {isTeamAnalysis ? (
-            <>
-              <BreadcrumbItem>
-                <BreadcrumbLink as={Link} to="/dashboard/teams">
-                  Teams
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbItem>
-                <BreadcrumbLink
-                  as={Link}
-                  to={`/dashboard/teams/${analysis?.team_id || ''}`}
-                >
-                  {analysis?.team_id ? 'Team' : 'Team Analysis'}
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbItem>
-                <BreadcrumbLink
-                  as={Link}
-                  to={`/dashboard/teams/${analysis?.team_id || ''}/reports/history`}
-                >
-                  Reports
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbItem isCurrentPage>
-                <BreadcrumbLink>Analysis</BreadcrumbLink>
-              </BreadcrumbItem>
-            </>
-          ) : (
-            <>
-              <BreadcrumbItem>
-                <BreadcrumbLink as={Link} to="/dashboard/integrations">
-                  Integrations
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbItem>
-                <BreadcrumbLink
-                  as={Link}
-                  to={`/dashboard/integrations/${analysis?.channel_id?.split(':')[0] || ''}`}
-                >
-                  {channel?.name || 'Workspace'}
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbItem>
-                <BreadcrumbLink
-                  as={Link}
-                  to={`/dashboard/integrations/${analysis?.channel_id?.split(':')[0] || ''}/channels`}
-                >
-                  Channels
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbItem>
-                <BreadcrumbLink
-                  as={Link}
-                  to={`/dashboard/integrations/${analysis?.channel_id?.split(':')[0] || ''}/channels/${analysis?.channel_id || ''}`}
-                >
-                  {channelName}
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbItem isCurrentPage>
-                <BreadcrumbLink>Analysis</BreadcrumbLink>
-              </BreadcrumbItem>
-            </>
-          )}
-        </Breadcrumb>
-
-        {/* Back button */}
-        <ErrorBoundary
-          fallback={
-            <Button onClick={() => navigate(-1)} mb={4}>
-              Back
-            </Button>
-          }
-        >
-          <Button onClick={() => navigate(-1)} sx={safeCustomStyles.backButton}>
-            Back
-          </Button>
-        </ErrorBoundary>
 
         {/* Header section with title and actions */}
         <Box sx={customStyles.headerSection}>
