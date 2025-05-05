@@ -1,0 +1,24 @@
+FROM mcr.microsoft.com/playwright:latest
+
+WORKDIR /app
+
+# Install Node.js dependencies
+COPY package.json package-lock.json* ./
+RUN npm ci
+
+# Install Python dependencies
+COPY requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy test scripts and utilities
+COPY run-tests.sh ./
+RUN chmod +x run-tests.sh
+
+# Copy setup scripts
+COPY setup/wait-for-services.sh ./setup/
+RUN chmod +x ./setup/wait-for-services.sh
+
+# Set up directories for test results
+RUN mkdir -p results/e2e results/api
+
+CMD ["./run-tests.sh"]

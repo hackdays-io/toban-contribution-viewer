@@ -1,0 +1,16 @@
+{
+  "name": "toban-integration-tests",
+  "version": "1.0.0",
+  "description": "Integration tests for Toban Contribution Viewer",
+  "scripts": {
+    "test:e2e": "playwright test",
+    "test:api": "pytest tests/api"
+  },
+  "dependencies": {
+    "@playwright/test": "^1.40.0",
+    "axios": "^1.6.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.2.2"
+  }
+}
