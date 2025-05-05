@@ -1,0 +1,132 @@
+version: '3.8'
+
+services:
+  # Test database
+  test-db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: toban_test
+    ports:
+      - "5433:5432"
+    volumes:
+      - test-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Backend service for testing
+  test-backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    depends_on:
+      test-db:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@test-db:5432/toban_test
+      - TESTING=true
+      - SUPABASE_URL=${SUPABASE_URL:-http://test-supabase:9000}
+      - SUPABASE_KEY=${SUPABASE_KEY:-test-key}
+      - SUPABASE_JWT_SECRET=${SUPABASE_JWT_SECRET:-test-jwt-secret}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-test-openrouter-key}
+      - OPENROUTER_DEFAULT_MODEL=${OPENROUTER_DEFAULT_MODEL:-test-model}
+    ports:
+      - "8001:8000"
+    volumes:
+      - ../backend:/app
+    command: >
+      bash -c "
+        alembic upgrade head &&
+        uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+      "
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Frontend service for testing
+  test-frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    depends_on:
+      test-backend:
+        condition: service_healthy
+    environment:
+      - VITE_API_URL=http://test-backend:8000
+      - VITE_SUPABASE_URL=${SUPABASE_URL:-http://test-supabase:9000}
+      - VITE_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:-test-anon-key}
+    ports:
+      - "5174:5173"
+    volumes:
+      - ../frontend:/app
+      - /app/node_modules
+    command: npm run dev -- --host 0.0.0.0
+
+  # Mock Slack API service
+  mock-slack-api:
+    build:
+      context: ./mocks/slack-api
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3000"
+    volumes:
+      - ./mocks/slack-api:/app
+    environment:
+      - PORT=3000
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Mock OpenRouter API service
+  mock-openrouter-api:
+    build:
+      context: ./mocks/openrouter-api
+      dockerfile: Dockerfile
+    ports:
+      - "3002:3000"
+    volumes:
+      - ./mocks/openrouter-api:/app
+    environment:
+      - PORT=3000
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Test runner container
+  test-runner:
+    build:
+      context: .
+      dockerfile: Dockerfile.test-runner
+    depends_on:
+      test-backend:
+        condition: service_healthy
+      test-frontend:
+        condition: service_started
+      mock-slack-api:
+        condition: service_healthy
+      mock-openrouter-api:
+        condition: service_healthy
+    volumes:
+      - ./tests:/app/tests
+      - ./utils:/app/utils
+      - ./setup:/app/setup
+      - ./results:/app/results
+    environment:
+      - BACKEND_URL=http://test-backend:8000
+      - FRONTEND_URL=http://test-frontend:5173
+      - SLACK_API_URL=http://mock-slack-api:3000
+      - OPENROUTER_API_URL=http://mock-openrouter-api:3000
+    command: ["./setup/wait-for-services.sh", "./run-tests.sh"]
+
+volumes:
+  test-postgres-data:
