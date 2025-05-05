@@ -1,4 +1,4 @@
-import React, { FC } from 'react'
+import { FC } from 'react'
 import {
   Badge,
   Box,
@@ -12,7 +12,7 @@ import {
   Spinner,
   Text,
 } from '@chakra-ui/react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { renderPlainText } from '../../utils/textRenderer'
 import { ServiceResource } from '../../lib/integrationService'
 

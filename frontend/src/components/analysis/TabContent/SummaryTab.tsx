@@ -9,10 +9,10 @@ import { ChannelAnalysisList } from '../../common'
  */
 const SummaryTab: React.FC<TabContentProps> = ({
   analysis,
-  channel,
   processedAnalysis,
   reportResult,
   isTeamAnalysis,
+  workspaceUuid,
 }) => {
   return (
     <>
@@ -21,11 +21,11 @@ const SummaryTab: React.FC<TabContentProps> = ({
           {processedAnalysis?.fixedChannelSummary
             ? renderPlainText(
                 processedAnalysis.fixedChannelSummary,
-                String(channel?.metadata?.workspace_uuid || '')
+                String(workspaceUuid || '')
               )
             : renderPlainText(
                 analysis?.channel_summary || 'No summary available',
-                String(channel?.metadata?.workspace_uuid || '')
+                String(workspaceUuid || '')
               )}
         </CardBody>
       </Card>
