@@ -9,17 +9,16 @@ import {
 
 interface AnalysisStatsProps {
   analysis: {
-    message_count?: number;
-    participant_count?: number;
-    thread_count?: number;
-    reaction_count?: number;
-    [key: string]: unknown;
-  };
-  isTeamAnalysis?: boolean | string;
+    message_count?: number
+    participant_count?: number
+    thread_count?: number
+    reaction_count?: number
+  }
+  isTeamAnalysis?: boolean | string
   customStyles?: {
-    statCard?: Record<string, unknown>;
-    [key: string]: unknown;
-  };
+    statCard?: Record<string, unknown>
+    [key: string]: unknown
+  }
 }
 
 /**
@@ -31,7 +30,7 @@ const AnalysisStats: React.FC<AnalysisStatsProps> = ({
   isTeamAnalysis,
   customStyles,
 }) => {
-  if (!analysis) return null;
+  if (!analysis) return null
 
   return (
     <SimpleGrid columns={{ base: 2, md: 4 }} spacing={4} mb={6}>
