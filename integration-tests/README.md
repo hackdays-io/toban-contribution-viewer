@@ -14,7 +14,7 @@ integration-tests/
 │   ├── e2e/              # End-to-end tests with Playwright
 │   └── api/              # API tests with pytest
 └── utils/                # Utility functions for tests
-    └── slack-data-fetcher.js  # Script to fetch Slack data for test generation
+    └── fetch-slack-data.js    # Script to fetch Slack data for test generation
 ```
 
 ## Setup Instructions
