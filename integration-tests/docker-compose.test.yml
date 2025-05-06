@@ -81,10 +81,11 @@ services:
     environment:
       - PORT=3000
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:3000/health')\" || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 3
+      start_period: 30s
 
   # Mock OpenRouter API service
   mock-openrouter-api:
@@ -98,10 +99,11 @@ services:
     environment:
       - PORT=3000
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:3000/health')\" || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 3
+      start_period: 30s
 
   # Test runner container
   test-runner:
