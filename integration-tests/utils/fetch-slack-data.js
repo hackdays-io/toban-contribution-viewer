@@ -16,7 +16,7 @@ require('dotenv').config();
 const WebClient = slackWebApi.WebClient;
 
 const DEFAULT_OUTPUT_DIR = path.join(__dirname, '../mocks/slack-api/data');
-const DEFAULT_CHANNEL_LIMIT = 10;
+const DEFAULT_CHANNEL_LIMIT = 5;
 const DEFAULT_MESSAGE_LIMIT = 20;
 const DEFAULT_USER_LIMIT = 20;
 
@@ -202,8 +202,9 @@ async function fetchChannels() {
   try {
     log.info('Fetching channel list...');
     const result = await slack.conversations.list({
-      limit: channelLimit,
-      types: 'public_channel,private_channel'
+      limit: 100,
+      types: 'public_channel,private_channel',
+      exclude_archived: true
     });
     saveToFile(result, 'conversations.json');
     return result.channels;
@@ -274,7 +275,6 @@ async function main() {
     const activeChannels = channels.filter(channel => !channel.is_archived);
     log.info(`Found ${activeChannels.length} active channels out of ${channels.length} total`);
     
-    const channelLimit = 5;
     const targetChannels = activeChannels.slice(0, channelLimit);
     log.info(`Selected ${targetChannels.length} active channels for message fetching`);
     
