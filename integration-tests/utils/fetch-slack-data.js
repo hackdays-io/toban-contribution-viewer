@@ -271,14 +271,21 @@ async function main() {
     
     const channels = await fetchChannels();
     
-    const targetChannelIds = ['C02FMV4EZ', 'C08JP0V9VT8']; // 06_random and proj_oss_boardgame
-    log.info(`Targeting specific channels: ${targetChannelIds.join(', ')}`);
+    const activeChannels = channels.filter(channel => !channel.is_archived);
+    log.info(`Found ${activeChannels.length} active channels out of ${channels.length} total`);
     
-    const targetChannels = channels.filter(channel => targetChannelIds.includes(channel.id));
+    const channelLimit = 5;
+    const targetChannels = activeChannels.slice(0, channelLimit);
+    log.info(`Selected ${targetChannels.length} active channels for message fetching`);
+    
     if (targetChannels.length === 0) {
-      log.warn('Target channels not found. Please check channel IDs.');
+      log.warn('No active channels found. Please check your Slack workspace.');
       return;
     }
+    
+    targetChannels.forEach(channel => {
+      log.info(`Selected channel: ${channel.name} (${channel.id})`);
+    });
     
     const messageUserIds = new Set();
     const allMessages = [];
@@ -286,6 +293,7 @@ async function main() {
     for (const channel of targetChannels) {
       const messages = await fetchMessages(channel);
       if (messages && messages.length > 0) {
+        log.info(`Found ${messages.length} messages in channel ${channel.name}`);
         messages.forEach(msg => {
           if (msg.user) messageUserIds.add(msg.user);
           if (msg.bot_id) messageUserIds.add(msg.bot_id);
