@@ -1,0 +1,2172 @@
+{
+  "ok": true,
+  "messages": [
+    {
+      "user": "U025D4YEU5U",
+      "type": "message",
+      "ts": "1746035608.591649",
+      "client_msg_id": "64B44401-688F-4525-B003-0BA88B9E95DC",
+      "text": "Civic Tech Project &amp; Community Handbook—From Taiwan's g0v Community to the World: The Collaborative Wisdom of Digital Citizens, developed by 臺灣_揪松團 g0v Jothon, FNF, and global contributors, is your go-to guide for building digital tools and community that protect rights and strengthen democracy. :hammer_and_wrench::ballot_box_with_ballot:\n\n:sparkles: It's not just a book — it's a toolkit for digital citizens ready to make a difference.\n\n:blue_book: What’s inside?\n:bulb:Global success stories\n:bulb:Practical and step-by-step guide\n:bulb:Hands-on worksheets for training and designing your initiatives. \n\n:date: Join us on May 27, 2025, 14:00–15:15 CEST for our online launch event: “Innovations to Tackle Crises in Democracy: Civic Tech Project &amp; Community Handbook”:globe_with_meridians: to explore the handbook with civic tech leaders and digital democracy experts from around the world!\n\n:point_right: Click here to register before May 23!\n <https://forms.gle/PNxwy4VvbfR69KMk6|https://forms.gle/PNxwy4VvbfR69KMk6>\n:point_right: Learn more on the event page: <https://www.freiheit.org/taiwan/innovations-tackle-crises-democracy-online-releasing-event-civic-tech-project-community|https://www.freiheit.org/taiwan/innovations-tackle-crises-democracy-online-releasing-event-civic-tech-project-community>",
+      "team": "T02FMV4EB",
+      "attachments": [
+        {
+          "image_url": "https://www.freiheit.org/sites/default/files/styles/facebook_share/public/2025-04/527-facebook-poster-with-up-for-democracy-photo.png?itok=9_hFHArL",
+          "image_width": 837,
+          "image_height": 628,
+          "image_bytes": 418418,
+          "from_url": "https://www.freiheit.org/taiwan/innovations-tackle-crises-democracy-online-releasing-event-civic-tech-project-community",
+          "service_icon": "https://www.freiheit.org/themes/custom/uv_theme/src/images/apple-touch-icon.png",
+          "id": 1,
+          "original_url": "https://www.freiheit.org/taiwan/innovations-tackle-crises-democracy-online-releasing-event-civic-tech-project-community",
+          "fallback": "Friedrich Naumann Foundation: EVENT: Innovations to Tackle Crises in Democracy: Online Releasing Event of",
+          "text": "In this online event, we are going to share with you how citizens can play an active role in harnessing technologies to foster their public participation and democracy by introducing you Civic Tech Project &amp; Community Handbook—From Taiwan's g0v Community to the World: The Collaborative Wisdom of Digital Citizens, a project that g0v jothon collaborated with us. Come register before May 23!",
+          "title": "EVENT: Innovations to Tackle Crises in Democracy: Online Releasing Event of",
+          "title_link": "https://www.freiheit.org/taiwan/innovations-tackle-crises-democracy-online-releasing-event-civic-tech-project-community",
+          "service_name": "Friedrich Naumann Foundation"
+        }
+      ],
+      "blocks": [
+        {
+          "type": "rich_text",
+          "block_id": "lhCoZ",
+          "elements": [
+            {
+              "type": "rich_text_section",
+              "elements": [
+                {
+                  "type": "text",
+                  "text": "Civic Tech Project & Community Handbook—From Taiwan's g0v Community to the World: The Collaborative Wisdom of Digital Citizens, developed by 臺灣_揪松團 g0v Jothon, FNF, and global contributors, is your go-to guide for building digital tools and community that protect rights and strengthen democracy. "
+                },
+                {
+                  "type": "emoji",
+                  "name": "hammer_and_wrench",
+                  "unicode": "1f6e0-fe0f"
+                },
+                {
+                  "type": "emoji",
+                  "name": "ballot_box_with_ballot",
+                  "unicode": "1f5f3-fe0f"
+                },
+                {
+                  "type": "text",
+                  "text": "\n\n"
+                },
+                {
+                  "type": "emoji",
+                  "name": "sparkles",
+                  "unicode": "2728"
+                },
+                {
+                  "type": "text",
+                  "text": " It's not just a book — it's a toolkit for digital citizens ready to make a difference.\n\n"
+                },
+                {
+                  "type": "emoji",
+                  "name": "blue_book",
+                  "unicode": "1f4d8"
+                },
+                {
+                  "type": "text",
+                  "text": " What’s inside?\n"
+                },
+                {
+                  "type": "emoji",
+                  "name": "bulb",
+                  "unicode": "1f4a1"
+                },
+                {
+                  "type": "text",
+                  "text": "Global success stories\n"
+                },
+                {
+                  "type": "emoji",
+                  "name": "bulb",
+                  "unicode": "1f4a1"
+                },
+                {
+                  "type": "text",
+                  "text": "Practical and step-by-step guide\n"
+                },
+                {
+                  "type": "emoji",
+                  "name": "bulb",
+                  "unicode": "1f4a1"
+                },
+                {
+                  "type": "text",
+                  "text": "Hands-on worksheets for training and designing your initiatives. \n\n"
+                },
+                {
+                  "type": "emoji",
+                  "name": "date",
+                  "unicode": "1f4c5"
+                },
+                {
+                  "type": "text",
+                  "text": " Join us on May 27, 2025, 14:00–15:15 CEST for our online launch event: “Innovations to Tackle Crises in Democracy: Civic Tech Project & Community Handbook”"
+                },
+                {
+                  "type": "emoji",
+                  "name": "globe_with_meridians",
+                  "unicode": "1f310"
+                },
+                {
+                  "type": "text",
+                  "text": " to explore the handbook with civic tech leaders and digital democracy experts from around the world!\n\n"
+                },
+                {
+                  "type": "emoji",
+                  "name": "point_right",
+                  "unicode": "1f449"
+                },
+                {
+                  "type": "text",
+                  "text": " Click here to register before May 23!\n "
+                },
+                {
+                  "type": "link",
+                  "url": "https://forms.gle/PNxwy4VvbfR69KMk6",
+                  "text": "https://forms.gle/PNxwy4VvbfR69KMk6"
+                },
+                {
+                  "type": "text",
+                  "text": "\n"
+                },
+                {
+                  "type": "emoji",
+                  "name": "point_right",
+                  "unicode": "1f449"
+                },
+                {
+                  "type": "text",
+                  "text": " Learn more on the event page: "
+                },
+                {
+                  "type": "link",
+                  "url": "https://www.freiheit.org/taiwan/innovations-tackle-crises-democracy-online-releasing-event-civic-tech-project-community",
+                  "text": "https://www.freiheit.org/taiwan/innovations-tackle-crises-democracy-online-releasing-event-civic-tech-project-community"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "reactions": [
+        {
+          "name": "sparkles",
+          "users": [
+            "U02GTJH1N",
+            "UA3UCG9MM",
+            "U05F3A92NSC"
+          ],
+          "count": 3
+        },
+        {
+          "name": "party-blob",
+          "users": [
+            "UA3UCG9MM",
+            "U05F3A92NSC"
+          ],
+          "count": 2
+        }
+      ]
+    },
+    {
+      "user": "U08LJ41MV0Q",
+      "type": "message",
+      "ts": "1745820005.874199",
+      "client_msg_id": "8f98d4de-5c00-4963-9d2f-12485f857dc5",
+      "text": "<https://kazaguruma-transit.nawashiro.dev/>\nこんにちは。Nawashiroと申します。千代田区福祉交通「風ぐるま」（障害者など配慮が必要な人のための区営バス）の乗換案内を作りました。\nというのも、紙の時刻表と設定が複雑なGoogleMap（車いすのみ+バスのみの設定をしないと検索できない）しか案内が無かったからです。\n電気代とかの都合で無課金ユーザは10req/hに制限しています。このままではあんまりなので、現在、区との連携を協議しています。\nぜひご覧ください。フィードバックなどやさしく頂けると幸いです。",
+      "team": "T02FMV4EB",
+      "thread_ts": "1745820005.874199",
+      "reply_count": 6,
+      "reply_users_count": 2,
+      "latest_reply": "1745821369.511809",
+      "reply_users": [
+        "U08LJ41MV0Q",
+        "UA3UCG9MM"
+      ],
+      "is_locked": false,
+      "subscribed": false,
+      "attachments": [
+        {
+          "from_url": "https://kazaguruma-transit.nawashiro.dev/",
+          "service_icon": "https://kazaguruma-transit.nawashiro.dev/apple-icon.png?3dec5e26e453ded9",
+          "id": 1,
+          "original_url": "https://kazaguruma-transit.nawashiro.dev/",
+          "fallback": "風ぐるま乗換案内【非公式】",
+          "text": "千代田区の地域福祉交通「風ぐるま」の乗換案内サービス。出発地・目的地を指定するだけで最適なルートを案内します。",
+          "title": "風ぐるま乗換案内【非公式】",
+          "title_link": "https://kazaguruma-transit.nawashiro.dev/",
+          "service_name": "風ぐるま乗換案内"
+        }
+      ],
+      "blocks": [
+        {
+          "type": "rich_text",
+          "block_id": "l0Tbm",
+          "elements": [
+            {
+              "type": "rich_text_section",
+              "elements": [
+                {
+                  "type": "link",
+                  "url": "https://kazaguruma-transit.nawashiro.dev/"
+                },
+                {
+                  "type": "text",
+                  "text": "\nこんにちは。Nawashiroと申します。千代田区福祉交通「風ぐるま」（障害者など配慮が必要な人のための区営バス）の乗換案内を作りました。\nというのも、紙の時刻表と設定が複雑なGoogleMap（車いすのみ+バスのみの設定をしないと検索できない）しか案内が無かったからです。\n電気代とかの都合で無課金ユーザは10req/hに制限しています。このままではあんまりなので、現在、区との連携を協議しています。\nぜひご覧ください。フィードバックなどやさしく頂けると幸いです。"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "reactions": [
+        {
+          "name": "sparkles",
+          "users": [
+            "U08TUNXH8",
+            "UA3UCG9MM",
+            "U0816469K42",
+            "U02GTJH1N",
+            "UBQ9EMJ80",
+            "U040QLC39C4",
+            "U06C9USU9C7",
+            "U05F3A92NSC",
+            "U08A77Z0DHN"
+          ],
+          "count": 9
+        },
+        {
+          "name": "meow_party",
+          "users": [
+            "U08TUNXH8",
+            "UA3UCG9MM",
+            "U0816469K42",
+            "U02GTJH1N",
+            "U05F3A92NSC"
+          ],
+          "count": 5
+        },
+        {
+          "name": "civitan-zoom",
+          "users": [
+            "UA3UCG9MM",
+            "U0816469K42",
+            "U02GTJH1N",
+            "U05F3A92NSC",
+            "U02N8KR7VTQ"
+          ],
+          "count": 5
+        },
+        {
+          "name": "eyes",
+          "users": [
+            "U049Q0Z5D3P"
+          ],
+          "count": 1
+        }
+      ]
+    },
+    {
+      "user": "U05HY78PN9H",
+      "type": "message",
+      "ts": "1745542707.255469",
+      "edited": {
+        "user": "U05HY78PN9H",
+        "ts": "1745548017.000000"
+      },
+      "client_msg_id": "73898927-9266-4ad9-80e8-8bca8608abeb",
+      "text": "こんにちは！西粟倉という村で山林管理をしている田畑といいます。先週末、生きものを登録するアプリをつくってみました。\n<https://note.com/hyakumori/n/n3562b2335f42>\nオープンソース化を目指していきたい・相性がよいのではないか？となんとなく思っているのですが、私自身エンジニアではないので分からない部分も多く、そもそも目指すべきなのか？というところも含めてアドバイスやご意見頂戴できれば嬉しく思います。もし場違いな投稿であれば削除致しますので、そちらもコメント頂ければ幸いです！よろしくお願いします！",
+      "team": "T02FMV4EB",
+      "thread_ts": "1745542707.255469",
+      "reply_count": 5,
+      "reply_users_count": 3,
+      "latest_reply": "1746164295.017439",
+      "reply_users": [
+        "UA3UCG9MM",
+        "U05HY78PN9H",
+        "U07TA5D13EU"
+      ],
+      "is_locked": false,
+      "subscribed": false,
+      "attachments": [
+        {
+          "image_url": "https://assets.st-note.com/production/uploads/images/186112943/rectangle_large_type_2_7fa557002b6de73149fbf06bd6c8b3bc.png?fit=bounds&quality=85&width=1280",
+          "image_width": 1280,
+          "image_height": 670,
+          "image_bytes": 62576,
+          "from_url": "https://note.com/hyakumori/n/n3562b2335f42",
+          "service_icon": "https://assets.st-note.com/poc-image/manual/note-common-images/production/icons/apple-touch-icon.png",
+          "id": 1,
+          "original_url": "https://note.com/hyakumori/n/n3562b2335f42",
+          "fallback": "note（ノート）: 非エンジニアがGPTで生きもの記録アプリを開発した話｜株式会社百森",
+          "text": "こんにちは。株式会社百森の田畑です。いまは西粟倉という人口1300の村で森林管理会社を経営していますが、昔はITベンチャーにいました。なので開発は身近にありましたが、企画や分析、営業だったのでコーディングはしたことがありません。そんな私でもアプリがサクッと動いたよ！AIすごい！という話をします。 どういうアプリをつくったのか 西粟倉という村はその93%以上が森林です。ほとんどは戦後の家不足に対応するため国策で植えられてきたものですが、丸太の価値が低くて業界的にかなりキビシイです。原木の生産はこれからも背骨ではあるものの、どうやってこの「スギやヒノキの畑」から、今までにないの価値を",
+          "title": "非エンジニアがGPTで生きもの記録アプリを開発した話｜株式会社百森",
+          "title_link": "https://note.com/hyakumori/n/n3562b2335f42",
+          "service_name": "note（ノート）"
+        }
+      ],
+      "blocks": [
+        {
+          "type": "rich_text",
+          "block_id": "w6pSJ",
+          "elements": [
+            {
+              "type": "rich_text_section",
+              "elements": [
+                {
+                  "type": "text",
+                  "text": "こんにちは！西粟倉という村で山林管理をしている田畑といいます。先週末、生きものを登録するアプリをつくってみました。\n"
+                },
+                {
+                  "type": "link",
+                  "url": "https://note.com/hyakumori/n/n3562b2335f42"
+                },
+                {
+                  "type": "text",
+                  "text": "\nオープンソース化を目指していきたい・相性がよいのではないか？となんとなく思っているのですが、私自身エンジニアではないので分からない部分も多く、そもそも目指すべきなのか？というところも含めてアドバイスやご意見頂戴できれば嬉しく思います。もし場違いな投稿であれば削除致しますので、そちらもコメント頂ければ幸いです！よろしくお願いします！"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "reactions": [
+        {
+          "name": "tada",
+          "users": [
+            "UA30P3V3P",
+            "UV0RM030F",
+            "U08TUNXH8",
+            "U02GTJH1N",
+            "U08K10MH3MJ",
+            "U08P8KKB3MJ",
+            "U08Q81WBURX",
+            "UBQ9EMJ80"
+          ],
+          "count": 8
+        },
+        {
+          "name": "eyes",
+          "users": [
+            "UA3UCG9MM",
+            "U049Q0Z5D3P",
+            "U08TUNXH8",
+            "U02GTJH1N",
+            "U08P8KKB3MJ",
+            "U080UK0T6H5"
+          ],
+          "count": 6
+        },
+        {
+          "name": "+1",
+          "users": [
+            "U08A77Z0DHN",
+            "U040QLC39C4",
+            "U08TUNXH8",
+            "U02GTJH1N",
+            "U07SPQMKREH"
+          ],
+          "count": 5
+        }
+      ]
+    },
+    {
+      "user": "U0617504EER",
+      "type": "message",
+      "ts": "1743431054.387629",
+      "client_msg_id": "3e597ca2-0838-4ae6-bab7-ef56c5ac9efd",
+      "text": "Hi, I am Peter from g0v community. I shared the project info of <https://kamimap.com/en/map/2024-noto-earthquake/#37.4752954760677,136.85481768442452-37.23376666876605,137.37545615164885|kamimap> to contributors and volunteers working in helping Myanmar people after the earthquake today, and they found it very useful!",
+      "team": "T02FMV4EB",
+      "thread_ts": "1743431054.387629",
+      "reply_count": 4,
+      "reply_users_count": 3,
+      "latest_reply": "1743770596.070049",
+      "reply_users": [
+        "U02GTJH1N",
+        "U0617504EER",
+        "UA3UCG9MM"
+      ],
+      "is_locked": false,
+      "subscribed": false,
+      "attachments": [
+        {
+          "image_url": "https://kamimap.com/images/ogp_2024-noto-earthquake.png",
+          "image_width": 1200,
+          "image_height": 630,
+          "image_bytes": 214360,
+          "from_url": "https://kamimap.com/en/map/2024-noto-earthquake/#37.4752954760677,136.85481768442452-37.23376666876605,137.37545615164885",
+          "service_icon": "https://kamimap.com/apple-touch-icon.png",
+          "id": 1,
+          "original_url": "https://kamimap.com/en/map/2024-noto-earthquake/#37.4752954760677,136.85481768442452-37.23376666876605,137.37545615164885",
+          "fallback": "Noto Peninsula Earthquake Information (2024)KamiMap",
+          "text": "This map is designed for printing, allowing those without internet access to obtain information from social media. Once you set the map to the desired place, you can print it in A4 size. It shows a list of information for that spot, such as gas stations or water distribution points. Just print it and give it to anyone who needs it!",
+          "title": "Noto Peninsula Earthquake Information (2024)KamiMap",
+          "title_link": "https://kamimap.com/en/map/2024-noto-earthquake/#37.4752954760677,136.85481768442452-37.23376666876605,137.37545615164885",
+          "service_name": "kamimap.com"
+        }
+      ],
+      "blocks": [
+        {
+          "type": "rich_text",
+          "block_id": "2ykMz",
+          "elements": [
+            {
+              "type": "rich_text_section",
+              "elements": [
+                {
+                  "type": "text",
+                  "text": "Hi, I am Peter from g0v community. I shared the project info of "
+                },
+                {
+                  "type": "link",
+                  "url": "https://kamimap.com/en/map/2024-noto-earthquake/#37.4752954760677,136.85481768442452-37.23376666876605,137.37545615164885",
+                  "text": "kamimap"
+                },
+                {
+                  "type": "text",
+                  "text": " to contributors and volunteers working in helping Myanmar people after the earthquake today, and they found it very useful!"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "reactions": [
+        {
+          "name": "heart",
+          "users": [
+            "U08D436G988",
+            "U02GVL0PP",
+            "U7F06EUKV",
+            "U059KS1C3HU",
+            "U02GY2W0B",
+            "U02GTJH1N",
+            "U01J6LR6EBW",
+            "UV10F3KQX",
+            "U080UK0T6H5",
+            "UA3UCG9MM",
+            "U01CM6ZC71C",
+            "U04UZK2UWDB",
+            "U0166UF6D96",
+            "U05F3A92NSC",
+            "UBQ9EMJ80"
+          ],
+          "count": 15
+        },
+        {
+          "name": "raised_hands",
+          "users": [
+            "UFZVC74TA",
+            "U08TUNXH8",
+            "UBQ9EMJ80",
+            "U0166UF6D96"
+          ],
+          "count": 4
+        }
+      ]
+    },
+    {
+      "user": "U03HCS4BBE1",
+      "type": "message",
+      "ts": "1743146128.230769",
+      "client_msg_id": "a188d4cc-3555-409f-b62a-b5cefd456f8b",
+      "text": "<https://odcs.bodik.jp/|BODIK ODCS>というオープンデータ・カタログサイトを運営している、\n（公財）九州先端科学技術研究所の西依と申します:blush:\n\nBODIK ODCSは現在、全国の326自治体にご利用いただいているのですが、\n先日、愛知県岡崎市様のカタログサイトである、<https://odcs.bodik.jp/232025/|「岡崎オープンデータラボ」>がオープンしました:cherry_blossom:\nこのサイトでは、オープンデータを利用して街の賑わい度などを可視化するなど、\n合計19枚のダッシュボードを備えており、また、一部のデータはAPIで提供されるなど\n充実した内容となっています:clap:\nみなさんのアイデア次第でデータの利活用がもっともっと広まると嬉しいです:dizzy:\nぜひ一度ご覧ください！",
+      "team": "T02FMV4EB",
+      "thread_ts": "1743146128.230769",
+      "reply_count": 1,
+      "reply_users_count": 1,
+      "latest_reply": "1743146373.032239",
+      "reply_users": [
+        "U03HCS4BBE1"
+      ],
+      "is_locked": false,
+      "subscribed": false,
+      "attachments": [
+        {
+          "from_url": "https://odcs.bodik.jp/232025/",
+          "image_url": "https://odcs.bodik.jp/232025/wp-content/uploads/sites/368/2025/03/eyecatch-1024x538.png",
+          "image_width": 1024,
+          "image_height": 538,
+          "image_bytes": 92167,
+          "service_icon": "https://odcs.bodik.jp/232025/wp-content/uploads/sites/368/2025/01/okazaki_favicon2-300x300.png",
+          "id": 1,
+          "original_url": "https://odcs.bodik.jp/232025/",
+          "fallback": "岡崎オープンデータラボ",
+          "text": "愛知県岡崎市",
+          "title": "岡崎オープンデータラボ",
+          "title_link": "https://odcs.bodik.jp/232025/",
+          "service_name": "odcs.bodik.jp"
+        }
+      ],
+      "blocks": [
+        {
+          "type": "rich_text",
+          "block_id": "NE4iC",
+          "elements": [
+            {
+              "type": "rich_text_section",
+              "elements": [
+                {
+                  "type": "link",
+                  "url": "https://odcs.bodik.jp/",
+                  "text": "BODIK ODCS"
+                },
+                {
+                  "type": "text",
+                  "text": "というオープンデータ・カタログサイトを運営している、\n（公財）九州先端科学技術研究所の西依と申します"
+                },
+                {
+                  "type": "emoji",
+                  "name": "blush",
+                  "unicode": "1f60a"
+                },
+                {
+                  "type": "text",
+                  "text": "\n\nBODIK ODCSは現在、全国の326自治体にご利用いただいているのですが、\n先日、愛知県岡崎市様のカタログサイトである、"
+                },
+                {
+                  "type": "link",
+                  "url": "https://odcs.bodik.jp/232025/",
+                  "text": "「岡崎オープンデータラボ」"
+                },
+                {
+                  "type": "text",
+                  "text": "がオープンしました"
+                },
+                {
+                  "type": "emoji",
+                  "name": "cherry_blossom",
+                  "unicode": "1f338"
+                },
+                {
+                  "type": "text",
+                  "text": "\nこのサイトでは、オープンデータを利用して街の賑わい度などを可視化するなど、\n合計19枚のダッシュボードを備えており、また、一部のデータはAPIで提供されるなど\n充実した内容となっています"
+                },
+                {
+                  "type": "emoji",
+                  "name": "clap",
+                  "unicode": "1f44f"
+                },
+                {
+                  "type": "text",
+                  "text": "\nみなさんのアイデア次第でデータの利活用がもっともっと広まると嬉しいです"
+                },
+                {
+                  "type": "emoji",
+                  "name": "dizzy",
+                  "unicode": "1f4ab"
+                },
+                {
+                  "type": "text",
+                  "text": "\nぜひ一度ご覧ください！"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "reactions": [
+        {
+          "name": "clap",
+          "users": [
+            "UBQ9EMJ80",
+            "U08TUNXH8",
+            "U0812QXEARE",
+            "U023SEEU0RZ",
+            "U019LQU1BEK",
+            "U01JJD184NB",
+            "U06C9USU9C7",
+            "UV784ER1C",
+            "U089E955F8C",
+            "UFZVC74TA",
+            "U07TEUGM4MR",
+            "UB73Z5THR",
+            "UA1HL3WU8"
+          ],
+          "count": 13
+        },
+        {
+          "name": "medetai",
+          "users": [
+            "U08HLSSE6HE",
+            "U08TUNXH8",
+            "UV784ER1C",
+            "U05F3A92NSC",
+            "UA1HL3WU8"
+          ],
+          "count": 5
+        },
+        {
+          "name": "star-struck",
+          "users": [
+            "UA1HL3WU8"
+          ],
+          "count": 1
+        },
+        {
+          "name": "fire",
+          "users": [
+            "UA1HL3WU8"
+          ],
+          "count": 1
+        }
+      ]
+    },
+    {
+      "user": "U07E64AV5TQ",
+      "type": "message",
+      "ts": "1739337611.696989",
+      "client_msg_id": "5de0ae6b-c695-4cdb-98a9-948f87e26760",
+      "text": "政治ってきわめてキャッチコピーが重要な世界だと想うのですが、\n電通でもAIをつかったコピー生成の試みを、随分前からやってるみたいですね\nやっとChatGPTベースになったみたいなので記事が上がってました\nこれ使いたい（お客様向けなんでしょうけど）\n\n<https://dentsu-ho.com/articles/9180>",
+      "team": "T02FMV4EB",
+      "attachments": [
+        {
+          "image_url": "https://ecdn.speedsize.com/e7df76a9-4406-40f5-bc97-57e7c2c2d99d/assets.dentsu-ho.com/uploads/article/ogp_image/9180/ogp_1737445702-aico2_01_ogp.jpg",
+          "image_width": 1200,
+          "image_height": 630,
+          "image_bytes": 82075,
+          "from_url": "https://dentsu-ho.com/articles/9180",
+          "service_icon": "https://dentsu-ho.com/favicon.ico",
+          "id": 1,
+          "original_url": "https://dentsu-ho.com/articles/9180",
+          "fallback": "AIでコピーライターは絶滅するのか？ | ウェブ電通報",
+          "text": "人間がもっとも人間として真価を発揮するはずの「創造力」を必要とする仕事を、AIは代替できるのでしょうか？\n \n 電通の「AICO2（アイコツー）」は、「創造的思",
+          "title": "AIでコピーライターは絶滅するのか？ | ウェブ電通報",
+          "title_link": "https://dentsu-ho.com/articles/9180",
+          "service_name": "dentsu-ho.com"
+        }
+      ],
+      "blocks": [
+        {
+          "type": "rich_text",
+          "block_id": "+rEOE",
+          "elements": [
+            {
+              "type": "rich_text_section",
+              "elements": [
+                {
+                  "type": "text",
+                  "text": "政治ってきわめてキャッチコピーが重要な世界だと想うのですが、\n電通でもAIをつかったコピー生成の試みを、随分前からやってるみたいですね\nやっとChatGPTベースになったみたいなので記事が上がってました\nこれ使いたい（お客様向けなんでしょうけど）\n\n"
+                },
+                {
+                  "type": "link",
+                  "url": "https://dentsu-ho.com/articles/9180"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "user": "UBQ9EMJ80",
+      "type": "message",
+      "ts": "1738911898.761259",
+      "client_msg_id": "b1ca555b-e3b4-4d15-9a14-6ee78126ae1f",
+      "text": "【Code for Japanで働く人ってどんな人？:civitan-zoom:】メンバー紹介記事のご紹介です！\n今回はGovTech事業を担当する砂川洋輝さんにCfJでのプロジェクトにおける考え方について聞きました。\nどんなキャリアを歩んで今CfJで働いているのか、各メンバーによってその経緯は様々です。通勤タイムにでもご覧ください:train:\n<https://www.code4japan.org/voice/202502_hirokisunagawa>",
+      "team": "T02FMV4EB",
+      "attachments": [
+        {
+          "from_url": "https://www.code4japan.org/voice/202502_hirokisunagawa",
+          "image_url": "https://lh3.googleusercontent.com/pw/AP1GczOvvcga46Sa7_ULj1T7pHLZ7XEY9GJJBzZQ5WZrtOqobDSgMMJ2aCHNXSXt9LHD08v1Cfg5ahxcYQQQOA10PRNWrXtzp_DcpOyd1eQDBHeR0AzKRas9qmNBWZZacfV0tAOPO1Rvpbf6jEgh3S0SZFCI",
+          "image_width": 512,
+          "image_height": 269,
+          "image_bytes": 39810,
+          "id": 1,
+          "original_url": "https://www.code4japan.org/voice/202502_hirokisunagawa",
+          "fallback": "Code for Japan: 人と社会の可能性を信じて取り組む、行政の伴走支援 | インタビュー | Code for Japan",
+          "text": "Code for Japanは市民（Civic）が技術（Tech）を使って地域や身近な困りごとを解決する、シビックテック活動に取り組む団体です。Code for Japanの仲間と一緒にシビックテックを楽しみましょう！",
+          "title": "人と社会の可能性を信じて取り組む、行政の伴走支援 | インタビュー | Code for Japan",
+          "title_link": "https://www.code4japan.org/voice/202502_hirokisunagawa",
+          "service_name": "Code for Japan"
+        }
+      ],
+      "blocks": [
+        {
+          "type": "rich_text",
+          "block_id": "vxVge",
+          "elements": [
+            {
+              "type": "rich_text_section",
+              "elements": [
+                {
+                  "type": "text",
+                  "text": "【Code for Japanで働く人ってどんな人？"
+                },
+                {
+                  "type": "emoji",
+                  "name": "civitan-zoom"
+                },
+                {
+                  "type": "text",
+                  "text": "】メンバー紹介記事のご紹介です！\n今回はGovTech事業を担当する砂川洋輝さんにCfJでのプロジェクトにおける考え方について聞きました。\nどんなキャリアを歩んで今CfJで働いているのか、各メンバーによってその経緯は様々です。通勤タイムにでもご覧ください"
+                },
+                {
+                  "type": "emoji",
+                  "name": "train",
+                  "unicode": "1f68b"
+                },
+                {
+                  "type": "text",
+                  "text": "\n"
+                },
+                {
+                  "type": "link",
+                  "url": "https://www.code4japan.org/voice/202502_hirokisunagawa"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "reactions": [
+        {
+          "name": "clap",
+          "users": [
+            "U04TZ18HYAX",
+            "U02D23K8K61",
+            "UV0RM030F",
+            "UG86QJZPF",
+            "U08TUNXH8",
+            "UV784ER1C",
+            "UA3UCG9MM",
+            "U02GTJH1N",
+            "U016BKNV91A",
+            "U010ZFF74CR",
+            "U08HLSSE6HE",
+            "U019LQU1BEK",
+            "UG2P78XEG",
+            "U02BEDH9YFR"
+          ],
+          "count": 14
+        },
+        {
+          "name": "+1",
+          "users": [
+            "U3B4KAJ0N"
+          ],
+          "count": 1
+        }
+      ]
+    },
+    {
+      "user": "U07UP339MB6",
+      "type": "message",
+      "ts": "1737926288.151139",
+      "client_msg_id": "4faf6d2e-4ed2-49d0-8b08-85838e902791",
+      "text": "みなさま、はじめまして。\n一般社団法人Code for Noto代表理事の羽生田と申します。\n\n当法人では本日、\n能登の震災・豪雨からの復興まちづくりを行う地域・協議会の\nまちづくりイベント、ワークショップ、メディア露出が俯瞰できるWebサービス\n「NOTOまちづくりタイムライン」を開発し、リリースしました。\n\n『NOTOまちづくりタイムライン』\n<https://www.nototimeline.org>\n(※PC向けのサービスです)\n\n・能登全域で、どこで、誰が、何ををやっているか知りたい\n・他の地域の取り組みを参考にしたい\n・取り上げられたメディアを調査したい\n・自分たちの取り組みのタイムラインをまとめたい\n\nといった現地の方々のお役に立つと同時に、\n\n・支援したいけど、誰に問合せれば良いか分からない\n・資金・人的な中間支援の調査をしたい\n・地域のキーマンと繋がりたい\n\nといった支援側の方々のお役に立つサービスとなっております。\n\nまた、一部地域では、\nまちづくりワークショップで出た付箋の意見をWEB上に配置した\n「NOTOまちづくりビジョンMAP」を搭載しております。\n実際の住民意見を地理空間で把握することが出来ます。\n\nさらに、2024年東京都知事選で話題となったブロードリスニング手法を取り入れた\n「Talk to the City -NOTO-」（以下、T3C）も搭載しております。\n\nT3C技術は2023年に米国で開発された最新のAI技術であり、\n復興まちづくりで活用される世界初の事例となります。\n\n---------------------------------------------------\n\nSummit2024の安野さんブロードリスニング手法(TTTC)を見てから、\nこれは能登の復興にも役立つ！と確信し、早速技術を取り入れております。\n能登のデジタル支援等にご興味をお持ちの方は、お気軽にお問い合わせくださいませ！\n突然の宣伝失礼しました！",
+      "team": "T02FMV4EB",
+      "thread_ts": "1737926288.151139",
+      "reply_count": 2,
+      "reply_users_count": 2,
+      "latest_reply": "1737973512.353899",
+      "reply_users": [
+        "U08TUNXH8",
+        "UA3UCG9MM"
+      ],
+      "is_locked": false,
+      "subscribed": false,
+      "attachments": [
+        {
+          "image_url": "https://lh5.googleusercontent.com/aq-fe_RcuvXk3DCqN1IoC02y2eXwGLG6BwXn0cYNQfoMVZyl24rpExYJh6c86O3VEDDsYZU2w_EWY1KrjjPSvNk",
+          "image_width": 780,
+          "image_height": 335,
+          "image_bytes": 118187,
+          "from_url": "https://www.nototimeline.org/",
+          "service_icon": "https://lh4.googleusercontent.com/hNcxu4JytNmfgx-_TI7nm0YNwkhg1AYZ2m6ALijzG-xPnFT8B-vEnTymwYq2KiWHMyCs8roj1h-ZAZ0RxnGmC9VPm8jJzhKHzVJN5S3tFQMX2kWl",
+          "id": 1,
+          "original_url": "https://www.nototimeline.org",
+          "fallback": "NOTOまちづくりタイムライン",
+          "text": "NOTOまちづくりタイムライン",
+          "title": "NOTOまちづくりタイムライン",
+          "title_link": "https://www.nototimeline.org/",
+          "service_name": "nototimeline.org"
+        }
+      ],
+      "blocks": [
+        {
+          "type": "rich_text",
+          "block_id": "xGr+R",
+          "elements": [
+            {
+              "type": "rich_text_section",
+              "elements": [
+                {
+                  "type": "text",
+                  "text": "みなさま、はじめまして。\n一般社団法人Code for Noto代表理事の羽生田と申します。\n\n当法人では本日、\n能登の震災・豪雨からの復興まちづくりを行う地域・協議会の\nまちづくりイベント、ワークショップ、メディア露出が俯瞰できるWebサービス\n「NOTOまちづくりタイムライン」を開発し、リリースしました。\n\n『NOTOまちづくりタイムライン』\n"
+                },
+                {
+                  "type": "link",
+                  "url": "https://www.nototimeline.org"
+                },
+                {
+                  "type": "text",
+                  "text": "\n(※PC向けのサービスです)\n\n・能登全域で、どこで、誰が、何ををやっているか知りたい\n・他の地域の取り組みを参考にしたい\n・取り上げられたメディアを調査したい\n・自分たちの取り組みのタイムラインをまとめたい\n\nといった現地の方々のお役に立つと同時に、\n\n・支援したいけど、誰に問合せれば良いか分からない\n・資金・人的な中間支援の調査をしたい\n・地域のキーマンと繋がりたい\n\nといった支援側の方々のお役に立つサービスとなっております。\n\nまた、一部地域では、\nまちづくりワークショップで出た付箋の意見をWEB上に配置した\n「NOTOまちづくりビジョンMAP」を搭載しております。\n実際の住民意見を地理空間で把握することが出来ます。\n\nさらに、2024年東京都知事選で話題となったブロードリスニング手法を取り入れた\n「Talk to the City -NOTO-」（以下、T3C）も搭載しております。\n\nT3C技術は2023年に米国で開発された最新のAI技術であり、\n復興まちづくりで活用される世界初の事例となります。\n\n---------------------------------------------------\n\nSummit2024の安野さんブロードリスニング手法(TTTC)を見てから、\nこれは能登の復興にも役立つ！と確信し、早速技術を取り入れております。\n能登のデジタル支援等にご興味をお持ちの方は、お気軽にお問い合わせくださいませ！\n突然の宣伝失礼しました！"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "reactions": [
+        {
+          "name": "heart",
+          "users": [
+            "U02RD33Q71Q",
+            "UNFH36N84",
+            "U06C9USU9C7",
+            "U08TUNXH8",
+            "U088ZPEKVS5",
+            "UV784ER1C",
+            "U081TA8CDGA",
+            "UA3UCG9MM",
+            "U05F3A92NSC",
+            "U01PS2DDC03",
+            "U08APFV21ND",
+            "U02GTJH1N",
+            "UA1HL3WU8",
+            "UFZVC74TA",
+            "U019LQU1BEK",
+            "U016BKNV91A",
+            "U059KS1C3HU",
+            "UG2P78XEG"
+          ],
+          "count": 18
+        },
+        {
+          "name": "meow_party",
+          "users": [
+            "UNFH36N84",
+            "U08TUNXH8",
+            "U088ZPEKVS5",
+            "UV784ER1C",
+            "UA3UCG9MM",
+            "U3B4KAJ0N",
+            "U02GTJH1N",
+            "U07QXU1JPRP"
+          ],
+          "count": 8
+        },
+        {
+          "name": "cool",
+          "users": [
+            "UB73Z5THR",
+            "U088ZPEKVS5",
+            "UV784ER1C",
+            "U02GTJH1N"
+          ],
+          "count": 4
+        }
+      ]
+    },
+    {
+      "user": "U07E64AV5TQ",
+      "type": "message",
+      "ts": "1737343886.946719",
+      "edited": {
+        "user": "U07E64AV5TQ",
+        "ts": "1737346749.000000"
+      },
+      "client_msg_id": "28cb5faa-c753-45a2-8990-65f5dc649b21",
+      "text": "安野さんが発表された、デジタル民主主義2030向けのOSSが気になっています。\nGitHubでの公開状況、インストールの手順など、情報を共有したいです\nわたしはUXデザイナーなので、プロダクトによってはインストールもままならないかとおもってますが\n個人的に遊んでみたいです\n\n情報お持ちの方よろしくお願いします\n\n※雑談的な投稿はここでよかったのですよね？\n\n<https://aismiley.co.jp/ai_news/takahiroanno-digital-democracy-2030/>",
+      "team": "T02FMV4EB",
+      "thread_ts": "1737343886.946719",
+      "reply_count": 4,
+      "reply_users_count": 3,
+      "latest_reply": "1738587169.611839",
+      "reply_users": [
+        "U02GTJH1N",
+        "U07E64AV5TQ",
+        "U059KS1C3HU"
+      ],
+      "is_locked": false,
+      "subscribed": false,
+      "attachments": [
+        {
+          "from_url": "https://aismiley.co.jp/ai_news/takahiroanno-digital-democracy-2030/",
+          "ts": 1737018871,
+          "image_url": "https://aismiley.co.jp/wp-content/uploads/2025/01/takahiroanno20250116_top.png",
+          "image_width": 2240,
+          "image_height": 1260,
+          "image_bytes": 3040693,
+          "service_icon": "https://aismiley.co.jp/wp-content/themes/aismiley-new/assets/favicon.ico",
+          "id": 1,
+          "original_url": "https://aismiley.co.jp/ai_news/takahiroanno-digital-democracy-2030/",
+          "fallback": "AIsmiley: 安野たかひろ氏「2025年はデジタル民主主義元年」デジタル民主主義2030プロジェクトを発表",
+          "text": "2024年都知事選で15万票を獲得しGovTech東京のアドバイザーを務めるAIエンジニアの安野たかひろ氏は、 […]",
+          "title": "安野たかひろ氏「2025年はデジタル民主主義元年」デジタル民主主義2030プロジェクトを発表",
+          "title_link": "https://aismiley.co.jp/ai_news/takahiroanno-digital-democracy-2030/",
+          "service_name": "AIsmiley"
+        }
+      ],
+      "blocks": [
+        {
+          "type": "rich_text",
+          "block_id": "yJ2C5",
+          "elements": [
+            {
+              "type": "rich_text_section",
+              "elements": [
+                {
+                  "type": "text",
+                  "text": "安野さんが発表された、デジタル民主主義2030向けのOSSが気になっています。\nGitHubでの公開状況、インストールの手順など、情報を共有したいです\nわたしはUXデザイナーなので、プロダクトによってはインストールもままならないかとおもってますが\n個人的に遊んでみたいです\n\n情報お持ちの方よろしくお願いします\n\n※雑談的な投稿はここでよかったのですよね？\n\n"
+                },
+                {
+                  "type": "link",
+                  "url": "https://aismiley.co.jp/ai_news/takahiroanno-digital-democracy-2030/"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "text": "Code for Nerimaの青木です。ご存知の方もいらっしゃるかと思いますが、趣味がプラモデル作成で練馬で模型サークルや模型の展示会などを主催して活動もしております。1/1700のご存知ホワイトベースのプラモデルが市販されているのですが練馬駅上空にあったらどんな感じなのだろう？と思い、PLATEAUの3D都市データを加工して3Dプリンターで出力をしてみました。ちなみにホワイトベースは僕の全塗装作品です（笑）\n\n使用したアプリはBlender。アドオンでGMLファイルをインポートするものがあるのでそれを利用して地面と建物と道路を読み込みます。もちろんそのままで3Dプリンターで出力ができないし、目的は模型を作ることなのでいくつかやった編集作業を列挙したいと思います。\n\n・仕上がりを30cm四方くらいにしたいのでその分だけトリミング。ブーリアンの機能を使って切り出すのですがデータ量が多いので時間をかけて行う。\n・建物が道路から浮いてるところがあるので建物の下を伸ばすような感じで地面に突き刺す\n・4分割で印刷するのだが建物で分断されないように道路に沿ってパーツ分けをする（ナイフツール等でカット）\n・道路は別パーツにして塗装をしたかったので、道路（面データ）に厚みをつけて地面を0.5mm切り抜いて凹ませる加工に。上から道路パーツがはめ込めるように建物も道路に厚みをつけたデータでトリミング（かなりの部分道路にはみ出てる建物があった）\n・道路は駅のガードしたなど被り込んでいるところは建物で切り抜き、上からパーツとして嵌めれるように0.3mmでプラ板状態で出力。積層タイプだと0.1mm単位の精度は出ないので入らないところはヤスリで調整\n・造形後はエアブラシ等で塗装をしています。建物一つ一つを筆で塗装もしたのですが、結果的に単色の無機質な感じにした方が雰囲気がでた感じです\n\n仕様している3DプリンターはAnkerMake M5C。大体一つのパーツを出力するのに20時間くらい。コストは１ピース300g程度なので2000円のフィラメントだと4つで2,400円くらいとなります。4日間かけて出力。実際には試作を6回くらい重ねているので、1ヶ月くらいかけて良さげな造形ができました。3Dプリンターは調整や設定が必要で「工具」だなと実感しました。\n\nPLATEAUの運用例を見ると延焼や倒壊のシミュレーションなど活用されていますが、自分の住んでる地域やランドマークをこうして出力して楽しむのもいいなと思いました。「東京ドーム何個分」とかピンとこない時など、自分の知っているところに東京ドームを持ってきて配置して立体模型にしちゃってもいいわけです。\n\nあとは施設等で目が見えない方への触地図としてオブジェを兼ねて作ってみて飾るのもいいと思います。「町を触る」と言う体験が提供できます。\n円形に切り抜いてワイングラスにテラリウム作って上から都市データの印刷物で蓋をしてもおしゃれですね（笑）\n\n趣味やエンタメ方面ですが、オープンデータの活用と言うことで投稿させていただきました。似たようなことやってらっしゃる方がいたらご連絡ください（笑）",
+      "files": [
+        {
+          "id": "F089QT954C9",
+          "created": 1737341713,
+          "timestamp": 1737341713,
+          "name": "IMG_3320.JPG",
+          "title": "IMG_3320.JPG",
+          "mimetype": "image/jpeg",
+          "filetype": "jpg",
+          "pretty_type": "JPEG",
+          "user": "UCZ4ZRWCT",
+          "user_team": "T02FMV4EB",
+          "editable": false,
+          "size": 2841050,
+          "mode": "hosted",
+          "is_external": false,
+          "external_type": "",
+          "is_public": true,
+          "public_url_shared": false,
+          "display_as_bot": false,
+          "username": "",
+          "url_private": "https://files.slack.com/files-pri/T02FMV4EB-F089QT954C9/img_3320.jpg",
+          "url_private_download": "https://files.slack.com/files-pri/T02FMV4EB-F089QT954C9/download/img_3320.jpg",
+          "media_display_type": "unknown",
+          "thumb_64": "https://files.slack.com/files-tmb/T02FMV4EB-F089QT954C9-2b493114fb/img_3320_64.jpg",
+          "thumb_80": "https://files.slack.com/files-tmb/T02FMV4EB-F089QT954C9-2b493114fb/img_3320_80.jpg",
+          "thumb_360": "https://files.slack.com/files-tmb/T02FMV4EB-F089QT954C9-2b493114fb/img_3320_360.jpg",
+          "thumb_360_w": 360,
+          "thumb_360_h": 360,
+          "thumb_480": "https://files.slack.com/files-tmb/T02FMV4EB-F089QT954C9-2b493114fb/img_3320_480.jpg",
+          "thumb_480_w": 480,
+          "thumb_480_h": 480,
+          "thumb_160": "https://files.slack.com/files-tmb/T02FMV4EB-F089QT954C9-2b493114fb/img_3320_160.jpg",
+          "thumb_720": "https://files.slack.com/files-tmb/T02FMV4EB-F089QT954C9-2b493114fb/img_3320_720.jpg",
+          "thumb_720_w": 720,
+          "thumb_720_h": 720,
+          "thumb_800": "https://files.slack.com/files-tmb/T02FMV4EB-F089QT954C9-2b493114fb/img_3320_800.jpg",
+          "thumb_800_w": 800,
+          "thumb_800_h": 800,
+          "thumb_960": "https://files.slack.com/files-tmb/T02FMV4EB-F089QT954C9-2b493114fb/img_3320_960.jpg",
+          "thumb_960_w": 960,
+          "thumb_960_h": 960,
+          "thumb_1024": "https://files.slack.com/files-tmb/T02FMV4EB-F089QT954C9-2b493114fb/img_3320_1024.jpg",
+          "thumb_1024_w": 1024,
+          "thumb_1024_h": 1024,
+          "original_w": 2869,
+          "original_h": 2869,
+          "thumb_tiny": "AwAwADCz0X8KaOtI8oXIPJqLzHPIUAe3JpWHcsMQBzUQkVm2DORyajLbRkPyTyGP3aaqsVbBIQc9eSadhXLDZxxTc8ClRt4HGOOlLjAqRiY46A49aYT8+OCO+D0pXbaQfbBpgEhy27A7EjAqkIflH4VmB7Hb1qQuFGxvlXpn1+lQq7vIGz83QAdB7e9SEqSyOdw6/Q+1MQBvm9FHAHpSkgjio+h559M0CQbtvU+3akxoSTlSPamb2ZeSQR3zSuajbKnIBP0pIbGFweox7elCyNlQDkAcAdqa6MTk8ewqRFwBTuKw/DPjeePQVKAFxgYFN7CndqkZ/9k=",
+          "permalink": "https://cfj.slack.com/files/U08RQ71QY0G/F089QT954C9/img_3320.jpg",
+          "permalink_public": "https://slack-files.com/T02FMV4EB-F089QT954C9-20e253fa62",
+          "is_starred": false,
+          "skipped_shares": true,
+          "has_rich_preview": false,
+          "file_access": "visible"
+        },
+        {
+          "id": "F08A11EK61E",
+          "created": 1737341725,
+          "timestamp": 1737341725,
+          "name": "IMG_3322.JPG",
+          "title": "IMG_3322.JPG",
+          "mimetype": "image/jpeg",
+          "filetype": "jpg",
+          "pretty_type": "JPEG",
+          "user": "UCZ4ZRWCT",
+          "user_team": "T02FMV4EB",
+          "editable": false,
+          "size": 3329603,
+          "mode": "hosted",
+          "is_external": false,
+          "external_type": "",
+          "is_public": true,
+          "public_url_shared": false,
+          "display_as_bot": false,
+          "username": "",
+          "url_private": "https://files.slack.com/files-pri/T02FMV4EB-F08A11EK61E/img_3322.jpg",
+          "url_private_download": "https://files.slack.com/files-pri/T02FMV4EB-F08A11EK61E/download/img_3322.jpg",
+          "media_display_type": "unknown",
+          "thumb_64": "https://files.slack.com/files-tmb/T02FMV4EB-F08A11EK61E-1cbee71633/img_3322_64.jpg",
+          "thumb_80": "https://files.slack.com/files-tmb/T02FMV4EB-F08A11EK61E-1cbee71633/img_3322_80.jpg",
+          "thumb_360": "https://files.slack.com/files-tmb/T02FMV4EB-F08A11EK61E-1cbee71633/img_3322_360.jpg",
+          "thumb_360_w": 360,
+          "thumb_360_h": 360,
+          "thumb_480": "https://files.slack.com/files-tmb/T02FMV4EB-F08A11EK61E-1cbee71633/img_3322_480.jpg",
+          "thumb_480_w": 480,
+          "thumb_480_h": 480,
+          "thumb_160": "https://files.slack.com/files-tmb/T02FMV4EB-F08A11EK61E-1cbee71633/img_3322_160.jpg",
+          "thumb_720": "https://files.slack.com/files-tmb/T02FMV4EB-F08A11EK61E-1cbee71633/img_3322_720.jpg",
+          "thumb_720_w": 720,
+          "thumb_720_h": 720,
+          "thumb_800": "https://files.slack.com/files-tmb/T02FMV4EB-F08A11EK61E-1cbee71633/img_3322_800.jpg",
+          "thumb_800_w": 800,
+          "thumb_800_h": 800,
+          "thumb_960": "https://files.slack.com/files-tmb/T02FMV4EB-F08A11EK61E-1cbee71633/img_3322_960.jpg",
+          "thumb_960_w": 960,
+          "thumb_960_h": 960,
+          "thumb_1024": "https://files.slack.com/files-tmb/T02FMV4EB-F08A11EK61E-1cbee71633/img_3322_1024.jpg",
+          "thumb_1024_w": 1024,
+          "thumb_1024_h": 1024,
+          "original_w": 3589,
+          "original_h": 3589,
+          "thumb_tiny": "AwAwADCAt84571agfcg3cn1rPlzvOOCOtTQSqiYc8igC0xG+rLrux7GswsFmILc5rTBoAcTSE8UyRwgyxxikV1cZU5oAqtbR/M53tnnFR7QrAxxtn3FWeB3/AFpokUg45IpDIWRXXc6tu9qsxyFl+6fxqIyEDpx7Um8qeHx7GnYRLIhkXaRx9aSCHyc4Oc0wStk+/vUsbBlGSST3pAQsCTSLweePr0qbB9AKCoPWi47CYDJgnj2ppVR1Ax6kUFCP9WT9KBuxyNvvTuKwgjAPy5+g6VKq49M0LhRxTsmk2M//2Q==",
+          "permalink": "https://cfj.slack.com/files/U08RQ71QY0G/F08A11EK61E/img_3322.jpg",
+          "permalink_public": "https://slack-files.com/T02FMV4EB-F08A11EK61E-ed2b38744d",
+          "is_starred": false,
+          "skipped_shares": true,
+          "has_rich_preview": false,
+          "file_access": "visible"
+        }
+      ],
+      "upload": false,
+      "user": "UCZ4ZRWCT",
+      "blocks": [
+        {
+          "type": "rich_text",
+          "block_id": "LtNrc",
+          "elements": [
+            {
+              "type": "rich_text_section",
+              "elements": [
+                {
+                  "type": "text",
+                  "text": "Code for Nerimaの青木です。ご存知の方もいらっしゃるかと思いますが、趣味がプラモデル作成で練馬で模型サークルや模型の展示会などを主催して活動もしております。1/1700のご存知ホワイトベースのプラモデルが市販されているのですが練馬駅上空にあったらどんな感じなのだろう？と思い、PLATEAUの3D都市データを加工して3Dプリンターで出力をしてみました。ちなみにホワイトベースは僕の全塗装作品です（笑）\n\n使用したアプリはBlender。アドオンでGMLファイルをインポートするものがあるのでそれを利用して地面と建物と道路を読み込みます。もちろんそのままで3Dプリンターで出力ができないし、目的は模型を作ることなのでいくつかやった編集作業を列挙したいと思います。\n\n・仕上がりを30cm四方くらいにしたいのでその分だけトリミング。ブーリアンの機能を使って切り出すのですがデータ量が多いので時間をかけて行う。\n・建物が道路から浮いてるところがあるので建物の下を伸ばすような感じで地面に突き刺す\n・4分割で印刷するのだが建物で分断されないように道路に沿ってパーツ分けをする（ナイフツール等でカット）\n・道路は別パーツにして塗装をしたかったので、道路（面データ）に厚みをつけて地面を0.5mm切り抜いて凹ませる加工に。上から道路パーツがはめ込めるように建物も道路に厚みをつけたデータでトリミング（かなりの部分道路にはみ出てる建物があった）\n・道路は駅のガードしたなど被り込んでいるところは建物で切り抜き、上からパーツとして嵌めれるように0.3mmでプラ板状態で出力。積層タイプだと0.1mm単位の精度は出ないので入らないところはヤスリで調整\n・造形後はエアブラシ等で塗装をしています。建物一つ一つを筆で塗装もしたのですが、結果的に単色の無機質な感じにした方が雰囲気がでた感じです\n\n仕様している3DプリンターはAnkerMake M5C。大体一つのパーツを出力するのに20時間くらい。コストは１ピース300g程度なので2000円のフィラメントだと4つで2,400円くらいとなります。4日間かけて出力。実際には試作を6回くらい重ねているので、1ヶ月くらいかけて良さげな造形ができました。3Dプリンターは調整や設定が必要で「工具」だなと実感しました。\n\nPLATEAUの運用例を見ると延焼や倒壊のシミュレーションなど活用されていますが、自分の住んでる地域やランドマークをこうして出力して楽しむのもいいなと思いました。「東京ドーム何個分」とかピンとこない時など、自分の知っているところに東京ドームを持ってきて配置して立体模型にしちゃってもいいわけです。\n\nあとは施設等で目が見えない方への触地図としてオブジェを兼ねて作ってみて飾るのもいいと思います。「町を触る」と言う体験が提供できます。\n円形に切り抜いてワイングラスにテラリウム作って上から都市データの印刷物で蓋をしてもおしゃれですね（笑）\n\n趣味やエンタメ方面ですが、オープンデータの活用と言うことで投稿させていただきました。似たようなことやってらっしゃる方がいたらご連絡ください（笑）"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "type": "message",
+      "ts": "1737343156.740909",
+      "edited": {
+        "user": "UCZ4ZRWCT",
+        "ts": "1737344238.000000"
+      },
+      "client_msg_id": "1d67b7cf-91eb-466c-b1ff-94b3534bce44",
+      "thread_ts": "1737343156.740909",
+      "reply_count": 2,
+      "reply_users_count": 2,
+      "latest_reply": "1737898874.213789",
+      "reply_users": [
+        "UCZ4ZRWCT",
+        "U05PMURSADC"
+      ],
+      "is_locked": false,
+      "subscribed": false,
+      "reactions": [
+        {
+          "name": "meow_party",
+          "users": [
+            "U08TUNXH8",
+            "U05F3A92NSC"
+          ],
+          "count": 2
+        },
+        {
+          "name": "tada",
+          "users": [
+            "U08TUNXH8",
+            "U053AL62B6C",
+            "U05F3A92NSC",
+            "UG86QJZPF",
+            "U019LQU1BEK",
+            "U016BKNV91A"
+          ],
+          "count": 6
+        },
+        {
+          "name": "sparkles",
+          "users": [
+            "U08TUNXH8",
+            "UA1HL3WU8"
+          ],
+          "count": 2
+        },
+        {
+          "name": "saluting_face",
+          "users": [
+            "U05PMURSADC"
+          ],
+          "count": 1
+        }
+      ]
+    },
+    {
+      "user": "UV784ER1C",
+      "type": "message",
+      "ts": "1735014074.972539",
+      "edited": {
+        "user": "UV784ER1C",
+        "ts": "1735014473.000000"
+      },
+      "client_msg_id": "C47AA91C-E287-4187-B99D-0BFEDF061AE3",
+      "text": "メリークリスマス。 :christmas_tree: \n本年もお世話になりました。 :man-bowing:\nさて、ここで問題です。 \n\n1. Japan Open Chain\n2. Open Chain Japan\n3. Japan Smart Chain\nこのうち、Web3 と直接関係ないものは、どれでしょう？ :smiling_face_with_3_hearts: \n皆さま、良い年末年始を！",
+      "team": "T02FMV4EB",
+      "thread_ts": "1735014074.972539",
+      "reply_count": 1,
+      "reply_users_count": 1,
+      "latest_reply": "1735014388.122799",
+      "reply_users": [
+        "UV784ER1C"
+      ],
+      "is_locked": false,
+      "subscribed": false,
+      "blocks": [
+        {
+          "type": "rich_text",
+          "block_id": "ydsKo",
+          "elements": [
+            {
+              "type": "rich_text_section",
+              "elements": [
+                {
+                  "type": "text",
+                  "text": "メリークリスマス。"
+                },
+                {
+                  "type": "text",
+                  "text": " "
+                },
+                {
+                  "type": "emoji",
+                  "name": "christmas_tree",
+                  "unicode": "1f384"
+                },
+                {
+                  "type": "text",
+                  "text": " \n"
+                },
+                {
+                  "type": "text",
+                  "text": "本年もお世話になりました。 "
+                },
+                {
+                  "type": "emoji",
+                  "name": "man-bowing",
+                  "unicode": "1f647-200d-2642-fe0f"
+                },
+                {
+                  "type": "text",
+                  "text": "\nさて、ここで問題です。 \n\n"
+                }
+              ]
+            },
+            {
+              "type": "rich_text_list",
+              "elements": [
+                {
+                  "type": "rich_text_section",
+                  "elements": [
+                    {
+                      "type": "text",
+                      "text": "Japan Open Chain"
+                    }
+                  ]
+                },
+                {
+                  "type": "rich_text_section",
+                  "elements": [
+                    {
+                      "type": "text",
+                      "text": "Open Chain Japan"
+                    }
+                  ]
+                },
+                {
+                  "type": "rich_text_section",
+                  "elements": [
+                    {
+                      "type": "text",
+                      "text": "Japan Smart Chain"
+                    }
+                  ]
+                }
+              ],
+              "style": "ordered",
+              "indent": 0,
+              "offset": 0,
+              "border": 0
+            },
+            {
+              "type": "rich_text_section",
+              "elements": [
+                {
+                  "type": "text",
+                  "text": "\nこのうち、Web3 と直接関係ないものは、どれでしょう？ "
+                },
+                {
+                  "type": "emoji",
+                  "name": "smiling_face_with_3_hearts",
+                  "unicode": "1f970"
+                },
+                {
+                  "type": "text",
+                  "text": " \n皆さま、良い年末年始を！"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "reactions": [
+        {
+          "name": "one",
+          "users": [
+            "UV784ER1C"
+          ],
+          "count": 1
+        },
+        {
+          "name": "two",
+          "users": [
+            "UV784ER1C",
+            "U07992SS7L5",
+            "UP0CGTW6P"
+          ],
+          "count": 3
+        },
+        {
+          "name": "three",
+          "users": [
+            "UV784ER1C",
+            "U0861T6HFE3"
+          ],
+          "count": 2
+        },
+        {
+          "name": "relaxed",
+          "users": [
+            "U07992SS7L5",
+            "U082Q1GS98A"
+          ],
+          "count": 2
+        }
+      ]
+    },
+    {
+      "user": "UBQ9EMJ80",
+      "type": "message",
+      "ts": "1734998473.167559",
+      "edited": {
+        "user": "UBQ9EMJ80",
+        "ts": "1734998642.000000"
+      },
+      "client_msg_id": "64889c2c-91a8-4273-9ca4-ac367758961a",
+      "text": "こんにちは！CfJのNaoです。\n来年2月に名古屋で開催されるカンファレンスへのお誘いです。\n<https://techgala.jp|TechGALA>と呼ばれる今回のイベントにCode for Japanがコミュニティサポーターとして応援をしており、\nチケットの引換コードを頂いております！\n\n参加のご興味がある方はスレッドの詳細をご覧下さい。",
+      "team": "T02FMV4EB",
+      "thread_ts": "1734998473.167559",
+      "reply_count": 9,
+      "reply_users_count": 2,
+      "latest_reply": "1738643130.169779",
+      "reply_users": [
+        "UBQ9EMJ80",
+        "U083AKX9RQC"
+      ],
+      "is_locked": false,
+      "subscribed": false,
+      "blocks": [
+        {
+          "type": "rich_text",
+          "block_id": "1wFkJ",
+          "elements": [
+            {
+              "type": "rich_text_section",
+              "elements": [
+                {
+                  "type": "text",
+                  "text": "こんにちは！CfJのNaoです。\n来年2月に名古屋で開催されるカンファレンスへのお誘いです。\n"
+                },
+                {
+                  "type": "link",
+                  "url": "https://techgala.jp",
+                  "text": "TechGALA"
+                },
+                {
+                  "type": "text",
+                  "text": "と呼ばれる今回のイベントにCode for Japanがコミュニティサポーターとして応援をしており、\nチケットの引換コードを頂いております！\n\n参加のご興味がある方はスレッドの詳細をご覧下さい。"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "reactions": [
+        {
+          "name": "meow_party",
+          "users": [
+            "U08TUNXH8"
+          ],
+          "count": 1
+        }
+      ]
+    },
+    {
+      "user": "UMZQXBPC2",
+      "type": "message",
+      "ts": "1734993154.855909",
+      "client_msg_id": "d07a3765-01b8-499c-abdb-4d819370a194",
+      "text": "こんにちは、シビックテック界隈を出入りしている今村です。今年3月からはIPAのデジタル基盤センターでオープンソース推進担当として勤務しています。\n昨年まではCivicTech&amp;GovTechアドベントカレンダーに参加していましたが、今年はご縁あってLinuxFoundationのコミュニティのひとつ「OpenChain Japan WG」のアドベントカレンダーに参加しています。\nOpenChain Japan Advent Calendar 2024\n<https://qiita.com/advent-calendar/2024/openchainjapanwg>\n\n私は本日12/24を担当させていただきました。\nこれを機会にIPAの公式Webサイト内にコラムという形で記事を公開しました。\n\nデジタル基盤センターのOSSコラム：オープンソースエコシステムをどのように変えていくか\n<https://www.ipa.go.jp/digital/kaihatsu/oss/column-open-source-ecosystem.html>\n\n私なりのオープンソースコミュニティへの貢献のつもりで書きました。\nぜひご覧いただけると嬉しいです。\n\nそれではハッピーメリークリスマス！そして、よいお年を！",
+      "team": "T02FMV4EB",
+      "attachments": [
+        {
+          "image_url": "https://qiita-user-contents.imgix.net/https%3A%2F%2Fcdn.qiita.com%2Fassets%2Fpublic%2Fadvent_calendar%2Fogp%2Fcalendar-ogp-background-c24e7570f8dc39b6f4e1323cbd83d11f.jpg?ixlib=rb-4.0.0&w=1200&mark-x=142&mark-y=128&mark64=aHR0cHM6Ly9xaWl0YS11c2VyLWNvbnRlbnRzLmltZ2l4Lm5ldC9-dGV4dD9peGxpYj1yYi00LjAuMCZ0eHQtYWxpZ249bGVmdCUyQ3RvcCZ0eHQtY29sb3I9JTIzRkZGRkZGJnR4dC1mb250PUhpcmFnaW5vJTIwU2FucyUyMFc2JnR4dC1zaXplPTU2JnR4dD1PcGVuQ2hhaW4lMjBKYXBhbiUyMEFkdmVudCUyMENhbGVuZGFyJTIwMjAyNCZ3PTkxNiZoPTM1NiZzPTBkOTFkZmVjMWMwMzhiNDgxNmU0YjEzMWM4NDRlMmUz&blend-mode=normal&blend-x=142&blend-y=491&blend64=aHR0cHM6Ly9xaWl0YS11c2VyLWNvbnRlbnRzLmltZ2l4Lm5ldC9-dGV4dD9peGxpYj1yYi00LjAuMCZ0eHQtYWxpZ249bGVmdCUyQ3RvcCZ0eHQtY29sb3I9JTIzRkZGRkZGJnR4dC1mb250PUhpcmFnaW5vJTIwU2FucyUyMFc2JnR4dC1zaXplPTM2JnR4dD1PcGVuQ2hhaW4lMjBQcm9qZWN0Jnc9OTE2JnM9NTgzMjcxM2JkYTAwMTYzYzVmNmM4MGNkNmJlNDYzMTY&s=94bdda4810eed78ebb07c92c7413e639",
+          "image_width": 1200,
+          "image_height": 630,
+          "image_bytes": 58254,
+          "from_url": "https://qiita.com/advent-calendar/2024/openchainjapanwg",
+          "service_icon": "https://cdn.qiita.com/assets/favicons/public/apple-touch-icon-ec5ba42a24ae923f16825592efdc356f.png",
+          "id": 1,
+          "original_url": "https://qiita.com/advent-calendar/2024/openchainjapanwg",
+          "fallback": "Qiita: OpenChain Japan - Qiita Advent Calendar 2024 - Qiita",
+          "text": "Calendar page for Qiita Advent Calendar 2024 regarding OpenChain Japan.",
+          "title": "OpenChain Japan - Qiita Advent Calendar 2024 - Qiita",
+          "title_link": "https://qiita.com/advent-calendar/2024/openchainjapanwg",
+          "service_name": "Qiita"
+        },
+        {
+          "from_url": "https://www.ipa.go.jp/digital/kaihatsu/oss/column-open-source-ecosystem.html",
+          "service_icon": "https://www.ipa.go.jp/apple-touch-icon-180x180.png",
+          "id": 2,
+          "original_url": "https://www.ipa.go.jp/digital/kaihatsu/oss/column-open-source-ecosystem.html",
+          "fallback": "IPA 独立行政法人 情報処理推進機構: デジタル基盤センターのOSSコラム：オープンソースエコシステムをどのように変えていくか | 社会・産業のデジタル変革 | IPA 独立行政法人 情報処理推進機構",
+          "text": "このコラムでは、私たちがオープンソース推進の活動の一端として行っているオープンソースエコシステムのリサーチの内容の一部をお伝えします。",
+          "title": "デジタル基盤センターのOSSコラム：オープンソースエコシステムをどのように変えていくか | 社会・産業のデジタル変革 | IPA 独立行政法人 情報処理推進機構",
+          "title_link": "https://www.ipa.go.jp/digital/kaihatsu/oss/column-open-source-ecosystem.html",
+          "service_name": "IPA 独立行政法人 情報処理推進機構"
+        }
+      ],
+      "blocks": [
+        {
+          "type": "rich_text",
+          "block_id": "1vEPy",
+          "elements": [
+            {
+              "type": "rich_text_section",
+              "elements": [
+                {
+                  "type": "text",
+                  "text": "こんにちは、シビックテック界隈を出入りしている今村です。今年3月からはIPAのデジタル基盤センターでオープンソース推進担当として勤務しています。\n昨年まではCivicTech&GovTechアドベントカレンダーに参加していましたが、今年はご縁あってLinuxFoundationのコミュニティのひとつ「OpenChain Japan WG」のアドベントカレンダーに参加しています。\nOpenChain Japan Advent Calendar 2024\n"
+                },
+                {
+                  "type": "link",
+                  "url": "https://qiita.com/advent-calendar/2024/openchainjapanwg"
+                },
+                {
+                  "type": "text",
+                  "text": "\n\n私は本日12/24を担当させていただきました。\nこれを機会にIPAの公式Webサイト内にコラムという形で記事を公開しました。\n\nデジタル基盤センターのOSSコラム：オープンソースエコシステムをどのように変えていくか\n"
+                },
+                {
+                  "type": "link",
+                  "url": "https://www.ipa.go.jp/digital/kaihatsu/oss/column-open-source-ecosystem.html"
+                },
+                {
+                  "type": "text",
+                  "text": "\n\n私なりのオープンソースコミュニティへの貢献のつもりで書きました。\nぜひご覧いただけると嬉しいです。\n\nそれではハッピーメリークリスマス！そして、よいお年を！"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "reactions": [
+        {
+          "name": "+1",
+          "users": [
+            "U02D23K8K61",
+            "U08TUNXH8",
+            "U01TWNS56BC"
+          ],
+          "count": 3
+        },
+        {
+          "name": "sensei_cat",
+          "users": [
+            "U0316KRUCNR",
+            "U08TUNXH8"
+          ],
+          "count": 2
+        },
+        {
+          "name": "party_parrot",
+          "users": [
+            "U3B4KAJ0N",
+            "UBQ9EMJ80",
+            "UFZVC74TA",
+            "U08TUNXH8",
+            "U019LQU1BEK"
+          ],
+          "count": 5
+        },
+        {
+          "name": "sparkles",
+          "users": [
+            "UFZVC74TA",
+            "U08TUNXH8"
+          ],
+          "count": 2
+        }
+      ]
+    },
+    {
+      "user": "UA1HL3WU8",
+      "type": "message",
+      "ts": "1734726925.542609",
+      "client_msg_id": "86d5a6ec-fcb8-4da7-9ba6-c06521022b08",
+      "text": "Funding Program のお知らせです。DPI (Digital Public Infrastructure) という言葉に覚えのある方は必見です。\n<https://digitalpublicinterest.org/call-for-proposals/call-for-proposals-initiative-for-digital-public-interest-fund-for-civil-society-engaging-on-dpi/|https://digitalpublicinterest.org/call-for-proposals/call-for-proposals-initiative-for-di[…]-public-interest-fund-for-civil-society-engaging-on-dpi/>",
+      "team": "T02FMV4EB",
+      "blocks": [
+        {
+          "type": "rich_text",
+          "block_id": "3QgQx",
+          "elements": [
+            {
+              "type": "rich_text_section",
+              "elements": [
+                {
+                  "type": "text",
+                  "text": "Funding Program のお知らせです。DPI (Digital Public Infrastructure) という言葉に覚えのある方は必見です。\n"
+                },
+                {
+                  "type": "link",
+                  "url": "https://digitalpublicinterest.org/call-for-proposals/call-for-proposals-initiative-for-digital-public-interest-fund-for-civil-society-engaging-on-dpi/",
+                  "text": "https://digitalpublicinterest.org/call-for-proposals/call-for-proposals-initiative-for-di[…]-public-interest-fund-for-civil-society-engaging-on-dpi/"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "reactions": [
+        {
+          "name": "eyes",
+          "users": [
+            "UMZQXBPC2",
+            "U08TUNXH8",
+            "UBQ9EMJ80"
+          ],
+          "count": 3
+        }
+      ]
+    },
+    {
+      "user": "UP0CGTW6P",
+      "type": "message",
+      "ts": "1734680179.604109",
+      "client_msg_id": "BDE701B0-32AB-4A1E-8CB6-0654FFB6034E",
+      "text": "今週突然始まったmixi2ですが、皆さん結構やり始めてる様子ですね。\nところで、Code for Japanのコミュニティはどなたか作られましたでしょうか？",
+      "team": "T02FMV4EB",
+      "thread_ts": "1734680179.604109",
+      "reply_count": 2,
+      "reply_users_count": 2,
+      "latest_reply": "1734838175.589749",
+      "reply_users": [
+        "UA3UCG9MM",
+        "UP0CGTW6P"
+      ],
+      "is_locked": false,
+      "subscribed": false,
+      "blocks": [
+        {
+          "type": "rich_text",
+          "block_id": "JDwQ8",
+          "elements": [
+            {
+              "type": "rich_text_section",
+              "elements": [
+                {
+                  "type": "text",
+                  "text": "今週突然始まったmixi2ですが、皆さん結構やり始めてる様子ですね。\nところで、Code for Japanのコミュニティはどなたか作られましたでしょうか？"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "user": "U06TE1S59CJ",
+      "type": "message",
+      "ts": "1734593385.920819",
+      "client_msg_id": "c4599cbe-4330-447c-8455-84b55c29329c",
+      "text": "大変遅ればせながら、CFJ Summit2024のnoteを書きました\nご興味があればご覧ください。\n\n<https://note.com/icchy_3dscan/n/n78df6104f807>",
+      "team": "T02FMV4EB",
+      "thread_ts": "1734593385.920819",
+      "reply_count": 2,
+      "reply_users_count": 2,
+      "latest_reply": "1734854466.320599",
+      "reply_users": [
+        "UP0CGTW6P",
+        "U06TE1S59CJ"
+      ],
+      "is_locked": false,
+      "subscribed": false,
+      "attachments": [
+        {
+          "image_url": "https://assets.st-note.com/production/uploads/images/166331149/rectangle_large_type_2_30dfd0da6ec95802aa41a81b79661b79.jpeg?fit=bounds&quality=85&width=1280",
+          "image_width": 1280,
+          "image_height": 670,
+          "image_bytes": 235250,
+          "from_url": "https://note.com/icchy_3dscan/n/n78df6104f807",
+          "service_icon": "https://assets.st-note.com/poc-image/manual/note-common-images/production/icons/apple-touch-icon.png",
+          "id": 1,
+          "original_url": "https://note.com/icchy_3dscan/n/n78df6104f807",
+          "fallback": "note（ノート）: 【イベントレポート】Code For Japan Summit2024 で3Dスキャンを布教してきたという話｜icchy",
+          "text": "自己紹介 主にX(旧Twitter)で発信をしているいっちーというものです。 「営みのデジタルアーカイブ」を4D/AIで表現する！」というコンセプトのもと開発や撮影をしている大学院生です。 令和の小泉八雲を目指して活動しています 撮影したほかの場所にご興味がありましたら、以下のURLよりプロフィールを見てください！ X(旧Twitter) Instagram ポートフォリオはこちらからご覧ください。 \n\nicchyのポートフォリオ | Notion\n\n自己紹介\n\n<http://ultra-citron-588.notion.site|ultra-citron-588.notion.site>\n\n \n 普段の活動について 私の活動の",
+          "title": "【イベントレポート】Code For Japan Summit2024 で3Dスキャンを布教してきたという話｜icchy",
+          "title_link": "https://note.com/icchy_3dscan/n/n78df6104f807",
+          "service_name": "note（ノート）"
+        }
+      ],
+      "blocks": [
+        {
+          "type": "rich_text",
+          "block_id": "TLvsP",
+          "elements": [
+            {
+              "type": "rich_text_section",
+              "elements": [
+                {
+                  "type": "text",
+                  "text": "大変遅ればせながら、CFJ Summit2024のnoteを書きました\nご興味があればご覧ください。\n\n"
+                },
+                {
+                  "type": "link",
+                  "url": "https://note.com/icchy_3dscan/n/n78df6104f807"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "reactions": [
+        {
+          "name": "sparkles",
+          "users": [
+            "U08TUNXH8",
+            "U01E984FNHY",
+            "UP0CGTW6P"
+          ],
+          "count": 3
+        },
+        {
+          "name": "meow_party",
+          "users": [
+            "U08TUNXH8",
+            "U01E984FNHY",
+            "UP0CGTW6P"
+          ],
+          "count": 3
+        },
+        {
+          "name": "raised_hands",
+          "users": [
+            "UBQ9EMJ80",
+            "U01E984FNHY",
+            "UP0CGTW6P"
+          ],
+          "count": 3
+        }
+      ]
+    },
+    {
+      "text": "突然のコメント失礼します。\n以前Code for経由でNPO関連のプロジェクトに参加した際、振り返りをイラストにまとめていたのですが、\n\n最近またお仕事として始めまして、こんな感じのイラストを描いています。\n\nもし、イベントの際に描き起こしが必要な際、もしかしたらスキルが活かせるかもしれないと思い投稿させて頂きます:memo:",
+      "files": [
+        {
+          "id": "F0855N3JXJN",
+          "created": 1734235974,
+          "timestamp": 1734235974,
+          "name": "IMG_2120.png",
+          "title": "IMG_2120",
+          "mimetype": "image/png",
+          "filetype": "png",
+          "pretty_type": "PNG",
+          "user": "U01VCSK5C3H",
+          "user_team": "T02FMV4EB",
+          "editable": false,
+          "size": 581550,
+          "mode": "hosted",
+          "is_external": false,
+          "external_type": "",
+          "is_public": true,
+          "public_url_shared": false,
+          "display_as_bot": false,
+          "username": "",
+          "url_private": "https://files.slack.com/files-pri/T02FMV4EB-F0855N3JXJN/img_2120.png",
+          "url_private_download": "https://files.slack.com/files-pri/T02FMV4EB-F0855N3JXJN/download/img_2120.png",
+          "media_display_type": "unknown",
+          "thumb_64": "https://files.slack.com/files-tmb/T02FMV4EB-F0855N3JXJN-dc2e1c6316/img_2120_64.png",
+          "thumb_80": "https://files.slack.com/files-tmb/T02FMV4EB-F0855N3JXJN-dc2e1c6316/img_2120_80.png",
+          "thumb_360": "https://files.slack.com/files-tmb/T02FMV4EB-F0855N3JXJN-dc2e1c6316/img_2120_360.png",
+          "thumb_360_w": 360,
+          "thumb_360_h": 255,
+          "thumb_480": "https://files.slack.com/files-tmb/T02FMV4EB-F0855N3JXJN-dc2e1c6316/img_2120_480.png",
+          "thumb_480_w": 480,
+          "thumb_480_h": 339,
+          "thumb_160": "https://files.slack.com/files-tmb/T02FMV4EB-F0855N3JXJN-dc2e1c6316/img_2120_160.png",
+          "thumb_720": "https://files.slack.com/files-tmb/T02FMV4EB-F0855N3JXJN-dc2e1c6316/img_2120_720.png",
+          "thumb_720_w": 720,
+          "thumb_720_h": 509,
+          "original_w": 768,
+          "original_h": 543,
+          "thumb_tiny": "AwAhADC+fvEcYpOcEU9sZ5pGOcY7UAMBOfr70o7kZ4peDjnrSA88DPr3oAQHLcfnTgeMDJo28DOBQRgj69qAFbrnNJgen40rZByM0n8JOfyoAOvcfgaMY5zx7Uq5AOBSDoaAD2JJoGex6HvRwBk5ozz9D1oAkpp+7Tqafu0AKvSihelFACN9ymp94/SnN9ymp94/SgD/2Q==",
+          "permalink": "https://cfj.slack.com/files/U08RQ71QY0G/F0855N3JXJN/img_2120.png",
+          "permalink_public": "https://slack-files.com/T02FMV4EB-F0855N3JXJN-1089918e1c",
+          "is_starred": false,
+          "skipped_shares": true,
+          "has_rich_preview": false,
+          "file_access": "visible"
+        },
+        {
+          "id": "F0855KHCK0B",
+          "created": 1734235974,
+          "timestamp": 1734235974,
+          "name": "IMG_2344.png",
+          "title": "IMG_2344",
+          "mimetype": "image/png",
+          "filetype": "png",
+          "pretty_type": "PNG",
+          "user": "U01VCSK5C3H",
+          "user_team": "T02FMV4EB",
+          "editable": false,
+          "size": 499625,
+          "mode": "hosted",
+          "is_external": false,
+          "external_type": "",
+          "is_public": true,
+          "public_url_shared": false,
+          "display_as_bot": false,
+          "username": "",
+          "url_private": "https://files.slack.com/files-pri/T02FMV4EB-F0855KHCK0B/img_2344.png",
+          "url_private_download": "https://files.slack.com/files-pri/T02FMV4EB-F0855KHCK0B/download/img_2344.png",
+          "media_display_type": "unknown",
+          "thumb_64": "https://files.slack.com/files-tmb/T02FMV4EB-F0855KHCK0B-cf9e2d79b7/img_2344_64.png",
+          "thumb_80": "https://files.slack.com/files-tmb/T02FMV4EB-F0855KHCK0B-cf9e2d79b7/img_2344_80.png",
+          "thumb_360": "https://files.slack.com/files-tmb/T02FMV4EB-F0855KHCK0B-cf9e2d79b7/img_2344_360.png",
+          "thumb_360_w": 360,
+          "thumb_360_h": 255,
+          "thumb_480": "https://files.slack.com/files-tmb/T02FMV4EB-F0855KHCK0B-cf9e2d79b7/img_2344_480.png",
+          "thumb_480_w": 480,
+          "thumb_480_h": 339,
+          "thumb_160": "https://files.slack.com/files-tmb/T02FMV4EB-F0855KHCK0B-cf9e2d79b7/img_2344_160.png",
+          "thumb_720": "https://files.slack.com/files-tmb/T02FMV4EB-F0855KHCK0B-cf9e2d79b7/img_2344_720.png",
+          "thumb_720_w": 720,
+          "thumb_720_h": 509,
+          "original_w": 768,
+          "original_h": 543,
+          "thumb_tiny": "AwAhADDQ7nikOKc2c96aDwORmgAwBmlzk4zS8d6aBgnmgAU0uT2IzQOetHYdqAAg+tJzj3pxxk0nbigBGz0BwaXjcRSdT3pTjd1oAAPpRzkUgOfWl4De9AD6KKKAGDqPpSH79KOo+lIfv0AOFNP3/wAacKafv/jQB//Z",
+          "permalink": "https://cfj.slack.com/files/U08RQ71QY0G/F0855KHCK0B/img_2344.png",
+          "permalink_public": "https://slack-files.com/T02FMV4EB-F0855KHCK0B-e4ea36e19e",
+          "is_starred": false,
+          "skipped_shares": true,
+          "has_rich_preview": false,
+          "file_access": "visible"
+        },
+        {
+          "id": "F0855N3KDEW",
+          "created": 1734235975,
+          "timestamp": 1734235975,
+          "name": "IMG_2342.jpg",
+          "title": "IMG_2342",
+          "mimetype": "image/jpeg",
+          "filetype": "jpg",
+          "pretty_type": "JPEG",
+          "user": "U01VCSK5C3H",
+          "user_team": "T02FMV4EB",
+          "editable": false,
+          "size": 100624,
+          "mode": "hosted",
+          "is_external": false,
+          "external_type": "",
+          "is_public": true,
+          "public_url_shared": false,
+          "display_as_bot": false,
+          "username": "",
+          "url_private": "https://files.slack.com/files-pri/T02FMV4EB-F0855N3KDEW/img_2342.jpg",
+          "url_private_download": "https://files.slack.com/files-pri/T02FMV4EB-F0855N3KDEW/download/img_2342.jpg",
+          "media_display_type": "unknown",
+          "thumb_64": "https://files.slack.com/files-tmb/T02FMV4EB-F0855N3KDEW-864a22fc65/img_2342_64.jpg",
+          "thumb_80": "https://files.slack.com/files-tmb/T02FMV4EB-F0855N3KDEW-864a22fc65/img_2342_80.jpg",
+          "thumb_360": "https://files.slack.com/files-tmb/T02FMV4EB-F0855N3KDEW-864a22fc65/img_2342_360.jpg",
+          "thumb_360_w": 360,
+          "thumb_360_h": 255,
+          "thumb_480": "https://files.slack.com/files-tmb/T02FMV4EB-F0855N3KDEW-864a22fc65/img_2342_480.jpg",
+          "thumb_480_w": 480,
+          "thumb_480_h": 340,
+          "thumb_160": "https://files.slack.com/files-tmb/T02FMV4EB-F0855N3KDEW-864a22fc65/img_2342_160.jpg",
+          "thumb_720": "https://files.slack.com/files-tmb/T02FMV4EB-F0855N3KDEW-864a22fc65/img_2342_720.jpg",
+          "thumb_720_w": 720,
+          "thumb_720_h": 509,
+          "thumb_800": "https://files.slack.com/files-tmb/T02FMV4EB-F0855N3KDEW-864a22fc65/img_2342_800.jpg",
+          "thumb_800_w": 800,
+          "thumb_800_h": 566,
+          "original_w": 800,
+          "original_h": 566,
+          "thumb_tiny": "AwAhADDQPU5zRzx6UrcnGaQjvn8jQADgYNAPtijvQSPSgBMfXFOyM96TgjNAxu70AKw+lIDjjFDdfWjj06UABPtR0x7UvOOc0ZOKAEIJ+lAJ4BAoH3cnrR6YoAcaO9Bo70ALSdqWk7UADdKaO1ObpTR2oA//2Q==",
+          "permalink": "https://cfj.slack.com/files/U08RQ71QY0G/F0855N3KDEW/img_2342.jpg",
+          "permalink_public": "https://slack-files.com/T02FMV4EB-F0855N3KDEW-7cb8946df4",
+          "is_starred": false,
+          "skipped_shares": true,
+          "has_rich_preview": false,
+          "file_access": "visible"
+        },
+        {
+          "id": "F0855N3KD8A",
+          "created": 1734235974,
+          "timestamp": 1734235974,
+          "name": "IMG_2344.png",
+          "title": "IMG_2344",
+          "mimetype": "image/png",
+          "filetype": "png",
+          "pretty_type": "PNG",
+          "user": "U01VCSK5C3H",
+          "user_team": "T02FMV4EB",
+          "editable": false,
+          "size": 499625,
+          "mode": "hosted",
+          "is_external": false,
+          "external_type": "",
+          "is_public": true,
+          "public_url_shared": false,
+          "display_as_bot": false,
+          "username": "",
+          "url_private": "https://files.slack.com/files-pri/T02FMV4EB-F0855N3KD8A/img_2344.png",
+          "url_private_download": "https://files.slack.com/files-pri/T02FMV4EB-F0855N3KD8A/download/img_2344.png",
+          "media_display_type": "unknown",
+          "thumb_64": "https://files.slack.com/files-tmb/T02FMV4EB-F0855N3KD8A-4057a18f16/img_2344_64.png",
+          "thumb_80": "https://files.slack.com/files-tmb/T02FMV4EB-F0855N3KD8A-4057a18f16/img_2344_80.png",
+          "thumb_360": "https://files.slack.com/files-tmb/T02FMV4EB-F0855N3KD8A-4057a18f16/img_2344_360.png",
+          "thumb_360_w": 360,
+          "thumb_360_h": 255,
+          "thumb_480": "https://files.slack.com/files-tmb/T02FMV4EB-F0855N3KD8A-4057a18f16/img_2344_480.png",
+          "thumb_480_w": 480,
+          "thumb_480_h": 339,
+          "thumb_160": "https://files.slack.com/files-tmb/T02FMV4EB-F0855N3KD8A-4057a18f16/img_2344_160.png",
+          "thumb_720": "https://files.slack.com/files-tmb/T02FMV4EB-F0855N3KD8A-4057a18f16/img_2344_720.png",
+          "thumb_720_w": 720,
+          "thumb_720_h": 509,
+          "original_w": 768,
+          "original_h": 543,
+          "thumb_tiny": "AwAhADDQ7nikOKc2c96aDwORmgAwBmlzk4zS8d6aBgnmgAU0uT2IzQOetHYdqAAg+tJzj3pxxk0nbigBGz0BwaXjcRSdT3pTjd1oAAPpRzkUgOfWl4De9AD6KKKAGDqPpSH79KOo+lIfv0AOFNP3/wAacKafv/jQB//Z",
+          "permalink": "https://cfj.slack.com/files/U08RQ71QY0G/F0855N3KD8A/img_2344.png",
+          "permalink_public": "https://slack-files.com/T02FMV4EB-F0855N3KD8A-c8d63027b0",
+          "is_starred": false,
+          "skipped_shares": true,
+          "has_rich_preview": false,
+          "file_access": "visible"
+        }
+      ],
+      "upload": false,
+      "user": "U01VCSK5C3H",
+      "blocks": [
+        {
+          "type": "rich_text",
+          "block_id": "GI0TB",
+          "elements": [
+            {
+              "type": "rich_text_section",
+              "elements": [
+                {
+                  "type": "text",
+                  "text": "突然のコメント失礼します。\n以前Code for経由でNPO関連のプロジェクトに参加した際、振り返りをイラストにまとめていたのですが、\n\n最近またお仕事として始めまして、こんな感じのイラストを描いています。\n\nもし、イベントの際に描き起こしが必要な際、もしかしたらスキルが活かせるかもしれないと思い投稿させて頂きます"
+                },
+                {
+                  "type": "emoji",
+                  "name": "memo",
+                  "unicode": "1f4dd"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "type": "message",
+      "ts": "1734236107.651609",
+      "client_msg_id": "113C8D8E-C8FC-4BD2-A98D-E42CD526AFD7",
+      "reactions": [
+        {
+          "name": "heart",
+          "users": [
+            "U07992SS7L5",
+            "U02GTJH1N",
+            "U08TUNXH8",
+            "U01J6LR6EBW",
+            "U01E984FNHY",
+            "U05F3A92NSC",
+            "UJK5F25A6",
+            "U08GARSAD3J"
+          ],
+          "count": 8
+        }
+      ]
+    },
+    {
+      "user": "U01108F4796",
+      "type": "message",
+      "ts": "1733648008.846259",
+      "client_msg_id": "33073de0-24fa-4a1c-8b3b-5593c28864df",
+      "text": "Tokyo AIのイベントを共有させていただきます。12/18と12/20\n<https://lu.ma/n2f8k27t>\n<https://lu.ma/61wsqsli>",
+      "team": "T02FMV4EB",
+      "attachments": [
+        {
+          "image_url": "https://social-images.lu.ma/cdn-cgi/image/format=auto,fit=cover,dpr=1,background=white,quality=75,width=800,height=419/api/event-one?calendar_avatar=https%3A%2F%2Fimages.lumacdn.com%2Fcalendars%2F0j%2Ff06726d0-fcd7-4731-b351-caf1f12bb402&calendar_name=Tokyo%20AI%20%28TAI%29&color0=%23faf9f9&color1=%23998dad&color2=%231a1722&color3=%235d45d5&host_avatar=https%3A%2F%2Fimages.lumacdn.com%2Favatars%2F9c%2F0ab55bb9-f200-49b8-9670-0a970dec4739&host_name=Ilya%20Kulyatin&img=https%3A%2F%2Fimages.lumacdn.com%2Fevent-covers%2Fke%2F0ea4c2a9-69c9-417c-a3c5-a0833c9f4a66&name=TAI%20AAI%20%2306%20-%20Bio%20x%20AI",
+          "image_width": 800,
+          "image_height": 419,
+          "image_bytes": 29443,
+          "from_url": "https://lu.ma/n2f8k27t",
+          "service_icon": "https://lu.ma/apple-touch-icon.png",
+          "id": 1,
+          "original_url": "https://lu.ma/n2f8k27t",
+          "fallback": "TAI AAI #06 - Bio x AI · Luma",
+          "text": "Topic\nThis session of the Tokyo AI (TAI) Advanced AI (AAI) sub-group will be on topics in Bio x AI, bringing together experts in the field to talk about how AI…",
+          "title": "TAI AAI #06 - Bio x AI · Luma",
+          "title_link": "https://lu.ma/n2f8k27t",
+          "service_name": "lu.ma"
+        },
+        {
+          "image_url": "https://social-images.lu.ma/cdn-cgi/image/format=auto,fit=cover,dpr=1,background=white,quality=75,width=800,height=419/api/event-one?calendar_avatar=https%3A%2F%2Fimages.lumacdn.com%2Fcalendars%2F0j%2Ff06726d0-fcd7-4731-b351-caf1f12bb402&calendar_name=Tokyo%20AI%20%28TAI%29&color0=%23020001&color1=%23c02627&color2=%23f9f3f2&color3=%23a66b6a&host_avatar=https%3A%2F%2Fimages.lumacdn.com%2Favatars%2F9c%2F0ab55bb9-f200-49b8-9670-0a970dec4739&host_name=Ilya%20Kulyatin&img=https%3A%2F%2Fimages.lumacdn.com%2Fevent-covers%2Fvt%2F7ce6be37-f1f8-4f92-bfb4-2c3337f00a27&name=TAI%20AMAJ%20%2304%20-%20%E9%9F%B3%E5%A3%B0AI%20%2F%20Voice%20AI",
+          "image_width": 800,
+          "image_height": 419,
+          "image_bytes": 16353,
+          "from_url": "https://lu.ma/61wsqsli",
+          "service_icon": "https://lu.ma/apple-touch-icon.png",
+          "id": 2,
+          "original_url": "https://lu.ma/61wsqsli",
+          "fallback": "TAI AMAJ #04 - 音声AI / Voice AI · Luma",
+          "text": "Topic\nJoin us for our 4th event on Applied AI and ML in Japanese. Topics are about 「Voice AI」. Let us know if you want to be a speaker or have someone you'd…",
+          "title": "TAI AMAJ #04 - 音声AI / Voice AI · Luma",
+          "title_link": "https://lu.ma/61wsqsli",
+          "service_name": "lu.ma"
+        }
+      ],
+      "blocks": [
+        {
+          "type": "rich_text",
+          "block_id": "xyc+F",
+          "elements": [
+            {
+              "type": "rich_text_section",
+              "elements": [
+                {
+                  "type": "text",
+                  "text": "Tokyo AIのイベントを共有させていただきます。12/18と12/20\n"
+                },
+                {
+                  "type": "link",
+                  "url": "https://lu.ma/n2f8k27t"
+                },
+                {
+                  "type": "text",
+                  "text": "\n"
+                },
+                {
+                  "type": "link",
+                  "url": "https://lu.ma/61wsqsli"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "user": "U02MCTP1S",
+      "type": "message",
+      "ts": "1732506237.294229",
+      "edited": {
+        "user": "U02MCTP1S",
+        "ts": "1732506711.000000"
+      },
+      "client_msg_id": "1FBF3AB3-DFBB-42FF-A904-CBC5BD8E9715",
+      "text": "Code for japan summit 向けに作ってたデモGPTsを来週閉じる予定なのですが、せっかくなので来週までということで共有します。もしもっとこうした方がいいなどあればフィードバックもらえるとありがたいです。\n\n議事録作成\n<https://chatgpt.com/g/g-Zmct6IrIX-yi-shi-lu-zuo-cheng-hisinesuanarisuto-gao-dao|https://chatgpt.com/g/g-Zmct6IrIX-yi-shi-lu-zuo-cheng-hisinesuanarisuto-gao-dao>\nプレゼン修正提案\n<https://chatgpt.com/g/g-Egdd6dhjr-hisinesuhuresentesiyonjiang-shi-gao-shan|https://chatgpt.com/g/g-Egdd6dhjr-hisinesuhuresentesiyonjiang-shi-gao-shan>\n要件整理\n<https://chatgpt.com/g/g-6732b82f3630819099063501f2eeede0-sisutemukai-fa-yao-jian-ding-yi-dan-dang-gao-dao|https://chatgpt.com/g/g-6732b82f3630819099063501f2eeede0-sisutemukai-fa-yao-jian-ding-yi-dan-dang-gao-dao>\nAI彼氏(※これだけ常設公開です)\n<https://chatgpt.com/g/g-skpK1ZxzB-aibi-shi-kenta-aban|https://chatgpt.com/g/g-skpK1ZxzB-aibi-shi-kenta-aban>",
+      "team": "T02FMV4EB",
+      "thread_ts": "1732506237.294229",
+      "reply_count": 5,
+      "reply_users_count": 2,
+      "latest_reply": "1732600840.629499",
+      "reply_users": [
+        "U0817P34R9S",
+        "U02MCTP1S"
+      ],
+      "is_locked": false,
+      "subscribed": false,
+      "attachments": [
+        {
+          "image_url": "https://chatgpt.com/backend-api/content?id=file-rxKvRWTjXGtjO20hrgraoD1Y&gizmo_id=g-Zmct6IrIX&ts=481251&p=gpp&sig=ab8509bccb8b7db05aa83423ed11972991c761b93f298f238c334b90ed14a1a9&v=0",
+          "image_width": 512,
+          "image_height": 512,
+          "image_bytes": 46005,
+          "from_url": "https://chatgpt.com/g/g-Zmct6IrIX-yi-shi-lu-zuo-cheng-hisinesuanarisuto-gao-dao",
+          "service_icon": "https://cdn.oaistatic.com/assets/apple-touch-icon-mz9nytnj.webp",
+          "id": 1,
+          "original_url": "https://chatgpt.com/g/g-Zmct6IrIX-yi-shi-lu-zuo-cheng-hisinesuanarisuto-gao-dao",
+          "fallback": "ChatGPT: ChatGPT - 議事録作成 ビジネスアナリスト 高島",
+          "text": "あなたの同僚のビジネスアナリスト高島があなたの議事録作成を手伝ってくれます。テキストやSRTファイルなど文字起こしデータを元に議事録を作成してくれます。",
+          "title": "ChatGPT - 議事録作成 ビジネスアナリスト 高島",
+          "title_link": "https://chatgpt.com/g/g-Zmct6IrIX-yi-shi-lu-zuo-cheng-hisinesuanarisuto-gao-dao",
+          "service_name": "ChatGPT"
+        },
+        {
+          "image_url": "https://chatgpt.com/backend-api/content?id=file-dHtbb23BPDi3kJ0jsgmYbhxf&gizmo_id=g-Egdd6dhjr&ts=481251&p=gpp&sig=a87d3f951ff84904f6d44b791a3a2458e6c51c9b0791e774edcddc826fffc19e&v=0",
+          "image_width": 512,
+          "image_height": 512,
+          "image_bytes": 46005,
+          "from_url": "https://chatgpt.com/g/g-Egdd6dhjr-hisinesuhuresentesiyonjiang-shi-gao-shan",
+          "service_icon": "https://cdn.oaistatic.com/assets/apple-touch-icon-mz9nytnj.webp",
+          "id": 2,
+          "original_url": "https://chatgpt.com/g/g-Egdd6dhjr-hisinesuhuresentesiyonjiang-shi-gao-shan",
+          "fallback": "ChatGPT: ChatGPT - ビジネスプレゼンテーション講師　高杉",
+          "text": "ビジネスプレゼンテーション講師である高杉があなたのプレゼンテーションについてレビューを行いわかりやすく変更提案を行います。",
+          "title": "ChatGPT - ビジネスプレゼンテーション講師　高杉",
+          "title_link": "https://chatgpt.com/g/g-Egdd6dhjr-hisinesuhuresentesiyonjiang-shi-gao-shan",
+          "service_name": "ChatGPT"
+        },
+        {
+          "image_url": "https://chatgpt.com/backend-api/content?id=file-MQUX2M7fEeqfWwCcCzqrnhEr&gizmo_id=g-6732b82f3630819099063501f2eeede0&ts=481251&p=gpp&sig=94a21d41f03c51dd9727f416a43a80d820361fdd41dd73e684357dbb2a095b88&v=0",
+          "image_width": 512,
+          "image_height": 512,
+          "image_bytes": 46005,
+          "from_url": "https://chatgpt.com/g/g-6732b82f3630819099063501f2eeede0-sisutemukai-fa-yao-jian-ding-yi-dan-dang-gao-dao",
+          "service_icon": "https://cdn.oaistatic.com/assets/apple-touch-icon-mz9nytnj.webp",
+          "id": 3,
+          "original_url": "https://chatgpt.com/g/g-6732b82f3630819099063501f2eeede0-sisutemukai-fa-yao-jian-ding-yi-dan-dang-gao-dao",
+          "fallback": "ChatGPT: ChatGPT - システム開発 要件定義担当 高島",
+          "text": "ITコンサルタントである高島があなたの開発したいシステムについて相談をしながら要件定義書を作成します。",
+          "title": "ChatGPT - システム開発 要件定義担当 高島",
+          "title_link": "https://chatgpt.com/g/g-6732b82f3630819099063501f2eeede0-sisutemukai-fa-yao-jian-ding-yi-dan-dang-gao-dao",
+          "service_name": "ChatGPT"
+        },
+        {
+          "image_url": "https://chatgpt.com/backend-api/content?id=file-Gy4feu14WSiXSSGgjjYI4Ksc&gizmo_id=g-skpK1ZxzB&ts=481251&p=gpp&sig=5c8c92985f9331b05146bcec28a16f7a3f3cd8e9b5cd1d18d1fd3a2b00666d6b&v=0",
+          "image_width": 512,
+          "image_height": 512,
+          "image_bytes": 46005,
+          "from_url": "https://chatgpt.com/g/g-skpK1ZxzB-aibi-shi-kenta-aban",
+          "service_icon": "https://cdn.oaistatic.com/assets/apple-touch-icon-mz9nytnj.webp",
+          "id": 4,
+          "original_url": "https://chatgpt.com/g/g-skpK1ZxzB-aibi-shi-kenta-aban",
+          "fallback": "ChatGPT: ChatGPT - AI彼氏 けんた（α版）",
+          "text": "AI彼氏のけんたと雑談できます。このAIは会話シュミレータとして、株式会社自動処理のがAIに個性を与える研究のために作られています。入力された会話は自動処理社には共有されませんので安心してお使いください。",
+          "title": "ChatGPT - AI彼氏 けんた（α版）",
+          "title_link": "https://chatgpt.com/g/g-skpK1ZxzB-aibi-shi-kenta-aban",
+          "service_name": "ChatGPT"
+        }
+      ],
+      "blocks": [
+        {
+          "type": "rich_text",
+          "block_id": "GZqz3",
+          "elements": [
+            {
+              "type": "rich_text_section",
+              "elements": [
+                {
+                  "type": "text",
+                  "text": "Code for japan summit 向けに作ってたデモGPTsを来週閉じる予定なのですが、せっかくなので来週までということで共有します。もしもっとこうした方がいいなどあればフィードバックもらえるとありがたいです。\n\n議事録作成\n"
+                },
+                {
+                  "type": "link",
+                  "url": "https://chatgpt.com/g/g-Zmct6IrIX-yi-shi-lu-zuo-cheng-hisinesuanarisuto-gao-dao",
+                  "text": "https://chatgpt.com/g/g-Zmct6IrIX-yi-shi-lu-zuo-cheng-hisinesuanarisuto-gao-dao"
+                },
+                {
+                  "type": "text",
+                  "text": "\nプレゼン修正提案\n"
+                },
+                {
+                  "type": "link",
+                  "url": "https://chatgpt.com/g/g-Egdd6dhjr-hisinesuhuresentesiyonjiang-shi-gao-shan",
+                  "text": "https://chatgpt.com/g/g-Egdd6dhjr-hisinesuhuresentesiyonjiang-shi-gao-shan"
+                },
+                {
+                  "type": "text",
+                  "text": "\n要件整理\n"
+                },
+                {
+                  "type": "link",
+                  "url": "https://chatgpt.com/g/g-6732b82f3630819099063501f2eeede0-sisutemukai-fa-yao-jian-ding-yi-dan-dang-gao-dao",
+                  "text": "https://chatgpt.com/g/g-6732b82f3630819099063501f2eeede0-sisutemukai-fa-yao-jian-ding-yi-dan-dang-gao-dao"
+                },
+                {
+                  "type": "text",
+                  "text": "\nAI彼氏"
+                },
+                {
+                  "type": "text",
+                  "text": "(※これだけ常設公開です)"
+                },
+                {
+                  "type": "text",
+                  "text": "\n"
+                },
+                {
+                  "type": "link",
+                  "url": "https://chatgpt.com/g/g-skpK1ZxzB-aibi-shi-kenta-aban",
+                  "text": "https://chatgpt.com/g/g-skpK1ZxzB-aibi-shi-kenta-aban"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "user": "U01AN50V7FH",
+      "type": "message",
+      "ts": "1732283399.534699",
+      "edited": {
+        "user": "U01AN50V7FH",
+        "ts": "1732321193.000000"
+      },
+      "client_msg_id": "A161FC4D-AAAE-4099-94FF-3781A0E277F0",
+      "text": "FYIの書き込み失礼します。\n先日滋賀県で開催されたCode for Japan Summit2024に参加したオカモトと申します。cfjsでの夕方のセッション*Future Forum* では「地方自治体×スタートアップ」のグループに参加しまして、このグループでは、自治体の入札契約(公共調達)する現行の運用が、応募するスタートアップ企業のアジャイルな価値観&スピード感との相性とすごぶる悪くて、スタートアップ支援を目的とした公共調達のスキームのはずなのに、使い勝手が若干悪くてスタートアップから敬遠される的な課題が出て、現場の方たちのリアルな意見にとても勉強になりましたです。\n\nで、たまたまタイミング良く、ちょうどその公共調達をお題にした「地方自治体×スタートアップ」のミートアップイベントが、来週11/28(木)に東京有楽町のTiBで開催される予定だそうです。\n<https://j-startup-city.csti-startup-policy.go.jp/matchpitch2024|https://j-startup-city.csti-startup-policy.go.jp/matchpitch2024>\n\nもしご興味ある方はイベントに参加されると良いのではないかと思います。全国から地方自治体の関係者やスタートアップ企業がイベントに参加するらしく、公共調達についての意見交換やネットワーキングなどをされるとよろしいかと存じます。(なおスタートアップ企業では、例えば3Dプリンター住宅を手がけるセレンディクスや、水問題に取り組むWOTAの中の人が登壇される模様)    \n ※現地参加が厳しそうな方は、オンライン配信ありです\n\nとりいそぎのイベント情報共有まで",
+      "team": "T02FMV4EB",
+      "attachments": [
+        {
+          "image_url": "https://static.wixstatic.com/media/f83338_87c01b2e32984328b5315ed032f86a66~mv2.jpg/v1/fill/w_1200,h_630,al_c/f83338_87c01b2e32984328b5315ed032f86a66~mv2.jpg",
+          "image_width": 1200,
+          "image_height": 630,
+          "image_bytes": 119266,
+          "from_url": "https://j-startup-city.csti-startup-policy.go.jp/matchpitch2024",
+          "service_icon": "https://static.wixstatic.com/media/5b6f26_0acd224258da4f30a256a3aef164f024%7Emv2.png/v1/fill/w_180%2Ch_180%2Clg_1%2Cusm_0.66_1.00_0.01/5b6f26_0acd224258da4f30a256a3aef164f024%7Emv2.png",
+          "id": 1,
+          "original_url": "https://j-startup-city.csti-startup-policy.go.jp/matchpitch2024",
+          "fallback": "J-Startup City: マッチングピッチ2024 | J-Startup City|J-Startup City",
+          "text": "公共調達を活用したスタートアップの育成と、社会・行政課題の効率的な解決の同時達成を目指した「マッチングピッチ2024」を開催します！",
+          "title": "マッチングピッチ2024 | J-Startup City|J-Startup City",
+          "title_link": "https://j-startup-city.csti-startup-policy.go.jp/matchpitch2024",
+          "service_name": "J-Startup City"
+        }
+      ],
+      "blocks": [
+        {
+          "type": "rich_text",
+          "block_id": "0jzoW",
+          "elements": [
+            {
+              "type": "rich_text_section",
+              "elements": [
+                {
+                  "type": "text",
+                  "text": "FYIの書き込み失礼します。\n先日滋賀県で開催されたCode for Japan Summit2024に参加したオカモトと申します。cfjsでの夕方のセッション"
+                },
+                {
+                  "type": "text",
+                  "text": "Future Forum ",
+                  "style": {
+                    "bold": true,
+                    "italic": false
+                  }
+                },
+                {
+                  "type": "text",
+                  "text": "では「地方自治体×スタートアップ」のグループに参加しまして、このグループでは、自治体の入札契約(公共調達)する現行の運用が、応募するスタートアップ企業のアジャイルな価値観&スピード感との相性とすごぶる悪くて、スタートアップ支援を目的とした公共調達のスキームのはずなのに、使い勝手が若干悪くてスタートアップから敬遠される的な課題が出て、現場の方たちのリアルな意見にとても勉強になりましたです。\n\nで、たまたまタイミング良く、ちょうどその公共調達をお題にした「地方自治体×スタートアップ」のミートアップイベントが、来週11/28(木)に東京有楽町のTiBで開催される予定だそうです。\n"
+                },
+                {
+                  "type": "link",
+                  "url": "https://j-startup-city.csti-startup-policy.go.jp/matchpitch2024",
+                  "text": "https://j-startup-city.csti-startup-policy.go.jp/matchpitch2024"
+                },
+                {
+                  "type": "text",
+                  "text": "\n\nもしご興味ある方は"
+                },
+                {
+                  "type": "text",
+                  "text": "イベントに"
+                },
+                {
+                  "type": "text",
+                  "text": "参加されると良いのではないかと思います。全国から地方自治体の関係者やスタートアップ企業がイベントに参加するらしく、公共調達についての意見交換やネットワーキングなどをされるとよろしいかと存じます。(なおスタートアップ企業では、例えば3Dプリンター住宅を手がけるセレンディクスや、水問題に取り組むWOTAの中の人が登壇される模様)    \n ※現地参加が厳しそうな方は、オンライン配信ありです\n\nとりいそぎのイベント情報共有まで"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "reactions": [
+        {
+          "name": "green_heart",
+          "users": [
+            "UA1HL3WU8",
+            "U03HSQL8JQ1",
+            "U07NU13LWG2"
+          ],
+          "count": 3
+        },
+        {
+          "name": "fire",
+          "users": [
+            "UA1HL3WU8",
+            "U03HSQL8JQ1"
+          ],
+          "count": 2
+        },
+        {
+          "name": "iine",
+          "users": [
+            "UJK5F25A6",
+            "UUYM6FMK6"
+          ],
+          "count": 2
+        },
+        {
+          "name": "eyes",
+          "users": [
+            "U07RGGAKEDS"
+          ],
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "has_more": true,
+  "pin_count": 0,
+  "channel_actions_ts": null,
+  "channel_actions_count": 0,
+  "response_metadata": {
+    "next_cursor": "bmV4dF90czoxNzMyMTcwMDUxOTMyMDY5",
+    "scopes": [
+      "channels:history",
+      "channels:read",
+      "app_mentions:read",
+      "groups:read",
+      "dnd:read",
+      "conversations.connect:read",
+      "im:read",
+      "mpim:history",
+      "mpim:read",
+      "reactions:read",
+      "team:read",
+      "users:read",
+      "users.profile:read",
+      "usergroups:read",
+      "channels:join"
+    ],
+    "acceptedScopes": [
+      "channels:history",
+      "groups:history",
+      "mpim:history",
+      "im:history",
+      "read"
+    ]
+  }
+}
