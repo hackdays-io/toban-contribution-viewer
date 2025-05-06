@@ -2,7 +2,7 @@
   "ok": true,
   "access_token": "xoxb-test-token",
   "token_type": "bot",
-  "scope": "channels:history,channels:read,users:read",
+  "scope": "channels:history,channels:read,users:read,channels:join",
   "bot_user_id": "B12345",
   "app_id": "A12345",
   "team": {

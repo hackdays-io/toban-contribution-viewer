@@ -709,7 +709,7 @@
       "blocks": [
         {
           "type": "rich_text",
-          "block_id": "dfJq",
+          "block_id": "xiCa",
           "elements": [
             {
               "type": "rich_text_section",
@@ -751,7 +751,7 @@
       "blocks": [
         {
           "type": "rich_text",
-          "block_id": "gO5",
+          "block_id": "YLN0M",
           "elements": [
             {
               "type": "rich_text_section",
@@ -1811,7 +1811,7 @@
       "blocks": [
         {
           "type": "rich_text",
-          "block_id": "otj",
+          "block_id": "71M9",
           "elements": [
             {
               "type": "rich_text_section",
@@ -1862,7 +1862,7 @@
       "blocks": [
         {
           "type": "rich_text",
-          "block_id": "3ba",
+          "block_id": "C17E",
           "elements": [
             {
               "type": "rich_text_section",
@@ -1913,7 +1913,7 @@
       "blocks": [
         {
           "type": "rich_text",
-          "block_id": "WXT",
+          "block_id": "I80x",
           "elements": [
             {
               "type": "rich_text_section",
@@ -2481,7 +2481,7 @@
       "blocks": [
         {
           "type": "rich_text",
-          "block_id": "04h",
+          "block_id": "It0",
           "elements": [
             {
               "type": "rich_text_section",
@@ -6618,7 +6618,8 @@
       "team:read",
       "users:read",
       "users.profile:read",
-      "usergroups:read"
+      "usergroups:read",
+      "channels:join"
     ],
     "acceptedScopes": [
       "channels:history",
