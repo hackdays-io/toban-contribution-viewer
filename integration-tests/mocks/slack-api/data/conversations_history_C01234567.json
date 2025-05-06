@@ -5,20 +5,80 @@
       "type": "message",
       "user": "U01234567",
       "text": "Hello everyone!",
-      "ts": "1614267200.000100"
+      "ts": "1614267200.000100",
+      "team": "T12345",
+      "blocks": [
+        {
+          "type": "rich_text",
+          "block_id": "text1",
+          "elements": [
+            {
+              "type": "rich_text_section",
+              "elements": [
+                {
+                  "type": "text",
+                  "text": "Hello everyone!"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "client_msg_id": "01234567-abcd-4567-efgh-123456789abc"
     },
     {
       "type": "message",
       "user": "U01234568",
       "text": "Hi there!",
-      "ts": "1614267300.000200"
+      "ts": "1614267300.000200",
+      "team": "T12345",
+      "blocks": [
+        {
+          "type": "rich_text",
+          "block_id": "text2",
+          "elements": [
+            {
+              "type": "rich_text_section",
+              "elements": [
+                {
+                  "type": "text",
+                  "text": "Hi there!"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "client_msg_id": "12345678-abcd-4567-efgh-123456789abc"
     },
     {
       "type": "message",
       "user": "U01234569",
       "text": "Good morning!",
-      "ts": "1614267400.000300"
+      "ts": "1614267400.000300",
+      "team": "T12345",
+      "blocks": [
+        {
+          "type": "rich_text",
+          "block_id": "text3",
+          "elements": [
+            {
+              "type": "rich_text_section",
+              "elements": [
+                {
+                  "type": "text",
+                  "text": "Good morning!"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "client_msg_id": "23456789-abcd-4567-efgh-123456789abc"
     }
   ],
-  "has_more": false
+  "has_more": false,
+  "response_metadata": {
+    "next_cursor": ""
+  }
 }

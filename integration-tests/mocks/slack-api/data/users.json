@@ -3,30 +3,115 @@
   "members": [
     {
       "id": "U01234567",
+      "team_id": "T12345",
       "name": "user1",
+      "deleted": false,
+      "color": "9f69e7",
       "real_name": "User One",
+      "tz": "Asia/Tokyo",
+      "tz_label": "Japan Standard Time",
+      "tz_offset": 32400,
       "profile": {
+        "title": "",
+        "phone": "",
+        "skype": "",
+        "real_name": "User One",
+        "real_name_normalized": "User One",
         "display_name": "User 1",
-        "email": "user1@example.com"
-      }
+        "display_name_normalized": "User 1",
+        "email": "user1@example.com",
+        "status_text": "",
+        "status_emoji": "",
+        "status_expiration": 0,
+        "avatar_hash": "g12345",
+        "image_24": "https://secure.gravatar.com/avatar/user1.jpg?s=24",
+        "image_32": "https://secure.gravatar.com/avatar/user1.jpg?s=32",
+        "image_48": "https://secure.gravatar.com/avatar/user1.jpg?s=48"
+      },
+      "is_admin": false,
+      "is_owner": false,
+      "is_primary_owner": false,
+      "is_restricted": false,
+      "is_ultra_restricted": false,
+      "is_bot": false,
+      "is_app_user": false,
+      "updated": 1614267200
     },
     {
       "id": "U01234568",
+      "team_id": "T12345",
       "name": "user2",
+      "deleted": false,
+      "color": "4bbe2e",
       "real_name": "User Two",
+      "tz": "Asia/Tokyo",
+      "tz_label": "Japan Standard Time",
+      "tz_offset": 32400,
       "profile": {
+        "title": "",
+        "phone": "",
+        "skype": "",
+        "real_name": "User Two",
+        "real_name_normalized": "User Two",
         "display_name": "User 2",
-        "email": "user2@example.com"
-      }
+        "display_name_normalized": "User 2",
+        "email": "user2@example.com",
+        "status_text": "",
+        "status_emoji": "",
+        "status_expiration": 0,
+        "avatar_hash": "g23456",
+        "image_24": "https://secure.gravatar.com/avatar/user2.jpg?s=24",
+        "image_32": "https://secure.gravatar.com/avatar/user2.jpg?s=32",
+        "image_48": "https://secure.gravatar.com/avatar/user2.jpg?s=48"
+      },
+      "is_admin": false,
+      "is_owner": false,
+      "is_primary_owner": false,
+      "is_restricted": false,
+      "is_ultra_restricted": false,
+      "is_bot": false,
+      "is_app_user": false,
+      "updated": 1614267300
     },
     {
       "id": "U01234569",
+      "team_id": "T12345",
       "name": "user3",
+      "deleted": false,
+      "color": "e7392d",
       "real_name": "User Three",
+      "tz": "Asia/Tokyo",
+      "tz_label": "Japan Standard Time",
+      "tz_offset": 32400,
       "profile": {
+        "title": "",
+        "phone": "",
+        "skype": "",
+        "real_name": "User Three",
+        "real_name_normalized": "User Three",
         "display_name": "User 3",
-        "email": "user3@example.com"
-      }
+        "display_name_normalized": "User 3",
+        "email": "user3@example.com",
+        "status_text": "",
+        "status_emoji": "",
+        "status_expiration": 0,
+        "avatar_hash": "g34567",
+        "image_24": "https://secure.gravatar.com/avatar/user3.jpg?s=24",
+        "image_32": "https://secure.gravatar.com/avatar/user3.jpg?s=32",
+        "image_48": "https://secure.gravatar.com/avatar/user3.jpg?s=48"
+      },
+      "is_admin": false,
+      "is_owner": false,
+      "is_primary_owner": false,
+      "is_restricted": false,
+      "is_ultra_restricted": false,
+      "is_bot": false,
+      "is_app_user": false,
+      "updated": 1614267400
     }
-  ]
+  ],
+  "cache_ts": 1614267500,
+  "response_metadata": {
+    "next_cursor": ""
+  }
 }
