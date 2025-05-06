@@ -81,7 +81,7 @@ services:
     environment:
       - PORT=3000
     healthcheck:
-      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:3000/health')\" || exit 1"]
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3000/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1); }).on('error', () => process.exit(1))\" || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -99,7 +99,7 @@ services:
     environment:
       - PORT=3000
     healthcheck:
-      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:3000/health')\" || exit 1"]
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3000/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1); }).on('error', () => process.exit(1))\" || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 3
