@@ -93,20 +93,20 @@ For generating test data from real Slack workspaces, use the data fetcher script
 npm install
 
 # Run with a Slack API token
-./utils/slack-data-fetcher.js --token "xoxb-your-token"
+./utils/fetch-slack-data.js --token "xoxb-your-token"
 
 # Or use environment variables
 export SLACK_TOKEN="xoxb-your-token"
-./utils/slack-data-fetcher.js
+./utils/fetch-slack-data.js
 
 # Customize the number of items to fetch
-./utils/slack-data-fetcher.js --channels 5 --messages 10 --users 15
+./utils/fetch-slack-data.js --channels 5 --messages 10 --users 15
 
 # Specify a custom output directory
-./utils/slack-data-fetcher.js --output /path/to/output/dir
+./utils/fetch-slack-data.js --output /path/to/output/dir
 
 # Disable data sanitization (not recommended for commits)
-./utils/slack-data-fetcher.js --no-sanitize
+./utils/fetch-slack-data.js --no-sanitize
 ```
 
 The script will fetch:
