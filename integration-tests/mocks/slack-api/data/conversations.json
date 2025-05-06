@@ -611,7 +611,8 @@
       "team:read",
       "users:read",
       "users.profile:read",
-      "usergroups:read"
+      "usergroups:read",
+      "channels:join"
     ],
     "acceptedScopes": [
       "channels:read",
