@@ -3,8 +3,8 @@ FROM mcr.microsoft.com/playwright:latest
 WORKDIR /app
 
 # Install Node.js dependencies
-COPY package.json package-lock.json* ./
-RUN npm ci
+COPY package.json ./
+RUN npm install
 
 # Install Python dependencies
 COPY requirements.txt ./
