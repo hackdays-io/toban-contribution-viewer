@@ -10,7 +10,7 @@
 const fs = require('fs');
 const path = require('path');
 const slackWebApi = require('@slack/web-api');
-const commander = require('commander');
+const { Command } = require('commander');
 require('dotenv').config();
 
 const WebClient = slackWebApi.WebClient;
@@ -20,7 +20,7 @@ const DEFAULT_CHANNEL_LIMIT = 10;
 const DEFAULT_MESSAGE_LIMIT = 20;
 const DEFAULT_USER_LIMIT = 20;
 
-const program = commander.program;
+const program = new Command();
 program
   .version('1.0.0')
   .description('Fetch Slack data for test data generation')
