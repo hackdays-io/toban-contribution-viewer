@@ -14,6 +14,7 @@ integration-tests/
 │   ├── e2e/              # End-to-end tests with Playwright
 │   └── api/              # API tests with pytest
 └── utils/                # Utility functions for tests
+    └── slack-data-fetcher.js  # Script to fetch Slack data for test generation
 ```
 
 ## Setup Instructions
@@ -82,3 +83,36 @@ Add new Playwright test files to the `tests/e2e` directory. See the [Playwright 
 ### API Tests
 
 Add new pytest test files to the `tests/api` directory. See the [pytest documentation](https://docs.pytest.org/en/stable/) for more information.
+
+## Test Data Generation
+
+For generating test data from real Slack workspaces, use the data fetcher script:
+
+```bash
+# Install dependencies
+npm install
+
+# Run with a Slack API token
+./utils/slack-data-fetcher.js --token "xoxb-your-token"
+
+# Or use environment variables
+export SLACK_TOKEN="xoxb-your-token"
+./utils/slack-data-fetcher.js
+
+# Customize the number of items to fetch
+./utils/slack-data-fetcher.js --channels 5 --messages 10 --users 15
+
+# Specify a custom output directory
+./utils/slack-data-fetcher.js --output /path/to/output/dir
+
+# Disable data sanitization (not recommended for commits)
+./utils/slack-data-fetcher.js --no-sanitize
+```
+
+The script will fetch:
+- Channel list
+- Messages from selected channels
+- User information
+- Mock OAuth response
+
+Data is saved to `mocks/slack-api/data/` by default.
