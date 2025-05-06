@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Slack Data Fetcher
+ * Fetch Slack Data
  * 
  * This script fetches data from the Slack API and saves it as JSON files
  * for use by the mock Slack API service in integration tests.
@@ -9,16 +9,18 @@
 
 const fs = require('fs');
 const path = require('path');
-const WebClient = require('@slack/web-api').WebClient;
-const program = require('commander').program;
-const chalk = require('chalk');
+const slackWebApi = require('@slack/web-api');
+const commander = require('commander');
 require('dotenv').config();
+
+const WebClient = slackWebApi.WebClient;
 
 const DEFAULT_OUTPUT_DIR = path.join(__dirname, '../mocks/slack-api/data');
 const DEFAULT_CHANNEL_LIMIT = 10;
 const DEFAULT_MESSAGE_LIMIT = 20;
 const DEFAULT_USER_LIMIT = 20;
 
+const program = commander.program;
 program
   .version('1.0.0')
   .description('Fetch Slack data for test data generation')
@@ -35,10 +37,10 @@ program.parse(process.argv);
 const options = program.opts();
 
 const log = {
-  info: (msg) => console.log(chalk.blue(`[INFO] ${msg}`)),
-  warn: (msg) => console.log(chalk.yellow(`[WARN] ${msg}`)),
-  error: (msg) => console.error(chalk.red(`[ERROR] ${msg}`)),
-  success: (msg) => console.log(chalk.green(`[SUCCESS] ${msg}`))
+  info: (msg) => console.log(`[INFO] ${msg}`),
+  warn: (msg) => console.log(`[WARN] ${msg}`),
+  error: (msg) => console.error(`[ERROR] ${msg}`),
+  success: (msg) => console.log(`[SUCCESS] ${msg}`)
 };
 
 const token = options.token || process.env.SLACK_TOKEN;
