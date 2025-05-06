@@ -215,15 +215,53 @@ async function fetchChannels() {
 }
 
 /**
+ * Join a channel if not already a member
+ */
+async function joinChannel(channelId) {
+  try {
+    log.info(`Joining channel ${channelId}...`);
+    const result = await slack.conversations.join({
+      channel: channelId
+    });
+    log.success(`Successfully joined channel ${channelId}`);
+    return true;
+  } catch (error) {
+    log.error(`Failed to join channel ${channelId}: ${error.message}`);
+    return false;
+  }
+}
+
+/**
  * Fetch message history for a channel
  */
 async function fetchMessages(channel) {
   try {
     log.info(`Fetching messages for channel ${channel.name} (${channel.id})...`);
-    const result = await slack.conversations.history({
-      channel: channel.id,
-      limit: messageLimit
-    });
+    let result;
+    
+    try {
+      result = await slack.conversations.history({
+        channel: channel.id,
+        limit: messageLimit
+      });
+    } catch (error) {
+      if (error.message.includes('not_in_channel')) {
+        log.warn(`Not in channel ${channel.name} (${channel.id}). Attempting to join...`);
+        const joined = await joinChannel(channel.id);
+        
+        if (joined) {
+          result = await slack.conversations.history({
+            channel: channel.id,
+            limit: messageLimit
+          });
+        } else {
+          throw error; // Re-throw if join failed
+        }
+      } else {
+        throw error; // Re-throw for other errors
+      }
+    }
+    
     saveToFile(result, `conversations_history_${channel.id}.json`);
     return result.messages;
   } catch (error) {
@@ -240,7 +278,7 @@ function createOAuthResponse() {
     ok: true,
     access_token: `xoxb-${Date.now()}`,
     token_type: "bot",
-    scope: "channels:history,channels:read,users:read",
+    scope: "channels:history,channels:read,users:read,channels:join",
     bot_user_id: "B12345",
     app_id: "A12345",
     team: {
