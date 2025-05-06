@@ -12,6 +12,9 @@ RUN mkdir -p /app/data
 # Copy application code
 COPY . .
 
+# Create data directory if it doesn't exist
+RUN mkdir -p /app/data
+
 EXPOSE 3000
 
 CMD ["node", "server.js"]
