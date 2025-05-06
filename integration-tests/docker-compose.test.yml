@@ -81,10 +81,11 @@ services:
     environment:
       - PORT=3000
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3000/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1); }).on('error', () => process.exit(1))\" || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 3
+      start_period: 30s
 
   # Mock OpenRouter API service
   mock-openrouter-api:
@@ -98,10 +99,11 @@ services:
     environment:
       - PORT=3000
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3000/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1); }).on('error', () => process.exit(1))\" || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 3
+      start_period: 30s
 
   # Test runner container
   test-runner:
