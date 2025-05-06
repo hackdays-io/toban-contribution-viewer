@@ -70,44 +70,84 @@ const slack = new WebClient(token);
 /**
  * Sanitize sensitive data in objects
  */
-function sanitizeData(data, type) {
+function sanitizeData(data, type, messageUserIds = []) {
   if (!shouldSanitize) return data;
   
   if (type === 'users') {
-    const members = data.members.map((user, index) => {
-      const sanitizedUser = { ...user };
+    const originalMembers = data.members;
+    let sanitizedMembers = [];
+    
+    if (messageUserIds.length > 0) {
+      log.info(`Creating sanitized data for ${messageUserIds.length} message authors`);
       
-      if (sanitizedUser.profile && sanitizedUser.profile.email) {
-        sanitizedUser.profile.email = `user${index + 1}@example.com`;
-      }
-      
-      if (sanitizedUser.real_name) {
-        sanitizedUser.real_name = `User ${index + 1}`;
-      }
-      
-      if (sanitizedUser.profile) {
-        if (sanitizedUser.profile.real_name) {
-          sanitizedUser.profile.real_name = `User ${index + 1}`;
-        }
-        if (sanitizedUser.profile.real_name_normalized) {
-          sanitizedUser.profile.real_name_normalized = `User ${index + 1}`;
-        }
-        if (sanitizedUser.profile.display_name) {
-          sanitizedUser.profile.display_name = `User ${index + 1}`;
-        }
-        if (sanitizedUser.profile.display_name_normalized) {
-          sanitizedUser.profile.display_name_normalized = `User ${index + 1}`;
+      messageUserIds.forEach((userId, index) => {
+        const existingUser = originalMembers.find(u => u.id === userId) || originalMembers[0];
+        
+        if (!existingUser) {
+          log.warn(`No template user found for ID ${userId}`);
+          return;
         }
         
-        if (sanitizedUser.profile.phone) {
+        const sanitizedUser = { ...existingUser, id: userId };
+        
+        if (sanitizedUser.profile) {
+          sanitizedUser.profile = { ...sanitizedUser.profile };
+          sanitizedUser.profile.email = `user${index + 1}@example.com`;
+          sanitizedUser.profile.real_name = `User ${index + 1}`;
+          sanitizedUser.profile.real_name_normalized = `User ${index + 1}`;
+          sanitizedUser.profile.display_name = `User ${index + 1}`;
+          sanitizedUser.profile.display_name_normalized = `User ${index + 1}`;
           sanitizedUser.profile.phone = '';
+          
+          sanitizedUser.profile.image_original = `https://example.com/images/user${index + 1}.jpg`;
+          sanitizedUser.profile.image_24 = `https://example.com/images/user${index + 1}_24.jpg`;
+          sanitizedUser.profile.image_32 = `https://example.com/images/user${index + 1}_32.jpg`;
+          sanitizedUser.profile.image_48 = `https://example.com/images/user${index + 1}_48.jpg`;
+          sanitizedUser.profile.image_72 = `https://example.com/images/user${index + 1}_72.jpg`;
+          sanitizedUser.profile.image_192 = `https://example.com/images/user${index + 1}_192.jpg`;
+          sanitizedUser.profile.image_512 = `https://example.com/images/user${index + 1}_512.jpg`;
         }
-      }
+        
+        if (sanitizedUser.real_name) {
+          sanitizedUser.real_name = `User ${index + 1}`;
+        }
+        
+        sanitizedMembers.push(sanitizedUser);
+      });
       
-      return sanitizedUser;
-    });
+      log.success(`Created ${sanitizedMembers.length} sanitized user records`);
+    } else {
+      log.info('No message authors found, sanitizing all users');
+      sanitizedMembers = originalMembers.map((user, index) => {
+        const sanitizedUser = { ...user };
+        
+        if (sanitizedUser.profile) {
+          sanitizedUser.profile = { ...sanitizedUser.profile };
+          sanitizedUser.profile.email = `user${index + 1}@example.com`;
+          sanitizedUser.profile.real_name = `User ${index + 1}`;
+          sanitizedUser.profile.real_name_normalized = `User ${index + 1}`;
+          sanitizedUser.profile.display_name = `User ${index + 1}`;
+          sanitizedUser.profile.display_name_normalized = `User ${index + 1}`;
+          sanitizedUser.profile.phone = '';
+          
+          sanitizedUser.profile.image_original = `https://example.com/images/user${index + 1}.jpg`;
+          sanitizedUser.profile.image_24 = `https://example.com/images/user${index + 1}_24.jpg`;
+          sanitizedUser.profile.image_32 = `https://example.com/images/user${index + 1}_32.jpg`;
+          sanitizedUser.profile.image_48 = `https://example.com/images/user${index + 1}_48.jpg`;
+          sanitizedUser.profile.image_72 = `https://example.com/images/user${index + 1}_72.jpg`;
+          sanitizedUser.profile.image_192 = `https://example.com/images/user${index + 1}_192.jpg`;
+          sanitizedUser.profile.image_512 = `https://example.com/images/user${index + 1}_512.jpg`;
+        }
+        
+        if (sanitizedUser.real_name) {
+          sanitizedUser.real_name = `User ${index + 1}`;
+        }
+        
+        return sanitizedUser;
+      });
+    }
     
-    return { ...data, members };
+    return { ...data, members: sanitizedMembers };
   }
   
   if (type === 'oauth') {
@@ -142,11 +182,11 @@ function saveToFile(data, filename) {
 /**
  * Fetch users from Slack API
  */
-async function fetchUsers() {
+async function fetchUsers(messageUserIds = []) {
   try {
     log.info('Fetching user list...');
     const result = await slack.users.list({ limit: userLimit });
-    const sanitizedData = sanitizeData(result, 'users');
+    const sanitizedData = sanitizeData(result, 'users', messageUserIds);
     saveToFile(sanitizedData, 'users.json');
     return sanitizedData.members;
   } catch (error) {
@@ -229,14 +269,34 @@ async function main() {
     log.info('Verifying Slack API token...');
     await slack.auth.test();
     
-    const users = await fetchUsers();
     const channels = await fetchChannels();
     
-    if (channels.length > 0) {
-      for (const channel of channels.slice(0, 2)) { // Limit to 2 channels for messages
-        await fetchMessages(channel);
+    const targetChannelIds = ['C02FMV4EZ', 'C08JP0V9VT8']; // 06_random and proj_oss_boardgame
+    log.info(`Targeting specific channels: ${targetChannelIds.join(', ')}`);
+    
+    const targetChannels = channels.filter(channel => targetChannelIds.includes(channel.id));
+    if (targetChannels.length === 0) {
+      log.warn('Target channels not found. Please check channel IDs.');
+      return;
+    }
+    
+    const messageUserIds = new Set();
+    const allMessages = [];
+    
+    for (const channel of targetChannels) {
+      const messages = await fetchMessages(channel);
+      if (messages && messages.length > 0) {
+        messages.forEach(msg => {
+          if (msg.user) messageUserIds.add(msg.user);
+          if (msg.bot_id) messageUserIds.add(msg.bot_id);
+        });
+        allMessages.push(...messages);
       }
     }
+    
+    const userIdArray = Array.from(messageUserIds);
+    log.info(`Found ${userIdArray.length} unique user IDs in messages`);
+    const users = await fetchUsers(userIdArray);
     
     createOAuthResponse();
     

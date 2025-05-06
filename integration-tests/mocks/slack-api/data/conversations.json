@@ -2,64 +2,623 @@
   "ok": true,
   "channels": [
     {
-      "id": "C01234567",
-      "name": "general",
+      "id": "C02FMV4ET",
+      "name": "01_general",
       "is_channel": true,
       "is_group": false,
       "is_im": false,
       "is_mpim": false,
       "is_private": false,
-      "created": 1614267200,
+      "created": 1407812236,
       "is_archived": false,
       "is_general": true,
       "unlinked": 0,
-      "name_normalized": "general",
+      "name_normalized": "01_general",
       "is_shared": false,
       "is_org_shared": false,
       "is_pending_ext_shared": false,
       "pending_shared": [],
-      "context_team_id": "T12345"
+      "context_team_id": "T02FMV4EB",
+      "updated": 1735265607520,
+      "parent_conversation": null,
+      "creator": "U02FMV4EF",
+      "is_ext_shared": false,
+      "shared_team_ids": [
+        "T02FMV4EB"
+      ],
+      "pending_connected_team_ids": [],
+      "is_member": true,
+      "topic": {
+        "value": "運営からのお知らせチャンネルです。投稿は運営のみですが、リアクションやスレッドでのコメントは可能です。SlackやNotionの使い方ガイドはリンクをご確認ください。Participants can’t post, but reactions and comments in threads are welcome. <https://code4japan-community.notion.site/Slack-c705394b048f4bc98a1f301802cc2812?pvs=4>",
+        "creator": "UA3UCG9MM",
+        "last_set": 1735265607
+      },
+      "purpose": {
+        "value": "This channel is for team-wide communication and announcements. All team members are in this channel.\n全体に共有したい内容やシビックテックに関するアナウンスを発信できる場所です。基本的に全員がここに入っています。\n<#C02FMV4EZ|> は雑談、 <#CEA5BDYUA|> は自己紹介ができる場です。",
+        "creator": "UV15A7W6L",
+        "last_set": 1584766048
+      },
+      "properties": {
+        "posting_restricted_to": {
+          "type": [
+            "admin"
+          ]
+        },
+        "threads_restricted_to": {
+          "type": [
+            "ra"
+          ]
+        },
+        "canvas": {
+          "file_id": "F07A9CNE760",
+          "is_empty": true,
+          "quip_thread_id": "eIa9AAxFEBX"
+        },
+        "tabs": [
+          {
+            "id": "files",
+            "label": "",
+            "type": "files"
+          },
+          {
+            "id": "Ct07JTH5BDNZ",
+            "label": "",
+            "type": "folder"
+          },
+          {
+            "id": "bookmarks",
+            "label": "",
+            "type": "bookmarks"
+          }
+        ],
+        "tabz": [
+          {
+            "type": "files"
+          },
+          {
+            "id": "Ct07JTH5BDNZ",
+            "type": "folder"
+          },
+          {
+            "type": "bookmarks"
+          }
+        ]
+      },
+      "previous_names": [
+        "general"
+      ],
+      "num_members": 8598
     },
     {
-      "id": "C01234568",
-      "name": "random",
+      "id": "C02FMV4EZ",
+      "name": "06_random",
       "is_channel": true,
       "is_group": false,
       "is_im": false,
       "is_mpim": false,
       "is_private": false,
-      "created": 1614267300,
+      "created": 1407812236,
       "is_archived": false,
       "is_general": false,
       "unlinked": 0,
-      "name_normalized": "random",
+      "name_normalized": "06_random",
       "is_shared": false,
       "is_org_shared": false,
       "is_pending_ext_shared": false,
       "pending_shared": [],
-      "context_team_id": "T12345"
+      "context_team_id": "T02FMV4EB",
+      "updated": 1729241837756,
+      "parent_conversation": null,
+      "creator": "U02FMV4EF",
+      "is_ext_shared": false,
+      "shared_team_ids": [
+        "T02FMV4EB"
+      ],
+      "pending_connected_team_ids": [],
+      "is_member": true,
+      "topic": {
+        "value": "シビックテックやオープンソース・オープンデータの周辺事情に関する記事・活動事例などをシェアするチャンネルです。（全員が投稿可能ですが、全参加者に届くので、チャネルや内容が適切か確認してからの投稿をお願いします。またイベント告知は <#C0191KF8WFQ|> 、採用募集は <#C03RFDENFFF|> のフォームでご登録ください。）",
+        "creator": "UA3UCG9MM",
+        "last_set": 1729241837
+      },
+      "purpose": {
+        "value": "参加者全員による記事や活動などの共有・お知らせチャンネル",
+        "creator": "U08TUNXH8",
+        "last_set": 1598065473
+      },
+      "properties": {
+        "canvas": {
+          "file_id": "F05JYV2ETQ8",
+          "is_empty": true,
+          "quip_thread_id": "bVC9AAlfJfd"
+        },
+        "tabs": [
+          {
+            "id": "files",
+            "label": "",
+            "type": "files"
+          }
+        ],
+        "tabz": [
+          {
+            "type": "files"
+          }
+        ]
+      },
+      "previous_names": [
+        "random"
+      ],
+      "num_members": 8546
     },
     {
-      "id": "C01234569",
-      "name": "tech",
+      "id": "C02GTQJS3",
+      "name": "sandbox",
       "is_channel": true,
       "is_group": false,
       "is_im": false,
       "is_mpim": false,
       "is_private": false,
-      "created": 1614267400,
-      "is_archived": false,
+      "created": 1408727126,
+      "is_archived": true,
       "is_general": false,
       "unlinked": 0,
-      "name_normalized": "tech",
+      "name_normalized": "sandbox",
       "is_shared": false,
       "is_org_shared": false,
       "is_pending_ext_shared": false,
       "pending_shared": [],
-      "context_team_id": "T12345"
+      "context_team_id": "T02FMV4EB",
+      "updated": 1724849001362,
+      "parent_conversation": null,
+      "creator": "U02FMV4EF",
+      "is_ext_shared": false,
+      "shared_team_ids": [
+        "T02FMV4EB"
+      ],
+      "pending_connected_team_ids": [],
+      "is_member": false,
+      "topic": {
+        "value": "投稿の練習やテストをするチャンネルです",
+        "creator": "U02FMV4EF",
+        "last_set": 1408727143
+      },
+      "purpose": {
+        "value": ":cfj: 投稿の練習やテストをするチャンネルです。  \nSlackに慣れてない方はここで投稿の練習をしてみてください.\nどんな投稿しても大丈夫です。",
+        "creator": "U03SWSLNK",
+        "last_set": 1425539970
+      },
+      "properties": {
+        "tabs": [
+          {
+            "id": "files",
+            "label": "",
+            "type": "files"
+          }
+        ],
+        "tabz": [
+          {
+            "type": "files"
+          }
+        ]
+      },
+      "previous_names": [],
+      "num_members": 0
+    },
+    {
+      "id": "C02GTR305",
+      "name": "summit",
+      "is_channel": true,
+      "is_group": false,
+      "is_im": false,
+      "is_mpim": false,
+      "is_private": false,
+      "created": 1408727370,
+      "is_archived": true,
+      "is_general": false,
+      "unlinked": 0,
+      "name_normalized": "summit",
+      "is_shared": false,
+      "is_org_shared": false,
+      "is_pending_ext_shared": false,
+      "pending_shared": [],
+      "context_team_id": "T02FMV4EB",
+      "updated": 1724849001339,
+      "parent_conversation": null,
+      "creator": "U02FMV4EF",
+      "is_ext_shared": false,
+      "shared_team_ids": [
+        "T02FMV4EB"
+      ],
+      "pending_connected_team_ids": [],
+      "is_member": false,
+      "topic": {
+        "value": "Code for Japan Summit についてチャットするチャンネルです",
+        "creator": "U02FMV4EF",
+        "last_set": 1408728006
+      },
+      "purpose": {
+        "value": "Code for Japan Summit についてチャットするチャンネルです",
+        "creator": "U02FMV4EF",
+        "last_set": 1408728023
+      },
+      "properties": {
+        "tabs": [
+          {
+            "id": "files",
+            "label": "",
+            "type": "files"
+          }
+        ],
+        "tabz": [
+          {
+            "type": "files"
+          }
+        ]
+      },
+      "previous_names": [
+        "summit2014"
+      ],
+      "num_members": 0
+    },
+    {
+      "id": "C02GTRK2K",
+      "name": "summit-event",
+      "is_channel": true,
+      "is_group": false,
+      "is_im": false,
+      "is_mpim": false,
+      "is_private": false,
+      "created": 1408727599,
+      "is_archived": true,
+      "is_general": false,
+      "unlinked": 0,
+      "name_normalized": "summit-event",
+      "is_shared": false,
+      "is_org_shared": false,
+      "is_pending_ext_shared": false,
+      "pending_shared": [],
+      "context_team_id": "T02FMV4EB",
+      "updated": 1724849001468,
+      "parent_conversation": null,
+      "creator": "U02FMV4EF",
+      "is_ext_shared": false,
+      "shared_team_ids": [
+        "T02FMV4EB"
+      ],
+      "pending_connected_team_ids": [],
+      "is_member": false,
+      "topic": {
+        "value": "イベントについてチャットするチャンネルです",
+        "creator": "U02FMV4EF",
+        "last_set": 1408727634
+      },
+      "purpose": {
+        "value": "イベントについてチャットするチャンネルです\n* プレ懇親会（金曜：googleカフェ）\n* 本番懇親会（土曜：ホワイエで）\n* アンカンファレンス（日曜・テーマ＆やり方／土曜に付箋に書いてもらう？）\n* ハックデイ（何やる？）\n* ワークショップ（今のところ日程ないけど・テーマ＆やり方）",
+        "creator": "U02FMV4EF",
+        "last_set": 1408727599
+      },
+      "properties": {
+        "tabs": [
+          {
+            "id": "files",
+            "label": "",
+            "type": "files"
+          }
+        ],
+        "tabz": [
+          {
+            "type": "files"
+          }
+        ]
+      },
+      "previous_names": [
+        "summit2014-event"
+      ],
+      "num_members": 0
+    },
+    {
+      "id": "C02GUN6J0",
+      "name": "summit-community",
+      "is_channel": true,
+      "is_group": false,
+      "is_im": false,
+      "is_mpim": false,
+      "is_private": false,
+      "created": 1408727405,
+      "is_archived": true,
+      "is_general": false,
+      "unlinked": 0,
+      "name_normalized": "summit-community",
+      "is_shared": false,
+      "is_org_shared": false,
+      "is_pending_ext_shared": false,
+      "pending_shared": [],
+      "context_team_id": "T02FMV4EB",
+      "updated": 1724849001437,
+      "parent_conversation": null,
+      "creator": "U02FMV4EF",
+      "is_ext_shared": false,
+      "shared_team_ids": [
+        "T02FMV4EB"
+      ],
+      "pending_connected_team_ids": [],
+      "is_member": false,
+      "topic": {
+        "value": "場の環境作り（コミュニティ＆コネクト）についてチャットするチャンネルです",
+        "creator": "U02FMV4EF",
+        "last_set": 1408727436
+      },
+      "purpose": {
+        "value": "場の環境作り（コミュニティ＆コネクト）についてチャットするチャンネルです。\n\n* 名札の設計\n* アイスブレイク（土曜の入場時：全員参加＆ランチ時：任意参加）、\n* ブースアイデア（アプリに触れられる、プロジェクトを紹介する）、\n* 子供を連れてこれる環境、日本地図を貼ってBrigade の場所を貼っておく等",
+        "creator": "U02FMV4EF",
+        "last_set": 1408727503
+      },
+      "properties": {
+        "tabs": [
+          {
+            "id": "files",
+            "label": "",
+            "type": "files"
+          }
+        ],
+        "tabz": [
+          {
+            "type": "files"
+          }
+        ]
+      },
+      "previous_names": [
+        "summit2014-community"
+      ],
+      "num_members": 0
+    },
+    {
+      "id": "C02GUNK0L",
+      "name": "summit-content",
+      "is_channel": true,
+      "is_group": false,
+      "is_im": false,
+      "is_mpim": false,
+      "is_private": false,
+      "created": 1408727559,
+      "is_archived": true,
+      "is_general": false,
+      "unlinked": 0,
+      "name_normalized": "summit-content",
+      "is_shared": false,
+      "is_org_shared": false,
+      "is_pending_ext_shared": false,
+      "pending_shared": [],
+      "context_team_id": "T02FMV4EB",
+      "updated": 1724849001492,
+      "parent_conversation": null,
+      "creator": "U02FMV4EF",
+      "is_ext_shared": false,
+      "shared_team_ids": [
+        "T02FMV4EB"
+      ],
+      "pending_connected_team_ids": [],
+      "is_member": false,
+      "topic": {
+        "value": "メインコンテンツについてチャットするチャンネルです",
+        "creator": "U02FMV4EF",
+        "last_set": 1408727579
+      },
+      "purpose": {
+        "value": "メインコンテンツについてチャットするチャンネルです\n* 基調講演（講演者と内容）\n* 海外ゲスト（アテンド、チケット、宿泊、通訳）\n* セッションオーナー（現在10程度の企画あり。テーマ＋担当者）\n* パネルディスカッション（土曜の夕方）",
+        "creator": "U02FMV4EF",
+        "last_set": 1408727559
+      },
+      "properties": {
+        "tabs": [
+          {
+            "id": "files",
+            "label": "",
+            "type": "files"
+          }
+        ],
+        "tabz": [
+          {
+            "type": "files"
+          }
+        ]
+      },
+      "previous_names": [
+        "summit2014-content"
+      ],
+      "num_members": 0
+    },
+    {
+      "id": "C02GUNPTN",
+      "name": "summit-media",
+      "is_channel": true,
+      "is_group": false,
+      "is_im": false,
+      "is_mpim": false,
+      "is_private": false,
+      "created": 1408727623,
+      "is_archived": true,
+      "is_general": false,
+      "unlinked": 0,
+      "name_normalized": "summit-media",
+      "is_shared": false,
+      "is_org_shared": false,
+      "is_pending_ext_shared": false,
+      "pending_shared": [],
+      "context_team_id": "T02FMV4EB",
+      "updated": 1724849001414,
+      "parent_conversation": null,
+      "creator": "U02FMV4EF",
+      "is_ext_shared": false,
+      "shared_team_ids": [
+        "T02FMV4EB"
+      ],
+      "pending_connected_team_ids": [],
+      "is_member": false,
+      "topic": {
+        "value": "メディア&amp;制作についてチャットするチャンネルです",
+        "creator": "U02FMV4EF",
+        "last_set": 1408727647
+      },
+      "purpose": {
+        "value": "* 事前\n    - PRサイト（スポンサー紹介、参加申し込み、セッション講演申し込み）\n    - 広報素材（バナー、プロモ動画）、メディア告知（プレスリリース等）\n* 当日\n    - 中継動画、取材動画、twitter実況・まとめ、写真撮影\n* 事後\n    - ブログ（文字起こし）",
+        "creator": "U02FMV4EF",
+        "last_set": 1408727623
+      },
+      "properties": {
+        "tabs": [
+          {
+            "id": "files",
+            "label": "",
+            "type": "files"
+          }
+        ],
+        "tabz": [
+          {
+            "type": "files"
+          }
+        ]
+      },
+      "previous_names": [
+        "summit2014-media"
+      ],
+      "num_members": 0
+    },
+    {
+      "id": "C02GUNS3Y",
+      "name": "summit-goods",
+      "is_channel": true,
+      "is_group": false,
+      "is_im": false,
+      "is_mpim": false,
+      "is_private": false,
+      "created": 1408727667,
+      "is_archived": true,
+      "is_general": false,
+      "unlinked": 0,
+      "name_normalized": "summit-goods",
+      "is_shared": false,
+      "is_org_shared": false,
+      "is_pending_ext_shared": false,
+      "pending_shared": [],
+      "context_team_id": "T02FMV4EB",
+      "updated": 1724849001554,
+      "parent_conversation": null,
+      "creator": "U02FMV4EF",
+      "is_ext_shared": false,
+      "shared_team_ids": [
+        "T02FMV4EB"
+      ],
+      "pending_connected_team_ids": [],
+      "is_member": false,
+      "topic": {
+        "value": "モノ作りについてチャットするチャンネルです",
+        "creator": "U02FMV4EF",
+        "last_set": 1408727675
+      },
+      "purpose": {
+        "value": "モノ作りについてチャットするチャンネルです\n* カンファレンスロゴ\n* ステッカー（無料：2014コネクト用、CfJ公式）\n* Tシャツ（有料：男女兼用）\n* パンフ（コネクトに絡めた体裁）\n* オリジナル付箋（大きめ、ロゴはなし、コネクトテースト",
+        "creator": "U02FMV4EF",
+        "last_set": 1408727668
+      },
+      "properties": {
+        "tabs": [
+          {
+            "id": "files",
+            "label": "",
+            "type": "files"
+          }
+        ],
+        "tabz": [
+          {
+            "type": "files"
+          }
+        ]
+      },
+      "previous_names": [
+        "summit2014-goods"
+      ],
+      "num_members": 0
+    },
+    {
+      "id": "C02GY7EF8",
+      "name": "summit-sponsor",
+      "is_channel": true,
+      "is_group": false,
+      "is_im": false,
+      "is_mpim": false,
+      "is_private": false,
+      "created": 1408887749,
+      "is_archived": true,
+      "is_general": false,
+      "unlinked": 0,
+      "name_normalized": "summit-sponsor",
+      "is_shared": false,
+      "is_org_shared": false,
+      "is_pending_ext_shared": false,
+      "pending_shared": [],
+      "context_team_id": "T02FMV4EB",
+      "updated": 1724849003368,
+      "parent_conversation": null,
+      "creator": "U02GTJH1N",
+      "is_ext_shared": false,
+      "shared_team_ids": [
+        "T02FMV4EB"
+      ],
+      "pending_connected_team_ids": [],
+      "is_member": false,
+      "topic": {
+        "value": "スポンサー獲得関連のチャンネルです",
+        "creator": "U02FMV4EF",
+        "last_set": 1408916525
+      },
+      "purpose": {
+        "value": "スポンサー獲得関連のチャンネルです。",
+        "creator": "U02GTJH1N",
+        "last_set": 1408887751
+      },
+      "properties": {
+        "tabs": [
+          {
+            "id": "files",
+            "label": "",
+            "type": "files"
+          }
+        ],
+        "tabz": [
+          {
+            "type": "files"
+          }
+        ]
+      },
+      "previous_names": [],
+      "num_members": 0
     }
   ],
   "response_metadata": {
-    "next_cursor": ""
+    "next_cursor": "dGVhbTpDMDJIQTlIR1M=",
+    "scopes": [
+      "channels:history",
+      "channels:read",
+      "app_mentions:read",
+      "groups:read",
+      "dnd:read",
+      "conversations.connect:read",
+      "im:read",
+      "mpim:history",
+      "mpim:read",
+      "reactions:read",
+      "team:read",
+      "users:read",
+      "users.profile:read",
+      "usergroups:read"
+    ],
+    "acceptedScopes": [
+      "channels:read",
+      "groups:read",
+      "mpim:read",
+      "im:read",
+      "read"
+    ]
   }
 }
