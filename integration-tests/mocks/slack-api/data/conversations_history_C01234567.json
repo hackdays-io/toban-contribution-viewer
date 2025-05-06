@@ -1,0 +1,24 @@
+{
+  "ok": true,
+  "messages": [
+    {
+      "type": "message",
+      "user": "U01234567",
+      "text": "Hello everyone!",
+      "ts": "1614267200.000100"
+    },
+    {
+      "type": "message",
+      "user": "U01234568",
+      "text": "Hi there!",
+      "ts": "1614267300.000200"
+    },
+    {
+      "type": "message",
+      "user": "U01234569",
+      "text": "Good morning!",
+      "ts": "1614267400.000300"
+    }
+  ],
+  "has_more": false
+}

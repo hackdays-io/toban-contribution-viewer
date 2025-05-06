@@ -1,0 +1,26 @@
+{
+  "ok": true,
+  "channels": [
+    {
+      "id": "C01234567",
+      "name": "general",
+      "is_channel": true,
+      "is_private": false,
+      "is_archived": false
+    },
+    {
+      "id": "C01234568",
+      "name": "random",
+      "is_channel": true,
+      "is_private": false,
+      "is_archived": false
+    },
+    {
+      "id": "C01234569",
+      "name": "tech",
+      "is_channel": true,
+      "is_private": false,
+      "is_archived": false
+    }
+  ]
+}

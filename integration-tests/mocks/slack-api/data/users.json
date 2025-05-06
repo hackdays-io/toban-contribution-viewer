@@ -1,0 +1,32 @@
+{
+  "ok": true,
+  "members": [
+    {
+      "id": "U01234567",
+      "name": "user1",
+      "real_name": "User One",
+      "profile": {
+        "display_name": "User 1",
+        "email": "user1@example.com"
+      }
+    },
+    {
+      "id": "U01234568",
+      "name": "user2",
+      "real_name": "User Two",
+      "profile": {
+        "display_name": "User 2",
+        "email": "user2@example.com"
+      }
+    },
+    {
+      "id": "U01234569",
+      "name": "user3",
+      "real_name": "User Three",
+      "profile": {
+        "display_name": "User 3",
+        "email": "user3@example.com"
+      }
+    }
+  ]
+}

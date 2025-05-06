@@ -1,0 +1,21 @@
+{
+  "ok": true,
+  "access_token": "xoxb-test-token",
+  "token_type": "bot",
+  "scope": "channels:history,channels:read,users:read",
+  "bot_user_id": "B12345",
+  "app_id": "A12345",
+  "team": {
+    "id": "T12345",
+    "name": "Test Team",
+    "domain": "testteam"
+  },
+  "enterprise": null,
+  "authed_user": {
+    "id": "U12345",
+    "scope": "chat:write",
+    "access_token": "xoxp-test-token",
+    "token_type": "user"
+  },
+  "is_enterprise_install": false
+}
