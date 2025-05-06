@@ -9,8 +9,8 @@
 
 const fs = require('fs');
 const path = require('path');
-const { WebClient } = require('@slack/web-api');
-const { program } = require('commander');
+const WebClient = require('@slack/web-api').WebClient;
+const program = require('commander').program;
 const chalk = require('chalk');
 require('dotenv').config();
 
