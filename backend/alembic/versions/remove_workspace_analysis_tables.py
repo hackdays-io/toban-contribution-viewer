@@ -1,6 +1,6 @@
 """remove_workspace_analysis_tables
 
-Revision ID: remove_workspace_analysis
+Revision ID: remove_workspace_analysis_tables
 Revises: ea5ebf7c670a
 Create Date: 2025-04-24 12:00:00.000000
 
@@ -12,7 +12,7 @@ from sqlalchemy.dialects import postgresql
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision = "remove_workspace_analysis"
+revision = "remove_workspace_analysis_tables"
 down_revision = "ea5ebf7c670a"  # Make sure this matches your latest migration
 branch_labels = None
 depends_on = None
