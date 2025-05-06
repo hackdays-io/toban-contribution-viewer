@@ -1,0 +1,1941 @@
+{
+  "ok": true,
+  "messages": [
+    {
+      "user": "U08P9R13XDX",
+      "type": "message",
+      "ts": "1745233908.541919",
+      "client_msg_id": "a2e44994-f974-4c32-8292-7372eafe99d4",
+      "text": "はじめまして。高校生です。\nCode forの活動に興味があってSlackに入ってみました。\nまだよくわかっていないのですが、Code for Japanではどんな活動をしているのか、詳しく教えてもらえませんか？\n自分でも少し調べたのですが、実際に中にいる方のお話を聞けたらうれしいです。",
+      "team": "T02FMV4EB",
+      "thread_ts": "1745233908.541919",
+      "reply_count": 2,
+      "reply_users_count": 2,
+      "latest_reply": "1745236354.898189",
+      "reply_users": [
+        "UA3UCG9MM",
+        "U08P9R13XDX"
+      ],
+      "is_locked": false,
+      "subscribed": false,
+      "blocks": [
+        {
+          "type": "rich_text",
+          "block_id": "yCS6R",
+          "elements": [
+            {
+              "type": "rich_text_section",
+              "elements": [
+                {
+                  "type": "text",
+                  "text": "はじめまして。高校生です。\nCode forの活動に興味があってSlackに入ってみました。\nまだよくわかっていないのですが、Code for Japanではどんな活動をしているのか、詳しく教えてもらえませんか？\n自分でも少し調べたのですが、実際に中にいる方のお話を聞けたらうれしいです。"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "user": "U02N826RAH4",
+      "type": "message",
+      "ts": "1744857731.434379",
+      "client_msg_id": "44f5a772-892d-4e33-a9b4-636244a84c16",
+      "text": "Only Japanese are here?",
+      "team": "T02FMV4EB",
+      "thread_ts": "1744857731.434379",
+      "reply_count": 7,
+      "reply_users_count": 4,
+      "latest_reply": "1745243766.191719",
+      "reply_users": [
+        "U05F3A92NSC",
+        "U08D436G988",
+        "U02GTJH1N",
+        "U02N826RAH4"
+      ],
+      "is_locked": false,
+      "subscribed": false,
+      "blocks": [
+        {
+          "type": "rich_text",
+          "block_id": "8IlMj",
+          "elements": [
+            {
+              "type": "rich_text_section",
+              "elements": [
+                {
+                  "type": "text",
+                  "text": "Only Japanese are here?"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "user": "U01MNU6BTSM",
+      "type": "message",
+      "ts": "1740918809.612229",
+      "edited": {
+        "user": "U01MNU6BTSM",
+        "ts": "1740918869.000000"
+      },
+      "client_msg_id": "ba312ce1-e53f-4f05-aa33-02dac6f43170",
+      "text": "<#C08FHM5CFQT|> にて大船渡林野火災でUshahidiを使った情報地図の作成ができないか検討中です。\n311のときにも運用されていたとのことで、経験者や詳しい方がいたらいくつか質問したいです。\n\n1. 運用面で気をつけていたことはありますか？\n    a. 今回、特に収集したいのはSNS上に散逸する支援情報(事業者が自主的にやっているものなど)や支援を必要とする支援者の情報、善意の可視化あたりなのかなと思っています。311のときはTwitter APIが無料で使えたので特定のハッシュタグから効率よく集められたと思いますが、今回は手作業が占める部分が多くなりそうです。\n    b. OpenStreetMapに大船渡の情報がないので位置情報に関しては少し複雑な登録方法が必要だと思っています。どのようにしていたか？\n    c. 広く投稿可能にして(実際には投稿者は限られると予想)モデレーターがチェックして公開という形式が良いのかなと思いますが、そのような運用でしたか？\n2. シビックテック的な活動をこれまでしたことがないので人の巻き込み方やプロジェクトの進め方などの知見があれば知りたいです\n    a. 情報鮮度などもあるので中途半端に活動しているとあまり価値がでないのかなとも思っています",
+      "team": "T02FMV4EB",
+      "thread_ts": "1740918809.612229",
+      "reply_count": 2,
+      "reply_users_count": 2,
+      "latest_reply": "1741525475.228719",
+      "reply_users": [
+        "UA3UCG9MM",
+        "U01MNU6BTSM"
+      ],
+      "is_locked": false,
+      "subscribed": false,
+      "blocks": [
+        {
+          "type": "rich_text",
+          "block_id": "NtKnK",
+          "elements": [
+            {
+              "type": "rich_text_section",
+              "elements": [
+                {
+                  "type": "channel",
+                  "channel_id": "C08FHM5CFQT"
+                },
+                {
+                  "type": "text",
+                  "text": " にて大船渡林野火災でUshahidiを使った情報地図の作成ができないか検討中です。\n311のときにも運用されていたとのことで、経験者や詳しい方がいたらいくつか質問したいです。\n\n"
+                }
+              ]
+            },
+            {
+              "type": "rich_text_list",
+              "elements": [
+                {
+                  "type": "rich_text_section",
+                  "elements": [
+                    {
+                      "type": "text",
+                      "text": "運用面で気をつけていたことはありますか？"
+                    }
+                  ]
+                }
+              ],
+              "style": "ordered",
+              "indent": 0,
+              "border": 0
+            },
+            {
+              "type": "rich_text_list",
+              "elements": [
+                {
+                  "type": "rich_text_section",
+                  "elements": [
+                    {
+                      "type": "text",
+                      "text": "今回、特に収集したいのはSNS上に散逸する支援情報(事業者が自主的にやっているものなど)や支援を必要とする支援者の情報、善意の可視化あたりなのかなと思っています。311のときはTwitter APIが無料で使えたので特定のハッシュタグから効率よく集められたと思いますが、今回は手作業が占める部分が多くなりそうです。"
+                    }
+                  ]
+                },
+                {
+                  "type": "rich_text_section",
+                  "elements": [
+                    {
+                      "type": "text",
+                      "text": "OpenStreetMapに大船渡の情報がないので位置情報に関しては少し複雑な登録方法が必要だと思っています。どのようにしていたか？"
+                    }
+                  ]
+                },
+                {
+                  "type": "rich_text_section",
+                  "elements": [
+                    {
+                      "type": "text",
+                      "text": "広く投稿可能にして(実際には投稿者は限られると予想)モデレーターがチェックして公開という形式が良いのかなと思いますが、そのような運用でしたか？"
+                    }
+                  ]
+                }
+              ],
+              "style": "ordered",
+              "indent": 1,
+              "border": 0
+            },
+            {
+              "type": "rich_text_list",
+              "elements": [
+                {
+                  "type": "rich_text_section",
+                  "elements": [
+                    {
+                      "type": "text",
+                      "text": "シビックテック的な活動をこれまでしたことがないので人の巻き込み方やプロジェクトの進め方などの知見があれば知りたいです"
+                    }
+                  ]
+                }
+              ],
+              "style": "ordered",
+              "indent": 0,
+              "offset": 1,
+              "border": 0
+            },
+            {
+              "type": "rich_text_list",
+              "elements": [
+                {
+                  "type": "rich_text_section",
+                  "elements": [
+                    {
+                      "type": "text",
+                      "text": "情報鮮度などもあるので中途半端に活動しているとあまり価値がでないのかなとも思っています"
+                    }
+                  ]
+                }
+              ],
+              "style": "ordered",
+              "indent": 1,
+              "border": 0
+            }
+          ]
+        }
+      ],
+      "reactions": [
+        {
+          "name": "eyes",
+          "users": [
+            "UA3UCG9MM",
+            "U049Q0Z5D3P"
+          ],
+          "count": 2
+        }
+      ]
+    },
+    {
+      "user": "U07T8UF6VCP",
+      "type": "message",
+      "ts": "1730039395.499859",
+      "client_msg_id": "e1c5a659-4393-4eba-828b-c753eaf4f361",
+      "text": "お世話になります。\n以下の11/16(土)のオードリー・タンさんと安野貴博さんによるトークセッションですが、お二人とも現地でトークセッションされるという理解で合ってますでしょうか？\n<https://summit2024.code4japan.org/test-home#keynote>",
+      "team": "T02FMV4EB",
+      "thread_ts": "1730039395.499859",
+      "reply_count": 2,
+      "reply_users_count": 2,
+      "latest_reply": "1730078848.546029",
+      "reply_users": [
+        "U08TUNXH8",
+        "U07T8UF6VCP"
+      ],
+      "is_locked": false,
+      "subscribed": false,
+      "attachments": [
+        {
+          "image_url": "https://storage.googleapis.com/production-os-assets/assets/b5dac159-f6ff-4009-86e1-dd4dd48e240d",
+          "image_width": 1720,
+          "image_height": 900,
+          "image_bytes": 932243,
+          "from_url": "https://summit2024.code4japan.org/test-home#keynote",
+          "service_icon": "https://storage.googleapis.com/production-os-assets/assets/0e277506-9519-4275-808f-01a3a6912685",
+          "id": 1,
+          "original_url": "https://summit2024.code4japan.org/test-home#keynote",
+          "fallback": "Code for Japan Summit 2024",
+          "text": "Code for Japan Summitは、2014年から毎年秋頃に開催している国内最大級のシビックテックカンファレンスです。",
+          "title": "Code for Japan Summit 2024",
+          "title_link": "https://summit2024.code4japan.org/test-home#keynote",
+          "service_name": "summit2024.code4japan.org"
+        }
+      ],
+      "blocks": [
+        {
+          "type": "rich_text",
+          "block_id": "fJcVV",
+          "elements": [
+            {
+              "type": "rich_text_section",
+              "elements": [
+                {
+                  "type": "text",
+                  "text": "お世話になります。\n以下の11/16(土)のオードリー・タンさんと安野貴博さんによるトークセッションですが、お二人とも現地でトークセッションされるという理解で合ってますでしょうか？\n"
+                },
+                {
+                  "type": "link",
+                  "url": "https://summit2024.code4japan.org/test-home#keynote"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "user": "UA3UCG9MM",
+      "type": "message",
+      "ts": "1729242578.011759",
+      "client_msg_id": "d3a0a128-80dd-4a99-b9ba-1bc665ab7f1e",
+      "text": "チャンネルの使い方について紹介します:civitan-highfive:\n• <#C02FMV4ET|> ：全体向けご案内チャンネル:loudspeaker:\n    ◦ Code for Japanからのお知らせをお届けするチャンネルです。投稿は運営のみですが、リアクションやスレッドでのコメントはみなさん可能です。\n• <#CEA5BDYUA|> ：はじめまして自己紹介チャネル\n    ◦ シビックテックのきっかけ、普段されていることや趣味について簡単に自己紹介をいただけると嬉しいです。スタンプでリアクションしたり、共通項のある人などはスレッドでコメントしたり、交流の場としてもご活用ください。\n• <#C0191KF8WFQ|> ：イベント告知案内（フォーマットあり）:dancer:\n    ◦ シビックテック関連イベントの告知は統一フォーマットで項目にルールを設けています。チャネルに直接書き込まないようにお気をつけください。フォームに記入した登録内容は自動でチャンネルに発信されます。<https://forms.gle/aZmXpZfTdrtZ4C9i7> \n• <#C01970N4DGD|> ：プロジェクト紹介・ボランティア募集:raised_back_of_hand:\n    ◦ プロジェクトメンバーの募集を告知するチャンネルです①プロジェクトのチャネル名・Notionのプロジェクトページ ②プロジェクトの概要 ③今後の開発予定と参加して欲しい人に持ち寄って欲しいスキル などを記載ください。\n• <#C019EH2J352|> ：嬉しさ共有・共感チャネル:raised_hands:\n    ◦ 嬉しいこと、感謝したいことを気軽に書き込むチャンネルです。リアク文字の:rocket: が走った時に転送されてくる場合もあります。\n• <#C02FMV4EZ|> ：シビックテック界隈共有:speaking_head_in_silhouette:\n    ◦ シビックテックやオープンソース・オープンデータの周辺事情に関する記事・活動事例などをシェアするチャンネルです。（全員が投稿可能ですが、全参加者に届くので、チャネルや内容が適切か確認してからの投稿をお願いします。）\n• <#C8Q4YULTX|> ：質問・相談:raising_hand:\n    ◦ Slackの使い方や気になることなどあれば、お気軽にお声かけください。\n• <#CNYAQ0Y4A|> ：写真・動画アップ:camera::video_camera:\n    ◦ 全国各地でのシビックテック活動の写真をアップするチャンネル\n• <#C03RFDENFFF|> ：有償の人材募集:handshake:\n    ◦ シビックテックに関連する業務で人材募集（有償のみ）をする際にご利用ください。投稿をする際は、専用フォーム <https://forms.gle/8zyEgJgTfWUVJRwG7> から記入をお願いいたします。無償の人材募集は<#C01970N4DGD|> へお願いしています。\n• #interest-：興味関心・共通ネタ\n    ◦ 英語、環境、インフラデータ、サウナ…。みんなの趣味や興味に沿った雑談広場があります\n• #proj-：プロジェクトごと\n    ◦ Decidim、FIWARE、感覚過敏、日本酒、アフターピル、ウェルビーイング…。色々なプロジェクト毎のチャネルで議論や開発に関する相談などが展開されています",
+      "team": "T02FMV4EB",
+      "attachments": [
+        {
+          "image_url": "https://lh3.googleusercontent.com/BpFcW8d3Tzj0a5FpuTNITQmq7ugEyVSLTcaFcFa3qLoBfWUtT4gZOmAIL51CYNOEjM_hPrj7_jU",
+          "image_width": 800,
+          "image_height": 600,
+          "image_bytes": 52274,
+          "from_url": "https://forms.gle/aZmXpZfTdrtZ4C9i7",
+          "service_icon": "http://ssl.gstatic.com/docs/forms/device_home/ios_120.png",
+          "id": 1,
+          "original_url": "https://forms.gle/aZmXpZfTdrtZ4C9i7",
+          "fallback": "Google Docs: シビックテックイベント紹介フォーム / Civic Tech event sharing form",
+          "text": "本フォームにご記入いただいたイベント情報は、自動的にCode for JapanのSlackの #03_events で配信されます。\nシビックテックのイベントの告知にご活用ください。 / Event information you provide in this form will automatically be distributed via #03_events on Code for Japan's Slack. Please use it to announce Civic Tech events.",
+          "title": "シビックテックイベント紹介フォーム / Civic Tech event sharing form",
+          "title_link": "https://forms.gle/aZmXpZfTdrtZ4C9i7",
+          "service_name": "Google Docs"
+        },
+        {
+          "image_url": "https://lh5.googleusercontent.com/ZCY46bU2OnRwt6AEgZr9X2vQ-2W37HyM0184WfBn8jhTN0JXxPHYKwF4sAhsu8edZKcNFv2FRIc",
+          "image_width": 800,
+          "image_height": 600,
+          "image_bytes": 157771,
+          "from_url": "https://forms.gle/8zyEgJgTfWUVJRwG7",
+          "service_icon": "http://ssl.gstatic.com/docs/forms/device_home/ios_120.png",
+          "id": 2,
+          "original_url": "https://forms.gle/8zyEgJgTfWUVJRwG7",
+          "fallback": "Google Docs: シビックテック関連・求人フォーム",
+          "text": "本フォームにご記入いただいた求人情報は、自動的にCode for JapanのSlack #09_hiring チャンネルで配信されます。\nシビックテック関連の事業者からの求人募集に活用してください。\n\n・利用ルール\n1. 常識的な範囲内でのご利用をお願いいたします（投稿内容や投稿量等）\n2. 1投稿1職種でお願いいたします\n3. 有償案件のみを対象とします（プロボノ募集は #04_join_project でお願いします）\n4. 本求人募集に関するトラブルは当事者間での対応をお願いいたします",
+          "title": "シビックテック関連・求人フォーム",
+          "title_link": "https://forms.gle/8zyEgJgTfWUVJRwG7",
+          "service_name": "Google Docs"
+        }
+      ],
+      "blocks": [
+        {
+          "type": "rich_text",
+          "block_id": "OyCLZ",
+          "elements": [
+            {
+              "type": "rich_text_section",
+              "elements": [
+                {
+                  "type": "text",
+                  "text": "チャンネルの使い方について紹介します"
+                },
+                {
+                  "type": "emoji",
+                  "name": "civitan-highfive"
+                },
+                {
+                  "type": "text",
+                  "text": "\n"
+                }
+              ]
+            },
+            {
+              "type": "rich_text_list",
+              "elements": [
+                {
+                  "type": "rich_text_section",
+                  "elements": [
+                    {
+                      "type": "channel",
+                      "channel_id": "C02FMV4ET"
+                    },
+                    {
+                      "type": "text",
+                      "text": " ：全体向けご案内チャンネル"
+                    },
+                    {
+                      "type": "emoji",
+                      "name": "loudspeaker",
+                      "unicode": "1f4e2"
+                    }
+                  ]
+                }
+              ],
+              "style": "bullet",
+              "indent": 0,
+              "border": 0
+            },
+            {
+              "type": "rich_text_list",
+              "elements": [
+                {
+                  "type": "rich_text_section",
+                  "elements": [
+                    {
+                      "type": "text",
+                      "text": "Code for Japanからのお知らせをお届けするチャンネルです。投稿は運営のみですが、リアクションやスレッドでのコメントはみなさん可能です。"
+                    }
+                  ]
+                }
+              ],
+              "style": "bullet",
+              "indent": 1,
+              "border": 0
+            },
+            {
+              "type": "rich_text_list",
+              "elements": [
+                {
+                  "type": "rich_text_section",
+                  "elements": [
+                    {
+                      "type": "channel",
+                      "channel_id": "CEA5BDYUA"
+                    },
+                    {
+                      "type": "text",
+                      "text": " ：はじめまして自己紹介チャネル"
+                    }
+                  ]
+                }
+              ],
+              "style": "bullet",
+              "indent": 0,
+              "border": 0
+            },
+            {
+              "type": "rich_text_list",
+              "elements": [
+                {
+                  "type": "rich_text_section",
+                  "elements": [
+                    {
+                      "type": "text",
+                      "text": "シビックテックのきっかけ、普段されていることや趣味について簡単に自己紹介をいただけると嬉しいです。スタンプでリアクションしたり、共通項のある人などはスレッドでコメントしたり、交流の場としてもご活用ください。"
+                    }
+                  ]
+                }
+              ],
+              "style": "bullet",
+              "indent": 1,
+              "border": 0
+            },
+            {
+              "type": "rich_text_list",
+              "elements": [
+                {
+                  "type": "rich_text_section",
+                  "elements": [
+                    {
+                      "type": "channel",
+                      "channel_id": "C0191KF8WFQ"
+                    },
+                    {
+                      "type": "text",
+                      "text": " ：イベント告知案内（フォーマットあり）"
+                    },
+                    {
+                      "type": "emoji",
+                      "name": "dancer",
+                      "unicode": "1f483"
+                    }
+                  ]
+                }
+              ],
+              "style": "bullet",
+              "indent": 0,
+              "border": 0
+            },
+            {
+              "type": "rich_text_list",
+              "elements": [
+                {
+                  "type": "rich_text_section",
+                  "elements": [
+                    {
+                      "type": "text",
+                      "text": "シビックテック関連イベントの告知は統一フォーマットで項目にルールを設けています。チャネルに直接書き込まないようにお気をつけください。フォームに記入した登録内容は自動でチャンネルに発信されます。"
+                    },
+                    {
+                      "type": "link",
+                      "url": "https://forms.gle/aZmXpZfTdrtZ4C9i7"
+                    },
+                    {
+                      "type": "text",
+                      "text": " "
+                    }
+                  ]
+                }
+              ],
+              "style": "bullet",
+              "indent": 1,
+              "border": 0
+            },
+            {
+              "type": "rich_text_list",
+              "elements": [
+                {
+                  "type": "rich_text_section",
+                  "elements": [
+                    {
+                      "type": "channel",
+                      "channel_id": "C01970N4DGD"
+                    },
+                    {
+                      "type": "text",
+                      "text": " ：プロジェクト紹介・ボランティア募集"
+                    },
+                    {
+                      "type": "emoji",
+                      "name": "raised_back_of_hand",
+                      "unicode": "1f91a"
+                    }
+                  ]
+                }
+              ],
+              "style": "bullet",
+              "indent": 0,
+              "border": 0
+            },
+            {
+              "type": "rich_text_list",
+              "elements": [
+                {
+                  "type": "rich_text_section",
+                  "elements": [
+                    {
+                      "type": "text",
+                      "text": "プロジェクトメンバーの募集を告知するチャンネルです①プロジェクトのチャネル名・Notionのプロジェクトページ ②プロジェクトの概要 ③今後の開発予定と参加して欲しい人に持ち寄って欲しいスキル などを記載ください。"
+                    }
+                  ]
+                }
+              ],
+              "style": "bullet",
+              "indent": 1,
+              "border": 0
+            },
+            {
+              "type": "rich_text_list",
+              "elements": [
+                {
+                  "type": "rich_text_section",
+                  "elements": [
+                    {
+                      "type": "channel",
+                      "channel_id": "C019EH2J352"
+                    },
+                    {
+                      "type": "text",
+                      "text": " ：嬉しさ共有・共感チャネル"
+                    },
+                    {
+                      "type": "emoji",
+                      "name": "raised_hands",
+                      "unicode": "1f64c"
+                    }
+                  ]
+                }
+              ],
+              "style": "bullet",
+              "indent": 0,
+              "border": 0
+            },
+            {
+              "type": "rich_text_list",
+              "elements": [
+                {
+                  "type": "rich_text_section",
+                  "elements": [
+                    {
+                      "type": "text",
+                      "text": "嬉しいこと、感謝したいことを気軽に書き込むチャンネルです。リアク文字の"
+                    },
+                    {
+                      "type": "emoji",
+                      "name": "rocket",
+                      "unicode": "1f680"
+                    },
+                    {
+                      "type": "text",
+                      "text": " が走った時に転送されてくる場合もあります。"
+                    }
+                  ]
+                }
+              ],
+              "style": "bullet",
+              "indent": 1,
+              "border": 0
+            },
+            {
+              "type": "rich_text_list",
+              "elements": [
+                {
+                  "type": "rich_text_section",
+                  "elements": [
+                    {
+                      "type": "channel",
+                      "channel_id": "C02FMV4EZ"
+                    },
+                    {
+                      "type": "text",
+                      "text": " ：シビックテック界隈共有"
+                    },
+                    {
+                      "type": "emoji",
+                      "name": "speaking_head_in_silhouette",
+                      "unicode": "1f5e3-fe0f"
+                    }
+                  ]
+                }
+              ],
+              "style": "bullet",
+              "indent": 0,
+              "border": 0
+            },
+            {
+              "type": "rich_text_list",
+              "elements": [
+                {
+                  "type": "rich_text_section",
+                  "elements": [
+                    {
+                      "type": "text",
+                      "text": "シビックテックやオープンソース・オープンデータの周辺事情に関する記事・活動事例などをシェアするチャンネルです。（全員が投稿可能ですが、全参加者に届くので、チャネルや内容が適切か確認してからの投稿をお願いします。）"
+                    }
+                  ]
+                }
+              ],
+              "style": "bullet",
+              "indent": 1,
+              "border": 0
+            },
+            {
+              "type": "rich_text_list",
+              "elements": [
+                {
+                  "type": "rich_text_section",
+                  "elements": [
+                    {
+                      "type": "channel",
+                      "channel_id": "C8Q4YULTX"
+                    },
+                    {
+                      "type": "text",
+                      "text": " ：質問・相談"
+                    },
+                    {
+                      "type": "emoji",
+                      "name": "raising_hand",
+                      "unicode": "1f64b"
+                    }
+                  ]
+                }
+              ],
+              "style": "bullet",
+              "indent": 0,
+              "border": 0
+            },
+            {
+              "type": "rich_text_list",
+              "elements": [
+                {
+                  "type": "rich_text_section",
+                  "elements": [
+                    {
+                      "type": "text",
+                      "text": "Slackの使い方や気になることなどあれば、お気軽にお声かけください。"
+                    }
+                  ]
+                }
+              ],
+              "style": "bullet",
+              "indent": 1,
+              "border": 0
+            },
+            {
+              "type": "rich_text_list",
+              "elements": [
+                {
+                  "type": "rich_text_section",
+                  "elements": [
+                    {
+                      "type": "channel",
+                      "channel_id": "CNYAQ0Y4A"
+                    },
+                    {
+                      "type": "text",
+                      "text": " ：写真・動画アップ"
+                    },
+                    {
+                      "type": "emoji",
+                      "name": "camera",
+                      "unicode": "1f4f7"
+                    },
+                    {
+                      "type": "emoji",
+                      "name": "video_camera",
+                      "unicode": "1f4f9"
+                    }
+                  ]
+                }
+              ],
+              "style": "bullet",
+              "indent": 0,
+              "border": 0
+            },
+            {
+              "type": "rich_text_list",
+              "elements": [
+                {
+                  "type": "rich_text_section",
+                  "elements": [
+                    {
+                      "type": "text",
+                      "text": "全国各地でのシビックテック活動の写真をアップするチャンネル"
+                    }
+                  ]
+                }
+              ],
+              "style": "bullet",
+              "indent": 1,
+              "border": 0
+            },
+            {
+              "type": "rich_text_list",
+              "elements": [
+                {
+                  "type": "rich_text_section",
+                  "elements": [
+                    {
+                      "type": "channel",
+                      "channel_id": "C03RFDENFFF"
+                    },
+                    {
+                      "type": "text",
+                      "text": " ：有償の人材募集"
+                    },
+                    {
+                      "type": "emoji",
+                      "name": "handshake",
+                      "unicode": "1f91d"
+                    }
+                  ]
+                }
+              ],
+              "style": "bullet",
+              "indent": 0,
+              "border": 0
+            },
+            {
+              "type": "rich_text_list",
+              "elements": [
+                {
+                  "type": "rich_text_section",
+                  "elements": [
+                    {
+                      "type": "text",
+                      "text": "シビックテックに関連する業務で人材募集（有償のみ）をする際にご利用ください。投稿をする際は、専用フォーム "
+                    },
+                    {
+                      "type": "link",
+                      "url": "https://forms.gle/8zyEgJgTfWUVJRwG7"
+                    },
+                    {
+                      "type": "text",
+                      "text": " から記入をお願いいたします。無償の人材募集は"
+                    },
+                    {
+                      "type": "channel",
+                      "channel_id": "C01970N4DGD"
+                    },
+                    {
+                      "type": "text",
+                      "text": " へお願いしています。"
+                    }
+                  ]
+                }
+              ],
+              "style": "bullet",
+              "indent": 1,
+              "border": 0
+            },
+            {
+              "type": "rich_text_list",
+              "elements": [
+                {
+                  "type": "rich_text_section",
+                  "elements": [
+                    {
+                      "type": "text",
+                      "text": "#interest-：興味関心・共通ネタ"
+                    }
+                  ]
+                }
+              ],
+              "style": "bullet",
+              "indent": 0,
+              "border": 0
+            },
+            {
+              "type": "rich_text_list",
+              "elements": [
+                {
+                  "type": "rich_text_section",
+                  "elements": [
+                    {
+                      "type": "text",
+                      "text": "英語、環境、インフラデータ、サウナ…。みんなの趣味や興味に沿った雑談広場があります"
+                    }
+                  ]
+                }
+              ],
+              "style": "bullet",
+              "indent": 1,
+              "border": 0
+            },
+            {
+              "type": "rich_text_list",
+              "elements": [
+                {
+                  "type": "rich_text_section",
+                  "elements": [
+                    {
+                      "type": "text",
+                      "text": "#proj-：プロジェクトごと"
+                    }
+                  ]
+                }
+              ],
+              "style": "bullet",
+              "indent": 0,
+              "border": 0
+            },
+            {
+              "type": "rich_text_list",
+              "elements": [
+                {
+                  "type": "rich_text_section",
+                  "elements": [
+                    {
+                      "type": "text",
+                      "text": "Decidim、FIWARE、感覚過敏、日本酒、アフターピル、ウェルビーイング…。色々なプロジェクト毎のチャネルで議論や開発に関する相談などが展開されています"
+                    }
+                  ]
+                }
+              ],
+              "style": "bullet",
+              "indent": 1,
+              "border": 0
+            }
+          ]
+        }
+      ],
+      "pinned_to": [
+        "C8Q4YULTX"
+      ],
+      "pinned_info": {
+        "channel": "C8Q4YULTX",
+        "pinned_by": "UA3UCG9MM",
+        "pinned_ts": 1729242652
+      },
+      "reactions": [
+        {
+          "name": "+1",
+          "users": [
+            "U07HUEUL76X",
+            "UP0CGTW6P",
+            "U05HS8R9VD3"
+          ],
+          "count": 3
+        }
+      ]
+    },
+    {
+      "user": "U07E64AV5TQ",
+      "type": "message",
+      "ts": "1729181648.181249",
+      "client_msg_id": "878d2722-8980-4ae1-90e9-eb537bb26869",
+      "text": "雑談系チャンネルってありますか？　ちょっとみんなに質問をしたくって",
+      "team": "T02FMV4EB",
+      "thread_ts": "1729181648.181249",
+      "reply_count": 1,
+      "reply_users_count": 1,
+      "latest_reply": "1729242636.260539",
+      "reply_users": [
+        "UA3UCG9MM"
+      ],
+      "is_locked": false,
+      "subscribed": false,
+      "blocks": [
+        {
+          "type": "rich_text",
+          "block_id": "BSNhl",
+          "elements": [
+            {
+              "type": "rich_text_section",
+              "elements": [
+                {
+                  "type": "text",
+                  "text": "雑談系チャンネルってありますか？　ちょっとみんなに質問をしたくって"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "user": "U06TE1S59CJ",
+      "type": "message",
+      "ts": "1728114388.501759",
+      "client_msg_id": "40d65d0e-6cef-41e1-a5ab-b2a07785ce9a",
+      "text": "お疲れ様です。\n1点質問をさせてください。\n\nCode For Japan Summit2024のワークショップ運営者向けのSlackのチャンネルって既に存在しますでしょうか？\nお忙しいところ恐縮ですが、ご確認をお願いいたします。",
+      "team": "T02FMV4EB",
+      "thread_ts": "1728114388.501759",
+      "reply_count": 1,
+      "reply_users_count": 1,
+      "latest_reply": "1728129739.407709",
+      "reply_users": [
+        "U08TUNXH8"
+      ],
+      "is_locked": false,
+      "subscribed": false,
+      "blocks": [
+        {
+          "type": "rich_text",
+          "block_id": "phms3",
+          "elements": [
+            {
+              "type": "rich_text_section",
+              "elements": [
+                {
+                  "type": "text",
+                  "text": "お疲れ様です。\n1点質問をさせてください。\n\nCode For Japan Summit2024のワークショップ運営者向けのSlackのチャンネルって既に存在しますでしょうか？\nお忙しいところ恐縮ですが、ご確認をお願いいたします。"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "user": "U07K3E2MVEF",
+      "type": "message",
+      "ts": "1726141023.238369",
+      "client_msg_id": "afce0ca7-95cb-4902-806a-e5855e626574",
+      "text": "初めまして、夜分遅くに失礼いたします。。特定非営利活動法人Chance For All/学生チームの下田壮人と申します。\n\n私は、学生チームが運営する「感情図書館hidamari」という事業部に所属しております。*「感情図書館hidamari」とは本を感情で分類し、全国のこどもたちに本を読むきっかけを届けることを目指し2月に立ち上がった事業*です。\n現在、hidamariに所属する約10名のメンバーで感情分類を行なっているのですが、1冊を分類するのに時間がかかり*選書スピードがかなり遅いことが課題*となっています。\nそこで、テクノロジーの力を使って*全国の人とともに感情分類を行えるシステムを作りたい*と考えております。\n\n現在、私がプロジェクトリーダーとなって、*感情分類の閲覧と投稿ができるデータベースの制作*に取り掛かっています。\n以下の要素を含んだデータベースを作製しようと考えているのですが、*どの言語、人数で書くのが最適でしょうか？*\n• 本の検索\n• 本の情報閲覧\n    ◦ 本の題名\n    ◦ 作者\n    ◦ 本の種類\n    ◦ ISBNコード\n    ◦ 出版社\n    ◦ 感情分類\n• 感情分類の書き込み\n• 未掲載本の新規登録\nまた、現在9/28のSocial Hack Dayへの参加を考えております。その際に必要な資料の形式とデータベースの進行具合についてもご意見いただけますと幸いです。\nお忙しいところ大変恐縮ですが、ご教示のほどよろしくお願いいたします。",
+      "team": "T02FMV4EB",
+      "thread_ts": "1726141023.238369",
+      "reply_count": 2,
+      "reply_users_count": 2,
+      "latest_reply": "1726622883.887239",
+      "reply_users": [
+        "U017RG4H02C",
+        "U07K3E2MVEF"
+      ],
+      "is_locked": false,
+      "subscribed": false,
+      "blocks": [
+        {
+          "type": "rich_text",
+          "block_id": "xlccl",
+          "elements": [
+            {
+              "type": "rich_text_section",
+              "elements": [
+                {
+                  "type": "text",
+                  "text": "初めまして、夜分遅くに失礼いたします。。特定非営利活動法人Chance For All/学生チームの下田壮人と申します。\n\n私は、学生チームが運営する「感情図書館hidamari」という事業部に所属しております。"
+                },
+                {
+                  "type": "text",
+                  "text": "「感情図書館hidamari」とは本を感情で分類し、全国のこどもたちに本を読むきっかけを届けることを目指し2月に立ち上がった事業",
+                  "style": {
+                    "bold": true
+                  }
+                },
+                {
+                  "type": "text",
+                  "text": "です。\n現在、hidamariに所属する約10名のメンバーで感情分類を行なっているのですが、1冊を分類するのに時間がかかり"
+                },
+                {
+                  "type": "text",
+                  "text": "選書スピードがかなり遅いことが課題",
+                  "style": {
+                    "bold": true
+                  }
+                },
+                {
+                  "type": "text",
+                  "text": "となっています。\nそこで、テクノロジーの力を使って"
+                },
+                {
+                  "type": "text",
+                  "text": "全国の人とともに感情分類を行えるシステムを作りたい",
+                  "style": {
+                    "bold": true
+                  }
+                },
+                {
+                  "type": "text",
+                  "text": "と考えております。\n\n現在、私がプロジェクトリーダーとなって、"
+                },
+                {
+                  "type": "text",
+                  "text": "感情分類の閲覧と投稿ができるデータベースの制作",
+                  "style": {
+                    "bold": true
+                  }
+                },
+                {
+                  "type": "text",
+                  "text": "に取り掛かっています。\n以下の要素を含んだデータベースを作製しようと考えているのですが、"
+                },
+                {
+                  "type": "text",
+                  "text": "どの言語、人数で書くのが最適でしょうか？",
+                  "style": {
+                    "bold": true
+                  }
+                },
+                {
+                  "type": "text",
+                  "text": "\n"
+                }
+              ]
+            },
+            {
+              "type": "rich_text_list",
+              "elements": [
+                {
+                  "type": "rich_text_section",
+                  "elements": [
+                    {
+                      "type": "text",
+                      "text": "本の検索"
+                    }
+                  ]
+                },
+                {
+                  "type": "rich_text_section",
+                  "elements": [
+                    {
+                      "type": "text",
+                      "text": "本の情報閲覧"
+                    }
+                  ]
+                }
+              ],
+              "style": "bullet",
+              "indent": 0,
+              "border": 0
+            },
+            {
+              "type": "rich_text_list",
+              "elements": [
+                {
+                  "type": "rich_text_section",
+                  "elements": [
+                    {
+                      "type": "text",
+                      "text": "本の題名"
+                    }
+                  ]
+                },
+                {
+                  "type": "rich_text_section",
+                  "elements": [
+                    {
+                      "type": "text",
+                      "text": "作者"
+                    }
+                  ]
+                },
+                {
+                  "type": "rich_text_section",
+                  "elements": [
+                    {
+                      "type": "text",
+                      "text": "本の種類"
+                    }
+                  ]
+                },
+                {
+                  "type": "rich_text_section",
+                  "elements": [
+                    {
+                      "type": "text",
+                      "text": "ISBNコード"
+                    }
+                  ]
+                },
+                {
+                  "type": "rich_text_section",
+                  "elements": [
+                    {
+                      "type": "text",
+                      "text": "出版社"
+                    }
+                  ]
+                },
+                {
+                  "type": "rich_text_section",
+                  "elements": [
+                    {
+                      "type": "text",
+                      "text": "感情分類"
+                    }
+                  ]
+                }
+              ],
+              "style": "bullet",
+              "indent": 1,
+              "border": 0
+            },
+            {
+              "type": "rich_text_list",
+              "elements": [
+                {
+                  "type": "rich_text_section",
+                  "elements": [
+                    {
+                      "type": "text",
+                      "text": "感情分類の書き込み"
+                    }
+                  ]
+                },
+                {
+                  "type": "rich_text_section",
+                  "elements": [
+                    {
+                      "type": "text",
+                      "text": "未掲載本の新規登録"
+                    }
+                  ]
+                }
+              ],
+              "style": "bullet",
+              "indent": 0,
+              "border": 0
+            },
+            {
+              "type": "rich_text_section",
+              "elements": [
+                {
+                  "type": "text",
+                  "text": "\nまた、現在9/28のSocial Hack Dayへの参加を考えております。その際に必要な資料の形式とデータベースの進行具合についてもご意見いただけますと幸いです。\nお忙しいところ大変恐縮ですが、ご教示のほどよろしくお願いいたします。"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "reactions": [
+        {
+          "name": "heart_eyes",
+          "users": [
+            "U03NA7YUV5Z",
+            "U02GTJH1N",
+            "U01BKSYUQUU",
+            "U03V66FT132"
+          ],
+          "count": 4
+        },
+        {
+          "name": "book",
+          "users": [
+            "UA3UCG9MM",
+            "U01BKSYUQUU",
+            "U019LQU1BEK",
+            "U03V66FT132"
+          ],
+          "count": 4
+        }
+      ]
+    },
+    {
+      "user": "U05F3A92NSC",
+      "type": "message",
+      "ts": "1723602896.690269",
+      "client_msg_id": "a3041bed-5bb1-44f4-b35c-7011e65825ef",
+      "text": "質問させてください\n本業のチームが　鳥取市エリアで　オープンデータ作成のワークショップを企画しており、地域のシビックテックの方々につながれたら大変ありがたいのですが、鳥取に近いエリアで　シビックテック活動をされているグループなどがあれば、教えていただければありがたいです",
+      "team": "T02FMV4EB",
+      "thread_ts": "1723602896.690269",
+      "reply_count": 17,
+      "reply_users_count": 6,
+      "latest_reply": "1730854504.419849",
+      "reply_users": [
+        "U08TUNXH8",
+        "U07BSPANWCW",
+        "U05F3A92NSC",
+        "U7842PCT0",
+        "U01DSQQ9GJC",
+        "U07GXM4P49J"
+      ],
+      "is_locked": false,
+      "subscribed": false,
+      "blocks": [
+        {
+          "type": "rich_text",
+          "block_id": "2KTED",
+          "elements": [
+            {
+              "type": "rich_text_section",
+              "elements": [
+                {
+                  "type": "text",
+                  "text": "質問させてください\n本業のチームが　鳥取市エリアで　オープンデータ作成のワークショップを企画しており、地域のシビックテックの方々につながれたら大変ありがたいのですが、鳥取に近いエリアで　シビックテック活動をされているグループなどがあれば、教えていただければありがたいです"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "reactions": [
+        {
+          "name": "eyes",
+          "users": [
+            "U06QWS1867L"
+          ],
+          "count": 1
+        }
+      ]
+    },
+    {
+      "user": "U01BKSYUQUU",
+      "type": "message",
+      "ts": "1718473731.644349",
+      "client_msg_id": "f503e458-4aff-4dfd-b5d5-38b54a667c08",
+      "text": "前回のオフィスアワーでCivictech Accelerator Programを紹介していただいたのですが，エントリー締切は2024年1月15日（月）正午までとのことでした。\n新しく企画はしているのでしょうか？もししているのならぜひエントリーしたいです。\n<https://cap.code4japan.org/>",
+      "team": "T02FMV4EB",
+      "thread_ts": "1718473731.644349",
+      "reply_count": 4,
+      "reply_users_count": 2,
+      "latest_reply": "1718891406.410819",
+      "reply_users": [
+        "U01MN2JCURW",
+        "U01BKSYUQUU"
+      ],
+      "is_locked": false,
+      "subscribed": false,
+      "attachments": [
+        {
+          "image_url": "https://cap.code4japan.org/OGP.png",
+          "image_width": 1200,
+          "image_height": 630,
+          "image_bytes": 144425,
+          "from_url": "https://cap.code4japan.org/",
+          "service_icon": "https://cap.code4japan.org/apple-touch-icon.png",
+          "id": 1,
+          "original_url": "https://cap.code4japan.org/",
+          "fallback": "Civictech Accelerator Program - Code for Japan",
+          "text": "Code for Japanが企画・運営する、シビックテック特化型アクセラレータープログラムです。地域の困りごとや社会課題にアプローチするためのプロトタイプをつくるチームをメンタリングやコーディネートをしながら支援をしていきます。特に、①時事問題を取り上げているもの②地域間連携の可能性があるもの、他の地域にも展開することで利益享受者が増えるもの③多言語対応などで他国のシビックテックコミュニティと協働できたり、他国に対しても利益を享受してもらえるよう展開可能なものを募集しています。",
+          "title": "Civictech Accelerator Program - Code for Japan",
+          "title_link": "https://cap.code4japan.org/",
+          "service_name": "cap.code4japan.org"
+        }
+      ],
+      "blocks": [
+        {
+          "type": "rich_text",
+          "block_id": "JRSe2",
+          "elements": [
+            {
+              "type": "rich_text_section",
+              "elements": [
+                {
+                  "type": "text",
+                  "text": "前回のオフィスアワーでCivictech Accelerator Programを紹介していただいたのですが，エントリー締切は2024年1月15日（月）正午までとのことでした。\n新しく企画はしているのでしょうか？もししているのならぜひエントリーしたいです。\n"
+                },
+                {
+                  "type": "link",
+                  "url": "https://cap.code4japan.org/"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "user": "U075B6PB8A2",
+      "type": "message",
+      "ts": "1716944409.092929",
+      "client_msg_id": "6aa6cfca-68da-4ea0-a8ab-f2227ef4aa18",
+      "text": "初めまして、今、はいりました。山形県鶴岡市議会議員　草島進一です。議員歴県議含め約２０年。市民派、緑系、持続可能な地域がミッションです。今後つくる新図書館の構想づくりに、徹底した市民参加と合意形成にDECIDIMを活用しようと提案しています。現在この導入の支援についてはどこにどのように依頼したらいいかどなたかお教え願えませんか。よろしくお願いします。",
+      "team": "T02FMV4EB",
+      "thread_ts": "1716944409.092929",
+      "reply_count": 2,
+      "reply_users_count": 2,
+      "latest_reply": "1716950959.385699",
+      "reply_users": [
+        "U08TUNXH8",
+        "U075B6PB8A2"
+      ],
+      "is_locked": false,
+      "subscribed": false,
+      "blocks": [
+        {
+          "type": "rich_text",
+          "block_id": "s75Dl",
+          "elements": [
+            {
+              "type": "rich_text_section",
+              "elements": [
+                {
+                  "type": "text",
+                  "text": "初めまして、今、はいりました。山形県鶴岡市議会議員　草島進一です。議員歴県議含め約２０年。市民派、緑系、持続可能な地域がミッションです。今後つくる新図書館の構想づくりに、徹底した市民参加と合意形成にDECIDIMを活用しようと提案しています。現在この導入の支援についてはどこにどのように依頼したらいいかどなたかお教え願えませんか。よろしくお願いします。"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "reactions": [
+        {
+          "name": "+1",
+          "users": [
+            "U010CU8S8CW"
+          ],
+          "count": 1
+        }
+      ]
+    },
+    {
+      "user": "U05KZ5UEUL8",
+      "type": "message",
+      "ts": "1711070266.020419",
+      "client_msg_id": "3f0fe79c-d247-49b2-b4f7-e4535cb1d1c8",
+      "text": "<@U04DZ3L1LBS> ここでメンションしてすみません。SHDのNotionにプロジェクトの記載が終わった後にSlackにメンションすることについて、どのチャンネルに投稿すれば良いかを迷っていました。ご教示できますでしょうか。",
+      "team": "T02FMV4EB",
+      "thread_ts": "1711070266.020419",
+      "reply_count": 1,
+      "reply_users_count": 1,
+      "latest_reply": "1711071933.737079",
+      "reply_users": [
+        "U04DZ3L1LBS"
+      ],
+      "is_locked": false,
+      "subscribed": false,
+      "blocks": [
+        {
+          "type": "rich_text",
+          "block_id": "EIVeE",
+          "elements": [
+            {
+              "type": "rich_text_section",
+              "elements": [
+                {
+                  "type": "user",
+                  "user_id": "U04DZ3L1LBS"
+                },
+                {
+                  "type": "text",
+                  "text": " ここでメンションしてすみません。SHDのNotionにプロジェクトの記載が終わった後にSlackにメンションすることについて、どのチャンネルに投稿すれば良いかを迷っていました。ご教示できますでしょうか。"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "user": "U0213NKJ6KH",
+      "type": "message",
+      "ts": "1711003602.903749",
+      "client_msg_id": "b4569fa5-2611-45ab-865b-c792592794cf",
+      "text": "ここのSlackへメンバー追加ってどうすればよいのでしょうか？？\n<mailto:ryujin.yamada1@gmail.com|ryujin.yamada1@gmail.com>",
+      "team": "T02FMV4EB",
+      "thread_ts": "1711003602.903749",
+      "reply_count": 1,
+      "reply_users_count": 1,
+      "latest_reply": "1711028494.335649",
+      "reply_users": [
+        "U067B0VCNSE"
+      ],
+      "is_locked": false,
+      "subscribed": false,
+      "blocks": [
+        {
+          "type": "rich_text",
+          "block_id": "ywVfn",
+          "elements": [
+            {
+              "type": "rich_text_section",
+              "elements": [
+                {
+                  "type": "text",
+                  "text": "ここのSlackへメンバー追加ってどうすればよいのでしょうか？？\n"
+                },
+                {
+                  "type": "link",
+                  "url": "mailto:ryujin.yamada1@gmail.com",
+                  "text": "ryujin.yamada1@gmail.com"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "user": "U01BKSYUQUU",
+      "type": "message",
+      "ts": "1710103005.695689",
+      "client_msg_id": "9d0458b4-712b-4f39-93fe-bd9817388de2",
+      "text": "去年の11月にCode for Japanのインターンに応募したつもりなのですが，返信がありません。\n募集がしめきられていたということでしょうか。\n\n問い合わせ先のメールアドレスに連絡しても，アドレス不明と出て届かないようです。",
+      "team": "T02FMV4EB",
+      "thread_ts": "1710103005.695689",
+      "reply_count": 2,
+      "reply_users_count": 2,
+      "latest_reply": "1710533459.586899",
+      "reply_users": [
+        "UA3UCG9MM",
+        "U01BKSYUQUU"
+      ],
+      "is_locked": false,
+      "subscribed": false,
+      "blocks": [
+        {
+          "type": "rich_text",
+          "block_id": "vqk9v",
+          "elements": [
+            {
+              "type": "rich_text_section",
+              "elements": [
+                {
+                  "type": "text",
+                  "text": "去年の11月にCode for Japanのインターンに応募したつもりなのですが，返信がありません。\n募集がしめきられていたということでしょうか。\n\n問い合わせ先のメールアドレスに連絡しても，アドレス不明と出て届かないようです。"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "user": "U06FJDBDR8S",
+      "type": "message",
+      "ts": "1708761424.259229",
+      "edited": {
+        "user": "U06FJDBDR8S",
+        "ts": "1708761486.000000"
+      },
+      "client_msg_id": "98c0da87-d7ca-4ed0-a450-829220680656",
+      "text": "オフィスアワーの開催時間がだいたい18:00-18:30だと思います。別の時間帯に開催するのは難しいのでしょうか？\nオフィスアワー開催時間帯、私は家事・育児の時間帯真っ只中で参加したくてもできないです:cry:\n\n<https://cfj.slack.com/archives/C0191KF8WFQ/p1708306253683319>",
+      "team": "T02FMV4EB",
+      "thread_ts": "1708761424.259229",
+      "reply_count": 3,
+      "reply_users_count": 2,
+      "latest_reply": "1709013121.650569",
+      "reply_users": [
+        "UA3UCG9MM",
+        "U06FJDBDR8S"
+      ],
+      "is_locked": false,
+      "subscribed": false,
+      "attachments": [
+        {
+          "from_url": "https://cfj.slack.com/archives/C0191KF8WFQ/p1708306253683319",
+          "ts": "1708306253.683319",
+          "msg_subtype": "bot_message",
+          "channel_id": "C0191KF8WFQ",
+          "channel_team": "T02FMV4EB",
+          "is_msg_unfurl": true,
+          "is_thread_root_unfurl": true,
+          "message_blocks": [
+            {
+              "team": "T02FMV4EB",
+              "channel": "C0191KF8WFQ",
+              "ts": "1708306253.683319",
+              "message": {
+                "blocks": [
+                  {
+                    "type": "rich_text",
+                    "block_id": "1PdGU",
+                    "elements": [
+                      {
+                        "type": "rich_text_section",
+                        "elements": [
+                          {
+                            "type": "emoji",
+                            "name": "mega",
+                            "unicode": "1f4e3"
+                          },
+                          {
+                            "type": "text",
+                            "text": " イベント名：オフィスアワー#22\n"
+                          },
+                          {
+                            "type": "emoji",
+                            "name": "spiral_calendar_pad",
+                            "unicode": "1f5d3-fe0f"
+                          },
+                          {
+                            "type": "text",
+                            "text": " 開催日時：2024-02-19 18:00 〜 18:30\n"
+                          },
+                          {
+                            "type": "emoji",
+                            "name": "round_pushpin",
+                            "unicode": "1f4cd"
+                          },
+                          {
+                            "type": "text",
+                            "text": " 開催場所/開催方法："
+                          },
+                          {
+                            "type": "link",
+                            "url": "https://us02web.zoom.us/j/85787311568?pwd=VTR6ZGhaS0RzTnpzcWRnYzlZTVR3Zz09"
+                          },
+                          {
+                            "type": "text",
+                            "text": "\n"
+                          },
+                          {
+                            "type": "emoji",
+                            "name": "bust_in_silhouette",
+                            "unicode": "1f464"
+                          },
+                          {
+                            "type": "text",
+                            "text": " 対象/定員：CfJのSlackに登録されている方は誰でも対象となります。\n"
+                          },
+                          {
+                            "type": "emoji",
+                            "name": "admission_tickets",
+                            "unicode": "1f39f-fe0f"
+                          },
+                          {
+                            "type": "text",
+                            "text": " 参加費：無料\n"
+                          },
+                          {
+                            "type": "emoji",
+                            "name": "bulb",
+                            "unicode": "1f4a1"
+                          },
+                          {
+                            "type": "text",
+                            "text": " 参加方法：申し込みは必要ありませんが、こちらの投稿にスタンプで反応をお願いします。\n"
+                          },
+                          {
+                            "type": "emoji",
+                            "name": "page_facing_up",
+                            "unicode": "1f4c4"
+                          },
+                          {
+                            "type": "text",
+                            "text": " イベント概要：CfJについて知りたい、自分の持っているプロジェクトについて相談したいなど、何でもざっくばらんにCfJのスタッフとお話しする場です！\n"
+                          },
+                          {
+                            "type": "emoji",
+                            "name": "office",
+                            "unicode": "1f3e2"
+                          },
+                          {
+                            "type": "text",
+                            "text": " 主催/担当者：窪田・陣内\n"
+                          },
+                          {
+                            "type": "emoji",
+                            "name": "email",
+                            "unicode": "2709-fe0f"
+                          },
+                          {
+                            "type": "text",
+                            "text": " 問い合わせ先："
+                          },
+                          {
+                            "type": "channel",
+                            "channel_id": "C02FMV4ET"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "id": 1,
+          "original_url": "https://cfj.slack.com/archives/C0191KF8WFQ/p1708306253683319",
+          "fallback": "[February 18th, 2024 5:30 PM] イベントのお知らせ: :mega: イベント名：オフィスアワー#22\n:spiral_calendar_pad: 開催日時：2024-02-19 18:00 〜 18:30\n:round_pushpin: 開催場所/開催方法：<https://us02web.zoom.us/j/85787311568?pwd=VTR6ZGhaS0RzTnpzcWRnYzlZTVR3Zz09>\n:bust_in_silhouette: 対象/定員：CfJのSlackに登録されている方は誰でも対象となります。\n:admission_tickets: 参加費：無料\n:bulb: 参加方法：申し込みは必要ありませんが、こちらの投稿にスタンプで反応をお願いします。\n:page_facing_up: イベント概要：CfJについて知りたい、自分の持っているプロジェクトについて相談したいなど、何でもざっくばらんにCfJのスタッフとお話しする場です！\n:office: 主催/担当者：窪田・陣内\n:email: 問い合わせ先：<#C02FMV4ET|01_general>",
+          "text": ":mega: イベント名：オフィスアワー#22\n:spiral_calendar_pad: 開催日時：2024-02-19 18:00 〜 18:30\n:round_pushpin: 開催場所/開催方法：<https://us02web.zoom.us/j/85787311568?pwd=VTR6ZGhaS0RzTnpzcWRnYzlZTVR3Zz09>\n:bust_in_silhouette: 対象/定員：CfJのSlackに登録されている方は誰でも対象となります。\n:admission_tickets: 参加費：無料\n:bulb: 参加方法：申し込みは必要ありませんが、こちらの投稿にスタンプで反応をお願いします。\n:page_facing_up: イベント概要：CfJについて知りたい、自分の持っているプロジェクトについて相談したいなど、何でもざっくばらんにCfJのスタッフとお話しする場です！\n:office: 主催/担当者：窪田・陣内\n:email: 問い合わせ先：<#C02FMV4ET|01_general>",
+          "author_name": "Zapier",
+          "author_link": "https://cfj.slack.com/services/B0198C14C1Y",
+          "author_subname": "イベントのお知らせ",
+          "mrkdwn_in": [
+            "text"
+          ],
+          "footer": "Slack の会話内のスレッド"
+        }
+      ],
+      "blocks": [
+        {
+          "type": "rich_text",
+          "block_id": "9Gd2u",
+          "elements": [
+            {
+              "type": "rich_text_section",
+              "elements": [
+                {
+                  "type": "text",
+                  "text": "オフィスアワーの開催時間がだいたい18:00-18:30だと思います。別の時間帯に開催するのは難しいのでしょうか？\nオフィスアワー開催時間帯、私は家事・育児の時間帯真っ只中で参加したくてもできないです"
+                },
+                {
+                  "type": "emoji",
+                  "name": "cry",
+                  "unicode": "1f622"
+                },
+                {
+                  "type": "text",
+                  "text": "\n\n"
+                },
+                {
+                  "type": "link",
+                  "url": "https://cfj.slack.com/archives/C0191KF8WFQ/p1708306253683319"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "reactions": [
+        {
+          "name": "wakari",
+          "users": [
+            "U02JW8GRNAV"
+          ],
+          "count": 1
+        }
+      ]
+    },
+    {
+      "user": "U06KHQV7YJD",
+      "type": "message",
+      "ts": "1708069294.284899",
+      "client_msg_id": "4b73cd88-4dd6-4773-b6ab-40cd72ce89e2",
+      "text": "ミントラリーのイベントについて質問です\nイベントに参加したかどうかわかるようにそのイベントを設定するには、どのようにするのでしょうか\n\nどんなイベントを、どのように設定するか、そしてどうやって参加したことを証明してもらうか\nについてご教示ください",
+      "team": "T02FMV4EB",
+      "thread_ts": "1708069294.284899",
+      "reply_count": 3,
+      "reply_users_count": 3,
+      "latest_reply": "1708071197.354359",
+      "reply_users": [
+        "UA3UCG9MM",
+        "U02RD33Q71Q",
+        "U06KHQV7YJD"
+      ],
+      "is_locked": false,
+      "subscribed": false,
+      "blocks": [
+        {
+          "type": "rich_text",
+          "block_id": "jTrUi",
+          "elements": [
+            {
+              "type": "rich_text_section",
+              "elements": [
+                {
+                  "type": "text",
+                  "text": "ミントラリーのイベントについて質問です\nイベントに参加したかどうかわかるようにそのイベントを設定するには、どのようにするのでしょうか\n\nどんなイベントを、どのように設定するか、そしてどうやって参加したことを証明してもらうか\nについてご教示ください"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "user": "U06EPNQ054N",
+      "type": "message",
+      "ts": "1705886386.821409",
+      "edited": {
+        "user": "U06EPNQ054N",
+        "ts": "1705886441.000000"
+      },
+      "client_msg_id": "265e83c5-a09c-4914-952a-aa15c2c3dba1",
+      "text": "Halo! Nice to meet you. I’m hoony from South Korea who used to run Code for Seoul community years ago. Now I’m working on two projects, <https://openwatch.kr/en|OPENWATCH> and <https://sluggish.at|sluggish hackers community>.\n\n*OPENWATCH* is open data projects to increase the accountability and transparency of power with data-based surveillance activities. (working with <https://cfoi.or.kr|The Center for Freedom of Information and Transparent Society>)\n*Sluggish Hackers* is a community to support non-profit activists with technology such as to automate their hand-by-hand jobs.\n\nI’m going to visit Tokyo from this Thursday to next Thursday, so that I’m leaving a message to meet some civic hackers who are interested in this category or already working on these kinds of projects. Feel free to ask me and I’ll be anticipating and waiting!",
+      "team": "T02FMV4EB",
+      "thread_ts": "1705886386.821409",
+      "reply_count": 1,
+      "reply_users_count": 1,
+      "latest_reply": "1706072062.476099",
+      "reply_users": [
+        "U04JV9ZV129"
+      ],
+      "is_locked": false,
+      "subscribed": false,
+      "attachments": [
+        {
+          "from_url": "https://openwatch.kr/en",
+          "id": 1,
+          "original_url": "https://openwatch.kr/en",
+          "fallback": "OPEN WATCH | Discloses information about those in power and monitors authority",
+          "text": "Check information on the profiles, activities, and details such as property and education of public officials, politicians, including members of the National Assembly and local councils.",
+          "title": "OPEN WATCH | Discloses information about those in power and monitors authority",
+          "title_link": "https://openwatch.kr/en",
+          "service_name": "openwatch.kr"
+        }
+      ],
+      "blocks": [
+        {
+          "type": "rich_text",
+          "block_id": "r/ikH",
+          "elements": [
+            {
+              "type": "rich_text_section",
+              "elements": [
+                {
+                  "type": "text",
+                  "text": "Halo! Nice to meet you. I’m hoony from South Korea who used to run Code for Seoul community years ago. Now I’m working on two projects, "
+                },
+                {
+                  "type": "link",
+                  "url": "https://openwatch.kr/en",
+                  "text": "OPENWATCH"
+                },
+                {
+                  "type": "text",
+                  "text": " and "
+                },
+                {
+                  "type": "link",
+                  "url": "https://sluggish.at",
+                  "text": "sluggish hackers community"
+                },
+                {
+                  "type": "text",
+                  "text": ".\n\n"
+                },
+                {
+                  "type": "text",
+                  "text": "OPENWATCH",
+                  "style": {
+                    "bold": true
+                  }
+                },
+                {
+                  "type": "text",
+                  "text": " is open data projects to increase the accountability and transparency of power with data-based surveillance activities. (working with "
+                },
+                {
+                  "type": "link",
+                  "url": "https://cfoi.or.kr",
+                  "text": "The Center for Freedom of Information and Transparent Society"
+                },
+                {
+                  "type": "text",
+                  "text": ")\n"
+                },
+                {
+                  "type": "text",
+                  "text": "Sluggish Hackers",
+                  "style": {
+                    "bold": true
+                  }
+                },
+                {
+                  "type": "text",
+                  "text": " is a community to support non-profit activists with technology such as to automate their hand-by-hand jobs.\n\nI’m going to visit Tokyo from this Thursday to next Thursday, so that I’m leaving a message to meet some civic hackers who are interested in this category or already working on these kinds of projects. Feel free to ask me and I’ll be anticipating and waiting!"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "reactions": [
+        {
+          "name": "eyes",
+          "users": [
+            "U04JV9ZV129",
+            "U05KZ5UEUL8"
+          ],
+          "count": 2
+        }
+      ]
+    },
+    {
+      "user": "U06DKM4R13K",
+      "type": "message",
+      "ts": "1705575135.411129",
+      "client_msg_id": "6cafa49a-dac8-4c6c-976d-11cdddca91de",
+      "text": "20日のSHDに参加予定の片野と申します。\n今日の相談会で最初Androidのマイクミュートが解けずあたふたして\n当日はiPadで接続予定ですが上記避けたいので\n明日19日午後どこかで事前にZOOMで\nつなぐ対向テストをどなたかして頂けないでしょうか？\n明日難しければ当日開催前でもいいです。\nたぶん5分程度で終わると思います。",
+      "team": "T02FMV4EB",
+      "thread_ts": "1705575135.411129",
+      "reply_count": 6,
+      "reply_users_count": 2,
+      "latest_reply": "1705648234.387289",
+      "reply_users": [
+        "U04DZ3L1LBS",
+        "U06DKM4R13K"
+      ],
+      "is_locked": false,
+      "subscribed": false,
+      "blocks": [
+        {
+          "type": "rich_text",
+          "block_id": "OMnXl",
+          "elements": [
+            {
+              "type": "rich_text_section",
+              "elements": [
+                {
+                  "type": "text",
+                  "text": "20日のSHDに参加予定の片野と申します。\n今日の相談会で最初Androidのマイクミュートが解けずあたふたして\n当日はiPadで接続予定ですが上記避けたいので\n明日19日午後どこかで事前にZOOMで\nつなぐ対向テストをどなたかして頂けないでしょうか？\n明日難しければ当日開催前でもいいです。\nたぶん5分程度で終わると思います。"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "subtype": "thread_broadcast",
+      "user": "UA3UCG9MM",
+      "thread_ts": "1701071154.329359",
+      "root": {
+        "user": "UP0CGTW6P",
+        "type": "message",
+        "ts": "1701071154.329359",
+        "client_msg_id": "6DFCD2A6-5746-479B-9724-36AC8726D4DB",
+        "text": "質問というかお願いです。\nブリゲードの地域別のチャネルがいくつか有りますが、長野県が該当するものが有りません。\nそこでですが、甲信（長野県・山梨県）または甲信越（長野県・山梨県・新潟県）のチャネルの作成をお願い出来ますでしょうか？\n（それとも、長野県は広すぎるから信州チャネルとして独立？）\nよろしくお願いします。",
+        "team": "T02FMV4EB",
+        "thread_ts": "1701071154.329359",
+        "reply_count": 3,
+        "reply_users_count": 2,
+        "latest_reply": "1701600861.175499",
+        "reply_users": [
+          "UA3UCG9MM",
+          "UP0CGTW6P"
+        ],
+        "is_locked": false,
+        "subscribed": false,
+        "blocks": [
+          {
+            "type": "rich_text",
+            "block_id": "WEBr3",
+            "elements": [
+              {
+                "type": "rich_text_section",
+                "elements": [
+                  {
+                    "type": "text",
+                    "text": "質問というかお願いです。\nブリゲードの地域別のチャネルがいくつか有りますが、長野県が該当するものが有りません。\nそこでですが、甲信（長野県・山梨県）または甲信越（長野県・山梨県・新潟県）のチャネルの作成をお願い出来ますでしょうか？\n（それとも、長野県は広すぎるから信州チャネルとして独立？）\nよろしくお願いします。"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "type": "message",
+      "ts": "1701071783.430369",
+      "client_msg_id": "b02d2741-30bf-4f72-9a1d-7a95a444b64d",
+      "text": "<@UP0CGTW6P> ありがとうございます！ブリゲード一覧の取り扱いについては、 <@UG86QJZPF>ひろみんなどと作業させていただいているので一度話してから共有させてください:ok_woman:",
+      "blocks": [
+        {
+          "type": "rich_text",
+          "block_id": "WjfTU",
+          "elements": [
+            {
+              "type": "rich_text_section",
+              "elements": [
+                {
+                  "type": "user",
+                  "user_id": "UP0CGTW6P"
+                },
+                {
+                  "type": "text",
+                  "text": " ありがとうございます！ブリゲード一覧の取り扱いについては、 "
+                },
+                {
+                  "type": "user",
+                  "user_id": "UG86QJZPF"
+                },
+                {
+                  "type": "text",
+                  "text": "ひろみんなどと作業させていただいているので一度話してから共有させてください"
+                },
+                {
+                  "type": "emoji",
+                  "name": "ok_woman",
+                  "unicode": "1f646"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "reactions": [
+        {
+          "name": "raised_hands",
+          "users": [
+            "U04V4EQ5AKY",
+            "UP0CGTW6P",
+            "U08TUNXH8"
+          ],
+          "count": 3
+        }
+      ]
+    },
+    {
+      "user": "UP0CGTW6P",
+      "type": "message",
+      "ts": "1701071154.329359",
+      "client_msg_id": "6DFCD2A6-5746-479B-9724-36AC8726D4DB",
+      "text": "質問というかお願いです。\nブリゲードの地域別のチャネルがいくつか有りますが、長野県が該当するものが有りません。\nそこでですが、甲信（長野県・山梨県）または甲信越（長野県・山梨県・新潟県）のチャネルの作成をお願い出来ますでしょうか？\n（それとも、長野県は広すぎるから信州チャネルとして独立？）\nよろしくお願いします。",
+      "team": "T02FMV4EB",
+      "thread_ts": "1701071154.329359",
+      "reply_count": 3,
+      "reply_users_count": 2,
+      "latest_reply": "1701600861.175499",
+      "reply_users": [
+        "UA3UCG9MM",
+        "UP0CGTW6P"
+      ],
+      "is_locked": false,
+      "subscribed": false,
+      "blocks": [
+        {
+          "type": "rich_text",
+          "block_id": "WEBr3",
+          "elements": [
+            {
+              "type": "rich_text_section",
+              "elements": [
+                {
+                  "type": "text",
+                  "text": "質問というかお願いです。\nブリゲードの地域別のチャネルがいくつか有りますが、長野県が該当するものが有りません。\nそこでですが、甲信（長野県・山梨県）または甲信越（長野県・山梨県・新潟県）のチャネルの作成をお願い出来ますでしょうか？\n（それとも、長野県は広すぎるから信州チャネルとして独立？）\nよろしくお願いします。"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "has_more": true,
+  "pin_count": 3,
+  "channel_actions_ts": null,
+  "channel_actions_count": 0,
+  "response_metadata": {
+    "next_cursor": "bmV4dF90czoxNzAxMDQ5ODIxOTcwMTg5",
+    "scopes": [
+      "channels:history",
+      "channels:read",
+      "app_mentions:read",
+      "groups:read",
+      "dnd:read",
+      "conversations.connect:read",
+      "im:read",
+      "mpim:history",
+      "mpim:read",
+      "reactions:read",
+      "team:read",
+      "users:read",
+      "users.profile:read",
+      "usergroups:read",
+      "channels:join"
+    ],
+    "acceptedScopes": [
+      "channels:history",
+      "groups:history",
+      "mpim:history",
+      "im:history",
+      "read"
+    ]
+  }
+}

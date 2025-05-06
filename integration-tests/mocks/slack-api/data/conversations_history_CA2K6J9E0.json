@@ -1,0 +1,1455 @@
+{
+  "ok": true,
+  "messages": [
+    {
+      "user": "U04DZ3L1LBS",
+      "type": "message",
+      "ts": "1703462405.818289",
+      "bot_id": "B04N33NQ7AR",
+      "app_id": "A029WGX4TV5",
+      "text": "プロジェクトチャンネルにご参加の皆様 Code for Japanコミュニティ担当のくぼっち(窪田)です。  \n 初めてコミュニティに入ってきた方にもプロジェクトチャネルが一覧しやすいように、毎年Slackの定期メンテナンスを行なっております。6ヶ月以上更新がないチャンネルを順次アーカイブしていきます。（*削除ではなく、検索などから履歴の閲覧・復活はできますのでご安心ください。*）  \n  こちらのチャンネルは半年以上更新がないため、今回この対象となります。プロジェクト再開の目処が立っている・今後の活動についてチャネル内で議論しておきたいなどの場合は、2024年1月10日(水)までに <https://api.threado.com/api/link/?id=3417468|@くぼっち> 宛にメンションをつけてお声掛けください。  \n それではみなさん素敵なクリスマスとお正月をお過ごしください :smile:  \n   \n",
+      "team": "T02FMV4EB",
+      "bot_profile": {
+        "id": "B04N33NQ7AR",
+        "deleted": true,
+        "name": "ThreadoAI",
+        "updated": 1733912281,
+        "app_id": "A029WGX4TV5",
+        "icons": {
+          "image_36": "https://avatars.slack-edge.com/2024-03-13/6795581088821_153e551caafc63c02e89_36.png",
+          "image_48": "https://avatars.slack-edge.com/2024-03-13/6795581088821_153e551caafc63c02e89_48.png",
+          "image_72": "https://avatars.slack-edge.com/2024-03-13/6795581088821_153e551caafc63c02e89_72.png"
+        },
+        "team_id": "T02FMV4EB"
+      },
+      "blocks": [
+        {
+          "type": "section",
+          "block_id": "mypMDSz9dA",
+          "text": {
+            "type": "mrkdwn",
+            "text": "プロジェクトチャンネルにご参加の皆様 Code for Japanコミュニティ担当のくぼっち(窪田)です。  \n",
+            "verbatim": false
+          }
+        },
+        {
+          "type": "section",
+          "block_id": "ahFmP7Aeis",
+          "text": {
+            "type": "mrkdwn",
+            "text": "初めてコミュニティに入ってきた方にもプロジェクトチャネルが一覧しやすいように、毎年Slackの定期メンテナンスを行なっております。6ヶ月以上更新がないチャンネルを順次アーカイブしていきます。（*削除ではなく、検索などから履歴の閲覧・復活はできますのでご安心ください。*）  \n",
+            "verbatim": false
+          }
+        },
+        {
+          "type": "section",
+          "block_id": "rO0ETmVaLO",
+          "text": {
+            "type": "mrkdwn",
+            "text": " こちらのチャンネルは半年以上更新がないため、今回この対象となります。プロジェクト再開の目処が立っている・今後の活動についてチャネル内で議論しておきたいなどの場合は、2024年1月10日(水)までに <https://api.threado.com/api/link/?id=3417468|@くぼっち> 宛にメンションをつけてお声掛けください。  \n",
+            "verbatim": false
+          }
+        },
+        {
+          "type": "section",
+          "block_id": "w7tDHZtdny",
+          "text": {
+            "type": "mrkdwn",
+            "text": "それではみなさん素敵なクリスマスとお正月をお過ごしください :smile:  \n",
+            "verbatim": false
+          }
+        },
+        {
+          "type": "section",
+          "block_id": "A1xl3Ycspk",
+          "text": {
+            "type": "mrkdwn",
+            "text": "  \n",
+            "verbatim": false
+          }
+        }
+      ]
+    },
+    {
+      "subtype": "thread_broadcast",
+      "bot_id": "B01V3NTQJNL",
+      "thread_ts": "1681278327.283979",
+      "root": {
+        "user": "U01UL42GNKW",
+        "type": "message",
+        "ts": "1681278327.283979",
+        "edited": {
+          "user": "B01V3NTQJNL",
+          "ts": "1681278327.000000"
+        },
+        "bot_id": "B01V3NTQJNL",
+        "app_id": "A01BP7R4KNY",
+        "text": "",
+        "team": "T02FMV4EB",
+        "bot_profile": {
+          "id": "B01V3NTQJNL",
+          "app_id": "A01BP7R4KNY",
+          "user_id": "U01UL42GNKW",
+          "name": "GitHub",
+          "icons": {
+            "image_36": "https://avatars.slack-edge.com/2020-11-25/1527503386626_319578f21381f9641cd8_36.png",
+            "image_48": "https://avatars.slack-edge.com/2020-11-25/1527503386626_319578f21381f9641cd8_48.png",
+            "image_72": "https://avatars.slack-edge.com/2020-11-25/1527503386626_319578f21381f9641cd8_72.png"
+          },
+          "deleted": false,
+          "updated": 1618483045,
+          "team_id": "T02FMV4EB"
+        },
+        "thread_ts": "1681278327.283979",
+        "reply_count": 1,
+        "reply_users_count": 1,
+        "latest_reply": "1681278327.460799",
+        "reply_users": [
+          "U01UL42GNKW"
+        ],
+        "is_locked": false,
+        "subscribed": false,
+        "attachments": [
+          {
+            "id": 1,
+            "footer_icon": "https://slack.github.com/static/img/favicon-neutral.png",
+            "ts": 1666189648,
+            "color": "cb2431",
+            "fallback": "[codeforjapan/socialhackday] Pull request opened by dependabot[bot]",
+            "text": "Bumps <https://github.com/sparklemotion/nokogiri|nokogiri> from 1.12.5 to 1.13.9.\n\nRelease notes\n\n_Sourced from <https://github.com/sparklemotion/nokogiri/releases|nokogiri's releases>._\n\n&gt; *1.13.9 / 2022-10-18*\n&gt; *Security*\n&gt; \n&gt; • [CRuby] Vendored libxml2 is updated to address <https://nvd.nist.gov/vuln/detail/CVE-2022-2309|CVE-2022-2309>, <https://nvd.nist.gov/vuln/detail/CVE-2022-40304|CVE-2022-40304>, and <https://nvd.nist.gov/vuln/detail/CVE-2022-40303|CVE-2022-40303>. See <https://github.com/sparklemotion/nokogiri/security/advisories/GHSA-2qc6-mcvw-92cw|GHSA-2qc6-mcvw-92cw> for more information.\n&gt; • [CRuby] Vendored zlib is updated to address <https://ubuntu.com/security/CVE-2022-37434|CVE-2022-37434>. Nokogiri was not affected by this vulnerability, but this version of zlib was being flagged up by some vulnerability scanners, see <https://github-redirect.dependabot.com/sparklemotion/nokogiri/issues/2626|#2626> for more information.\n&gt; \n&gt; *Dependencies*\n&gt; \n&gt; • [CRuby] Vendored libxml2 is updated to <https://gitlab.gnome.org/GNOME/libxml2/-/releases/v2.10.3|v2.10.3> from v2.9.14.\n&gt; • [CRuby] Vendored libxslt is updated to <https://gitlab.gnome.org/GNOME/libxslt/-/releases/v1.1.37|v1.1.37> from v1.1.35.\n&gt; • [CRuby] Vendored zlib is updated from 1.2.12 to 1.2.13. (See <https://github.com/sparklemotion/nokogiri/blob/v1.13.x/LICENSE-DEPENDENCIES.md#platform-releases|LICENSE-DEPENDENCIES.md> for details on which packages redistribute this library.)\n&gt; \n&gt; *Fixed*\n&gt; \n&gt; • [CRuby] `Nokogiri::XML::Namespace` objects, when compacted, update their internal struct's reference to the Ruby object wrapper. Previously, with GC compaction enabled, a segmentation fault was possible after compaction was triggered. [<https://github-redirect.dependabot.com/sparklemotion/nokogiri/issues/2658|#2658>] (Thanks, <https://github.com/eightbitraptor|`@​eightbitraptor`> and <https://github.com/peterzhu2118|`@​peterzhu2118`>!)\n&gt; • [CRuby] `Document#remove_namespaces!` now defers freeing the underlying `xmlNs` struct until the `Document` is GCed. Previously, maintaining a reference to a `Namespace` object that was removed in this way could lead to a segfault. [<https://github-redirect.dependabot.com/sparklemotion/nokogiri/issues/2658|#2658>]\n&gt; \n&gt; * * *\n&gt; \n&gt; sha256 checksums:\n&gt; \n&gt; ```\n&gt; 9b69829561d30c4461ea803baeaf3460e8b145cff7a26ce397119577a4083a02  nokogiri-1.13.9-aarch64-linux.gem\n&gt; e76ebb4b7b2e02c72b2d1541289f8b0679fb5984867cf199d89b8ef485764956  nokogiri-1.13.9-arm64-darwin.gem\n&gt; 15bae7d08bddeaa898d8e3f558723300137c26a2dc2632a1f89c8574c4467165  nokogiri-1.13.9-java.gem\n&gt; f6a1dbc7229184357f3129503530af73cc59ceba4932c700a458a561edbe04b9  nokogiri-1.13.9-x64-mingw-ucrt.gem\n&gt; 36d935d799baa4dc488024f71881ff0bc8b172cecdfc54781169c40ec02cbdb3  nokogiri-1.13.9-x64-mingw32.gem\n&gt; ebaf82aa9a11b8fafb67873d19ee48efb565040f04c898cdce8ca0cd53ff1a12  nokogiri-1.13.9-x86-linux.gem\n&gt; 11789a2a11b28bc028ee111f23311461104d8c4468d5b901ab7536b282504154  nokogiri-1.13.9-x86-mingw32.gem\n&gt; 01830e1646803ff91c0fe94bc768ff40082c6de8cfa563dafd01b3f7d5f9d795  nokogiri-1.13.9-x86_64-darwin.gem\n&gt; 8e93b8adec22958013799c8690d81c2cdf8a90b6f6e8150ab22e11895844d781  nokogiri-1.13.9-x86_64-linux.gem\n&gt; 96f37c1baf0234d3ae54c2c89aef7220d4a8a1b03d2675ff7723565b0a095531  nokogiri-1.13.9.gem\n&gt; ```\n&gt; \n&gt; *1.13.8 / 2022-07-23*\n&gt; *Deprecated*\n&gt; \n&gt; • `XML::Reader#attribute_nodes` is deprecated due to incompatibility between libxml2's `xmlReader` memory semantics and Ruby's garbage collector. Although this method continues to exist for backwards compatibility, it is unsafe to call and may segfault. This method will be removed in a future version of Nokogiri, and callers should use `#attribute_hash` instead. [<https://github-redirect.dependabot.com/sparklemotion/nokogiri/issues/2598|#2598>]\n&gt; \n&gt; *Improvements*\n&gt; \n&gt; • `XML::Reader#attribute_hash` is a new method to safely retrieve the attributes of a node from `XML::Reader`. [<https://github-redirect.dependabot.com/sparklemotion/nokogiri/issues/2598|#2598>, <https://github-redirect.dependabot.com/sparklemotion/nokogiri/issues/2599|#2599>]\n&gt; \n&gt; *Fixed*\n\n... (truncated)\n\nChangelog\n\n_Sourced from <https://github.com/sparklemotion/nokogiri/blob/main/CHANGELOG.md|nokogiri's changelog>._\n\n&gt; *1.13.9 / 2022-10-18*\n&gt; *Security*\n&gt; \n&gt; • [CRuby] Vendored libxml2 is updated to address <https://nvd.nist.gov/vuln/detail/CVE-2022-2309|CVE-2022-2309>, <https://nvd.nist.gov/vuln/detail/CVE-2022-40304|CVE-2022-40304>, and <https://nvd.nist.gov/vuln/detail/CVE-2022-40303|CVE-2022-40303>. See <https://github.com/sparklemotion/nokogiri/security/advisories/GHSA-2qc6-mcvw-92cw|GHSA-2qc6-mcvw-92cw> for more information.\n&gt; • [CRuby] Vendored zlib is updated to address <https://ubuntu.com/security/CVE-2022-37434|CVE-2022-37434>. Nokogiri was not affected by this vulnerability, but this version of zlib was being flagged up by some vulnerability scanners, see <https://github-redirect.dependabot.com/sparklemotion/nokogiri/issues/2626|#2626> for more information.\n&gt; \n&gt; *Dependencies*\n&gt; \n&gt; • [CRuby] Vendored libxml2 is updated to <https://gitlab.gnome.org/GNOME/libxml2/-/releases/v2.10.3|v2.10.3> from v2.9.14.\n&gt; • [CRuby] Vendored libxslt is updated to <https://gitlab.gnome.org/GNOME/libxslt/-/releases/v1.1.37|v1.1.37> from v1.1.35.\n&gt; • [CRuby] Vendored zlib is updated from 1.2.12 to 1.2.13. (See <https://github.com/sparklemotion/nokogiri/blob/v1.13.x/LICENSE-DEPENDENCIES.md#platform-releases|LICENSE-DEPENDENCIES.md> for details on which packages redistribute this library.)\n&gt; \n&gt; *Fixed*\n&gt; \n&gt; • [CRuby] `Nokogiri::XML::Namespace` objects, when compacted, update their internal struct's reference to the Ruby object wrapper. Previously, with GC compaction enabled, a segmentation fault was possible after compaction was triggered. [<https://github-redirect.dependabot.com/sparklemotion/nokogiri/issues/2658|#2658>] (Thanks, <https://github.com/eightbitraptor|`@​eightbitraptor`> and <https://github.com/peterzhu2118|`@​peterzhu2118`>!)\n&gt; • [CRuby] `Document#remove_namespaces!` now defers freeing the underlying `xmlNs` struct until the `Document` is GCed. Previously, maintaining a reference to a `Namespace` object that was removed in this way could lead to a segfault. [<https://github-redirect.dependabot.com/sparklemotion/nokogiri/issues/2658|#2658>]\n&gt; \n&gt; *1.13.8 / 2022-07-23*\n&gt; *Deprecated*\n&gt; \n&gt; • `XML::Reader#attribute_nodes` is deprecated due to incompatibility between libxml2's `xmlReader` memory semantics and Ruby's garbage collector. Although this method continues to exist for backwards compatibility, it is unsafe to call and may segfault. This method will be removed in a future version of Nokogiri, and callers should use `#attribute_hash` instead. [<https://github-redirect.dependabot.com/sparklemotion/nokogiri/issues/2598|#2598>]\n&gt; \n&gt; *Improvements*\n&gt; \n&gt; • `XML::Reader#attribute_hash` is a new method to safely retrieve the attributes of a node from `XML::Reader`. [<https://github-redirect.dependabot.com/sparklemotion/nokogiri/issues/2598|#2598>, <https://github-redirect.dependabot.com/sparklemotion/nokogiri/issues/2599|#2599>]\n&gt; \n&gt; *Fixed*\n&gt; \n&gt; • [CRuby] Calling `XML::Reader#attributes` is now safe to call. In Nokogiri &lt;= 1.13.7 this method may segfault. [<https://github-redirect.dependabot.com/sparklemotion/nokogiri/issues/2598|#2598>, <https://github-redirect.dependabot.com/sparklemotion/nokogiri/issues/2599|#2599>]\n&gt; \n&gt; *1.13.7 / 2022-07-12*\n&gt; *Fixed*\n&gt; \n&gt; `XML::Node` objects, when compacted, update their internal struct's reference to the Ruby object wrapper. Previously, with GC compaction enabled, a segmentation fault was possible after compaction was triggered. [<https://github-redirect.dependabot.com/sparklemotion/nokogiri/issues/2578|#2578>] (Thanks, <https://github.com/e…",
+            "pretext": "Pull request opened by <https://github.com/apps/dependabot|dependabot[bot]>",
+            "title": "<https://github.com/codeforjapan/socialhackday/pull/104|#104 Bump nokogiri from 1.12.5 to 1.13.9>",
+            "callback_id": "pr-opened-interaction",
+            "footer": "<https://github.com/codeforjapan/socialhackday|codeforjapan/socialhackday>",
+            "fields": [
+              {
+                "value": "dependencies, ruby",
+                "title": "Labels",
+                "short": true
+              },
+              {
+                "value": "1",
+                "title": "Comments",
+                "short": true
+              }
+            ],
+            "mrkdwn_in": [
+              "text"
+            ],
+            "actions": [
+              {
+                "id": "1",
+                "name": "comment",
+                "text": "Comment",
+                "type": "button",
+                "value": "{&amp;amp;quot;selectedOrg&amp;amp;quot;:&amp;amp;quot;codeforjapan&amp;amp;quot;,&amp;amp;quot;selectedOrgId&amp;amp;quot;:5137738,&amp;amp;quot;selectedRepo&amp;amp;quot;:&amp;amp;quot;socialhackday&amp;amp;quot;,&amp;amp;quot;selectedRepoId&amp;amp;quot;:128494821,&amp;amp;quot;number&amp;amp;quot;:104,&amp;amp;quot;htmlUrl&amp;amp;quot;:&amp;amp;quot;https://github.com/codeforjapan/socialhackday/pull/104&amp;amp;quot;,&amp;amp;quot;title&amp;amp;quot;:&amp;amp;quot;Bump nokogiri from 1.12.5 to 1.13.9&amp;amp;quot;}",
+                "style": ""
+              }
+            ]
+          }
+        ]
+      },
+      "user": "U01UL42GNKW",
+      "type": "message",
+      "ts": "1681278327.460799",
+      "app_id": "A01BP7R4KNY",
+      "text": "",
+      "attachments": [
+        {
+          "id": 1,
+          "footer_icon": "https://slack.github.com/static/img/favicon-neutral.png",
+          "ts": 1666189648,
+          "color": "cb2431",
+          "fallback": "[codeforjapan/socialhackday] Pull request closed by dependabot[bot]",
+          "pretext": "Pull request closed by <https://github.com/apps/dependabot|dependabot[bot]>",
+          "title": "<https://github.com/codeforjapan/socialhackday/pull/104|#104 Bump nokogiri from 1.12.5 to 1.13.9>",
+          "footer": "<https://github.com/codeforjapan/socialhackday|codeforjapan/socialhackday>"
+        }
+      ]
+    },
+    {
+      "user": "U01UL42GNKW",
+      "type": "message",
+      "ts": "1681278327.283979",
+      "edited": {
+        "user": "B01V3NTQJNL",
+        "ts": "1681278327.000000"
+      },
+      "bot_id": "B01V3NTQJNL",
+      "app_id": "A01BP7R4KNY",
+      "text": "",
+      "team": "T02FMV4EB",
+      "bot_profile": {
+        "id": "B01V3NTQJNL",
+        "deleted": false,
+        "name": "GitHub",
+        "updated": 1618483045,
+        "app_id": "A01BP7R4KNY",
+        "user_id": "U01UL42GNKW",
+        "icons": {
+          "image_36": "https://avatars.slack-edge.com/2020-11-25/1527503386626_319578f21381f9641cd8_36.png",
+          "image_48": "https://avatars.slack-edge.com/2020-11-25/1527503386626_319578f21381f9641cd8_48.png",
+          "image_72": "https://avatars.slack-edge.com/2020-11-25/1527503386626_319578f21381f9641cd8_72.png"
+        },
+        "team_id": "T02FMV4EB"
+      },
+      "thread_ts": "1681278327.283979",
+      "reply_count": 1,
+      "reply_users_count": 1,
+      "latest_reply": "1681278327.460799",
+      "reply_users": [
+        "U01UL42GNKW"
+      ],
+      "is_locked": false,
+      "subscribed": false,
+      "attachments": [
+        {
+          "id": 1,
+          "footer_icon": "https://slack.github.com/static/img/favicon-neutral.png",
+          "ts": 1666189648,
+          "color": "cb2431",
+          "fallback": "[codeforjapan/socialhackday] Pull request opened by dependabot[bot]",
+          "text": "Bumps <https://github.com/sparklemotion/nokogiri|nokogiri> from 1.12.5 to 1.13.9.\n\nRelease notes\n\n_Sourced from <https://github.com/sparklemotion/nokogiri/releases|nokogiri's releases>._\n\n&gt; *1.13.9 / 2022-10-18*\n&gt; *Security*\n&gt; \n&gt; • [CRuby] Vendored libxml2 is updated to address <https://nvd.nist.gov/vuln/detail/CVE-2022-2309|CVE-2022-2309>, <https://nvd.nist.gov/vuln/detail/CVE-2022-40304|CVE-2022-40304>, and <https://nvd.nist.gov/vuln/detail/CVE-2022-40303|CVE-2022-40303>. See <https://github.com/sparklemotion/nokogiri/security/advisories/GHSA-2qc6-mcvw-92cw|GHSA-2qc6-mcvw-92cw> for more information.\n&gt; • [CRuby] Vendored zlib is updated to address <https://ubuntu.com/security/CVE-2022-37434|CVE-2022-37434>. Nokogiri was not affected by this vulnerability, but this version of zlib was being flagged up by some vulnerability scanners, see <https://github-redirect.dependabot.com/sparklemotion/nokogiri/issues/2626|#2626> for more information.\n&gt; \n&gt; *Dependencies*\n&gt; \n&gt; • [CRuby] Vendored libxml2 is updated to <https://gitlab.gnome.org/GNOME/libxml2/-/releases/v2.10.3|v2.10.3> from v2.9.14.\n&gt; • [CRuby] Vendored libxslt is updated to <https://gitlab.gnome.org/GNOME/libxslt/-/releases/v1.1.37|v1.1.37> from v1.1.35.\n&gt; • [CRuby] Vendored zlib is updated from 1.2.12 to 1.2.13. (See <https://github.com/sparklemotion/nokogiri/blob/v1.13.x/LICENSE-DEPENDENCIES.md#platform-releases|LICENSE-DEPENDENCIES.md> for details on which packages redistribute this library.)\n&gt; \n&gt; *Fixed*\n&gt; \n&gt; • [CRuby] `Nokogiri::XML::Namespace` objects, when compacted, update their internal struct's reference to the Ruby object wrapper. Previously, with GC compaction enabled, a segmentation fault was possible after compaction was triggered. [<https://github-redirect.dependabot.com/sparklemotion/nokogiri/issues/2658|#2658>] (Thanks, <https://github.com/eightbitraptor|`@​eightbitraptor`> and <https://github.com/peterzhu2118|`@​peterzhu2118`>!)\n&gt; • [CRuby] `Document#remove_namespaces!` now defers freeing the underlying `xmlNs` struct until the `Document` is GCed. Previously, maintaining a reference to a `Namespace` object that was removed in this way could lead to a segfault. [<https://github-redirect.dependabot.com/sparklemotion/nokogiri/issues/2658|#2658>]\n&gt; \n&gt; * * *\n&gt; \n&gt; sha256 checksums:\n&gt; \n&gt; ```\n&gt; 9b69829561d30c4461ea803baeaf3460e8b145cff7a26ce397119577a4083a02  nokogiri-1.13.9-aarch64-linux.gem\n&gt; e76ebb4b7b2e02c72b2d1541289f8b0679fb5984867cf199d89b8ef485764956  nokogiri-1.13.9-arm64-darwin.gem\n&gt; 15bae7d08bddeaa898d8e3f558723300137c26a2dc2632a1f89c8574c4467165  nokogiri-1.13.9-java.gem\n&gt; f6a1dbc7229184357f3129503530af73cc59ceba4932c700a458a561edbe04b9  nokogiri-1.13.9-x64-mingw-ucrt.gem\n&gt; 36d935d799baa4dc488024f71881ff0bc8b172cecdfc54781169c40ec02cbdb3  nokogiri-1.13.9-x64-mingw32.gem\n&gt; ebaf82aa9a11b8fafb67873d19ee48efb565040f04c898cdce8ca0cd53ff1a12  nokogiri-1.13.9-x86-linux.gem\n&gt; 11789a2a11b28bc028ee111f23311461104d8c4468d5b901ab7536b282504154  nokogiri-1.13.9-x86-mingw32.gem\n&gt; 01830e1646803ff91c0fe94bc768ff40082c6de8cfa563dafd01b3f7d5f9d795  nokogiri-1.13.9-x86_64-darwin.gem\n&gt; 8e93b8adec22958013799c8690d81c2cdf8a90b6f6e8150ab22e11895844d781  nokogiri-1.13.9-x86_64-linux.gem\n&gt; 96f37c1baf0234d3ae54c2c89aef7220d4a8a1b03d2675ff7723565b0a095531  nokogiri-1.13.9.gem\n&gt; ```\n&gt; \n&gt; *1.13.8 / 2022-07-23*\n&gt; *Deprecated*\n&gt; \n&gt; • `XML::Reader#attribute_nodes` is deprecated due to incompatibility between libxml2's `xmlReader` memory semantics and Ruby's garbage collector. Although this method continues to exist for backwards compatibility, it is unsafe to call and may segfault. This method will be removed in a future version of Nokogiri, and callers should use `#attribute_hash` instead. [<https://github-redirect.dependabot.com/sparklemotion/nokogiri/issues/2598|#2598>]\n&gt; \n&gt; *Improvements*\n&gt; \n&gt; • `XML::Reader#attribute_hash` is a new method to safely retrieve the attributes of a node from `XML::Reader`. [<https://github-redirect.dependabot.com/sparklemotion/nokogiri/issues/2598|#2598>, <https://github-redirect.dependabot.com/sparklemotion/nokogiri/issues/2599|#2599>]\n&gt; \n&gt; *Fixed*\n\n... (truncated)\n\nChangelog\n\n_Sourced from <https://github.com/sparklemotion/nokogiri/blob/main/CHANGELOG.md|nokogiri's changelog>._\n\n&gt; *1.13.9 / 2022-10-18*\n&gt; *Security*\n&gt; \n&gt; • [CRuby] Vendored libxml2 is updated to address <https://nvd.nist.gov/vuln/detail/CVE-2022-2309|CVE-2022-2309>, <https://nvd.nist.gov/vuln/detail/CVE-2022-40304|CVE-2022-40304>, and <https://nvd.nist.gov/vuln/detail/CVE-2022-40303|CVE-2022-40303>. See <https://github.com/sparklemotion/nokogiri/security/advisories/GHSA-2qc6-mcvw-92cw|GHSA-2qc6-mcvw-92cw> for more information.\n&gt; • [CRuby] Vendored zlib is updated to address <https://ubuntu.com/security/CVE-2022-37434|CVE-2022-37434>. Nokogiri was not affected by this vulnerability, but this version of zlib was being flagged up by some vulnerability scanners, see <https://github-redirect.dependabot.com/sparklemotion/nokogiri/issues/2626|#2626> for more information.\n&gt; \n&gt; *Dependencies*\n&gt; \n&gt; • [CRuby] Vendored libxml2 is updated to <https://gitlab.gnome.org/GNOME/libxml2/-/releases/v2.10.3|v2.10.3> from v2.9.14.\n&gt; • [CRuby] Vendored libxslt is updated to <https://gitlab.gnome.org/GNOME/libxslt/-/releases/v1.1.37|v1.1.37> from v1.1.35.\n&gt; • [CRuby] Vendored zlib is updated from 1.2.12 to 1.2.13. (See <https://github.com/sparklemotion/nokogiri/blob/v1.13.x/LICENSE-DEPENDENCIES.md#platform-releases|LICENSE-DEPENDENCIES.md> for details on which packages redistribute this library.)\n&gt; \n&gt; *Fixed*\n&gt; \n&gt; • [CRuby] `Nokogiri::XML::Namespace` objects, when compacted, update their internal struct's reference to the Ruby object wrapper. Previously, with GC compaction enabled, a segmentation fault was possible after compaction was triggered. [<https://github-redirect.dependabot.com/sparklemotion/nokogiri/issues/2658|#2658>] (Thanks, <https://github.com/eightbitraptor|`@​eightbitraptor`> and <https://github.com/peterzhu2118|`@​peterzhu2118`>!)\n&gt; • [CRuby] `Document#remove_namespaces!` now defers freeing the underlying `xmlNs` struct until the `Document` is GCed. Previously, maintaining a reference to a `Namespace` object that was removed in this way could lead to a segfault. [<https://github-redirect.dependabot.com/sparklemotion/nokogiri/issues/2658|#2658>]\n&gt; \n&gt; *1.13.8 / 2022-07-23*\n&gt; *Deprecated*\n&gt; \n&gt; • `XML::Reader#attribute_nodes` is deprecated due to incompatibility between libxml2's `xmlReader` memory semantics and Ruby's garbage collector. Although this method continues to exist for backwards compatibility, it is unsafe to call and may segfault. This method will be removed in a future version of Nokogiri, and callers should use `#attribute_hash` instead. [<https://github-redirect.dependabot.com/sparklemotion/nokogiri/issues/2598|#2598>]\n&gt; \n&gt; *Improvements*\n&gt; \n&gt; • `XML::Reader#attribute_hash` is a new method to safely retrieve the attributes of a node from `XML::Reader`. [<https://github-redirect.dependabot.com/sparklemotion/nokogiri/issues/2598|#2598>, <https://github-redirect.dependabot.com/sparklemotion/nokogiri/issues/2599|#2599>]\n&gt; \n&gt; *Fixed*\n&gt; \n&gt; • [CRuby] Calling `XML::Reader#attributes` is now safe to call. In Nokogiri &lt;= 1.13.7 this method may segfault. [<https://github-redirect.dependabot.com/sparklemotion/nokogiri/issues/2598|#2598>, <https://github-redirect.dependabot.com/sparklemotion/nokogiri/issues/2599|#2599>]\n&gt; \n&gt; *1.13.7 / 2022-07-12*\n&gt; *Fixed*\n&gt; \n&gt; `XML::Node` objects, when compacted, update their internal struct's reference to the Ruby object wrapper. Previously, with GC compaction enabled, a segmentation fault was possible after compaction was triggered. [<https://github-redirect.dependabot.com/sparklemotion/nokogiri/issues/2578|#2578>] (Thanks, <https://github.com/e…",
+          "pretext": "Pull request opened by <https://github.com/apps/dependabot|dependabot[bot]>",
+          "title": "<https://github.com/codeforjapan/socialhackday/pull/104|#104 Bump nokogiri from 1.12.5 to 1.13.9>",
+          "callback_id": "pr-opened-interaction",
+          "footer": "<https://github.com/codeforjapan/socialhackday|codeforjapan/socialhackday>",
+          "fields": [
+            {
+              "value": "dependencies, ruby",
+              "title": "Labels",
+              "short": true
+            },
+            {
+              "value": "1",
+              "title": "Comments",
+              "short": true
+            }
+          ],
+          "mrkdwn_in": [
+            "text"
+          ],
+          "actions": [
+            {
+              "id": "1",
+              "name": "comment",
+              "text": "Comment",
+              "type": "button",
+              "value": "{&amp;amp;quot;selectedOrg&amp;amp;quot;:&amp;amp;quot;codeforjapan&amp;amp;quot;,&amp;amp;quot;selectedOrgId&amp;amp;quot;:5137738,&amp;amp;quot;selectedRepo&amp;amp;quot;:&amp;amp;quot;socialhackday&amp;amp;quot;,&amp;amp;quot;selectedRepoId&amp;amp;quot;:128494821,&amp;amp;quot;number&amp;amp;quot;:104,&amp;amp;quot;htmlUrl&amp;amp;quot;:&amp;amp;quot;https://github.com/codeforjapan/socialhackday/pull/104&amp;amp;quot;,&amp;amp;quot;title&amp;amp;quot;:&amp;amp;quot;Bump nokogiri from 1.12.5 to 1.13.9&amp;amp;quot;}",
+              "style": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "user": "U01UL42GNKW",
+      "type": "message",
+      "ts": "1681278322.832889",
+      "edited": {
+        "user": "B01V3NTQJNL",
+        "ts": "1681278324.000000"
+      },
+      "bot_id": "B01V3NTQJNL",
+      "app_id": "A01BP7R4KNY",
+      "text": "",
+      "team": "T02FMV4EB",
+      "bot_profile": {
+        "id": "B01V3NTQJNL",
+        "app_id": "A01BP7R4KNY",
+        "user_id": "U01UL42GNKW",
+        "name": "GitHub",
+        "icons": {
+          "image_36": "https://avatars.slack-edge.com/2020-11-25/1527503386626_319578f21381f9641cd8_36.png",
+          "image_48": "https://avatars.slack-edge.com/2020-11-25/1527503386626_319578f21381f9641cd8_48.png",
+          "image_72": "https://avatars.slack-edge.com/2020-11-25/1527503386626_319578f21381f9641cd8_72.png"
+        },
+        "deleted": false,
+        "updated": 1618483045,
+        "team_id": "T02FMV4EB"
+      },
+      "attachments": [
+        {
+          "id": 1,
+          "footer_icon": "https://slack.github.com/static/img/favicon-neutral.png",
+          "ts": 1681278320,
+          "color": "36a64f",
+          "fallback": "[codeforjapan/socialhackday] Pull request opened by dependabot[bot]",
+          "text": "Bumps <https://github.com/sparklemotion/nokogiri|nokogiri> from 1.12.5 to 1.14.3.\n\nRelease notes\n\n_Sourced from <https://github.com/sparklemotion/nokogiri/releases|nokogiri's releases>._\n\n&gt; *1.14.3 / 2023-04-11*\n&gt; *Security*\n&gt; \n&gt; • [CRuby] Vendored libxml2 is updated to address CVE-2023-29469, CVE-2023-28484, and one other security-related issue. See <https://github.com/sparklemotion/nokogiri/security/advisories/GHSA-pxvg-2qj5-37jq|GHSA-pxvg-2qj5-37jqGHSA-pxvg-2qj5-37jq> for more information.\n&gt; \n&gt; *Dependencies*\n&gt; \n&gt; • [CRuby] Vendored libxml2 is updated to <https://gitlab.gnome.org/GNOME/libxml2/-/releases/v2.10.4|v2.10.4> from v2.10.3.\n&gt; \n&gt; * * *\n&gt; \n&gt; sha256 checksums:\n&gt; \n&gt; ```\n&gt; 9cc53dd8d92868a0f5bcee44396357a19f95e32d8b9754092622a25bc954c60c  nokogiri-1.14.3-aarch64-linux.gem\n&gt; 320fa1836b8e59e86a804baee534893bcf3b901cc255bbec6d87f3dd3e431610  nokogiri-1.14.3-arm-linux.gem\n&gt; 67dd4ac33a8cf0967c521fa57e5a5422db39da8a9d131aaa2cd53deaa12be4cd  nokogiri-1.14.3-arm64-darwin.gem\n&gt; 13969ec7f41d9cff46fc7707224c55490a519feef7cfea727c6945c5b444caa2  nokogiri-1.14.3-java.gem\n&gt; 9885085249303461ee08f9a9b161d0a570391b8f5be0316b3ac5a6d9a947e1e2  nokogiri-1.14.3-x64-mingw-ucrt.gem\n&gt; 997943d7582a23ad6e7a0abe081d0d40d2c1319a6b2749f9b30fd18037f0c38a  nokogiri-1.14.3-x64-mingw32.gem\n&gt; 58c30b763aebd62dc4222385509d7f83ac398ee520490fadc4b6d7877e29895a  nokogiri-1.14.3-x86-linux.gem\n&gt; e1d58a5c56c34aab71b00901a969e19bf9f7322ee459b4e9380f433213887c04  nokogiri-1.14.3-x86-mingw32.gem\n&gt; f0a1ed1460a91fd2daf558357f4c0ceac6d994899da1bf98431aeda301e4dc74  nokogiri-1.14.3-x86_64-darwin.gem\n&gt; e323a7c654ef846e64582fb6e26f6fed869a96753f8e048ff723e74d8005cb11  nokogiri-1.14.3-x86_64-linux.gem\n&gt; 3b1cee0eb8879e9e25b6dd431be597ca68f20283b0d4f4ca986521fad107dc3a  nokogiri-1.14.3.gem\n&gt; ```\n&gt; \n&gt; *1.14.2 / 2023-02-13*\n&gt; *Fixed*\n&gt; \n&gt; • Calling `NodeSet#to_html` on an empty node set no longer raises an encoding-related exception. This bug was introduced in v1.14.0 while fixing <https://redirect.github.com/sparklemotion/nokogiri/issues/2649|#2649>. [<https://redirect.github.com/sparklemotion/nokogiri/issues/2784|#2784>]\n&gt; \n&gt; * * *\n&gt; \n&gt; sha256 checksums:\n&gt; \n&gt; ```\n&gt; 966acf4f6c1fba10518f86498141cf44265564ac5a65dcc8496b65f8c354f776  nokogiri-1.14.2-aarch64-linux.gem\n&gt; 8a3a35cadae4a800ddc0b967394257343d62196d9d059b54e38cf067981db428  nokogiri-1.14.2-arm-linux.gem\n&gt; 81404cd014ecb597725c3847523c2ee365191a968d0b5f7d857e03f388c57631  nokogiri-1.14.2-arm64-darwin.gem\n&gt; 0a39222af14e75eb0243e8d969345e03b90c0e02b0f33c61f1ebb6ae53538bb5  nokogiri-1.14.2-java.gem\n&gt; 62a18f9213a0ceeaf563d1bc7ccfd93273323c4356ded58a5617c59bc4635bc5  nokogiri-1.14.2-x64-mingw-ucrt.gem\n&gt; 54f6ac2c15a7a88f431bb5e23f4616aa8fc97a92eb63336bcf65b7050f2d3be0  nokogiri-1.14.2-x64-mingw32.gem\n&gt; c42fa0856f01f901954898e28c3c2b4dce0e843056b1b126f441d06e887e1b77  nokogiri-1.14.2-x86-linux.gem\n&gt; f940d9c8e47b0f19875465376f2d1c8911bc9489ac9a48c124579819dc4a7f19  nokogiri-1.14.2-x86-mingw32.gem\n&gt; 2508978f5ca28944919973f6300f0a7355fbe72604ab6a6913f1630be1030265  nokogiri-1.14.2-x86_64-darwin.gem\n&gt; bc6405e1f3ddac6e401f82d775f1c0c24c6e58c371b3fadaca0596d5d511e476  nokogiri-1.14.2-x86_64-linux.gem\n&gt; &lt;/tr&gt;&lt;/table&gt; \n&gt; ```\n\n... (truncated)\n\nChangelog\n\n_Sourced from <https://github.com/sparklemotion/nokogiri/blob/main/CHANGELOG.md|nokogiri's changelog>._\n\n&gt; *1.14.3 / 2023-04-11*\n&gt; *Security*\n&gt; \n&gt; • [CRuby] Vendored libxml2 is updated to address CVE-2023-29469, CVE-2023-28484, and one other security-related issue. See <https://github.com/sparklemotion/nokogiri/security/advisories/GHSA-pxvg-2qj5-37jq|GHSA-pxvg-2qj5-37jqGHSA-pxvg-2qj5-37jq> for more information.\n&gt; \n&gt; *Dependencies*\n&gt; \n&gt; • [CRuby] Vendored libxml2 is updated to <https://gitlab.gnome.org/GNOME/libxml2/-/releases/v2.10.4|v2.10.4> from v2.10.3.\n&gt; \n&gt; *1.14.2 / 2023-02-13*\n&gt; *Fixed*\n&gt; \n&gt; • Calling `NodeSet#to_html` on an empty node set no longer raises an encoding-related exception. This bug was introduced in v1.14.0 while fixing <https://redirect.github.com/sparklemotion/nokogiri/issues/2649|#2649>. [<https://redirect.github.com/sparklemotion/nokogiri/issues/2784|#2784>]\n&gt; \n&gt; *1.14.1 / 2023-01-30*\n&gt; *Fixed*\n&gt; \n&gt; • Serializing documents now works again with pseudo-IO objects that don't support IO's encoding API (like rubyzip's `Zip::OutputStream`). This was a regression in v1.14.0 due to the fix for <https://redirect.github.com/sparklemotion/nokogiri/issues/752|#752> in <https://redirect.github.com/sparklemotion/nokogiri/issues/2434|#2434>, and was not completely fixed by <https://redirect.github.com/sparklemotion/nokogiri/issues/2753|#2753>. [<https://redirect.github.com/sparklemotion/nokogiri/issues/2773|#2773>]\n&gt; • [CRuby] Address compiler warnings about `void*` casting and old-style C function definitions.\n&gt; \n&gt; *1.14.0 / 2023-01-12*\n&gt; *Notable Changes*\n&gt; *Ruby*\n&gt; \n&gt; This release introduces native gem support for Ruby 3.2. (Also see \"Technical note\" under \"Changed\" below.)\n&gt; \n&gt; This release ends support for:\n&gt; \n&gt; • Ruby 2.6, for which <https://www.ruby-lang.org/en/downloads/branches/|upstream support ended 2022-04-12>.\n&gt; • JRuby 9.3, which is not fully compatible with Ruby 2.7+\n&gt; \n&gt; *Faster, more reliable installation: Native Gem for `aarch64-linux` (aka `linux/arm64/v8`)*\n&gt; \n&gt; This version of Nokogiri ships _official_ native gem support for the `aarch64-linux` platform, which should support AWS Graviton and other ARM64 Linux platforms. Please note that glibc &gt;= 2.29 is required for aarch64-linux systems, see <https://nokogiri.org/#supported-platforms|Supported Platforms> for more information.\n&gt; \n&gt; *Faster, more reliable installation: Native Gem for `arm-linux` (aka `linux/arm/v7`)*\n&gt; \n&gt; This version of Nokogiri ships _experimental_ native gem support for the `arm-linux` platform. Please note that glibc &gt;= 2.29 is required for arm-linux systems, see <https://nokogiri.org/#supported-platforms|Supported Platforms> for more information.\n\n... (truncated)\n\nCommits\n\n• <https://github.com/sparklemotion/nokogiri/commit/e8d2f4a829c50e6ad4ccd1625cd094e3a24acf36|`e8d2f4a`> version bump to v1.14.3\n• <https://github.com/sparklemotion/nokogiri/commit/59fbc7b6d5cecad921cc24daa34d69bbda8713fb|`59fbc7b`> doc: update CHANGELOG for v1.14.3\n• <https://github.com/sparklemotion/nokogiri/commit/347eacbeeacd2be0140faede75395bd1ed01073f|`347eacb`> Merge pull request <https://redirect.github.com/sparklemotion/nokogiri/issues/2852|#2852> from sparklemotion/flavorjones-libxml2-2.10.4-backport\n• <https://github.com/sparklemotion/nokogiri/commit/36b0b3355d6d0d45bfdf1b55012bccfb348a6b4f|`36b0b33`> dep: update libxml2 to 2.10.4 from 2.10.3\n• <https://github.com/sparklemotion/nokogiri/commit/ac83e6ee7011ce9fec24399c759a73fb924a0de6|`ac83e6e`> test: update behavior of namespaces in HTML4\n• <https://github.com/sparklemotion/nokogiri/commit/2cf4996c5280f93e1ea66b2aceeed848d57fbe01|`2cf4996`> test: make default GC behavior \"normal\"\n• <https://github.com/sparklemotion/nokogiri/commit/1580121eeae3c1f266c4012d22d61314aa3202b7|`1580121`> version bump to v1.14.2\n• <https://github.com/sparklemotion/nokogiri/commit/530947753e3074d551217ea6bce7b4bbbc1234a9|`5309477`> Merge pull request <https://redirect.github.com/sparklemotion/nokogiri/issues/2791|#2791> from sparklemotion/2784-encoding-empty-strings-v1.14.x\n• <https://github.com/sparklemotion/nokogiri/commit/975ae491c4993ff47e36262dc8e305fa2d651bf4|`975ae49`> doc: update CHANGELOG\n• <https://github.com/sparklemotion/nokogiri/commit/f13cdb46406c9b119a368cf506d831865dd95163|`f13cdb4`> fix: empty node set serialization when document encoding is nil\n• Additional commits viewable in <https://github.com/sparklemotion/nokogiri/compare/v1.12.5...v1.14.3|compare view>\n\n  \n\n<https://docs.github.com/en/github/managing-sec…",
+          "pretext": "Pull request opened by <https://github.com/apps/dependabot|dependabot[bot]>",
+          "title": "<https://github.com/codeforjapan/socialhackday/pull/113|#113 Bump nokogiri from 1.12.5 to 1.14.3>",
+          "callback_id": "pr-opened-interaction",
+          "footer": "<https://github.com/codeforjapan/socialhackday|codeforjapan/socialhackday>",
+          "fields": [
+            {
+              "value": "dependencies, ruby",
+              "title": "Labels",
+              "short": true
+            }
+          ],
+          "mrkdwn_in": [
+            "text"
+          ],
+          "actions": [
+            {
+              "id": "1",
+              "name": "comment",
+              "text": "Comment",
+              "type": "button",
+              "value": "{&amp;amp;quot;selectedOrg&amp;amp;quot;:&amp;amp;quot;codeforjapan&amp;amp;quot;,&amp;amp;quot;selectedOrgId&amp;amp;quot;:5137738,&amp;amp;quot;selectedRepo&amp;amp;quot;:&amp;amp;quot;socialhackday&amp;amp;quot;,&amp;amp;quot;selectedRepoId&amp;amp;quot;:128494821,&amp;amp;quot;number&amp;amp;quot;:113,&amp;amp;quot;htmlUrl&amp;amp;quot;:&amp;amp;quot;https://github.com/codeforjapan/socialhackday/pull/113&amp;amp;quot;,&amp;amp;quot;title&amp;amp;quot;:&amp;amp;quot;Bump nokogiri from 1.12.5 to 1.14.3&amp;amp;quot;}",
+              "style": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "subtype": "thread_broadcast",
+      "bot_id": "B01V3NTQJNL",
+      "thread_ts": "1678305003.472389",
+      "root": {
+        "user": "U01UL42GNKW",
+        "type": "message",
+        "ts": "1678305003.472389",
+        "edited": {
+          "user": "B01V3NTQJNL",
+          "ts": "1678945444.000000"
+        },
+        "bot_id": "B01V3NTQJNL",
+        "app_id": "A01BP7R4KNY",
+        "text": "",
+        "team": "T02FMV4EB",
+        "bot_profile": {
+          "id": "B01V3NTQJNL",
+          "app_id": "A01BP7R4KNY",
+          "user_id": "U01UL42GNKW",
+          "name": "GitHub",
+          "icons": {
+            "image_36": "https://avatars.slack-edge.com/2020-11-25/1527503386626_319578f21381f9641cd8_36.png",
+            "image_48": "https://avatars.slack-edge.com/2020-11-25/1527503386626_319578f21381f9641cd8_48.png",
+            "image_72": "https://avatars.slack-edge.com/2020-11-25/1527503386626_319578f21381f9641cd8_72.png"
+          },
+          "deleted": false,
+          "updated": 1618483045,
+          "team_id": "T02FMV4EB"
+        },
+        "thread_ts": "1678305003.472389",
+        "reply_count": 1,
+        "reply_users_count": 1,
+        "latest_reply": "1678945444.064779",
+        "reply_users": [
+          "U01UL42GNKW"
+        ],
+        "is_locked": false,
+        "subscribed": false,
+        "attachments": [
+          {
+            "id": 1,
+            "footer_icon": "https://slack.github.com/static/img/favicon-neutral.png",
+            "ts": 1678305000,
+            "color": "cb2431",
+            "fallback": "[codeforjapan/socialhackday] Pull request opened by dependabot[bot]",
+            "text": "Bumps <https://github.com/rack/rack|rack> from 2.2.3 to 2.2.6.3.\n\nChangelog\n\n_Sourced from <https://github.com/rack/rack/blob/main/CHANGELOG.md|rack's changelog>._\n\n&gt; *Changelog*\n&gt; \n&gt; All notable changes to this project will be documented in this file. For info on how to format all future additions to this file please reference <https://keepachangelog.com/en/1.0.0/|Keep A Changelog>.\n&gt; \n&gt; *[Unreleased]*\n&gt; *SPEC Changes*\n&gt; \n&gt; • `rack.input` is now optional. (<https://github-redirect.dependabot.com/rack/rack/pull/1997|#1997>, [<https://github.com/ioquatix|`@​ioquatix`>])\n&gt; \n&gt; *Changed*\n&gt; \n&gt; • `rack.input` is now optional, and if missing, will raise an error. Use this to fail on multipart parsing a request without an input body. (<https://github-redirect.dependabot.com/rack/rack/pull/2018|#2018>, [<https://github.com/ioquatix|`@​ioquatix`>])\n&gt; • Introduce `module Rack::BadRequest` which is included in multipart and query parser errors. (<https://github-redirect.dependabot.com/rack/rack/pull/2019|#2019>, [<https://github.com/ioquatix|`@​ioquatix`>])\n&gt; • MIME type for JavaScript files (`.js`) changed from `application/javascript` to `text/javascript` (<https://github.com/rack/rack/commit/1bd0f1597d8f4a90d47115f3e156a8ce7870c9c8|`1bd0f15`>)\n&gt; \n&gt; *[3.0.4.1] - 2023-01-17*\n&gt; \n&gt; • [<https://github.com/advisories/GHSA-93pm-5p5f-3ghx|CVE-2022-44571>] Fix ReDoS vulnerability in multipart parser\n&gt; • [<https://github.com/advisories/GHSA-65f5-mfpf-vfhj|CVE-2022-44570>] Fix ReDoS in Rack::Utils.get_byte_ranges\n&gt; • [<https://github.com/advisories/GHSA-rqv2-275x-2jq5|CVE-2022-44572>] Forbid control characters in attributes (also ReDoS)\n&gt; \n&gt; *[3.0.4] - 2023-01-17*\n&gt; \n&gt; • `Rack::Request#POST` should consistently raise errors. Cache errors that occur when invoking `Rack::Request#POST` so they can be raised again later. (<https://github-redirect.dependabot.com/rack/rack/pull/2010|#2010>, [<https://github.com/ioquatix|`@​ioquatix`>])\n&gt; • Fix `Rack::Lint` error message for `HTTP_CONTENT_TYPE` and `HTTP_CONTENT_LENGTH`. (<https://github-redirect.dependabot.com/rack/rack/pull/2007|#2007>, <https://github.com/byroot|`@​byroot`>)\n&gt; • Extend `Rack::MethodOverride` to handle `QueryParser::ParamsTooDeepError` error. (<https://github-redirect.dependabot.com/rack/rack/pull/2006|#2006>, <https://github.com/byroot|`@​byroot`>)\n&gt; \n&gt; *[3.0.3] - 2022-12-27*\n&gt; *Fixed*\n&gt; \n&gt; • `Rack::URLMap` uses non-deprecated form of `Regexp.new`. (<https://github-redirect.dependabot.com/rack/rack/pull/1998|#1998>, <https://github.com/weizheheng|`@​weizheheng`>)\n&gt; \n&gt; *[3.0.2] -2022-12-05*\n&gt; *Fixed*\n&gt; \n&gt; • `Utils.build_nested_query` URL-encodes nested field names including the square brackets.\n&gt; • Allow `Rack::Response` to pass through streaming bodies. (<https://github-redirect.dependabot.com/rack/rack/pull/1993|#1993>, [<https://github.com/ioquatix|`@​ioquatix`>])\n&gt; \n&gt; *[3.0.1] - 2022-11-18*\n&gt; *Fixed*\n&gt; \n&gt; • `MethodOverride` does not look for an override if a request does not include form/parseable data.\n&gt; • `Rack::Lint::Wrapper` correctly handles `respond_to?` with `to_ary`, `each`, `call` and `to_path`, forwarding to the body. (<https://github-redirect.dependabot.com/rack/rack/pull/1981|#1981>, [<https://github.com/ioquatix|`@​ioquatix`>])\n&gt; \n&gt; *[3.0.0] - 2022-09-06*\n\n... (truncated)\n\nCommits\n\n• <https://github.com/rack/rack/commit/d6b5b2bab88f458fb048133604faebea952d8133|`d6b5b2b`> bump version\n• <https://github.com/rack/rack/commit/9aac3757fe19cdb0476504c9245170115bec9668|`9aac375`> Limit all multipart parts, not just files\n• <https://github.com/rack/rack/commit/2606ac5d5d180c00a8cbcaa4d634276bab06500e|`2606ac5`> bumping version\n• <https://github.com/rack/rack/commit/f6d4f528f2df1318a6612845db0b59adc7fe8fc1|`f6d4f52`> Fix ReDoS in Rack::Utils.get_byte_ranges\n• <https://github.com/rack/rack/commit/20bc90c2431d7fabcd1873410543cf3d72f65004|`20bc90c`> bump version\n• <https://github.com/rack/rack/commit/3677f170b4ac713defb84cd6a86431623ba0adc0|`3677f17`> Update changelog\n• <https://github.com/rack/rack/commit/ee25ab9a7ee981d7578f559701085b0cf39bde77|`ee25ab9`> Fix ReDoS vulnerability in multipart parser\n• <https://github.com/rack/rack/commit/19e49f0f185d7e42ed5b402baec6c897a8c48029|`19e49f0`> Forbid control characters in attributes\n• <https://github.com/rack/rack/commit/ea39e49442e0008bfce4ad628ce52a4be2a20b5b|`ea39e49`> Bump patch version.\n• <https://github.com/rack/rack/commit/c0f9de4844052b7867180c587d1b6969be2f114d|`c0f9de4`> Rack::MethodOverride handle QueryParser::ParamsTooDeepError (<https://github-redirect.dependabot.com/rack/rack/issues/2011|#2011>)\n• Additional commits viewable in <https://github.com/rack/rack/compare/2.2.3...v2.2.6.3|compare view>\n\n  \n\n<https://docs.github.com/en/github/managing-security-vulnerabilities/about-dependabot-security-updates#about-compatibility-scores|Dependabot compatibility score>\n\nDependabot will resolve any conflicts with this PR as long as you don't alter it yourself. You can also trigger a rebase manually by commenting `@dependabot rebase`.\n\n* * *\n\nDependabot commands and options  \n\nYou can trigger Dependabot actions by commenting on this PR:\n\n• `@dependabot rebase` will rebase this PR\n• `@dependabot recreate` will recreate this PR, overwriting any edits that have been made to it\n• `@dependabot merge` will merge this PR after your CI passes on it\n• `@dependabot squash and merge` will squash and merge this PR after your CI passes on it\n• `@dependabot cancel merge` will cancel a previously requested merge and block automerging\n• `@dependabot reopen` will reopen this PR if it is closed\n• `@dependabot close` will close this PR and stop Dependabot recreating it. You can achieve the same result by closing it manually\n• `@dependabot ignore this major version` will close this PR and stop Dependabot creating any more for this major version (unless you reopen the PR or upgrade to it yourself)\n• `@dependabot ignore this minor version` will close this PR and stop Dependabot creating any more for this minor version (unless you reopen the PR or upgrade to it yourself)\n• `@dependabot ignore this dependency` will close this PR and stop Dependabot creating any more for this dependency (unless you reopen the PR or upgrade to it yourself)\n• `@dependabot use these labels` will set the current labels as the default for future PRs for this repo and language\n• `@dependabot use these reviewers` will set the current reviewers as the default for future PRs for this repo and language\n• `@dependabot use these assignees` will set the current assignees as the default for future PRs for this repo and language\n• `@dependabot use this milestone` will set the current milestone as the default for future PRs for this repo and language\n\nYou can disable automated security fix PRs for this repo from the <https://github.com/codeforjapan/socialhackday/network/alerts|Security Alerts page>.",
+            "pretext": "Pull request opened by <https://github.com/apps/dependabot|dependabot[bot]>",
+            "title": "<https://github.com/codeforjapan/socialhackday/pull/111|#111 Bump rack from 2.2.3 to 2.2.6.3>",
+            "callback_id": "pr-opened-interaction",
+            "footer": "<https://github.com/codeforjapan/socialhackday|codeforjapan/socialhackday>",
+            "fields": [
+              {
+                "value": "dependencies, ruby",
+                "title": "Labels",
+                "short": true
+              },
+              {
+                "value": "1",
+                "title": "Comments",
+                "short": true
+              }
+            ],
+            "mrkdwn_in": [
+              "text"
+            ],
+            "actions": [
+              {
+                "id": "1",
+                "name": "comment",
+                "text": "Comment",
+                "type": "button",
+                "value": "{&amp;amp;quot;selectedOrg&amp;amp;quot;:&amp;amp;quot;codeforjapan&amp;amp;quot;,&amp;amp;quot;selectedOrgId&amp;amp;quot;:5137738,&amp;amp;quot;selectedRepo&amp;amp;quot;:&amp;amp;quot;socialhackday&amp;amp;quot;,&amp;amp;quot;selectedRepoId&amp;amp;quot;:128494821,&amp;amp;quot;number&amp;amp;quot;:111,&amp;amp;quot;htmlUrl&amp;amp;quot;:&amp;amp;quot;https://github.com/codeforjapan/socialhackday/pull/111&amp;amp;quot;,&amp;amp;quot;title&amp;amp;quot;:&amp;amp;quot;Bump rack from 2.2.3 to 2.2.6.3&amp;amp;quot;}",
+                "style": ""
+              }
+            ]
+          }
+        ]
+      },
+      "user": "U01UL42GNKW",
+      "type": "message",
+      "ts": "1678945444.064779",
+      "app_id": "A01BP7R4KNY",
+      "text": "",
+      "attachments": [
+        {
+          "id": 1,
+          "footer_icon": "https://slack.github.com/static/img/favicon-neutral.png",
+          "ts": 1678305000,
+          "color": "cb2431",
+          "fallback": "[codeforjapan/socialhackday] Pull request closed by dependabot[bot]",
+          "pretext": "Pull request closed by <https://github.com/apps/dependabot|dependabot[bot]>",
+          "title": "<https://github.com/codeforjapan/socialhackday/pull/111|#111 Bump rack from 2.2.3 to 2.2.6.3>",
+          "footer": "<https://github.com/codeforjapan/socialhackday|codeforjapan/socialhackday>"
+        }
+      ]
+    },
+    {
+      "user": "U01UL42GNKW",
+      "type": "message",
+      "ts": "1678945440.174379",
+      "edited": {
+        "user": "B01V3NTQJNL",
+        "ts": "1678945441.000000"
+      },
+      "bot_id": "B01V3NTQJNL",
+      "app_id": "A01BP7R4KNY",
+      "text": "",
+      "team": "T02FMV4EB",
+      "bot_profile": {
+        "id": "B01V3NTQJNL",
+        "app_id": "A01BP7R4KNY",
+        "user_id": "U01UL42GNKW",
+        "name": "GitHub",
+        "icons": {
+          "image_36": "https://avatars.slack-edge.com/2020-11-25/1527503386626_319578f21381f9641cd8_36.png",
+          "image_48": "https://avatars.slack-edge.com/2020-11-25/1527503386626_319578f21381f9641cd8_48.png",
+          "image_72": "https://avatars.slack-edge.com/2020-11-25/1527503386626_319578f21381f9641cd8_72.png"
+        },
+        "deleted": false,
+        "updated": 1618483045,
+        "team_id": "T02FMV4EB"
+      },
+      "attachments": [
+        {
+          "id": 1,
+          "footer_icon": "https://slack.github.com/static/img/favicon-neutral.png",
+          "ts": 1678945437,
+          "color": "36a64f",
+          "fallback": "[codeforjapan/socialhackday] Pull request opened by dependabot[bot]",
+          "text": "Bumps <https://github.com/rack/rack|rack> from 2.2.3 to 2.2.6.4.\n\nChangelog\n\n_Sourced from <https://github.com/rack/rack/blob/main/CHANGELOG.md|rack's changelog>._\n\n&gt; *Changelog*\n&gt; \n&gt; All notable changes to this project will be documented in this file. For info on how to format all future additions to this file please reference <https://keepachangelog.com/en/1.0.0/|Keep A Changelog>.\n&gt; \n&gt; *[3.0.7] - 2023-03-16*\n&gt; \n&gt; • Make query parameters without `=` have `nil` values. (<https://redirect.github.com/rack/rack/pull/2059|#2059>, [<https://github.com/jeremyevans|`@​jeremyevans`>])\n&gt; \n&gt; *[3.0.6.1] - 2023-03-13*\n&gt; \n&gt; • [<https://github.com/advisories/GHSA-c6qg-cjj8-47qp|CVE-2023-27539>] Avoid ReDoS in header parsing\n&gt; \n&gt; *[3.0.6] - 2023-03-13*\n&gt; \n&gt; • Add `QueryParser#missing_value` for handling missing values + tests. (<https://redirect.github.com/rack/rack/pull/2052|#2052>, [<https://github.com/ioquatix|`@​ioquatix`>])\n&gt; \n&gt; *[3.0.5] - 2023-03-13*\n&gt; \n&gt; • Split form/query parsing into two steps. (<https://redirect.github.com/rack/rack/pull/2038|#2038>, <https://github.com/matthewd|`@​matthewd`>)\n&gt; \n&gt; *[3.0.4.1] - 2023-03-02*\n&gt; *SPEC Changes*\n&gt; \n&gt; • `rack.input` is now optional. (<https://redirect.github.com/rack/rack/pull/1997|#1997>, [<https://github.com/ioquatix|`@​ioquatix`>])\n&gt; \n&gt; *Changed*\n&gt; \n&gt; • `rack.input` is now optional, and if missing, will raise an error. Use this to fail on multipart parsing a request without an input body. (<https://redirect.github.com/rack/rack/pull/2018|#2018>, [<https://github.com/ioquatix|`@​ioquatix`>])\n&gt; • Introduce `module Rack::BadRequest` which is included in multipart and query parser errors. (<https://redirect.github.com/rack/rack/pull/2019|#2019>, [<https://github.com/ioquatix|`@​ioquatix`>])\n&gt; • MIME type for JavaScript files (`.js`) changed from `application/javascript` to `text/javascript` (<https://github.com/rack/rack/commit/1bd0f1597d8f4a90d47115f3e156a8ce7870c9c8|`1bd0f15`>)\n&gt; • Add `.mjs` MIME type (<https://redirect.github.com/rack/rack/pull/2057|#2057>, [<https://github.com/axilleas|`@​axilleas`>])\n&gt; \n&gt; *[3.0.4.1] - 2023-01-17*\n&gt; \n&gt; • [<https://github.com/advisories/GHSA-93pm-5p5f-3ghx|CVE-2022-44571>] Fix ReDoS vulnerability in multipart parser\n&gt; • [<https://github.com/advisories/GHSA-65f5-mfpf-vfhj|CVE-2022-44570>] Fix ReDoS in Rack::Utils.get_byte_ranges\n&gt; • [<https://github.com/advisories/GHSA-rqv2-275x-2jq5|CVE-2022-44572>] Forbid control characters in attributes (also ReDoS)\n&gt; \n&gt; *[3.0.4] - 2023-01-17*\n&gt; \n&gt; • `Rack::Request#POST` should consistently raise errors. Cache errors that occur when invoking `Rack::Request#POST` so they can be raised again later. (<https://redirect.github.com/rack/rack/pull/2010|#2010>, [<https://github.com/ioquatix|`@​ioquatix`>])\n&gt; • Fix `Rack::Lint` error message for `HTTP_CONTENT_TYPE` and `HTTP_CONTENT_LENGTH`. (<https://redirect.github.com/rack/rack/pull/2007|#2007>, <https://github.com/byroot|`@​byroot`>)\n&gt; • Extend `Rack::MethodOverride` to handle `QueryParser::ParamsTooDeepError` error. (<https://redirect.github.com/rack/rack/pull/2006|#2006>, <https://github.com/byroot|`@​byroot`>)\n&gt; \n&gt; *[3.0.3] - 2022-12-27*\n&gt; *Fixed*\n&gt; \n&gt; • `Rack::URLMap` uses non-deprecated form of `Regexp.new`. (<https://redirect.github.com/rack/rack/pull/1998|#1998>, <https://github.com/weizheheng|`@​weizheheng`>)\n\n... (truncated)\n\nCommits\n\n• <https://github.com/rack/rack/commit/27addc7f1ae290b6b84c1c351e5b6d75a05bb40b|`27addc7`> bump version\n• <https://github.com/rack/rack/commit/ee7919ea04303717858be1c3f16b406adc6d8cff|`ee7919e`> Avoid ReDoS problem\n• <https://github.com/rack/rack/commit/d6b5b2bab88f458fb048133604faebea952d8133|`d6b5b2b`> bump version\n• <https://github.com/rack/rack/commit/9aac3757fe19cdb0476504c9245170115bec9668|`9aac375`> Limit all multipart parts, not just files\n• <https://github.com/rack/rack/commit/2606ac5d5d180c00a8cbcaa4d634276bab06500e|`2606ac5`> bumping version\n• <https://github.com/rack/rack/commit/f6d4f528f2df1318a6612845db0b59adc7fe8fc1|`f6d4f52`> Fix ReDoS in Rack::Utils.get_byte_ranges\n• <https://github.com/rack/rack/commit/20bc90c2431d7fabcd1873410543cf3d72f65004|`20bc90c`> bump version\n• <https://github.com/rack/rack/commit/3677f170b4ac713defb84cd6a86431623ba0adc0|`3677f17`> Update changelog\n• <https://github.com/rack/rack/commit/ee25ab9a7ee981d7578f559701085b0cf39bde77|`ee25ab9`> Fix ReDoS vulnerability in multipart parser\n• <https://github.com/rack/rack/commit/19e49f0f185d7e42ed5b402baec6c897a8c48029|`19e49f0`> Forbid control characters in attributes\n• Additional commits viewable in <https://github.com/rack/rack/compare/2.2.3...v2.2.6.4|compare view>\n\n  \n\n<https://docs.github.com/en/github/managing-security-vulnerabilities/about-dependabot-security-updates#about-compatibility-scores|Dependabot compatibility score>\n\nDependabot will resolve any conflicts with this PR as long as you don't alter it yourself. You can also trigger a rebase manually by commenting `@dependabot rebase`.\n\n* * *\n\nDependabot commands and options  \n\nYou can trigger Dependabot actions by commenting on this PR:\n\n• `@dependabot rebase` will rebase this PR\n• `@dependabot recreate` will recreate this PR, overwriting any edits that have been made to it\n• `@dependabot merge` will merge this PR after your CI passes on it\n• `@dependabot squash and merge` will squash and merge this PR after your CI passes on it\n• `@dependabot cancel merge` will cancel a previously requested merge and block automerging\n• `@dependabot reopen` will reopen this PR if it is closed\n• `@dependabot close` will close this PR and stop Dependabot recreating it. You can achieve the same result by closing it manually\n• `@dependabot ignore this major version` will close this PR and stop Dependabot creating any more for this major version (unless you reopen the PR or upgrade to it yourself)\n• `@dependabot ignore this minor version` will close this PR and stop Dependabot creating any more for this minor version (unless you reopen the PR or upgrade to it yourself)\n• `@dependabot ignore this dependency` will close this PR and stop Dependabot creating any more for this dependency (unless you reopen the PR or upgrade to it yourself)\n• `@dependabot use these labels` will set the current labels as the default for future PRs for this repo and language\n• `@dependabot use these reviewers` will set the current reviewers as the default for future PRs for this repo and language\n• `@dependabot use these assignees` will set the current assignees as the default for future PRs for this repo and language\n• `@dependabot use this milestone` will set the current milestone as the default for future PRs for this repo and language\n\nYou can disable automated security fix PRs for this repo from the <https://github.com/codeforjapan/socialhackday/network/alerts|Security Alerts page>.",
+          "pretext": "Pull request opened by <https://github.com/apps/dependabot|dependabot[bot]>",
+          "title": "<https://github.com/codeforjapan/socialhackday/pull/112|#112 Bump rack from 2.2.3 to 2.2.6.4>",
+          "callback_id": "pr-opened-interaction",
+          "footer": "<https://github.com/codeforjapan/socialhackday|codeforjapan/socialhackday>",
+          "fields": [
+            {
+              "value": "dependencies, ruby",
+              "title": "Labels",
+              "short": true
+            }
+          ],
+          "mrkdwn_in": [
+            "text"
+          ],
+          "actions": [
+            {
+              "id": "1",
+              "name": "comment",
+              "text": "Comment",
+              "type": "button",
+              "value": "{&amp;amp;quot;selectedOrg&amp;amp;quot;:&amp;amp;quot;codeforjapan&amp;amp;quot;,&amp;amp;quot;selectedOrgId&amp;amp;quot;:5137738,&amp;amp;quot;selectedRepo&amp;amp;quot;:&amp;amp;quot;socialhackday&amp;amp;quot;,&amp;amp;quot;selectedRepoId&amp;amp;quot;:128494821,&amp;amp;quot;number&amp;amp;quot;:112,&amp;amp;quot;htmlUrl&amp;amp;quot;:&amp;amp;quot;https://github.com/codeforjapan/socialhackday/pull/112&amp;amp;quot;,&amp;amp;quot;title&amp;amp;quot;:&amp;amp;quot;Bump rack from 2.2.3 to 2.2.6.4&amp;amp;quot;}",
+              "style": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "subtype": "thread_broadcast",
+      "bot_id": "B01V3NTQJNL",
+      "thread_ts": "1678305009.597439",
+      "root": {
+        "user": "U01UL42GNKW",
+        "type": "message",
+        "ts": "1678305009.597439",
+        "edited": {
+          "user": "B01V3NTQJNL",
+          "ts": "1678305010.000000"
+        },
+        "bot_id": "B01V3NTQJNL",
+        "app_id": "A01BP7R4KNY",
+        "text": "",
+        "team": "T02FMV4EB",
+        "bot_profile": {
+          "id": "B01V3NTQJNL",
+          "app_id": "A01BP7R4KNY",
+          "user_id": "U01UL42GNKW",
+          "name": "GitHub",
+          "icons": {
+            "image_36": "https://avatars.slack-edge.com/2020-11-25/1527503386626_319578f21381f9641cd8_36.png",
+            "image_48": "https://avatars.slack-edge.com/2020-11-25/1527503386626_319578f21381f9641cd8_48.png",
+            "image_72": "https://avatars.slack-edge.com/2020-11-25/1527503386626_319578f21381f9641cd8_72.png"
+          },
+          "deleted": false,
+          "updated": 1618483045,
+          "team_id": "T02FMV4EB"
+        },
+        "thread_ts": "1678305009.597439",
+        "reply_count": 1,
+        "reply_users_count": 1,
+        "latest_reply": "1678305009.815849",
+        "reply_users": [
+          "U01UL42GNKW"
+        ],
+        "is_locked": false,
+        "subscribed": false,
+        "attachments": [
+          {
+            "id": 1,
+            "footer_icon": "https://slack.github.com/static/img/favicon-neutral.png",
+            "ts": 1674074306,
+            "color": "cb2431",
+            "fallback": "[codeforjapan/socialhackday] Pull request opened by dependabot[bot]",
+            "text": "Bumps <https://github.com/rack/rack|rack> from 2.2.3 to 2.2.6.2.\n\nChangelog\n\n_Sourced from <https://github.com/rack/rack/blob/main/CHANGELOG.md|rack's changelog>._\n\n&gt; *Changelog*\n&gt; \n&gt; All notable changes to this project will be documented in this file. For info on how to format all future additions to this file please reference <https://keepachangelog.com/en/1.0.0/|Keep A Changelog>.\n&gt; \n&gt; *[3.0.3] - 2022-12-07*\n&gt; *Fixed*\n&gt; \n&gt; • `Rack::URLMap` uses non-deprecated form of `Regexp.new`. (<https://github-redirect.dependabot.com/rack/rack/pull/1998|#1998>, <https://github.com/weizheheng|`@​weizheheng`>)\n&gt; \n&gt; *[3.0.2] -2022-12-05*\n&gt; *Fixed*\n&gt; \n&gt; • `Utils.build_nested_query` URL-encodes nested field names including the square brackets.\n&gt; • Allow `Rack::Response` to pass through streaming bodies. (<https://github-redirect.dependabot.com/rack/rack/pull/1993|#1993>, [<https://github.com/ioquatix|`@​ioquatix`>])\n&gt; \n&gt; *[3.0.1] - 2022-11-18*\n&gt; *Fixed*\n&gt; \n&gt; • `MethodOverride` does not look for an override if a request does not include form/parseable data.\n&gt; • `Rack::Lint::Wrapper` correctly handles `respond_to?` with `to_ary`, `each`, `call` and `to_path`, forwarding to the body. (<https://github-redirect.dependabot.com/rack/rack/pull/1981|#1981>, [<https://github.com/ioquatix|`@​ioquatix`>])\n&gt; \n&gt; *[3.0.0] - 2022-09-06*\n&gt; \n&gt; • No changes\n&gt; \n&gt; *[3.0.0.rc1] - 2022-09-04*\n&gt; *SPEC Changes*\n&gt; \n&gt; • Stream argument must implement `&lt;&lt;` <https://github-redirect.dependabot.com/rack/rack/pull/1959|rack/rack#1959>\n&gt; • `close` may be called on `rack.input` <https://github-redirect.dependabot.com/rack/rack/pull/1956|rack/rack#1956>\n&gt; • `rack.response_finished` may be used for executing code after the response has been finished <https://github-redirect.dependabot.com/rack/rack/pull/1952|rack/rack#1952>\n&gt; \n&gt; *[3.0.0.beta1] - 2022-08-08*\n&gt; *Security*\n&gt; \n&gt; • Do not use semicolon as GET parameter separator. (<https://github-redirect.dependabot.com/rack/rack/pull/1733|#1733>, [<https://github.com/jeremyevans|`@​jeremyevans`>])\n&gt; \n&gt; *SPEC Changes*\n&gt; \n&gt; • Response array must now be non-frozen.\n&gt; • Response `status` must now be an integer greater than or equal to 100.\n&gt; • Response `headers` must now be an unfrozen hash.\n&gt; • Response header keys can no longer include uppercase characters.\n&gt; • Response header values can be an `Array` to handle multiple values (and no longer supports `\\n` encoded headers).\n&gt; • Response body can now respond to `#call` (streaming body) instead of `#each` (enumerable body), for the equivalent of response hijacking in previous versions.\n\n... (truncated)\n\nCommits\n\n• <https://github.com/rack/rack/commit/2606ac5d5d180c00a8cbcaa4d634276bab06500e|`2606ac5`> bumping version\n• <https://github.com/rack/rack/commit/f6d4f528f2df1318a6612845db0b59adc7fe8fc1|`f6d4f52`> Fix ReDoS in Rack::Utils.get_byte_ranges\n• <https://github.com/rack/rack/commit/20bc90c2431d7fabcd1873410543cf3d72f65004|`20bc90c`> bump version\n• <https://github.com/rack/rack/commit/3677f170b4ac713defb84cd6a86431623ba0adc0|`3677f17`> Update changelog\n• <https://github.com/rack/rack/commit/ee25ab9a7ee981d7578f559701085b0cf39bde77|`ee25ab9`> Fix ReDoS vulnerability in multipart parser\n• <https://github.com/rack/rack/commit/19e49f0f185d7e42ed5b402baec6c897a8c48029|`19e49f0`> Forbid control characters in attributes\n• <https://github.com/rack/rack/commit/ea39e49442e0008bfce4ad628ce52a4be2a20b5b|`ea39e49`> Bump patch version.\n• <https://github.com/rack/rack/commit/c0f9de4844052b7867180c587d1b6969be2f114d|`c0f9de4`> Rack::MethodOverride handle QueryParser::ParamsTooDeepError (<https://github-redirect.dependabot.com/rack/rack/issues/2011|#2011>)\n• <https://github.com/rack/rack/commit/8312a2fd6aee0950d7b2deb548aaf600cb871d80|`8312a2f`> Remove leading dot to fix compatibility with latest cgi gem. (<https://github-redirect.dependabot.com/rack/rack/issues/1988|#1988>)\n• <https://github.com/rack/rack/commit/2a82c88f1a468d8f68d9d7640886f5153142c272|`2a82c88`> Update tests to work on latest Rubies. (<https://github-redirect.dependabot.com/rack/rack/issues/1999|#1999>)\n• Additional commits viewable in <https://github.com/rack/rack/compare/2.2.3...v2.2.6.2|compare view>\n\n  \n\n<https://docs.github.com/en/github/managing-security-vulnerabilities/about-dependabot-security-updates#about-compatibility-scores|Dependabot compatibility score>\n\nDependabot will resolve any conflicts with this PR as long as you don't alter it yourself. You can also trigger a rebase manually by commenting `@dependabot rebase`.\n\n* * *\n\nDependabot commands and options  \n\nYou can trigger Dependabot actions by commenting on this PR:\n\n• `@dependabot rebase` will rebase this PR\n• `@dependabot recreate` will recreate this PR, overwriting any edits that have been made to it\n• `@dependabot merge` will merge this PR after your CI passes on it\n• `@dependabot squash and merge` will squash and merge this PR after your CI passes on it\n• `@dependabot cancel merge` will cancel a previously requested merge and block automerging\n• `@dependabot reopen` will reopen this PR if it is closed\n• `@dependabot close` will close this PR and stop Dependabot recreating it. You can achieve the same result by closing it manually\n• `@dependabot ignore this major version` will close this PR and stop Dependabot creating any more for this major version (unless you reopen the PR or upgrade to it yourself)\n• `@dependabot ignore this minor version` will close this PR and stop Dependabot creating any more for this minor version (unless you reopen the PR or upgrade to it yourself)\n• `@dependabot ignore this dependency` will close this PR and stop Dependabot creating any more for this dependency (unless you reopen the PR or upgrade to it yourself)\n• `@dependabot use these labels` will set the current labels as the default for future PRs for this repo and language\n• `@dependabot use these reviewers` will set the current reviewers as the default for future PRs for this repo and language\n• `@dependabot use these assignees` will set the current assignees as the default for future PRs for this repo and language\n• `@dependabot use this milestone` will set the current milestone as the default for future PRs for this repo and language\n\nYou can disable automated security fix PRs for this repo from the <https://github.com/codeforjapan/socialhackday/network/alerts|Security Alerts page>.",
+            "pretext": "Pull request opened by <https://github.com/apps/dependabot|dependabot[bot]>",
+            "title": "<https://github.com/codeforjapan/socialhackday/pull/108|#108 Bump rack from 2.2.3 to 2.2.6.2>",
+            "callback_id": "pr-opened-interaction",
+            "footer": "<https://github.com/codeforjapan/socialhackday|codeforjapan/socialhackday>",
+            "fields": [
+              {
+                "value": "dependencies, ruby",
+                "title": "Labels",
+                "short": true
+              },
+              {
+                "value": "1",
+                "title": "Comments",
+                "short": true
+              }
+            ],
+            "mrkdwn_in": [
+              "text"
+            ],
+            "actions": [
+              {
+                "id": "1",
+                "name": "comment",
+                "text": "Comment",
+                "type": "button",
+                "value": "{&amp;amp;quot;selectedOrg&amp;amp;quot;:&amp;amp;quot;codeforjapan&amp;amp;quot;,&amp;amp;quot;selectedOrgId&amp;amp;quot;:5137738,&amp;amp;quot;selectedRepo&amp;amp;quot;:&amp;amp;quot;socialhackday&amp;amp;quot;,&amp;amp;quot;selectedRepoId&amp;amp;quot;:128494821,&amp;amp;quot;number&amp;amp;quot;:108,&amp;amp;quot;htmlUrl&amp;amp;quot;:&amp;amp;quot;https://github.com/codeforjapan/socialhackday/pull/108&amp;amp;quot;,&amp;amp;quot;title&amp;amp;quot;:&amp;amp;quot;Bump rack from 2.2.3 to 2.2.6.2&amp;amp;quot;}",
+                "style": ""
+              }
+            ]
+          }
+        ]
+      },
+      "user": "U01UL42GNKW",
+      "type": "message",
+      "ts": "1678305009.815849",
+      "app_id": "A01BP7R4KNY",
+      "text": "",
+      "attachments": [
+        {
+          "id": 1,
+          "footer_icon": "https://slack.github.com/static/img/favicon-neutral.png",
+          "ts": 1674074306,
+          "color": "cb2431",
+          "fallback": "[codeforjapan/socialhackday] Pull request closed by dependabot[bot]",
+          "pretext": "Pull request closed by <https://github.com/apps/dependabot|dependabot[bot]>",
+          "title": "<https://github.com/codeforjapan/socialhackday/pull/108|#108 Bump rack from 2.2.3 to 2.2.6.2>",
+          "footer": "<https://github.com/codeforjapan/socialhackday|codeforjapan/socialhackday>"
+        }
+      ]
+    },
+    {
+      "user": "U01UL42GNKW",
+      "type": "message",
+      "ts": "1678305009.597439",
+      "edited": {
+        "user": "B01V3NTQJNL",
+        "ts": "1678305010.000000"
+      },
+      "bot_id": "B01V3NTQJNL",
+      "app_id": "A01BP7R4KNY",
+      "text": "",
+      "team": "T02FMV4EB",
+      "bot_profile": {
+        "id": "B01V3NTQJNL",
+        "app_id": "A01BP7R4KNY",
+        "user_id": "U01UL42GNKW",
+        "name": "GitHub",
+        "icons": {
+          "image_36": "https://avatars.slack-edge.com/2020-11-25/1527503386626_319578f21381f9641cd8_36.png",
+          "image_48": "https://avatars.slack-edge.com/2020-11-25/1527503386626_319578f21381f9641cd8_48.png",
+          "image_72": "https://avatars.slack-edge.com/2020-11-25/1527503386626_319578f21381f9641cd8_72.png"
+        },
+        "deleted": false,
+        "updated": 1618483045,
+        "team_id": "T02FMV4EB"
+      },
+      "thread_ts": "1678305009.597439",
+      "reply_count": 1,
+      "reply_users_count": 1,
+      "latest_reply": "1678305009.815849",
+      "reply_users": [
+        "U01UL42GNKW"
+      ],
+      "is_locked": false,
+      "subscribed": false,
+      "attachments": [
+        {
+          "id": 1,
+          "footer_icon": "https://slack.github.com/static/img/favicon-neutral.png",
+          "ts": 1674074306,
+          "color": "cb2431",
+          "fallback": "[codeforjapan/socialhackday] Pull request opened by dependabot[bot]",
+          "text": "Bumps <https://github.com/rack/rack|rack> from 2.2.3 to 2.2.6.2.\n\nChangelog\n\n_Sourced from <https://github.com/rack/rack/blob/main/CHANGELOG.md|rack's changelog>._\n\n&gt; *Changelog*\n&gt; \n&gt; All notable changes to this project will be documented in this file. For info on how to format all future additions to this file please reference <https://keepachangelog.com/en/1.0.0/|Keep A Changelog>.\n&gt; \n&gt; *[3.0.3] - 2022-12-07*\n&gt; *Fixed*\n&gt; \n&gt; • `Rack::URLMap` uses non-deprecated form of `Regexp.new`. (<https://github-redirect.dependabot.com/rack/rack/pull/1998|#1998>, <https://github.com/weizheheng|`@​weizheheng`>)\n&gt; \n&gt; *[3.0.2] -2022-12-05*\n&gt; *Fixed*\n&gt; \n&gt; • `Utils.build_nested_query` URL-encodes nested field names including the square brackets.\n&gt; • Allow `Rack::Response` to pass through streaming bodies. (<https://github-redirect.dependabot.com/rack/rack/pull/1993|#1993>, [<https://github.com/ioquatix|`@​ioquatix`>])\n&gt; \n&gt; *[3.0.1] - 2022-11-18*\n&gt; *Fixed*\n&gt; \n&gt; • `MethodOverride` does not look for an override if a request does not include form/parseable data.\n&gt; • `Rack::Lint::Wrapper` correctly handles `respond_to?` with `to_ary`, `each`, `call` and `to_path`, forwarding to the body. (<https://github-redirect.dependabot.com/rack/rack/pull/1981|#1981>, [<https://github.com/ioquatix|`@​ioquatix`>])\n&gt; \n&gt; *[3.0.0] - 2022-09-06*\n&gt; \n&gt; • No changes\n&gt; \n&gt; *[3.0.0.rc1] - 2022-09-04*\n&gt; *SPEC Changes*\n&gt; \n&gt; • Stream argument must implement `&lt;&lt;` <https://github-redirect.dependabot.com/rack/rack/pull/1959|rack/rack#1959>\n&gt; • `close` may be called on `rack.input` <https://github-redirect.dependabot.com/rack/rack/pull/1956|rack/rack#1956>\n&gt; • `rack.response_finished` may be used for executing code after the response has been finished <https://github-redirect.dependabot.com/rack/rack/pull/1952|rack/rack#1952>\n&gt; \n&gt; *[3.0.0.beta1] - 2022-08-08*\n&gt; *Security*\n&gt; \n&gt; • Do not use semicolon as GET parameter separator. (<https://github-redirect.dependabot.com/rack/rack/pull/1733|#1733>, [<https://github.com/jeremyevans|`@​jeremyevans`>])\n&gt; \n&gt; *SPEC Changes*\n&gt; \n&gt; • Response array must now be non-frozen.\n&gt; • Response `status` must now be an integer greater than or equal to 100.\n&gt; • Response `headers` must now be an unfrozen hash.\n&gt; • Response header keys can no longer include uppercase characters.\n&gt; • Response header values can be an `Array` to handle multiple values (and no longer supports `\\n` encoded headers).\n&gt; • Response body can now respond to `#call` (streaming body) instead of `#each` (enumerable body), for the equivalent of response hijacking in previous versions.\n\n... (truncated)\n\nCommits\n\n• <https://github.com/rack/rack/commit/2606ac5d5d180c00a8cbcaa4d634276bab06500e|`2606ac5`> bumping version\n• <https://github.com/rack/rack/commit/f6d4f528f2df1318a6612845db0b59adc7fe8fc1|`f6d4f52`> Fix ReDoS in Rack::Utils.get_byte_ranges\n• <https://github.com/rack/rack/commit/20bc90c2431d7fabcd1873410543cf3d72f65004|`20bc90c`> bump version\n• <https://github.com/rack/rack/commit/3677f170b4ac713defb84cd6a86431623ba0adc0|`3677f17`> Update changelog\n• <https://github.com/rack/rack/commit/ee25ab9a7ee981d7578f559701085b0cf39bde77|`ee25ab9`> Fix ReDoS vulnerability in multipart parser\n• <https://github.com/rack/rack/commit/19e49f0f185d7e42ed5b402baec6c897a8c48029|`19e49f0`> Forbid control characters in attributes\n• <https://github.com/rack/rack/commit/ea39e49442e0008bfce4ad628ce52a4be2a20b5b|`ea39e49`> Bump patch version.\n• <https://github.com/rack/rack/commit/c0f9de4844052b7867180c587d1b6969be2f114d|`c0f9de4`> Rack::MethodOverride handle QueryParser::ParamsTooDeepError (<https://github-redirect.dependabot.com/rack/rack/issues/2011|#2011>)\n• <https://github.com/rack/rack/commit/8312a2fd6aee0950d7b2deb548aaf600cb871d80|`8312a2f`> Remove leading dot to fix compatibility with latest cgi gem. (<https://github-redirect.dependabot.com/rack/rack/issues/1988|#1988>)\n• <https://github.com/rack/rack/commit/2a82c88f1a468d8f68d9d7640886f5153142c272|`2a82c88`> Update tests to work on latest Rubies. (<https://github-redirect.dependabot.com/rack/rack/issues/1999|#1999>)\n• Additional commits viewable in <https://github.com/rack/rack/compare/2.2.3...v2.2.6.2|compare view>\n\n  \n\n<https://docs.github.com/en/github/managing-security-vulnerabilities/about-dependabot-security-updates#about-compatibility-scores|Dependabot compatibility score>\n\nDependabot will resolve any conflicts with this PR as long as you don't alter it yourself. You can also trigger a rebase manually by commenting `@dependabot rebase`.\n\n* * *\n\nDependabot commands and options  \n\nYou can trigger Dependabot actions by commenting on this PR:\n\n• `@dependabot rebase` will rebase this PR\n• `@dependabot recreate` will recreate this PR, overwriting any edits that have been made to it\n• `@dependabot merge` will merge this PR after your CI passes on it\n• `@dependabot squash and merge` will squash and merge this PR after your CI passes on it\n• `@dependabot cancel merge` will cancel a previously requested merge and block automerging\n• `@dependabot reopen` will reopen this PR if it is closed\n• `@dependabot close` will close this PR and stop Dependabot recreating it. You can achieve the same result by closing it manually\n• `@dependabot ignore this major version` will close this PR and stop Dependabot creating any more for this major version (unless you reopen the PR or upgrade to it yourself)\n• `@dependabot ignore this minor version` will close this PR and stop Dependabot creating any more for this minor version (unless you reopen the PR or upgrade to it yourself)\n• `@dependabot ignore this dependency` will close this PR and stop Dependabot creating any more for this dependency (unless you reopen the PR or upgrade to it yourself)\n• `@dependabot use these labels` will set the current labels as the default for future PRs for this repo and language\n• `@dependabot use these reviewers` will set the current reviewers as the default for future PRs for this repo and language\n• `@dependabot use these assignees` will set the current assignees as the default for future PRs for this repo and language\n• `@dependabot use this milestone` will set the current milestone as the default for future PRs for this repo and language\n\nYou can disable automated security fix PRs for this repo from the <https://github.com/codeforjapan/socialhackday/network/alerts|Security Alerts page>.",
+          "pretext": "Pull request opened by <https://github.com/apps/dependabot|dependabot[bot]>",
+          "title": "<https://github.com/codeforjapan/socialhackday/pull/108|#108 Bump rack from 2.2.3 to 2.2.6.2>",
+          "callback_id": "pr-opened-interaction",
+          "footer": "<https://github.com/codeforjapan/socialhackday|codeforjapan/socialhackday>",
+          "fields": [
+            {
+              "value": "dependencies, ruby",
+              "title": "Labels",
+              "short": true
+            },
+            {
+              "value": "1",
+              "title": "Comments",
+              "short": true
+            }
+          ],
+          "mrkdwn_in": [
+            "text"
+          ],
+          "actions": [
+            {
+              "id": "1",
+              "name": "comment",
+              "text": "Comment",
+              "type": "button",
+              "value": "{&amp;amp;quot;selectedOrg&amp;amp;quot;:&amp;amp;quot;codeforjapan&amp;amp;quot;,&amp;amp;quot;selectedOrgId&amp;amp;quot;:5137738,&amp;amp;quot;selectedRepo&amp;amp;quot;:&amp;amp;quot;socialhackday&amp;amp;quot;,&amp;amp;quot;selectedRepoId&amp;amp;quot;:128494821,&amp;amp;quot;number&amp;amp;quot;:108,&amp;amp;quot;htmlUrl&amp;amp;quot;:&amp;amp;quot;https://github.com/codeforjapan/socialhackday/pull/108&amp;amp;quot;,&amp;amp;quot;title&amp;amp;quot;:&amp;amp;quot;Bump rack from 2.2.3 to 2.2.6.2&amp;amp;quot;}",
+              "style": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "user": "U01UL42GNKW",
+      "type": "message",
+      "ts": "1678305003.472389",
+      "edited": {
+        "user": "B01V3NTQJNL",
+        "ts": "1678945444.000000"
+      },
+      "bot_id": "B01V3NTQJNL",
+      "app_id": "A01BP7R4KNY",
+      "text": "",
+      "team": "T02FMV4EB",
+      "bot_profile": {
+        "id": "B01V3NTQJNL",
+        "app_id": "A01BP7R4KNY",
+        "user_id": "U01UL42GNKW",
+        "name": "GitHub",
+        "icons": {
+          "image_36": "https://avatars.slack-edge.com/2020-11-25/1527503386626_319578f21381f9641cd8_36.png",
+          "image_48": "https://avatars.slack-edge.com/2020-11-25/1527503386626_319578f21381f9641cd8_48.png",
+          "image_72": "https://avatars.slack-edge.com/2020-11-25/1527503386626_319578f21381f9641cd8_72.png"
+        },
+        "deleted": false,
+        "updated": 1618483045,
+        "team_id": "T02FMV4EB"
+      },
+      "thread_ts": "1678305003.472389",
+      "reply_count": 1,
+      "reply_users_count": 1,
+      "latest_reply": "1678945444.064779",
+      "reply_users": [
+        "U01UL42GNKW"
+      ],
+      "is_locked": false,
+      "subscribed": false,
+      "attachments": [
+        {
+          "id": 1,
+          "footer_icon": "https://slack.github.com/static/img/favicon-neutral.png",
+          "ts": 1678305000,
+          "color": "cb2431",
+          "fallback": "[codeforjapan/socialhackday] Pull request opened by dependabot[bot]",
+          "text": "Bumps <https://github.com/rack/rack|rack> from 2.2.3 to 2.2.6.3.\n\nChangelog\n\n_Sourced from <https://github.com/rack/rack/blob/main/CHANGELOG.md|rack's changelog>._\n\n&gt; *Changelog*\n&gt; \n&gt; All notable changes to this project will be documented in this file. For info on how to format all future additions to this file please reference <https://keepachangelog.com/en/1.0.0/|Keep A Changelog>.\n&gt; \n&gt; *[Unreleased]*\n&gt; *SPEC Changes*\n&gt; \n&gt; • `rack.input` is now optional. (<https://github-redirect.dependabot.com/rack/rack/pull/1997|#1997>, [<https://github.com/ioquatix|`@​ioquatix`>])\n&gt; \n&gt; *Changed*\n&gt; \n&gt; • `rack.input` is now optional, and if missing, will raise an error. Use this to fail on multipart parsing a request without an input body. (<https://github-redirect.dependabot.com/rack/rack/pull/2018|#2018>, [<https://github.com/ioquatix|`@​ioquatix`>])\n&gt; • Introduce `module Rack::BadRequest` which is included in multipart and query parser errors. (<https://github-redirect.dependabot.com/rack/rack/pull/2019|#2019>, [<https://github.com/ioquatix|`@​ioquatix`>])\n&gt; • MIME type for JavaScript files (`.js`) changed from `application/javascript` to `text/javascript` (<https://github.com/rack/rack/commit/1bd0f1597d8f4a90d47115f3e156a8ce7870c9c8|`1bd0f15`>)\n&gt; \n&gt; *[3.0.4.1] - 2023-01-17*\n&gt; \n&gt; • [<https://github.com/advisories/GHSA-93pm-5p5f-3ghx|CVE-2022-44571>] Fix ReDoS vulnerability in multipart parser\n&gt; • [<https://github.com/advisories/GHSA-65f5-mfpf-vfhj|CVE-2022-44570>] Fix ReDoS in Rack::Utils.get_byte_ranges\n&gt; • [<https://github.com/advisories/GHSA-rqv2-275x-2jq5|CVE-2022-44572>] Forbid control characters in attributes (also ReDoS)\n&gt; \n&gt; *[3.0.4] - 2023-01-17*\n&gt; \n&gt; • `Rack::Request#POST` should consistently raise errors. Cache errors that occur when invoking `Rack::Request#POST` so they can be raised again later. (<https://github-redirect.dependabot.com/rack/rack/pull/2010|#2010>, [<https://github.com/ioquatix|`@​ioquatix`>])\n&gt; • Fix `Rack::Lint` error message for `HTTP_CONTENT_TYPE` and `HTTP_CONTENT_LENGTH`. (<https://github-redirect.dependabot.com/rack/rack/pull/2007|#2007>, <https://github.com/byroot|`@​byroot`>)\n&gt; • Extend `Rack::MethodOverride` to handle `QueryParser::ParamsTooDeepError` error. (<https://github-redirect.dependabot.com/rack/rack/pull/2006|#2006>, <https://github.com/byroot|`@​byroot`>)\n&gt; \n&gt; *[3.0.3] - 2022-12-27*\n&gt; *Fixed*\n&gt; \n&gt; • `Rack::URLMap` uses non-deprecated form of `Regexp.new`. (<https://github-redirect.dependabot.com/rack/rack/pull/1998|#1998>, <https://github.com/weizheheng|`@​weizheheng`>)\n&gt; \n&gt; *[3.0.2] -2022-12-05*\n&gt; *Fixed*\n&gt; \n&gt; • `Utils.build_nested_query` URL-encodes nested field names including the square brackets.\n&gt; • Allow `Rack::Response` to pass through streaming bodies. (<https://github-redirect.dependabot.com/rack/rack/pull/1993|#1993>, [<https://github.com/ioquatix|`@​ioquatix`>])\n&gt; \n&gt; *[3.0.1] - 2022-11-18*\n&gt; *Fixed*\n&gt; \n&gt; • `MethodOverride` does not look for an override if a request does not include form/parseable data.\n&gt; • `Rack::Lint::Wrapper` correctly handles `respond_to?` with `to_ary`, `each`, `call` and `to_path`, forwarding to the body. (<https://github-redirect.dependabot.com/rack/rack/pull/1981|#1981>, [<https://github.com/ioquatix|`@​ioquatix`>])\n&gt; \n&gt; *[3.0.0] - 2022-09-06*\n\n... (truncated)\n\nCommits\n\n• <https://github.com/rack/rack/commit/d6b5b2bab88f458fb048133604faebea952d8133|`d6b5b2b`> bump version\n• <https://github.com/rack/rack/commit/9aac3757fe19cdb0476504c9245170115bec9668|`9aac375`> Limit all multipart parts, not just files\n• <https://github.com/rack/rack/commit/2606ac5d5d180c00a8cbcaa4d634276bab06500e|`2606ac5`> bumping version\n• <https://github.com/rack/rack/commit/f6d4f528f2df1318a6612845db0b59adc7fe8fc1|`f6d4f52`> Fix ReDoS in Rack::Utils.get_byte_ranges\n• <https://github.com/rack/rack/commit/20bc90c2431d7fabcd1873410543cf3d72f65004|`20bc90c`> bump version\n• <https://github.com/rack/rack/commit/3677f170b4ac713defb84cd6a86431623ba0adc0|`3677f17`> Update changelog\n• <https://github.com/rack/rack/commit/ee25ab9a7ee981d7578f559701085b0cf39bde77|`ee25ab9`> Fix ReDoS vulnerability in multipart parser\n• <https://github.com/rack/rack/commit/19e49f0f185d7e42ed5b402baec6c897a8c48029|`19e49f0`> Forbid control characters in attributes\n• <https://github.com/rack/rack/commit/ea39e49442e0008bfce4ad628ce52a4be2a20b5b|`ea39e49`> Bump patch version.\n• <https://github.com/rack/rack/commit/c0f9de4844052b7867180c587d1b6969be2f114d|`c0f9de4`> Rack::MethodOverride handle QueryParser::ParamsTooDeepError (<https://github-redirect.dependabot.com/rack/rack/issues/2011|#2011>)\n• Additional commits viewable in <https://github.com/rack/rack/compare/2.2.3...v2.2.6.3|compare view>\n\n  \n\n<https://docs.github.com/en/github/managing-security-vulnerabilities/about-dependabot-security-updates#about-compatibility-scores|Dependabot compatibility score>\n\nDependabot will resolve any conflicts with this PR as long as you don't alter it yourself. You can also trigger a rebase manually by commenting `@dependabot rebase`.\n\n* * *\n\nDependabot commands and options  \n\nYou can trigger Dependabot actions by commenting on this PR:\n\n• `@dependabot rebase` will rebase this PR\n• `@dependabot recreate` will recreate this PR, overwriting any edits that have been made to it\n• `@dependabot merge` will merge this PR after your CI passes on it\n• `@dependabot squash and merge` will squash and merge this PR after your CI passes on it\n• `@dependabot cancel merge` will cancel a previously requested merge and block automerging\n• `@dependabot reopen` will reopen this PR if it is closed\n• `@dependabot close` will close this PR and stop Dependabot recreating it. You can achieve the same result by closing it manually\n• `@dependabot ignore this major version` will close this PR and stop Dependabot creating any more for this major version (unless you reopen the PR or upgrade to it yourself)\n• `@dependabot ignore this minor version` will close this PR and stop Dependabot creating any more for this minor version (unless you reopen the PR or upgrade to it yourself)\n• `@dependabot ignore this dependency` will close this PR and stop Dependabot creating any more for this dependency (unless you reopen the PR or upgrade to it yourself)\n• `@dependabot use these labels` will set the current labels as the default for future PRs for this repo and language\n• `@dependabot use these reviewers` will set the current reviewers as the default for future PRs for this repo and language\n• `@dependabot use these assignees` will set the current assignees as the default for future PRs for this repo and language\n• `@dependabot use this milestone` will set the current milestone as the default for future PRs for this repo and language\n\nYou can disable automated security fix PRs for this repo from the <https://github.com/codeforjapan/socialhackday/network/alerts|Security Alerts page>.",
+          "pretext": "Pull request opened by <https://github.com/apps/dependabot|dependabot[bot]>",
+          "title": "<https://github.com/codeforjapan/socialhackday/pull/111|#111 Bump rack from 2.2.3 to 2.2.6.3>",
+          "callback_id": "pr-opened-interaction",
+          "footer": "<https://github.com/codeforjapan/socialhackday|codeforjapan/socialhackday>",
+          "fields": [
+            {
+              "value": "dependencies, ruby",
+              "title": "Labels",
+              "short": true
+            },
+            {
+              "value": "1",
+              "title": "Comments",
+              "short": true
+            }
+          ],
+          "mrkdwn_in": [
+            "text"
+          ],
+          "actions": [
+            {
+              "id": "1",
+              "name": "comment",
+              "text": "Comment",
+              "type": "button",
+              "value": "{&amp;amp;quot;selectedOrg&amp;amp;quot;:&amp;amp;quot;codeforjapan&amp;amp;quot;,&amp;amp;quot;selectedOrgId&amp;amp;quot;:5137738,&amp;amp;quot;selectedRepo&amp;amp;quot;:&amp;amp;quot;socialhackday&amp;amp;quot;,&amp;amp;quot;selectedRepoId&amp;amp;quot;:128494821,&amp;amp;quot;number&amp;amp;quot;:111,&amp;amp;quot;htmlUrl&amp;amp;quot;:&amp;amp;quot;https://github.com/codeforjapan/socialhackday/pull/111&amp;amp;quot;,&amp;amp;quot;title&amp;amp;quot;:&amp;amp;quot;Bump rack from 2.2.3 to 2.2.6.3&amp;amp;quot;}",
+              "style": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "subtype": "thread_broadcast",
+      "bot_id": "B01V3NTQJNL",
+      "thread_ts": "1677897476.684759",
+      "root": {
+        "user": "U01UL42GNKW",
+        "type": "message",
+        "ts": "1677897476.684759",
+        "edited": {
+          "user": "B01V3NTQJNL",
+          "ts": "1677897477.000000"
+        },
+        "bot_id": "B01V3NTQJNL",
+        "app_id": "A01BP7R4KNY",
+        "text": "",
+        "team": "T02FMV4EB",
+        "bot_profile": {
+          "id": "B01V3NTQJNL",
+          "app_id": "A01BP7R4KNY",
+          "user_id": "U01UL42GNKW",
+          "name": "GitHub",
+          "icons": {
+            "image_36": "https://avatars.slack-edge.com/2020-11-25/1527503386626_319578f21381f9641cd8_36.png",
+            "image_48": "https://avatars.slack-edge.com/2020-11-25/1527503386626_319578f21381f9641cd8_48.png",
+            "image_72": "https://avatars.slack-edge.com/2020-11-25/1527503386626_319578f21381f9641cd8_72.png"
+          },
+          "deleted": false,
+          "updated": 1618483045,
+          "team_id": "T02FMV4EB"
+        },
+        "thread_ts": "1677897476.684759",
+        "reply_count": 1,
+        "reply_users_count": 1,
+        "latest_reply": "1677897476.833279",
+        "reply_users": [
+          "U01UL42GNKW"
+        ],
+        "is_locked": false,
+        "subscribed": false,
+        "attachments": [
+          {
+            "id": 1,
+            "footer_icon": "https://slack.github.com/static/img/favicon-neutral.png",
+            "ts": 1649488721,
+            "color": "cb2431",
+            "fallback": "[codeforjapan/socialhackday] Pull request opened by dependabot[bot]",
+            "text": "Bumps <https://github.com/substack/minimist|minimist> from 1.2.5 to 1.2.6.\n\nCommits\n\n• <https://github.com/substack/minimist/commit/7efb22a518b53b06f5b02a1038a88bd6290c2846|`7efb22a`> 1.2.6\n• <https://github.com/substack/minimist/commit/ef88b9325f77b5ee643ccfc97e2ebda577e4c4e2|`ef88b93`> security notice for additional prototype pollution issue\n• <https://github.com/substack/minimist/commit/c2b981977fa834b223b408cfb860f933c9811e4d|`c2b9819`> isConstructorOrProto adapted from PR\n• <https://github.com/substack/minimist/commit/bc8ecee43875261f4f17eb20b1243d3ed15e70eb|`bc8ecee`> test from prototype pollution PR\n• See full diff in <https://github.com/substack/minimist/compare/1.2.5...1.2.6|compare view>\n\n  \n\n<https://docs.github.com/en/github/managing-security-vulnerabilities/about-dependabot-security-updates#about-compatibility-scores|Dependabot compatibility score>\n\nDependabot will resolve any conflicts with this PR as long as you don't alter it yourself. You can also trigger a rebase manually by commenting `@dependabot rebase`.\n\n* * *\n\nDependabot commands and options  \n\nYou can trigger Dependabot actions by commenting on this PR:\n\n• `@dependabot rebase` will rebase this PR\n• `@dependabot recreate` will recreate this PR, overwriting any edits that have been made to it\n• `@dependabot merge` will merge this PR after your CI passes on it\n• `@dependabot squash and merge` will squash and merge this PR after your CI passes on it\n• `@dependabot cancel merge` will cancel a previously requested merge and block automerging\n• `@dependabot reopen` will reopen this PR if it is closed\n• `@dependabot close` will close this PR and stop Dependabot recreating it. You can achieve the same result by closing it manually\n• `@dependabot ignore this major version` will close this PR and stop Dependabot creating any more for this major version (unless you reopen the PR or upgrade to it yourself)\n• `@dependabot ignore this minor version` will close this PR and stop Dependabot creating any more for this minor version (unless you reopen the PR or upgrade to it yourself)\n• `@dependabot ignore this dependency` will close this PR and stop Dependabot creating any more for this dependency (unless you reopen the PR or upgrade to it yourself)\n• `@dependabot use these labels` will set the current labels as the default for future PRs for this repo and language\n• `@dependabot use these reviewers` will set the current reviewers as the default for future PRs for this repo and language\n• `@dependabot use these assignees` will set the current assignees as the default for future PRs for this repo and language\n• `@dependabot use this milestone` will set the current milestone as the default for future PRs for this repo and language\n\nYou can disable automated security fix PRs for this repo from the <https://github.com/codeforjapan/socialhackday/network/alerts|Security Alerts page>.",
+            "pretext": "Pull request opened by <https://github.com/apps/dependabot|dependabot[bot]>",
+            "title": "<https://github.com/codeforjapan/socialhackday/pull/96|#96 Bump minimist from 1.2.5 to 1.2.6>",
+            "callback_id": "pr-opened-interaction",
+            "footer": "<https://github.com/codeforjapan/socialhackday|codeforjapan/socialhackday>",
+            "fields": [
+              {
+                "value": "dependencies, javascript",
+                "title": "Labels",
+                "short": true
+              },
+              {
+                "value": "1",
+                "title": "Comments",
+                "short": true
+              }
+            ],
+            "mrkdwn_in": [
+              "text"
+            ],
+            "actions": [
+              {
+                "id": "1",
+                "name": "comment",
+                "text": "Comment",
+                "type": "button",
+                "value": "{&amp;amp;quot;selectedOrg&amp;amp;quot;:&amp;amp;quot;codeforjapan&amp;amp;quot;,&amp;amp;quot;selectedOrgId&amp;amp;quot;:5137738,&amp;amp;quot;selectedRepo&amp;amp;quot;:&amp;amp;quot;socialhackday&amp;amp;quot;,&amp;amp;quot;selectedRepoId&amp;amp;quot;:128494821,&amp;amp;quot;number&amp;amp;quot;:96,&amp;amp;quot;htmlUrl&amp;amp;quot;:&amp;amp;quot;https://github.com/codeforjapan/socialhackday/pull/96&amp;amp;quot;,&amp;amp;quot;title&amp;amp;quot;:&amp;amp;quot;Bump minimist from 1.2.5 to 1.2.6&amp;amp;quot;}",
+                "style": ""
+              }
+            ]
+          }
+        ]
+      },
+      "user": "U01UL42GNKW",
+      "type": "message",
+      "ts": "1677897476.833279",
+      "app_id": "A01BP7R4KNY",
+      "text": "",
+      "attachments": [
+        {
+          "id": 1,
+          "footer_icon": "https://slack.github.com/static/img/favicon-neutral.png",
+          "ts": 1649488721,
+          "color": "cb2431",
+          "fallback": "[codeforjapan/socialhackday] Pull request closed by dependabot[bot]",
+          "pretext": "Pull request closed by <https://github.com/apps/dependabot|dependabot[bot]>",
+          "title": "<https://github.com/codeforjapan/socialhackday/pull/96|#96 Bump minimist from 1.2.5 to 1.2.6>",
+          "footer": "<https://github.com/codeforjapan/socialhackday|codeforjapan/socialhackday>"
+        }
+      ]
+    },
+    {
+      "user": "U01UL42GNKW",
+      "type": "message",
+      "ts": "1677897476.684759",
+      "edited": {
+        "user": "B01V3NTQJNL",
+        "ts": "1677897477.000000"
+      },
+      "bot_id": "B01V3NTQJNL",
+      "app_id": "A01BP7R4KNY",
+      "text": "",
+      "team": "T02FMV4EB",
+      "bot_profile": {
+        "id": "B01V3NTQJNL",
+        "app_id": "A01BP7R4KNY",
+        "user_id": "U01UL42GNKW",
+        "name": "GitHub",
+        "icons": {
+          "image_36": "https://avatars.slack-edge.com/2020-11-25/1527503386626_319578f21381f9641cd8_36.png",
+          "image_48": "https://avatars.slack-edge.com/2020-11-25/1527503386626_319578f21381f9641cd8_48.png",
+          "image_72": "https://avatars.slack-edge.com/2020-11-25/1527503386626_319578f21381f9641cd8_72.png"
+        },
+        "deleted": false,
+        "updated": 1618483045,
+        "team_id": "T02FMV4EB"
+      },
+      "thread_ts": "1677897476.684759",
+      "reply_count": 1,
+      "reply_users_count": 1,
+      "latest_reply": "1677897476.833279",
+      "reply_users": [
+        "U01UL42GNKW"
+      ],
+      "is_locked": false,
+      "subscribed": false,
+      "attachments": [
+        {
+          "id": 1,
+          "footer_icon": "https://slack.github.com/static/img/favicon-neutral.png",
+          "ts": 1649488721,
+          "color": "cb2431",
+          "fallback": "[codeforjapan/socialhackday] Pull request opened by dependabot[bot]",
+          "text": "Bumps <https://github.com/substack/minimist|minimist> from 1.2.5 to 1.2.6.\n\nCommits\n\n• <https://github.com/substack/minimist/commit/7efb22a518b53b06f5b02a1038a88bd6290c2846|`7efb22a`> 1.2.6\n• <https://github.com/substack/minimist/commit/ef88b9325f77b5ee643ccfc97e2ebda577e4c4e2|`ef88b93`> security notice for additional prototype pollution issue\n• <https://github.com/substack/minimist/commit/c2b981977fa834b223b408cfb860f933c9811e4d|`c2b9819`> isConstructorOrProto adapted from PR\n• <https://github.com/substack/minimist/commit/bc8ecee43875261f4f17eb20b1243d3ed15e70eb|`bc8ecee`> test from prototype pollution PR\n• See full diff in <https://github.com/substack/minimist/compare/1.2.5...1.2.6|compare view>\n\n  \n\n<https://docs.github.com/en/github/managing-security-vulnerabilities/about-dependabot-security-updates#about-compatibility-scores|Dependabot compatibility score>\n\nDependabot will resolve any conflicts with this PR as long as you don't alter it yourself. You can also trigger a rebase manually by commenting `@dependabot rebase`.\n\n* * *\n\nDependabot commands and options  \n\nYou can trigger Dependabot actions by commenting on this PR:\n\n• `@dependabot rebase` will rebase this PR\n• `@dependabot recreate` will recreate this PR, overwriting any edits that have been made to it\n• `@dependabot merge` will merge this PR after your CI passes on it\n• `@dependabot squash and merge` will squash and merge this PR after your CI passes on it\n• `@dependabot cancel merge` will cancel a previously requested merge and block automerging\n• `@dependabot reopen` will reopen this PR if it is closed\n• `@dependabot close` will close this PR and stop Dependabot recreating it. You can achieve the same result by closing it manually\n• `@dependabot ignore this major version` will close this PR and stop Dependabot creating any more for this major version (unless you reopen the PR or upgrade to it yourself)\n• `@dependabot ignore this minor version` will close this PR and stop Dependabot creating any more for this minor version (unless you reopen the PR or upgrade to it yourself)\n• `@dependabot ignore this dependency` will close this PR and stop Dependabot creating any more for this dependency (unless you reopen the PR or upgrade to it yourself)\n• `@dependabot use these labels` will set the current labels as the default for future PRs for this repo and language\n• `@dependabot use these reviewers` will set the current reviewers as the default for future PRs for this repo and language\n• `@dependabot use these assignees` will set the current assignees as the default for future PRs for this repo and language\n• `@dependabot use this milestone` will set the current milestone as the default for future PRs for this repo and language\n\nYou can disable automated security fix PRs for this repo from the <https://github.com/codeforjapan/socialhackday/network/alerts|Security Alerts page>.",
+          "pretext": "Pull request opened by <https://github.com/apps/dependabot|dependabot[bot]>",
+          "title": "<https://github.com/codeforjapan/socialhackday/pull/96|#96 Bump minimist from 1.2.5 to 1.2.6>",
+          "callback_id": "pr-opened-interaction",
+          "footer": "<https://github.com/codeforjapan/socialhackday|codeforjapan/socialhackday>",
+          "fields": [
+            {
+              "value": "dependencies, javascript",
+              "title": "Labels",
+              "short": true
+            },
+            {
+              "value": "1",
+              "title": "Comments",
+              "short": true
+            }
+          ],
+          "mrkdwn_in": [
+            "text"
+          ],
+          "actions": [
+            {
+              "id": "1",
+              "name": "comment",
+              "text": "Comment",
+              "type": "button",
+              "value": "{&amp;amp;quot;selectedOrg&amp;amp;quot;:&amp;amp;quot;codeforjapan&amp;amp;quot;,&amp;amp;quot;selectedOrgId&amp;amp;quot;:5137738,&amp;amp;quot;selectedRepo&amp;amp;quot;:&amp;amp;quot;socialhackday&amp;amp;quot;,&amp;amp;quot;selectedRepoId&amp;amp;quot;:128494821,&amp;amp;quot;number&amp;amp;quot;:96,&amp;amp;quot;htmlUrl&amp;amp;quot;:&amp;amp;quot;https://github.com/codeforjapan/socialhackday/pull/96&amp;amp;quot;,&amp;amp;quot;title&amp;amp;quot;:&amp;amp;quot;Bump minimist from 1.2.5 to 1.2.6&amp;amp;quot;}",
+              "style": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "user": "U01UL42GNKW",
+      "type": "message",
+      "ts": "1677897471.900139",
+      "edited": {
+        "user": "B01V3NTQJNL",
+        "ts": "1677897473.000000"
+      },
+      "bot_id": "B01V3NTQJNL",
+      "app_id": "A01BP7R4KNY",
+      "text": "",
+      "team": "T02FMV4EB",
+      "bot_profile": {
+        "id": "B01V3NTQJNL",
+        "app_id": "A01BP7R4KNY",
+        "user_id": "U01UL42GNKW",
+        "name": "GitHub",
+        "icons": {
+          "image_36": "https://avatars.slack-edge.com/2020-11-25/1527503386626_319578f21381f9641cd8_36.png",
+          "image_48": "https://avatars.slack-edge.com/2020-11-25/1527503386626_319578f21381f9641cd8_48.png",
+          "image_72": "https://avatars.slack-edge.com/2020-11-25/1527503386626_319578f21381f9641cd8_72.png"
+        },
+        "deleted": false,
+        "updated": 1618483045,
+        "team_id": "T02FMV4EB"
+      },
+      "attachments": [
+        {
+          "id": 1,
+          "footer_icon": "https://slack.github.com/static/img/favicon-neutral.png",
+          "ts": 1677897469,
+          "color": "36a64f",
+          "fallback": "[codeforjapan/socialhackday] Pull request opened by dependabot[bot]",
+          "text": "Bumps <https://github.com/minimistjs/minimist|minimist> from 1.2.5 to 1.2.8.\n\nChangelog\n\n_Sourced from <https://github.com/minimistjs/minimist/blob/main/CHANGELOG.md|minimist's changelog>._\n\n&gt; *<https://github.com/minimistjs/minimist/compare/v1.2.7...v1.2.8|v1.2.8> - 2023-02-09*\n&gt; *Merged*\n&gt; \n&gt; • [Fix] Fix long option followed by single dash <https://github-redirect.dependabot.com/minimistjs/minimist/pull/17|`[#17](https://github.com/minimistjs/minimist/issues/17)`>\n&gt; • [Tests] Remove duplicate test <https://github-redirect.dependabot.com/minimistjs/minimist/pull/12|`[#12](https://github.com/minimistjs/minimist/issues/12)`>\n&gt; • [Fix] opt.string works with multiple aliases <https://github-redirect.dependabot.com/minimistjs/minimist/pull/10|`[#10](https://github.com/minimistjs/minimist/issues/10)`>\n&gt; \n&gt; *Fixed*\n&gt; \n&gt; • [Fix] Fix long option followed by single dash (<https://github-redirect.dependabot.com/minimistjs/minimist/issues/17|#17>) <https://github-redirect.dependabot.com/minimistjs/minimist/issues/15|`[#15](https://github.com/minimistjs/minimist/issues/15)`>\n&gt; • [Tests] Remove duplicate test (<https://github-redirect.dependabot.com/minimistjs/minimist/issues/12|#12>) <https://github-redirect.dependabot.com/minimistjs/minimist/issues/8|`[#8](https://github.com/minimistjs/minimist/issues/8)`>\n&gt; • [Fix] Fix long option followed by single dash <https://github-redirect.dependabot.com/minimistjs/minimist/issues/15|`[#15](https://github.com/minimistjs/minimist/issues/15)`>\n&gt; • [Fix] opt.string works with multiple aliases (<https://github-redirect.dependabot.com/minimistjs/minimist/issues/10|#10>) <https://github-redirect.dependabot.com/minimistjs/minimist/issues/9|`[#9](https://github.com/minimistjs/minimist/issues/9)`>\n&gt; • [Fix] Fix handling of short option with non-trivial equals <https://github-redirect.dependabot.com/minimistjs/minimist/issues/5|`[#5](https://github.com/minimistjs/minimist/issues/5)`>\n&gt; • [Tests] Remove duplicate test <https://github-redirect.dependabot.com/minimistjs/minimist/issues/8|`[#8](https://github.com/minimistjs/minimist/issues/8)`>\n&gt; • [Fix] opt.string works with multiple aliases <https://github-redirect.dependabot.com/minimistjs/minimist/issues/9|`[#9](https://github.com/minimistjs/minimist/issues/9)`>\n&gt; \n&gt; *Commits*\n&gt; \n&gt; • Merge tag 'v0.2.3' <https://github.com/minimistjs/minimist/commit/a0267947c7870fc5847cf2d437fbe33f392767da|`a026794`>\n&gt; • [eslint] fix indentation and whitespace <https://github.com/minimistjs/minimist/commit/5368ca4147e974138a54cc0dc4cea8f756546b70|`5368ca4`>\n&gt; • [eslint] fix indentation and whitespace <https://github.com/minimistjs/minimist/commit/e5f5067259ceeaf0b098d14bec910f87e58708c7|`e5f5067`>\n&gt; • [eslint] more cleanup <https://github.com/minimistjs/minimist/commit/62fde7d935f83417fb046741531a9e2346a36976|`62fde7d`>\n&gt; • [eslint] more cleanup <https://github.com/minimistjs/minimist/commit/36ac5d0d95e4947d074e5737d94814034ca335d1|`36ac5d0`>\n&gt; • [meta] add `auto-changelog` <https://github.com/minimistjs/minimist/commit/73923d223553fca08b1ba77e3fbc2a492862ae4c|`73923d2`>\n&gt; • [actions] add reusable workflows <https://github.com/minimistjs/minimist/commit/d80727df77bfa9e631044d7f16368d8f09242c91|`d80727d`>\n&gt; • [eslint] add eslint; rules to enable later are warnings <https://github.com/minimistjs/minimist/commit/48bc06a1b41f00e9cdf183db34f7a51ba70e98d4|`48bc06a`>\n&gt; • [eslint] fix indentation <https://github.com/minimistjs/minimist/commit/34b0f1ccaa45183c3c4f06a91f9b405180a6f982|`34b0f1c`>\n&gt; • [readme] rename and add badges <https://github.com/minimistjs/minimist/commit/5df0fe49211bd09a3636f8686a7cb3012c3e98f0|`5df0fe4`>\n&gt; • [Dev Deps] switch from `covert` to `nyc` <https://github.com/minimistjs/minimist/commit/a48b128fdb8d427dfb20a15273f83e38d97bef07|`a48b128`>\n&gt; • [Dev Deps] update `covert`, `tape`; remove unnecessary `tap` <https://github.com/minimistjs/minimist/commit/f0fb958e9a1fe980cdffc436a211b0bda58f621b|`f0fb958`>\n&gt; • [meta] create FUNDING.yml; add `funding` in package.json <https://github.com/minimistjs/minimist/commit/3639e0c819359a366387e425ab6eabf4c78d3caa|`3639e0c`>\n&gt; • [meta] use `npmignore` to autogenerate an npmignore file <https://github.com/minimistjs/minimist/commit/be2e038c342d8333b32f0fde67a0026b79c8150e|`be2e038`>\n&gt; • Only apps should have lockfiles <https://github.com/minimistjs/minimist/commit/282b570e7489d01b03f2d6d3dabf79cd3e5f84cf|`282b570`>\n&gt; • isConstructorOrProto adapted from PR <https://github.com/minimistjs/minimist/commit/ef9153fc52b6cea0744b2239921c5dcae4697f11|`ef9153f`>\n&gt; • [Dev Deps] update `@ljharb/eslint-config`, `aud` <https://github.com/minimistjs/minimist/commit/098873c213cdb7c92e55ae1ef5aa1af3a8192a79|`098873c`>\n&gt; • [Dev Deps] update `@ljharb/eslint-config`, `aud` <https://github.com/minimistjs/minimist/commit/3124ed3e46306301ebb3c834874ce0241555c2c4|`3124ed3`>\n&gt; • [meta] add `safe-publish-latest` <https://github.com/minimistjs/minimist/commit/4b927de696d561c636b4f43bf49d4597cb36d6d6|`4b927de`>\n&gt; • [Tests] add `aud` in `posttest` <https://github.com/minimistjs/minimist/commit/b32d9bd0ab340f4e9f8c3a97ff2a4424f25fab8c|`b32d9bd`>\n&gt; • [meta] update repo URLs <https://github.com/minimistjs/minimist/commit/f9fdfc032c54884d9a9996a390c63cd0719bbe1a|`f9fdfc0`>\n&gt; • [actions] Avoid 0.6 tests due to build failures <https://github.com/minimistjs/minimist/commit/ba92fe6ebbdc0431cca9a2ea8f27beb492f5e4ec|`ba92fe6`>\n&gt; • [Dev Deps] update `tape` <https://github.com/minimistjs/minimist/commit/950eaa74f112e04d23e9c606c67472c46739b473|`950eaa7`>\n&gt; • [Dev Deps] add missing `npmignore` dev dep <https://github.com/minimistjs/minimist/commit/3226afaf09e9d127ca369742437fe6e88f752d6b|`3226afa`>\n&gt; • Merge tag 'v0.2.2' <https://github.com/minimistjs/minimist/commit/980d7ac61a0b4bd552711251ac107d506b23e41f|`980d7ac`>\n&gt; \n&gt; *<https://github.com/minimistjs/minimist/compare/v1.2.6...v1.2.7|v1.2.7> - 2022-10-10*\n&gt; *Commits*\n\n... (truncated)\n\nCommits\n\n• <https://github.com/minimistjs/minimist/commit/6901ee286bc4c16da6830b48b46ce1574703cea1|`6901ee2`> v1.2.8\n• <https://github.com/minimistjs/minimist/commit/a0267947c7870fc5847cf2d437fbe33f392767da|`a026794`> Merge tag 'v0.2.3'\n• <https://github.com/minimistjs/minimist/commit/c0b26618322e94adea26c68e613ef0be482c6c63|`c0b2661`> v0.2.3\n• <https://github.com/minimistjs/minimist/commit/63b8fee87b8e7a003216d5d77ba5d6decf3cfb0d|`63b8fee`> [Fix] Fix long option followed by single dash (<https://github-redirect.dependabot.com/minimistjs/minimist/issues/17|#17>)\n• <https://github.com/minimistjs/minimist/commit/72239e6f0ea77d8be0ad4f682b7ae7d142144395|`72239e6`> [Tests] Remove duplicate test (<https://github-redirect.dependabot.com/minimistjs/minimist/issues/12|#12>)\n• <https://github.com/minimistjs/minimist/commit/34b0f1ccaa45183c3c4f06a91f9b405180a6f982|`34b0f1c`> [eslint] fix indentation\n• <https://github.com/minimistjs/minimist/commit/3226afaf09e9d127ca369742437fe6e88f752d6b|`3226afa`> [Dev Deps] add missing `npmignore` dev dep\n• <https://github.com/minimistjs/minimist/commit/098873c213cdb7c92e55ae1ef5aa1af3a8192a79|`098873c`> [Dev Deps] update `@ljharb/eslint-config`, `aud`\n• <https://github.com/minimistjs/minimist/commit/9ec4d279ced72ea2f60237218e71cc03aa0dfdd6|`9ec4d27`> [Fix] Fix long option followed by single dash\n• <https://github.com/minimistjs/minimist/commit/ba92fe6ebbdc0431cca9a2ea8f27beb492f5e4ec|`ba92fe6`> [actions] Avoid 0.6 tests due to build failures\n• Additional commits viewable in <https://github.com/minimistjs/minimist/compare/v1.2.5...v1.2.8|compare view>\n\nMaintainer changes\n\nThis version was pushed to npm by <https://www.npmjs.com/~ljharb|ljharb>, a new releaser for minimist since your current version.\n\n  \n\n<https://docs.github.com/en/github/managing-security-vulnerabilities/about-dependabot-security-updates#about-compatibility-scores|Dependabot compatibility score>\n\nDependabot will resolve an…",
+          "pretext": "Pull request opened by <https://github.com/apps/dependabot|dependabot[bot]>",
+          "title": "<https://github.com/codeforjapan/socialhackday/pull/110|#110 Bump minimist from 1.2.5 to 1.2.8>",
+          "callback_id": "pr-opened-interaction",
+          "footer": "<https://github.com/codeforjapan/socialhackday|codeforjapan/socialhackday>",
+          "fields": [
+            {
+              "value": "dependencies, javascript",
+              "title": "Labels",
+              "short": true
+            }
+          ],
+          "mrkdwn_in": [
+            "text"
+          ],
+          "actions": [
+            {
+              "id": "1",
+              "name": "comment",
+              "text": "Comment",
+              "type": "button",
+              "value": "{&amp;amp;quot;selectedOrg&amp;amp;quot;:&amp;amp;quot;codeforjapan&amp;amp;quot;,&amp;amp;quot;selectedOrgId&amp;amp;quot;:5137738,&amp;amp;quot;selectedRepo&amp;amp;quot;:&amp;amp;quot;socialhackday&amp;amp;quot;,&amp;amp;quot;selectedRepoId&amp;amp;quot;:128494821,&amp;amp;quot;number&amp;amp;quot;:110,&amp;amp;quot;htmlUrl&amp;amp;quot;:&amp;amp;quot;https://github.com/codeforjapan/socialhackday/pull/110&amp;amp;quot;,&amp;amp;quot;title&amp;amp;quot;:&amp;amp;quot;Bump minimist from 1.2.5 to 1.2.8&amp;amp;quot;}",
+              "style": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "user": "U01UL42GNKW",
+      "type": "message",
+      "ts": "1674793363.641459",
+      "edited": {
+        "user": "B01V3NTQJNL",
+        "ts": "1674793365.000000"
+      },
+      "bot_id": "B01V3NTQJNL",
+      "app_id": "A01BP7R4KNY",
+      "text": "",
+      "team": "T02FMV4EB",
+      "bot_profile": {
+        "id": "B01V3NTQJNL",
+        "app_id": "A01BP7R4KNY",
+        "user_id": "U01UL42GNKW",
+        "name": "GitHub",
+        "icons": {
+          "image_36": "https://avatars.slack-edge.com/2020-11-25/1527503386626_319578f21381f9641cd8_36.png",
+          "image_48": "https://avatars.slack-edge.com/2020-11-25/1527503386626_319578f21381f9641cd8_48.png",
+          "image_72": "https://avatars.slack-edge.com/2020-11-25/1527503386626_319578f21381f9641cd8_72.png"
+        },
+        "deleted": false,
+        "updated": 1618483045,
+        "team_id": "T02FMV4EB"
+      },
+      "attachments": [
+        {
+          "id": 1,
+          "footer_icon": "https://slack.github.com/static/img/favicon-neutral.png",
+          "ts": 1674793361,
+          "color": "36a64f",
+          "fallback": "[codeforjapan/socialhackday] Pull request opened by dependabot[bot]",
+          "text": "Bumps <https://github.com/faisalman/ua-parser-js|ua-parser-js> from 0.7.28 to 0.7.33.\n\nChangelog\n\n_Sourced from <https://github.com/faisalman/ua-parser-js/blob/master/changelog.md|ua-parser-js's changelog>._\n\n&gt; *Version 0.7.33 / 1.0.33*\n&gt; \n&gt; • Add new browser : Cobalt\n&gt; • Identify Macintosh as an Apple device\n&gt; • Fix ReDoS vulnerability\n&gt; \n&gt; *Version 0.8*\n&gt; \n&gt; Version 0.8 was created by accident. This version is now deprecated and no longer maintained, please update to version 0.7 / 1.0.\n\nCommits\n\n• <https://github.com/faisalman/ua-parser-js/commit/f2d0db001d87da15de7b9b1df7be9f2eacefd8c5|`f2d0db0`> Bump version 0.7.33\n• <https://github.com/faisalman/ua-parser-js/commit/a6140a17dd0300a35cfc9cff999545f267889411|`a6140a1`> Remove unsafe regex in trim() function\n• <https://github.com/faisalman/ua-parser-js/commit/a88660493568d6144a551424a8139d6c876635f6|`a886604`> Fix <https://github-redirect.dependabot.com/faisalman/ua-parser-js/issues/605|#605> - Identify Macintosh as Apple device\n• <https://github.com/faisalman/ua-parser-js/commit/b814bcd79198e730936c82462e2d729eb5423e3c|`b814bcd`> Merge pull request <https://github-redirect.dependabot.com/faisalman/ua-parser-js/issues/606|#606> from rileyjshaw/patch-1\n• <https://github.com/faisalman/ua-parser-js/commit/7f71024161399b7aa5d5cd10dba9e059f0218262|`7f71024`> Fix documentation\n• <https://github.com/faisalman/ua-parser-js/commit/c239ac5167abd574a635cb809a2b4fa35810d23b|`c239ac5`> Merge pull request <https://github-redirect.dependabot.com/faisalman/ua-parser-js/issues/604|#604> from obecerra3/master\n• <https://github.com/faisalman/ua-parser-js/commit/8d3c2d327cf540ff2c050f1cc67bca8c6f8e4458|`8d3c2d3`> Add new browser: Cobalt\n• <https://github.com/faisalman/ua-parser-js/commit/d11fc47dc9b6acc0f89fc10c120cea08e10cd31a|`d11fc47`> Bump version 0.7.32\n• <https://github.com/faisalman/ua-parser-js/commit/b490110109de586deab96c775c9ef0dfc9c919c4|`b490110`> Merge branch 'develop' of <http://github.com:faisalman/ua-parser-js|github.com:faisalman/ua-parser-js>\n• <https://github.com/faisalman/ua-parser-js/commit/cb5da5ea4b220d5b60fe209e123b7f911d8e0d4a|`cb5da5e`> Merge pull request <https://github-redirect.dependabot.com/faisalman/ua-parser-js/issues/600|#600> from moekm/develop\n• Additional commits viewable in <https://github.com/faisalman/ua-parser-js/compare/0.7.28...0.7.33|compare view>\n\n  \n\n<https://docs.github.com/en/github/managing-security-vulnerabilities/about-dependabot-security-updates#about-compatibility-scores|Dependabot compatibility score>\n\nDependabot will resolve any conflicts with this PR as long as you don't alter it yourself. You can also trigger a rebase manually by commenting `@dependabot rebase`.\n\n* * *\n\nDependabot commands and options  \n\nYou can trigger Dependabot actions by commenting on this PR:\n\n• `@dependabot rebase` will rebase this PR\n• `@dependabot recreate` will recreate this PR, overwriting any edits that have been made to it\n• `@dependabot merge` will merge this PR after your CI passes on it\n• `@dependabot squash and merge` will squash and merge this PR after your CI passes on it\n• `@dependabot cancel merge` will cancel a previously requested merge and block automerging\n• `@dependabot reopen` will reopen this PR if it is closed\n• `@dependabot close` will close this PR and stop Dependabot recreating it. You can achieve the same result by closing it manually\n• `@dependabot ignore this major version` will close this PR and stop Dependabot creating any more for this major version (unless you reopen the PR or upgrade to it yourself)\n• `@dependabot ignore this minor version` will close this PR and stop Dependabot creating any more for this minor version (unless you reopen the PR or upgrade to it yourself)\n• `@dependabot ignore this dependency` will close this PR and stop Dependabot creating any more for this dependency (unless you reopen the PR or upgrade to it yourself)\n• `@dependabot use these labels` will set the current labels as the default for future PRs for this repo and language\n• `@dependabot use these reviewers` will set the current reviewers as the default for future PRs for this repo and language\n• `@dependabot use these assignees` will set the current assignees as the default for future PRs for this repo and language\n• `@dependabot use this milestone` will set the current milestone as the default for future PRs for this repo and language\n\nYou can disable automated security fix PRs for this repo from the <https://github.com/codeforjapan/socialhackday/network/alerts|Security Alerts page>.",
+          "pretext": "Pull request opened by <https://github.com/apps/dependabot|dependabot[bot]>",
+          "title": "<https://github.com/codeforjapan/socialhackday/pull/109|#109 Bump ua-parser-js from 0.7.28 to 0.7.33>",
+          "callback_id": "pr-opened-interaction",
+          "footer": "<https://github.com/codeforjapan/socialhackday|codeforjapan/socialhackday>",
+          "fields": [
+            {
+              "value": "dependencies, javascript",
+              "title": "Labels",
+              "short": true
+            }
+          ],
+          "mrkdwn_in": [
+            "text"
+          ],
+          "actions": [
+            {
+              "id": "1",
+              "name": "comment",
+              "text": "Comment",
+              "type": "button",
+              "value": "{&amp;amp;quot;selectedOrg&amp;amp;quot;:&amp;amp;quot;codeforjapan&amp;amp;quot;,&amp;amp;quot;selectedOrgId&amp;amp;quot;:5137738,&amp;amp;quot;selectedRepo&amp;amp;quot;:&amp;amp;quot;socialhackday&amp;amp;quot;,&amp;amp;quot;selectedRepoId&amp;amp;quot;:128494821,&amp;amp;quot;number&amp;amp;quot;:109,&amp;amp;quot;htmlUrl&amp;amp;quot;:&amp;amp;quot;https://github.com/codeforjapan/socialhackday/pull/109&amp;amp;quot;,&amp;amp;quot;title&amp;amp;quot;:&amp;amp;quot;Bump ua-parser-js from 0.7.28 to 0.7.33&amp;amp;quot;}",
+              "style": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "subtype": "thread_broadcast",
+      "bot_id": "B01V3NTQJNL",
+      "thread_ts": "1674074313.295959",
+      "root": {
+        "user": "U01UL42GNKW",
+        "type": "message",
+        "ts": "1674074313.295959",
+        "edited": {
+          "user": "B01V3NTQJNL",
+          "ts": "1674074313.000000"
+        },
+        "bot_id": "B01V3NTQJNL",
+        "app_id": "A01BP7R4KNY",
+        "text": "",
+        "team": "T02FMV4EB",
+        "bot_profile": {
+          "id": "B01V3NTQJNL",
+          "app_id": "A01BP7R4KNY",
+          "user_id": "U01UL42GNKW",
+          "name": "GitHub",
+          "icons": {
+            "image_36": "https://avatars.slack-edge.com/2020-11-25/1527503386626_319578f21381f9641cd8_36.png",
+            "image_48": "https://avatars.slack-edge.com/2020-11-25/1527503386626_319578f21381f9641cd8_48.png",
+            "image_72": "https://avatars.slack-edge.com/2020-11-25/1527503386626_319578f21381f9641cd8_72.png"
+          },
+          "deleted": false,
+          "updated": 1618483045,
+          "team_id": "T02FMV4EB"
+        },
+        "thread_ts": "1674074313.295959",
+        "reply_count": 1,
+        "reply_users_count": 1,
+        "latest_reply": "1674074313.452679",
+        "reply_users": [
+          "U01UL42GNKW"
+        ],
+        "is_locked": false,
+        "subscribed": false,
+        "attachments": [
+          {
+            "id": 1,
+            "footer_icon": "https://slack.github.com/static/img/favicon-neutral.png",
+            "ts": 1653669945,
+            "color": "cb2431",
+            "fallback": "[codeforjapan/socialhackday] Pull request opened by dependabot[bot]",
+            "text": "Bumps <https://github.com/rack/rack|rack> from 2.2.3 to 2.2.3.1.\n\nChangelog\n\n_Sourced from <https://github.com/rack/rack/blob/main/CHANGELOG.md|rack's changelog>._\n\n&gt; *Changelog*\n&gt; \n&gt; All notable changes to this project will be documented in this file. For info on how to format all future additions to this file please reference <https://keepachangelog.com/en/1.0.0/|Keep A Changelog>.\n&gt; \n&gt; *[3.0.0] - Unreleased*\n&gt; *Security*\n&gt; \n&gt; • Do not use semicolon as GET parameter separator. (<https://github-redirect.dependabot.com/rack/rack/pull/1733|#1733>, [<https://github.com/jeremyevans|`@​jeremyevans`>])\n&gt; \n&gt; *SPEC Changes*\n&gt; \n&gt; • Response `status` must now be an integer greater than or equal to 100.\n&gt; • Response `headers` must now be an unfrozen hash.\n&gt; • Response header keys can no longer include uppercase characters.\n&gt; • Response header values can be an `Array` to handle multiple values (and no longer supports `\\n` encoded headers).\n&gt; • Response body can now respond to `#call` (streaming body) instead of `#each` (enumerable body), for the equivalent of response hijacking in previous versions.\n&gt; • Middleware must no longer call `#each` on the body, but they can call `#to_ary` on the body if it responds to `#to_ary`.\n&gt; • `rack.input` is no longer required to be rewindable.\n&gt; • `rack.multithread/rack.multiprocess/rack.run_once` are no longer required environment keys.\n&gt; • `SERVER_PROTOCOL` is now a required key, matching the HTTP protocol used in the request.\n&gt; \n&gt; *Removed*\n&gt; \n&gt; • Remove `rack.multithread`/`rack.multiprocess`/`rack.run_once`. These variables generally come too late to be useful. (<https://github-redirect.dependabot.com/rack/rack/pull/1720|#1720>, [<https://github.com/ioquatix|`@​ioquatix`>], [<https://github.com/jeremyevans|`@​jeremyevans`>]))\n&gt; • Remove deprecated Rack::Request::SCHEME_WHITELIST. ([<https://github.com/jeremyevans|`@​jeremyevans`>])\n&gt; • Remove internal cookie deletion using pattern matching, there are very few practical cases where it would be useful and browsers handle it correctly without us doing anything special. (<https://github-redirect.dependabot.com/rack/rack/pull/1844|#1844>, [<https://github.com/ioquatix|`@​ioquatix`>])\n&gt; \n&gt; *Added*\n&gt; \n&gt; • `Rack::Headers` added to support lower-case header keys. ([<https://github.com/jeremyevans|`@​jeremyevans`>])\n&gt; • `Rack::Utils#set_cookie_header` now supports `escape_key: false` to avoid key escaping. ([<https://github.com/jeremyevans|`@​jeremyevans`>])\n&gt; • `Rack::RewindableInput` supports size. (<https://github.com/ahorek|`@​ahorek`>)\n&gt; • `Rack::RewindableInput::Middleware` added for making `rack.input` rewindable. ([<https://github.com/jeremyevans|`@​jeremyevans`>])\n&gt; • The RFC 7239 Forwarded header is now supported and considered by default when looking for information on forwarding, falling back to the X-Forwarded-* headers. `Rack::Request.forwarded_priority` accessor has been added for configuring the priority of which header to check. (<https://github-redirect.dependabot.com/rack/rack/issues/1423|#1423>, [<https://github.com/jeremyevans|`@​jeremyevans`>])\n&gt; • Allow response headers to contain array of values. (<https://github-redirect.dependabot.com/rack/rack/issues/1598|#1598>, [<https://github.com/ioquatix|`@​ioquatix`>])\n&gt; \n&gt; *Changed*\n&gt; \n&gt; • BREAKING CHANGE: Require `status` to be an Integer. (<https://github-redirect.dependabot.com/rack/rack/pull/1662|#1662>, <https://github.com/olleolleolle|`@​olleolleolle`>)\n&gt; • BREAKING CHANGE: Query parsing now treats parameters without `=` as having the empty string value instead of nil value, to conform to the URL spec. (<https://github-redirect.dependabot.com/rack/rack/issues/1696|#1696>, [<https://github.com/jeremyevans|`@​jeremyevans`>])\n&gt; • Relax validations around `Rack::Request#host` and `Rack::Request#hostname`. (<https://github-redirect.dependabot.com/rack/rack/issues/1606|#1606>, <https://github.com/pvande|`@​pvande`>)\n&gt; • Removed antiquated handlers: FCGI, LSWS, SCGI, Thin. (<https://github-redirect.dependabot.com/rack/rack/pull/1658|#1658>, [<https://github.com/ioquatix|`@​ioquatix`>])\n&gt; • Removed options from `Rack::Builder.parse_file` and `Rack::Builder.load_file`. (<https://github-redirect.dependabot.com/rack/rack/pull/1663|#1663>, [<https://github.com/ioquatix|`@​ioquatix`>])\n&gt; • `Rack::HTTP_VERSION` has been removed and the `HTTP_VERSION` env setting is no longer set in the CGI and Webrick handlers. (<https://github-redirect.dependabot.com/rack/rack/issues/970|#970>, [<https://github.com/jeremyevans|`@​jeremyevans`>])\n&gt; • `Rack::Request#[]` and `#[]=` now warn even in non-verbose mode. (<https://github-redirect.dependabot.com/rack/rack/issues/1277|#1277>, [<https://github.com/jeremyevans|`@​jeremyevans`>])\n&gt; • Decrease default allowed parameter recursion level from 100 to 32. (<https://github-redirect.dependabot.com/rack/rack/issues/1640|#1640>, [<https://github.com/jeremyevans|`@​jeremyevans`>])\n&gt; • Attempting to parse a multipart response with an empty body now raises Rack::Multipart::EmptyContentError. (<https://github-redirect.dependabot.com/rack/rack/issues/1603|#1603>, [<https://github.com/jeremyevans|`@​jeremyevans`>])\n&gt; • `Rack::Utils.secure_compare` uses OpenSSL's faster implementation if available. (<https://github-redirect.dependabot.com/rack/rack/pull/1711|#1711>, <https://github.com/bdewater|`@​bdewater`>)\n&gt; • `Rack::Request#POST` now caches an empty hash if input content type is not parseable. (<https://github-redirect.dependabot.com/rack/rack/pull/749|#749>, [<https://github.com/jeremyevans|`@​jeremyevans`>])\n\n... (truncated)\n\nCommits\n\n• <https://github.com/rack/rack/commit/925a4a6599ab26b4f3455b525393fe155d443655|`925a4a6`> update changelog\n• <https://github.com/rack/rack/commit/70c0a24ea2c03352fca287dc502ffbabf4e1aea1|`70c0a24`> bump version\n• <https://github.com/rack/rack/commit/434413f5cff1ca36d70c3e5a3544c5c2d7b636bf|`434413f`> Escape untrusted text when logging\n• <https://github.com/rack/rack/commit/a872bcce127a6f4a0f16af8f28b686955ba32814|`a872bcc`> Restrict broken mime parsing\n• See full diff in <https://github.com/rack/rack/compare/2.2.3...2.2.3.1|compare view>\n\n  \n\n<https://docs.github.com/en/github/managing-security-vulnerabilities/about-dependabot-security-updates#about-compatibility-scores|Dependabot compatibility score>\n\nDependabot will resolve any conflicts with this PR as long as you don't alter it yourself. You can also trigger a rebase manually by commenting `@dependabot rebase`.\n\n* * *\n\nDependabot commands and options  \n\nYou can trigger Dependabot actions by commenting on this PR:\n\n• `@dependabot rebase` will rebase this PR\n• `@dependabot recreate` will recreate this PR, overwriting any edits that have been made to it\n• `@dependabot merge` will merge this PR after your CI passes on it\n• `@dependabot squash and merge` will squash and merge this PR after your CI passes on it\n• `@dependabot cancel merge` will cancel a previously requested merge and block automerging\n• `@dependabot reopen` will reopen this PR if it is closed\n• `@dependabot close` will close this PR and stop Dependabot recreating it. You can achieve the same result by closing it manually\n• `@dependabot ignore this major version` will close this PR and stop Dependabot creating any more for this major version (unless you reopen the PR or upgrade to it yourself)\n• `@dependabot ignore this minor version` will close this PR and stop Dependabot creating any more for this minor version (unless you reopen the PR or upgrade to it yourself)\n• `@dependabot ignore this dependency` will close this PR and stop Dependabot creating any more for this dependency (unless you reopen the PR or upgrade to it yourself)\n• `@dependabot use these labels` will set the current labels as the default for future PRs for this repo and language\n• `@dependabot use these reviewers` will set the current re…",
+            "pretext": "Pull request opened by <https://github.com/apps/dependabot|dependabot[bot]>",
+            "title": "<https://github.com/codeforjapan/socialhackday/pull/100|#100 Bump rack from 2.2.3 to 2.2.3.1>",
+            "callback_id": "pr-opened-interaction",
+            "footer": "<https://github.com/codeforjapan/socialhackday|codeforjapan/socialhackday>",
+            "fields": [
+              {
+                "value": "dependencies, ruby",
+                "title": "Labels",
+                "short": true
+              },
+              {
+                "value": "1",
+                "title": "Comments",
+                "short": true
+              }
+            ],
+            "mrkdwn_in": [
+              "text"
+            ],
+            "actions": [
+              {
+                "id": "1",
+                "name": "comment",
+                "text": "Comment",
+                "type": "button",
+                "value": "{&amp;amp;quot;selectedOrg&amp;amp;quot;:&amp;amp;quot;codeforjapan&amp;amp;quot;,&amp;amp;quot;selectedOrgId&amp;amp;quot;:5137738,&amp;amp;quot;selectedRepo&amp;amp;quot;:&amp;amp;quot;socialhackday&amp;amp;quot;,&amp;amp;quot;selectedRepoId&amp;amp;quot;:128494821,&amp;amp;quot;number&amp;amp;quot;:100,&amp;amp;quot;htmlUrl&amp;amp;quot;:&amp;amp;quot;https://github.com/codeforjapan/socialhackday/pull/100&amp;amp;quot;,&amp;amp;quot;title&amp;amp;quot;:&amp;amp;quot;Bump rack from 2.2.3 to 2.2.3.1&amp;amp;quot;}",
+                "style": ""
+              }
+            ]
+          }
+        ]
+      },
+      "user": "U01UL42GNKW",
+      "type": "message",
+      "ts": "1674074313.452679",
+      "app_id": "A01BP7R4KNY",
+      "text": "",
+      "attachments": [
+        {
+          "id": 1,
+          "footer_icon": "https://slack.github.com/static/img/favicon-neutral.png",
+          "ts": 1653669945,
+          "color": "cb2431",
+          "fallback": "[codeforjapan/socialhackday] Pull request closed by dependabot[bot]",
+          "pretext": "Pull request closed by <https://github.com/apps/dependabot|dependabot[bot]>",
+          "title": "<https://github.com/codeforjapan/socialhackday/pull/100|#100 Bump rack from 2.2.3 to 2.2.3.1>",
+          "footer": "<https://github.com/codeforjapan/socialhackday|codeforjapan/socialhackday>"
+        }
+      ]
+    },
+    {
+      "user": "U01UL42GNKW",
+      "type": "message",
+      "ts": "1674074313.295959",
+      "edited": {
+        "user": "B01V3NTQJNL",
+        "ts": "1674074313.000000"
+      },
+      "bot_id": "B01V3NTQJNL",
+      "app_id": "A01BP7R4KNY",
+      "text": "",
+      "team": "T02FMV4EB",
+      "bot_profile": {
+        "id": "B01V3NTQJNL",
+        "app_id": "A01BP7R4KNY",
+        "user_id": "U01UL42GNKW",
+        "name": "GitHub",
+        "icons": {
+          "image_36": "https://avatars.slack-edge.com/2020-11-25/1527503386626_319578f21381f9641cd8_36.png",
+          "image_48": "https://avatars.slack-edge.com/2020-11-25/1527503386626_319578f21381f9641cd8_48.png",
+          "image_72": "https://avatars.slack-edge.com/2020-11-25/1527503386626_319578f21381f9641cd8_72.png"
+        },
+        "deleted": false,
+        "updated": 1618483045,
+        "team_id": "T02FMV4EB"
+      },
+      "thread_ts": "1674074313.295959",
+      "reply_count": 1,
+      "reply_users_count": 1,
+      "latest_reply": "1674074313.452679",
+      "reply_users": [
+        "U01UL42GNKW"
+      ],
+      "is_locked": false,
+      "subscribed": false,
+      "attachments": [
+        {
+          "id": 1,
+          "footer_icon": "https://slack.github.com/static/img/favicon-neutral.png",
+          "ts": 1653669945,
+          "color": "cb2431",
+          "fallback": "[codeforjapan/socialhackday] Pull request opened by dependabot[bot]",
+          "text": "Bumps <https://github.com/rack/rack|rack> from 2.2.3 to 2.2.3.1.\n\nChangelog\n\n_Sourced from <https://github.com/rack/rack/blob/main/CHANGELOG.md|rack's changelog>._\n\n&gt; *Changelog*\n&gt; \n&gt; All notable changes to this project will be documented in this file. For info on how to format all future additions to this file please reference <https://keepachangelog.com/en/1.0.0/|Keep A Changelog>.\n&gt; \n&gt; *[3.0.0] - Unreleased*\n&gt; *Security*\n&gt; \n&gt; • Do not use semicolon as GET parameter separator. (<https://github-redirect.dependabot.com/rack/rack/pull/1733|#1733>, [<https://github.com/jeremyevans|`@​jeremyevans`>])\n&gt; \n&gt; *SPEC Changes*\n&gt; \n&gt; • Response `status` must now be an integer greater than or equal to 100.\n&gt; • Response `headers` must now be an unfrozen hash.\n&gt; • Response header keys can no longer include uppercase characters.\n&gt; • Response header values can be an `Array` to handle multiple values (and no longer supports `\\n` encoded headers).\n&gt; • Response body can now respond to `#call` (streaming body) instead of `#each` (enumerable body), for the equivalent of response hijacking in previous versions.\n&gt; • Middleware must no longer call `#each` on the body, but they can call `#to_ary` on the body if it responds to `#to_ary`.\n&gt; • `rack.input` is no longer required to be rewindable.\n&gt; • `rack.multithread/rack.multiprocess/rack.run_once` are no longer required environment keys.\n&gt; • `SERVER_PROTOCOL` is now a required key, matching the HTTP protocol used in the request.\n&gt; \n&gt; *Removed*\n&gt; \n&gt; • Remove `rack.multithread`/`rack.multiprocess`/`rack.run_once`. These variables generally come too late to be useful. (<https://github-redirect.dependabot.com/rack/rack/pull/1720|#1720>, [<https://github.com/ioquatix|`@​ioquatix`>], [<https://github.com/jeremyevans|`@​jeremyevans`>]))\n&gt; • Remove deprecated Rack::Request::SCHEME_WHITELIST. ([<https://github.com/jeremyevans|`@​jeremyevans`>])\n&gt; • Remove internal cookie deletion using pattern matching, there are very few practical cases where it would be useful and browsers handle it correctly without us doing anything special. (<https://github-redirect.dependabot.com/rack/rack/pull/1844|#1844>, [<https://github.com/ioquatix|`@​ioquatix`>])\n&gt; \n&gt; *Added*\n&gt; \n&gt; • `Rack::Headers` added to support lower-case header keys. ([<https://github.com/jeremyevans|`@​jeremyevans`>])\n&gt; • `Rack::Utils#set_cookie_header` now supports `escape_key: false` to avoid key escaping. ([<https://github.com/jeremyevans|`@​jeremyevans`>])\n&gt; • `Rack::RewindableInput` supports size. (<https://github.com/ahorek|`@​ahorek`>)\n&gt; • `Rack::RewindableInput::Middleware` added for making `rack.input` rewindable. ([<https://github.com/jeremyevans|`@​jeremyevans`>])\n&gt; • The RFC 7239 Forwarded header is now supported and considered by default when looking for information on forwarding, falling back to the X-Forwarded-* headers. `Rack::Request.forwarded_priority` accessor has been added for configuring the priority of which header to check. (<https://github-redirect.dependabot.com/rack/rack/issues/1423|#1423>, [<https://github.com/jeremyevans|`@​jeremyevans`>])\n&gt; • Allow response headers to contain array of values. (<https://github-redirect.dependabot.com/rack/rack/issues/1598|#1598>, [<https://github.com/ioquatix|`@​ioquatix`>])\n&gt; \n&gt; *Changed*\n&gt; \n&gt; • BREAKING CHANGE: Require `status` to be an Integer. (<https://github-redirect.dependabot.com/rack/rack/pull/1662|#1662>, <https://github.com/olleolleolle|`@​olleolleolle`>)\n&gt; • BREAKING CHANGE: Query parsing now treats parameters without `=` as having the empty string value instead of nil value, to conform to the URL spec. (<https://github-redirect.dependabot.com/rack/rack/issues/1696|#1696>, [<https://github.com/jeremyevans|`@​jeremyevans`>])\n&gt; • Relax validations around `Rack::Request#host` and `Rack::Request#hostname`. (<https://github-redirect.dependabot.com/rack/rack/issues/1606|#1606>, <https://github.com/pvande|`@​pvande`>)\n&gt; • Removed antiquated handlers: FCGI, LSWS, SCGI, Thin. (<https://github-redirect.dependabot.com/rack/rack/pull/1658|#1658>, [<https://github.com/ioquatix|`@​ioquatix`>])\n&gt; • Removed options from `Rack::Builder.parse_file` and `Rack::Builder.load_file`. (<https://github-redirect.dependabot.com/rack/rack/pull/1663|#1663>, [<https://github.com/ioquatix|`@​ioquatix`>])\n&gt; • `Rack::HTTP_VERSION` has been removed and the `HTTP_VERSION` env setting is no longer set in the CGI and Webrick handlers. (<https://github-redirect.dependabot.com/rack/rack/issues/970|#970>, [<https://github.com/jeremyevans|`@​jeremyevans`>])\n&gt; • `Rack::Request#[]` and `#[]=` now warn even in non-verbose mode. (<https://github-redirect.dependabot.com/rack/rack/issues/1277|#1277>, [<https://github.com/jeremyevans|`@​jeremyevans`>])\n&gt; • Decrease default allowed parameter recursion level from 100 to 32. (<https://github-redirect.dependabot.com/rack/rack/issues/1640|#1640>, [<https://github.com/jeremyevans|`@​jeremyevans`>])\n&gt; • Attempting to parse a multipart response with an empty body now raises Rack::Multipart::EmptyContentError. (<https://github-redirect.dependabot.com/rack/rack/issues/1603|#1603>, [<https://github.com/jeremyevans|`@​jeremyevans`>])\n&gt; • `Rack::Utils.secure_compare` uses OpenSSL's faster implementation if available. (<https://github-redirect.dependabot.com/rack/rack/pull/1711|#1711>, <https://github.com/bdewater|`@​bdewater`>)\n&gt; • `Rack::Request#POST` now caches an empty hash if input content type is not parseable. (<https://github-redirect.dependabot.com/rack/rack/pull/749|#749>, [<https://github.com/jeremyevans|`@​jeremyevans`>])\n\n... (truncated)\n\nCommits\n\n• <https://github.com/rack/rack/commit/925a4a6599ab26b4f3455b525393fe155d443655|`925a4a6`> update changelog\n• <https://github.com/rack/rack/commit/70c0a24ea2c03352fca287dc502ffbabf4e1aea1|`70c0a24`> bump version\n• <https://github.com/rack/rack/commit/434413f5cff1ca36d70c3e5a3544c5c2d7b636bf|`434413f`> Escape untrusted text when logging\n• <https://github.com/rack/rack/commit/a872bcce127a6f4a0f16af8f28b686955ba32814|`a872bcc`> Restrict broken mime parsing\n• See full diff in <https://github.com/rack/rack/compare/2.2.3...2.2.3.1|compare view>\n\n  \n\n<https://docs.github.com/en/github/managing-security-vulnerabilities/about-dependabot-security-updates#about-compatibility-scores|Dependabot compatibility score>\n\nDependabot will resolve any conflicts with this PR as long as you don't alter it yourself. You can also trigger a rebase manually by commenting `@dependabot rebase`.\n\n* * *\n\nDependabot commands and options  \n\nYou can trigger Dependabot actions by commenting on this PR:\n\n• `@dependabot rebase` will rebase this PR\n• `@dependabot recreate` will recreate this PR, overwriting any edits that have been made to it\n• `@dependabot merge` will merge this PR after your CI passes on it\n• `@dependabot squash and merge` will squash and merge this PR after your CI passes on it\n• `@dependabot cancel merge` will cancel a previously requested merge and block automerging\n• `@dependabot reopen` will reopen this PR if it is closed\n• `@dependabot close` will close this PR and stop Dependabot recreating it. You can achieve the same result by closing it manually\n• `@dependabot ignore this major version` will close this PR and stop Dependabot creating any more for this major version (unless you reopen the PR or upgrade to it yourself)\n• `@dependabot ignore this minor version` will close this PR and stop Dependabot creating any more for this minor version (unless you reopen the PR or upgrade to it yourself)\n• `@dependabot ignore this dependency` will close this PR and stop Dependabot creating any more for this dependency (unless you reopen the PR or upgrade to it yourself)\n• `@dependabot use these labels` will set the current labels as the default for future PRs for this repo and language\n• `@dependabot use these reviewers` will set the current re…",
+          "pretext": "Pull request opened by <https://github.com/apps/dependabot|dependabot[bot]>",
+          "title": "<https://github.com/codeforjapan/socialhackday/pull/100|#100 Bump rack from 2.2.3 to 2.2.3.1>",
+          "callback_id": "pr-opened-interaction",
+          "footer": "<https://github.com/codeforjapan/socialhackday|codeforjapan/socialhackday>",
+          "fields": [
+            {
+              "value": "dependencies, ruby",
+              "title": "Labels",
+              "short": true
+            },
+            {
+              "value": "1",
+              "title": "Comments",
+              "short": true
+            }
+          ],
+          "mrkdwn_in": [
+            "text"
+          ],
+          "actions": [
+            {
+              "id": "1",
+              "name": "comment",
+              "text": "Comment",
+              "type": "button",
+              "value": "{&amp;amp;quot;selectedOrg&amp;amp;quot;:&amp;amp;quot;codeforjapan&amp;amp;quot;,&amp;amp;quot;selectedOrgId&amp;amp;quot;:5137738,&amp;amp;quot;selectedRepo&amp;amp;quot;:&amp;amp;quot;socialhackday&amp;amp;quot;,&amp;amp;quot;selectedRepoId&amp;amp;quot;:128494821,&amp;amp;quot;number&amp;amp;quot;:100,&amp;amp;quot;htmlUrl&amp;amp;quot;:&amp;amp;quot;https://github.com/codeforjapan/socialhackday/pull/100&amp;amp;quot;,&amp;amp;quot;title&amp;amp;quot;:&amp;amp;quot;Bump rack from 2.2.3 to 2.2.3.1&amp;amp;quot;}",
+              "style": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "user": "U01UL42GNKW",
+      "type": "message",
+      "ts": "1674074309.976619",
+      "edited": {
+        "user": "B01V3NTQJNL",
+        "ts": "1674074311.000000"
+      },
+      "bot_id": "B01V3NTQJNL",
+      "app_id": "A01BP7R4KNY",
+      "text": "",
+      "team": "T02FMV4EB",
+      "bot_profile": {
+        "id": "B01V3NTQJNL",
+        "app_id": "A01BP7R4KNY",
+        "user_id": "U01UL42GNKW",
+        "name": "GitHub",
+        "icons": {
+          "image_36": "https://avatars.slack-edge.com/2020-11-25/1527503386626_319578f21381f9641cd8_36.png",
+          "image_48": "https://avatars.slack-edge.com/2020-11-25/1527503386626_319578f21381f9641cd8_48.png",
+          "image_72": "https://avatars.slack-edge.com/2020-11-25/1527503386626_319578f21381f9641cd8_72.png"
+        },
+        "deleted": false,
+        "updated": 1618483045,
+        "team_id": "T02FMV4EB"
+      },
+      "attachments": [
+        {
+          "id": 1,
+          "footer_icon": "https://slack.github.com/static/img/favicon-neutral.png",
+          "ts": 1674074306,
+          "color": "36a64f",
+          "fallback": "[codeforjapan/socialhackday] Pull request opened by dependabot[bot]",
+          "text": "Bumps <https://github.com/rack/rack|rack> from 2.2.3 to 2.2.6.2.\n\nChangelog\n\n_Sourced from <https://github.com/rack/rack/blob/main/CHANGELOG.md|rack's changelog>._\n\n&gt; *Changelog*\n&gt; \n&gt; All notable changes to this project will be documented in this file. For info on how to format all future additions to this file please reference <https://keepachangelog.com/en/1.0.0/|Keep A Changelog>.\n&gt; \n&gt; *[3.0.3] - 2022-12-07*\n&gt; *Fixed*\n&gt; \n&gt; • `Rack::URLMap` uses non-deprecated form of `Regexp.new`. (<https://github-redirect.dependabot.com/rack/rack/pull/1998|#1998>, <https://github.com/weizheheng|`@​weizheheng`>)\n&gt; \n&gt; *[3.0.2] -2022-12-05*\n&gt; *Fixed*\n&gt; \n&gt; • `Utils.build_nested_query` URL-encodes nested field names including the square brackets.\n&gt; • Allow `Rack::Response` to pass through streaming bodies. (<https://github-redirect.dependabot.com/rack/rack/pull/1993|#1993>, [<https://github.com/ioquatix|`@​ioquatix`>])\n&gt; \n&gt; *[3.0.1] - 2022-11-18*\n&gt; *Fixed*\n&gt; \n&gt; • `MethodOverride` does not look for an override if a request does not include form/parseable data.\n&gt; • `Rack::Lint::Wrapper` correctly handles `respond_to?` with `to_ary`, `each`, `call` and `to_path`, forwarding to the body. (<https://github-redirect.dependabot.com/rack/rack/pull/1981|#1981>, [<https://github.com/ioquatix|`@​ioquatix`>])\n&gt; \n&gt; *[3.0.0] - 2022-09-06*\n&gt; \n&gt; • No changes\n&gt; \n&gt; *[3.0.0.rc1] - 2022-09-04*\n&gt; *SPEC Changes*\n&gt; \n&gt; • Stream argument must implement `&lt;&lt;` <https://github-redirect.dependabot.com/rack/rack/pull/1959|rack/rack#1959>\n&gt; • `close` may be called on `rack.input` <https://github-redirect.dependabot.com/rack/rack/pull/1956|rack/rack#1956>\n&gt; • `rack.response_finished` may be used for executing code after the response has been finished <https://github-redirect.dependabot.com/rack/rack/pull/1952|rack/rack#1952>\n&gt; \n&gt; *[3.0.0.beta1] - 2022-08-08*\n&gt; *Security*\n&gt; \n&gt; • Do not use semicolon as GET parameter separator. (<https://github-redirect.dependabot.com/rack/rack/pull/1733|#1733>, [<https://github.com/jeremyevans|`@​jeremyevans`>])\n&gt; \n&gt; *SPEC Changes*\n&gt; \n&gt; • Response array must now be non-frozen.\n&gt; • Response `status` must now be an integer greater than or equal to 100.\n&gt; • Response `headers` must now be an unfrozen hash.\n&gt; • Response header keys can no longer include uppercase characters.\n&gt; • Response header values can be an `Array` to handle multiple values (and no longer supports `\\n` encoded headers).\n&gt; • Response body can now respond to `#call` (streaming body) instead of `#each` (enumerable body), for the equivalent of response hijacking in previous versions.\n\n... (truncated)\n\nCommits\n\n• <https://github.com/rack/rack/commit/2606ac5d5d180c00a8cbcaa4d634276bab06500e|`2606ac5`> bumping version\n• <https://github.com/rack/rack/commit/f6d4f528f2df1318a6612845db0b59adc7fe8fc1|`f6d4f52`> Fix ReDoS in Rack::Utils.get_byte_ranges\n• <https://github.com/rack/rack/commit/20bc90c2431d7fabcd1873410543cf3d72f65004|`20bc90c`> bump version\n• <https://github.com/rack/rack/commit/3677f170b4ac713defb84cd6a86431623ba0adc0|`3677f17`> Update changelog\n• <https://github.com/rack/rack/commit/ee25ab9a7ee981d7578f559701085b0cf39bde77|`ee25ab9`> Fix ReDoS vulnerability in multipart parser\n• <https://github.com/rack/rack/commit/19e49f0f185d7e42ed5b402baec6c897a8c48029|`19e49f0`> Forbid control characters in attributes\n• <https://github.com/rack/rack/commit/ea39e49442e0008bfce4ad628ce52a4be2a20b5b|`ea39e49`> Bump patch version.\n• <https://github.com/rack/rack/commit/c0f9de4844052b7867180c587d1b6969be2f114d|`c0f9de4`> Rack::MethodOverride handle QueryParser::ParamsTooDeepError (<https://github-redirect.dependabot.com/rack/rack/issues/2011|#2011>)\n• <https://github.com/rack/rack/commit/8312a2fd6aee0950d7b2deb548aaf600cb871d80|`8312a2f`> Remove leading dot to fix compatibility with latest cgi gem. (<https://github-redirect.dependabot.com/rack/rack/issues/1988|#1988>)\n• <https://github.com/rack/rack/commit/2a82c88f1a468d8f68d9d7640886f5153142c272|`2a82c88`> Update tests to work on latest Rubies. (<https://github-redirect.dependabot.com/rack/rack/issues/1999|#1999>)\n• Additional commits viewable in <https://github.com/rack/rack/compare/2.2.3...v2.2.6.2|compare view>\n\n  \n\n<https://docs.github.com/en/github/managing-security-vulnerabilities/about-dependabot-security-updates#about-compatibility-scores|Dependabot compatibility score>\n\nDependabot will resolve any conflicts with this PR as long as you don't alter it yourself. You can also trigger a rebase manually by commenting `@dependabot rebase`.\n\n* * *\n\nDependabot commands and options  \n\nYou can trigger Dependabot actions by commenting on this PR:\n\n• `@dependabot rebase` will rebase this PR\n• `@dependabot recreate` will recreate this PR, overwriting any edits that have been made to it\n• `@dependabot merge` will merge this PR after your CI passes on it\n• `@dependabot squash and merge` will squash and merge this PR after your CI passes on it\n• `@dependabot cancel merge` will cancel a previously requested merge and block automerging\n• `@dependabot reopen` will reopen this PR if it is closed\n• `@dependabot close` will close this PR and stop Dependabot recreating it. You can achieve the same result by closing it manually\n• `@dependabot ignore this major version` will close this PR and stop Dependabot creating any more for this major version (unless you reopen the PR or upgrade to it yourself)\n• `@dependabot ignore this minor version` will close this PR and stop Dependabot creating any more for this minor version (unless you reopen the PR or upgrade to it yourself)\n• `@dependabot ignore this dependency` will close this PR and stop Dependabot creating any more for this dependency (unless you reopen the PR or upgrade to it yourself)\n• `@dependabot use these labels` will set the current labels as the default for future PRs for this repo and language\n• `@dependabot use these reviewers` will set the current reviewers as the default for future PRs for this repo and language\n• `@dependabot use these assignees` will set the current assignees as the default for future PRs for this repo and language\n• `@dependabot use this milestone` will set the current milestone as the default for future PRs for this repo and language\n\nYou can disable automated security fix PRs for this repo from the <https://github.com/codeforjapan/socialhackday/network/alerts|Security Alerts page>.",
+          "pretext": "Pull request opened by <https://github.com/apps/dependabot|dependabot[bot]>",
+          "title": "<https://github.com/codeforjapan/socialhackday/pull/108|#108 Bump rack from 2.2.3 to 2.2.6.2>",
+          "callback_id": "pr-opened-interaction",
+          "footer": "<https://github.com/codeforjapan/socialhackday|codeforjapan/socialhackday>",
+          "fields": [
+            {
+              "value": "dependencies, ruby",
+              "title": "Labels",
+              "short": true
+            }
+          ],
+          "mrkdwn_in": [
+            "text"
+          ],
+          "actions": [
+            {
+              "id": "1",
+              "name": "comment",
+              "text": "Comment",
+              "type": "button",
+              "value": "{&amp;amp;quot;selectedOrg&amp;amp;quot;:&amp;amp;quot;codeforjapan&amp;amp;quot;,&amp;amp;quot;selectedOrgId&amp;amp;quot;:5137738,&amp;amp;quot;selectedRepo&amp;amp;quot;:&amp;amp;quot;socialhackday&amp;amp;quot;,&amp;amp;quot;selectedRepoId&amp;amp;quot;:128494821,&amp;amp;quot;number&amp;amp;quot;:108,&amp;amp;quot;htmlUrl&amp;amp;quot;:&amp;amp;quot;https://github.com/codeforjapan/socialhackday/pull/108&amp;amp;quot;,&amp;amp;quot;title&amp;amp;quot;:&amp;amp;quot;Bump rack from 2.2.3 to 2.2.6.2&amp;amp;quot;}",
+              "style": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "user": "U01UL42GNKW",
+      "type": "message",
+      "ts": "1669943889.374739",
+      "edited": {
+        "user": "B01V3NTQJNL",
+        "ts": "1669943890.000000"
+      },
+      "bot_id": "B01V3NTQJNL",
+      "app_id": "A01BP7R4KNY",
+      "text": "",
+      "team": "T02FMV4EB",
+      "bot_profile": {
+        "id": "B01V3NTQJNL",
+        "app_id": "A01BP7R4KNY",
+        "user_id": "U01UL42GNKW",
+        "name": "GitHub",
+        "icons": {
+          "image_36": "https://avatars.slack-edge.com/2020-11-25/1527503386626_319578f21381f9641cd8_36.png",
+          "image_48": "https://avatars.slack-edge.com/2020-11-25/1527503386626_319578f21381f9641cd8_48.png",
+          "image_72": "https://avatars.slack-edge.com/2020-11-25/1527503386626_319578f21381f9641cd8_72.png"
+        },
+        "deleted": false,
+        "updated": 1618483045,
+        "team_id": "T02FMV4EB"
+      },
+      "attachments": [
+        {
+          "id": 1,
+          "footer_icon": "https://slack.github.com/static/img/favicon-neutral.png",
+          "ts": 1669943887,
+          "color": "36a64f",
+          "fallback": "[codeforjapan/socialhackday] Pull request opened by dependabot[bot]",
+          "text": "Bumps <https://github.com/SamVerschueren/decode-uri-component|decode-uri-component> from 0.2.0 to 0.2.2.\n\nRelease notes\n\n_Sourced from <https://github.com/SamVerschueren/decode-uri-component/releases|decode-uri-component's releases>._\n\n&gt; *v0.2.2*\n&gt; \n&gt; • Prevent overwriting previously decoded tokens 980e0bf\n&gt; \n&gt; <https://github.com/SamVerschueren/decode-uri-component/compare/v0.2.1...v0.2.2|SamVerschueren/decode-uri-component@v0.2.1...v0.2.2>\n&gt; \n&gt; *v0.2.1*\n&gt; \n&gt; • Switch to GitHub workflows 76abc93\n&gt; • Fix issue where decode throws - fixes <https://github-redirect.dependabot.com/SamVerschueren/decode-uri-component/issues/6|#6> 746ca5d\n&gt; • Update license (<https://github-redirect.dependabot.com/SamVerschueren/decode-uri-component/issues/1|#1>) 486d7e2\n&gt; • Tidelift tasks a650457\n&gt; • Meta tweaks 66e1c28\n&gt; \n&gt; <https://github.com/SamVerschueren/decode-uri-component/compare/v0.2.0...v0.2.1|SamVerschueren/decode-uri-component@v0.2.0...v0.2.1>\n\nCommits\n\n• <https://github.com/SamVerschueren/decode-uri-component/commit/a0eea469d26eb0df668b081672cdb9581feb78eb|`a0eea46`> 0.2.2\n• <https://github.com/SamVerschueren/decode-uri-component/commit/980e0bf09b64d94f1aa79012f895816c30ffd152|`980e0bf`> Prevent overwriting previously decoded tokens\n• <https://github.com/SamVerschueren/decode-uri-component/commit/3c8a373dd4837e89b3f970e01295dd03e1405a33|`3c8a373`> 0.2.1\n• <https://github.com/SamVerschueren/decode-uri-component/commit/76abc939783fe3900fadb7d384a74d324d5557f3|`76abc93`> Switch to GitHub workflows\n• <https://github.com/SamVerschueren/decode-uri-component/commit/746ca5dcb6667c5d364e782d53c542830e4c10b9|`746ca5d`> Fix issue where decode throws - fixes <https://github-redirect.dependabot.com/SamVerschueren/decode-uri-component/issues/6|#6>\n• <https://github.com/SamVerschueren/decode-uri-component/commit/486d7e26d3a8c0fbe860fb651fe1bc98c2f2be30|`486d7e2`> Update license (<https://github-redirect.dependabot.com/SamVerschueren/decode-uri-component/issues/1|#1>)\n• <https://github.com/SamVerschueren/decode-uri-component/commit/a65045724e6234acef87f31da499d4807b20b134|`a650457`> Tidelift tasks\n• <https://github.com/SamVerschueren/decode-uri-component/commit/66e1c2834c0e189201cb65196ec3101372459b02|`66e1c28`> Meta tweaks\n• See full diff in <https://github.com/SamVerschueren/decode-uri-component/compare/v0.2.0...v0.2.2|compare view>\n\n  \n\n<https://docs.github.com/en/github/managing-security-vulnerabilities/about-dependabot-security-updates#about-compatibility-scores|Dependabot compatibility score>\n\nDependabot will resolve any conflicts with this PR as long as you don't alter it yourself. You can also trigger a rebase manually by commenting `@dependabot rebase`.\n\n* * *\n\nDependabot commands and options  \n\nYou can trigger Dependabot actions by commenting on this PR:\n\n• `@dependabot rebase` will rebase this PR\n• `@dependabot recreate` will recreate this PR, overwriting any edits that have been made to it\n• `@dependabot merge` will merge this PR after your CI passes on it\n• `@dependabot squash and merge` will squash and merge this PR after your CI passes on it\n• `@dependabot cancel merge` will cancel a previously requested merge and block automerging\n• `@dependabot reopen` will reopen this PR if it is closed\n• `@dependabot close` will close this PR and stop Dependabot recreating it. You can achieve the same result by closing it manually\n• `@dependabot ignore this major version` will close this PR and stop Dependabot creating any more for this major version (unless you reopen the PR or upgrade to it yourself)\n• `@dependabot ignore this minor version` will close this PR and stop Dependabot creating any more for this minor version (unless you reopen the PR or upgrade to it yourself)\n• `@dependabot ignore this dependency` will close this PR and stop Dependabot creating any more for this dependency (unless you reopen the PR or upgrade to it yourself)\n• `@dependabot use these labels` will set the current labels as the default for future PRs for this repo and language\n• `@dependabot use these reviewers` will set the current reviewers as the default for future PRs for this repo and language\n• `@dependabot use these assignees` will set the current assignees as the default for future PRs for this repo and language\n• `@dependabot use this milestone` will set the current milestone as the default for future PRs for this repo and language\n\nYou can disable automated security fix PRs for this repo from the <https://github.com/codeforjapan/socialhackday/network/alerts|Security Alerts page>.",
+          "pretext": "Pull request opened by <https://github.com/apps/dependabot|dependabot[bot]>",
+          "title": "<https://github.com/codeforjapan/socialhackday/pull/107|#107 Bump decode-uri-component from 0.2.0 to 0.2.2>",
+          "footer": "<https://github.com/codeforjapan/socialhackday|codeforjapan/socialhackday>",
+          "fields": [
+            {
+              "value": "dependencies, javascript",
+              "title": "Labels",
+              "short": true
+            }
+          ],
+          "mrkdwn_in": [
+            "text"
+          ]
+        }
+      ]
+    },
+    {
+      "user": "U01UL42GNKW",
+      "type": "message",
+      "ts": "1669240096.797749",
+      "edited": {
+        "user": "B01V3NTQJNL",
+        "ts": "1669240097.000000"
+      },
+      "bot_id": "B01V3NTQJNL",
+      "app_id": "A01BP7R4KNY",
+      "text": "",
+      "team": "T02FMV4EB",
+      "bot_profile": {
+        "id": "B01V3NTQJNL",
+        "app_id": "A01BP7R4KNY",
+        "user_id": "U01UL42GNKW",
+        "name": "GitHub",
+        "icons": {
+          "image_36": "https://avatars.slack-edge.com/2020-11-25/1527503386626_319578f21381f9641cd8_36.png",
+          "image_48": "https://avatars.slack-edge.com/2020-11-25/1527503386626_319578f21381f9641cd8_48.png",
+          "image_72": "https://avatars.slack-edge.com/2020-11-25/1527503386626_319578f21381f9641cd8_72.png"
+        },
+        "deleted": false,
+        "updated": 1618483045,
+        "team_id": "T02FMV4EB"
+      },
+      "attachments": [
+        {
+          "id": 1,
+          "footer_icon": "https://slack.github.com/static/img/favicon-neutral.png",
+          "ts": 1669240094,
+          "color": "36a64f",
+          "fallback": "[codeforjapan/socialhackday] Pull request opened by dependabot[bot]",
+          "text": "Bumps <https://github.com/socketio/engine.io|engine.io> to 6.2.1 and updates ancestor dependency <https://github.com/BrowserSync/browser-sync|browser-sync>. These dependencies need to be updated together.\n\nUpdates `<http://engine.io|engine.io>` from 3.5.0 to 6.2.1\n\nRelease notes\n\n_Sourced from <https://github.com/socketio/engine.io/releases|engine.io's releases>._\n\n&gt; *6.2.1*\n&gt; \n&gt; :warning: This release contains an important security fix :warning:\n&gt; \n&gt; A malicious client could send a specially crafted HTTP request, triggering an uncaught exception and killing the Node.js process:\n&gt; \n&gt; ```\n&gt; Error: read ECONNRESET\n&gt;     at TCP.onStreamRead (internal/stream_base_commons.js:209:20)\n&gt; Emitted 'error' event on Socket instance at:\n&gt;     at emitErrorNT (internal/streams/destroy.js:106:8)\n&gt;     at emitErrorCloseNT (internal/streams/destroy.js:74:3)\n&gt;     at processTicksAndRejections (internal/process/task_queues.js:80:21) {\n&gt;   errno: -104,\n&gt;   code: 'ECONNRESET',\n&gt;   syscall: 'read'\n&gt; }\n&gt; ```\n&gt; \n&gt; Please upgrade as soon as possible.\n&gt; \n&gt; *Bug Fixes*\n&gt; \n&gt; • catch errors when destroying invalid upgrades (<https://github-redirect.dependabot.com/socketio/engine.io/issues/658|#658>) (<https://github.com/socketio/engine.io/commit/425e833ab13373edf1dd5a0706f07100db14e3c6|425e833>)\n&gt; \n&gt; *6.2.0*\n&gt; *Features*\n&gt; \n&gt; • add the \"maxPayload\" field in the handshake details (<https://github.com/socketio/engine.io/commit/088dcb4dff60df39785df13d0a33d3ceaa1dff38|088dcb4>)\n&gt; \n&gt; So that clients in HTTP long-polling can decide how many packets they have to send to stay under the maxHttpBufferSize value.\n&gt; \n&gt; This is a backward compatible change which should not mandate a new major revision of the protocol (we stay in v4), as we only add a field in the JSON-encoded handshake data:\n&gt; \n&gt; ```\n&gt; 0{\"sid\":\"lv_VI97HAXpY6yYWAAAC\",\"upgrades\":[\"websocket\"],\"pingInterval\":25000,\"pingTimeout\":5000,\"maxPayload\":1000000}\n&gt; ```\n&gt; \n&gt; *Links*\n&gt; \n&gt; • Diff: <https://github.com/socketio/engine.io/compare/6.1.3...6.2.0|socketio/engine.io@6.1.3...6.2.0>\n&gt; • Client release: <https://github.com/socketio/engine.io-client/releases/tag/6.2.0|6.2.0>\n&gt; • ws version: <https://github.com/websockets/ws/releases/tag/8.2.3|~8.2.3>\n&gt; \n&gt; *6.1.3*\n&gt; *Bug Fixes*\n&gt; \n&gt; • *typings:* allow CorsOptionsDelegate as cors options (<https://github-redirect.dependabot.com/socketio/engine.io/issues/641|#641>) (<https://github.com/socketio/engine.io/commit/a463d268ed90064e7863679bda423951de108c36|a463d26>)\n&gt; • *uws:* properly handle chunked content (<https://github-redirect.dependabot.com/socketio/engine.io/issues/642|#642>) (<https://github.com/socketio/engine.io/commit/33674403084c329dc6ad026c4122333a6f8a9992|3367440>)\n\n... (truncated)\n\nChangelog\n\n_Sourced from <https://github.com/socketio/engine.io/blob/main/CHANGELOG.md|engine.io's changelog>._\n\n&gt; *<https://github.com/socketio/engine.io/compare/6.2.0...6.2.1|6.2.1> (2022-11-20)*\n&gt; \n&gt; :warning: This release contains an important security fix :warning:\n&gt; \n&gt; A malicious client could send a specially crafted HTTP request, triggering an uncaught exception and killing the Node.js process:\n&gt; \n&gt; ```\n&gt; Error: read ECONNRESET\n&gt;     at TCP.onStreamRead (internal/stream_base_commons.js:209:20)\n&gt; Emitted 'error' event on Socket instance at:\n&gt;     at emitErrorNT (internal/streams/destroy.js:106:8)\n&gt;     at emitErrorCloseNT (internal/streams/destroy.js:74:3)\n&gt;     at processTicksAndRejections (internal/process/task_queues.js:80:21) {\n&gt;   errno: -104,\n&gt;   code: 'ECONNRESET',\n&gt;   syscall: 'read'\n&gt; }\n&gt; ```\n&gt; \n&gt; Please upgrade as soon as possible.\n&gt; \n&gt; *Bug Fixes*\n&gt; \n&gt; • catch errors when destroying invalid upgrades (<https://github-redirect.dependabot.com/socketio/engine.io/issues/658|#658>) (<https://github.com/socketio/engine.io/commit/425e833ab13373edf1dd5a0706f07100db14e3c6|425e833>)\n&gt; \n&gt; *<https://github.com/socketio/engine.io/compare/3.5.0...3.6.0|3.6.0> (2022-06-06)*\n&gt; *Bug Fixes*\n&gt; \n&gt; • add extension in the package.json main entry (<https://github-redirect.dependabot.com/socketio/engine.io/issues/608|#608>) (<https://github.com/socketio/engine.io/commit/3ad0567dbd57cfb7c2ff4e8b7488d80f37022b4a|3ad0567>)\n&gt; • do not reset the ping timer after upgrade (<https://github.com/socketio/engine.io/commit/1f5d4699862afee1e410fcb0e1f5e751ebcd2f9f|1f5d469>), closes <https://github-redirect.dependabot.com//github-redirect.dependabot.com/socketio/socket.io-client-swift/pull/1309/issues/issuecomment-768475704|socketio/socket.io-client-swift#1309>\n&gt; \n&gt; *Features*\n&gt; \n&gt; • decrease the default value of maxHttpBufferSize (<https://github.com/socketio/engine.io/commit/58e274c437e9cbcf69fd913c813aad8fbd253703|58e274c>)\n&gt; \n&gt; This change reduces the default value from 100 mb to a more sane 1 mb.\n&gt; \n&gt; This helps protect the server against denial of service attacks by malicious clients sending huge amounts of data.\n&gt; \n&gt; See also: <https://github.com/advisories/GHSA-j4f2-536g-r55m|GHSA-j4f2-536g-r55m>\n&gt; \n&gt; • increase the default value of pingTimeout (<https://github.com/socketio/engine.io/commit/f55a79a28a5fbc6c9edae876dd11308b89cc979e|f55a79a>)\n\n... (truncated)\n\nCommits\n\n• <https://github.com/socketio/engine.io/commit/24b847be6a61b64efc8c8c4d058a69259ad67693|`24b847b`> chore(release): 6.2.1\n• <https://github.com/socketio/engine.io/commit/425e833ab13373edf1dd5a0706f07100db14e3c6|`425e833`> fix: catch errors when destroying invalid upgrades (<https://github-redirect.dependabot.com/socketio/engine.io/issues/658|#658>)\n• <https://github.com/socketio/engine.io/commit/99adb00ba11d80ab27a4a2f4afd0eebd8aa406c5|`99adb00`> chore(deps): bump xmlhttprequest-ssl and engine.io-client in /examples/latenc...\n• <https://github.com/socketio/engine.io/commit/d196f6a6b746b5e362b131a1a16901a3db12cb21|`d196f6a`> chore(deps): bump minimatch from 3.0.4 to 3.1.2 (<https://github-redirect.dependabot.com/socketio/engine.io/issues/660|#660>)\n• <https://github.com/socketio/engine.io/commit/7c1270f98c51e51dfae1237492a56276070fd10e|`7c1270f`> chore(deps): bump nanoid from 3.1.25 to 3.3.1 (<https://github-redirect.dependabot.com/socketio/engine.io/issues/659|#659>)\n• <https://github.com/socketio/engine.io/commit/535a01d8898a5cc858c9d6031fc5ecda96ea4579|`535a01d`> ci: add Node.js 18 in the test matrix\n• <https://github.com/socketio/engine.io/commit/1b71a6f5cb868c934696ae3cc1a92d1168ec8505|`1b71a6f`> docs: remove \"Vanilla JS\" highlight from README (<https://github-redirect.dependabot.com/socketio/engine.io/issues/656|#656>)\n• <https://github.com/socketio/engine.io/commit/917d1d29e13f2e8f523c3738f6413f67b587aebe|`917d1d2`> refactor: replace deprecated `String.prototype.substr()` (<https://github-redirect.dependabot.com/socketio/engine.io/issues/646|#646>)\n• <https://github.com/socketio/engine.io/commit/020801ab8ce2d4cba517fe04df89b39d403123a5|`020801a`> chore: add changelog for version 3.6.0\n• <https://github.com/socketio/engine.io/commit/ed1d6f912ce61b13e2ae7ce7a1027b8c5fae2f15|`ed1d6f9`> test: make test script work on Windows (<https://github-redirect.dependabot.com/socketio/engine.io/issues/643|#643>)\n• Additional commits viewable in <https://github.com/socketio/engine.io/compare/3.5.0...6.2.1|compare view>\n\n  \n\nUpdates `browser-sync` from 2.27.5 to 2.27.10\n\nRelease notes\n\n_Sourced from <https://github.com/BrowserSync/browser-sync/releases|browser-sync's releases>._\n\n&gt; *2.27.9*\n&gt; *What's Changed*\n&gt; \n&gt; • fix(cli): Where's the command help? fixes <https://github-redirect.dependabot.com/BrowserSync/browser-sync/issues/1929|#1929> by <https://github.com/shakyShane|`@​shakyShane`> in <https://github-redirect.dependabot.com/BrowserSync/browser-sync/pull/1945|BrowserSync/browser-sync#1945>\n&gt; \n&gt; A bug prevented the help output from displaying - it was introduced whe…",
+          "pretext": "Pull request opened by <https://github.com/apps/dependabot|dependabot[bot]>",
+          "title": "<https://github.com/codeforjapan/socialhackday/pull/106|#106 Bump engine.io and browser-sync>",
+          "footer": "<https://github.com/codeforjapan/socialhackday|codeforjapan/socialhackday>",
+          "fields": [
+            {
+              "value": "dependencies, javascript",
+              "title": "Labels",
+              "short": true
+            }
+          ],
+          "mrkdwn_in": [
+            "text"
+          ]
+        }
+      ]
+    },
+    {
+      "user": "U01UL42GNKW",
+      "type": "message",
+      "ts": "1668037420.471499",
+      "edited": {
+        "user": "B01V3NTQJNL",
+        "ts": "1668037420.000000"
+      },
+      "bot_id": "B01V3NTQJNL",
+      "app_id": "A01BP7R4KNY",
+      "text": "",
+      "team": "T02FMV4EB",
+      "bot_profile": {
+        "id": "B01V3NTQJNL",
+        "app_id": "A01BP7R4KNY",
+        "user_id": "U01UL42GNKW",
+        "name": "GitHub",
+        "icons": {
+          "image_36": "https://avatars.slack-edge.com/2020-11-25/1527503386626_319578f21381f9641cd8_36.png",
+          "image_48": "https://avatars.slack-edge.com/2020-11-25/1527503386626_319578f21381f9641cd8_48.png",
+          "image_72": "https://avatars.slack-edge.com/2020-11-25/1527503386626_319578f21381f9641cd8_72.png"
+        },
+        "deleted": false,
+        "updated": 1618483045,
+        "team_id": "T02FMV4EB"
+      },
+      "attachments": [
+        {
+          "id": 1,
+          "footer_icon": "https://slack.github.com/static/img/favicon-neutral.png",
+          "ts": 1668037418,
+          "color": "36a64f",
+          "fallback": "[codeforjapan/socialhackday] Pull request opened by dependabot[bot]",
+          "text": "Bumps <https://github.com/socketio/socket.io-parser|socket.io-parser> from 3.3.2 to 3.3.3.\n\nChangelog\n\n_Sourced from <https://github.com/socketio/socket.io-parser/blob/main/CHANGELOG.md|socket.io-parser's changelog>._\n\n&gt; *<https://github.com/Automattic/socket.io-parser/compare/3.3.2...3.3.3|3.3.3> (2022-11-09)*\n&gt; *Bug Fixes*\n&gt; \n&gt; • check the format of the index of each attachment (<https://github.com/Automattic/socket.io-parser/commit/fb21e422fc193b34347395a33e0f625bebc09983|fb21e42>)\n&gt; \n&gt; *<https://github.com/socketio/socket.io-parser/compare/3.4.1...3.4.2|3.4.2> (2022-11-09)*\n&gt; *Bug Fixes*\n&gt; \n&gt; • check the format of the index of each attachment (<https://github.com/socketio/socket.io-parser/commit/04d23cecafe1b859fb03e0cbf6ba3b74dff56d14|04d23ce>)\n&gt; \n&gt; *<https://github.com/socketio/socket.io-parser/compare/4.2.0...4.2.1|4.2.1> (2022-06-27)*\n&gt; *Bug Fixes*\n&gt; \n&gt; • check the format of the index of each attachment (<https://github.com/socketio/socket.io-parser/commit/b5d0cb7dc56a0601a09b056beaeeb0e43b160050|b5d0cb7>)\n&gt; \n&gt; *<https://github.com/socketio/socket.io-parser/compare/4.0.4...4.0.5|4.0.5> (2022-06-27)*\n&gt; *Bug Fixes*\n&gt; \n&gt; • check the format of the index of each attachment (<https://github.com/socketio/socket.io-parser/commit/b559f050ee02bd90bd853b9823f8de7fa94a80d4|b559f05>)\n&gt; \n&gt; *<https://github.com/socketio/socket.io-parser/compare/4.1.2...4.2.0|4.2.0> (2022-04-17)*\n&gt; *Features*\n&gt; \n&gt; • allow the usage of custom replacer and reviver (<https://github-redirect.dependabot.com/socketio/socket.io-parser/issues/112|#112>) (<https://github.com/socketio/socket.io-parser/commit/b08bc1a93e8e3194b776c8a0bdedee1e29333680|b08bc1a>)\n&gt; \n&gt; *<https://github.com/socketio/socket.io-parser/compare/4.1.1...4.1.2|4.1.2> (2022-02-17)*\n&gt; *Bug Fixes*\n\n... (truncated)\n\nCommits\n\n• <https://github.com/socketio/socket.io-parser/commit/cd11e38e1a3e2146617bc586f86512605607b212|`cd11e38`> chore(release): 3.3.3\n• <https://github.com/socketio/socket.io-parser/commit/fb21e422fc193b34347395a33e0f625bebc09983|`fb21e42`> fix: check the format of the index of each attachment\n• See full diff in <https://github.com/socketio/socket.io-parser/compare/3.3.2...3.3.3|compare view>\n\n  \n\n<https://docs.github.com/en/github/managing-security-vulnerabilities/about-dependabot-security-updates#about-compatibility-scores|Dependabot compatibility score>\n\nDependabot will resolve any conflicts with this PR as long as you don't alter it yourself. You can also trigger a rebase manually by commenting `@dependabot rebase`.\n\n* * *\n\nDependabot commands and options  \n\nYou can trigger Dependabot actions by commenting on this PR:\n\n• `@dependabot rebase` will rebase this PR\n• `@dependabot recreate` will recreate this PR, overwriting any edits that have been made to it\n• `@dependabot merge` will merge this PR after your CI passes on it\n• `@dependabot squash and merge` will squash and merge this PR after your CI passes on it\n• `@dependabot cancel merge` will cancel a previously requested merge and block automerging\n• `@dependabot reopen` will reopen this PR if it is closed\n• `@dependabot close` will close this PR and stop Dependabot recreating it. You can achieve the same result by closing it manually\n• `@dependabot ignore this major version` will close this PR and stop Dependabot creating any more for this major version (unless you reopen the PR or upgrade to it yourself)\n• `@dependabot ignore this minor version` will close this PR and stop Dependabot creating any more for this minor version (unless you reopen the PR or upgrade to it yourself)\n• `@dependabot ignore this dependency` will close this PR and stop Dependabot creating any more for this dependency (unless you reopen the PR or upgrade to it yourself)\n• `@dependabot use these labels` will set the current labels as the default for future PRs for this repo and language\n• `@dependabot use these reviewers` will set the current reviewers as the default for future PRs for this repo and language\n• `@dependabot use these assignees` will set the current assignees as the default for future PRs for this repo and language\n• `@dependabot use this milestone` will set the current milestone as the default for future PRs for this repo and language\n\nYou can disable automated security fix PRs for this repo from the <https://github.com/codeforjapan/socialhackday/network/alerts|Security Alerts page>.",
+          "pretext": "Pull request opened by <https://github.com/apps/dependabot|dependabot[bot]>",
+          "title": "<https://github.com/codeforjapan/socialhackday/pull/105|#105 Bump socket.io-parser from 3.3.2 to 3.3.3>",
+          "footer": "<https://github.com/codeforjapan/socialhackday|codeforjapan/socialhackday>",
+          "fields": [
+            {
+              "value": "dependencies, javascript",
+              "title": "Labels",
+              "short": true
+            }
+          ],
+          "mrkdwn_in": [
+            "text"
+          ]
+        }
+      ]
+    },
+    {
+      "user": "U01UL42GNKW",
+      "type": "message",
+      "ts": "1666189659.102549",
+      "bot_id": "B01V3NTQJNL",
+      "app_id": "A01BP7R4KNY",
+      "text": "",
+      "team": "T02FMV4EB",
+      "bot_profile": {
+        "id": "B01V3NTQJNL",
+        "app_id": "A01BP7R4KNY",
+        "user_id": "U01UL42GNKW",
+        "name": "GitHub",
+        "icons": {
+          "image_36": "https://avatars.slack-edge.com/2020-11-25/1527503386626_319578f21381f9641cd8_36.png",
+          "image_48": "https://avatars.slack-edge.com/2020-11-25/1527503386626_319578f21381f9641cd8_48.png",
+          "image_72": "https://avatars.slack-edge.com/2020-11-25/1527503386626_319578f21381f9641cd8_72.png"
+        },
+        "deleted": false,
+        "updated": 1618483045,
+        "team_id": "T02FMV4EB"
+      },
+      "attachments": [
+        {
+          "id": 1,
+          "footer_icon": "https://slack.github.com/static/img/favicon-neutral.png",
+          "ts": 1653352532,
+          "color": "cb2431",
+          "fallback": "[codeforjapan/socialhackday] Pull request closed by dependabot[bot]",
+          "pretext": "Pull request closed by <https://github.com/apps/dependabot|dependabot[bot]>",
+          "title": "<https://github.com/codeforjapan/socialhackday/pull/99|#99 Bump nokogiri from 1.12.5 to 1.13.6>",
+          "footer": "<https://github.com/codeforjapan/socialhackday|codeforjapan/socialhackday>"
+        }
+      ]
+    }
+  ],
+  "has_more": true,
+  "pin_count": 0,
+  "channel_actions_ts": null,
+  "channel_actions_count": 0,
+  "response_metadata": {
+    "next_cursor": "bmV4dF90czoxNjY2MTg5NjU3MjY3Mzc5",
+    "scopes": [
+      "channels:history",
+      "channels:read",
+      "app_mentions:read",
+      "groups:read",
+      "dnd:read",
+      "conversations.connect:read",
+      "im:read",
+      "mpim:history",
+      "mpim:read",
+      "reactions:read",
+      "team:read",
+      "users:read",
+      "users.profile:read",
+      "usergroups:read",
+      "channels:join"
+    ],
+    "acceptedScopes": [
+      "channels:history",
+      "groups:history",
+      "mpim:history",
+      "im:history",
+      "read"
+    ]
+  }
+}

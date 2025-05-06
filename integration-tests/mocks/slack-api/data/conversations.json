@@ -151,26 +151,26 @@
       "num_members": 8546
     },
     {
-      "id": "C02GTQJS3",
-      "name": "sandbox",
+      "id": "C8Q4YULTX",
+      "name": "07_questions",
       "is_channel": true,
       "is_group": false,
       "is_im": false,
       "is_mpim": false,
       "is_private": false,
-      "created": 1408727126,
-      "is_archived": true,
+      "created": 1515490848,
+      "is_archived": false,
       "is_general": false,
       "unlinked": 0,
-      "name_normalized": "sandbox",
+      "name_normalized": "07_questions",
       "is_shared": false,
       "is_org_shared": false,
       "is_pending_ext_shared": false,
       "pending_shared": [],
       "context_team_id": "T02FMV4EB",
-      "updated": 1724849001362,
+      "updated": 1729242652245,
       "parent_conversation": null,
-      "creator": "U02FMV4EF",
+      "creator": "U08TUNXH8",
       "is_ext_shared": false,
       "shared_team_ids": [
         "T02FMV4EB"
@@ -178,387 +178,66 @@
       "pending_connected_team_ids": [],
       "is_member": false,
       "topic": {
-        "value": "投稿の練習やテストをするチャンネルです",
-        "creator": "U02FMV4EF",
-        "last_set": 1408727143
+        "value": "なんでも質問できるチャンネル",
+        "creator": "U08TUNXH8",
+        "last_set": 1598065508
       },
       "purpose": {
-        "value": ":cfj: 投稿の練習やテストをするチャンネルです。  \nSlackに慣れてない方はここで投稿の練習をしてみてください.\nどんな投稿しても大丈夫です。",
-        "creator": "U03SWSLNK",
-        "last_set": 1425539970
+        "value": "なんでも質問できるチャンネル",
+        "creator": "U08TUNXH8",
+        "last_set": 1598065421
       },
       "properties": {
+        "canvas": {
+          "file_id": "F05JFEF3SA3",
+          "is_empty": true,
+          "quip_thread_id": "CAD9AA1U0le"
+        },
         "tabs": [
           {
             "id": "files",
             "label": "",
             "type": "files"
-          }
-        ],
-        "tabz": [
+          },
           {
-            "type": "files"
-          }
-        ]
-      },
-      "previous_names": [],
-      "num_members": 0
-    },
-    {
-      "id": "C02GTR305",
-      "name": "summit",
-      "is_channel": true,
-      "is_group": false,
-      "is_im": false,
-      "is_mpim": false,
-      "is_private": false,
-      "created": 1408727370,
-      "is_archived": true,
-      "is_general": false,
-      "unlinked": 0,
-      "name_normalized": "summit",
-      "is_shared": false,
-      "is_org_shared": false,
-      "is_pending_ext_shared": false,
-      "pending_shared": [],
-      "context_team_id": "T02FMV4EB",
-      "updated": 1724849001339,
-      "parent_conversation": null,
-      "creator": "U02FMV4EF",
-      "is_ext_shared": false,
-      "shared_team_ids": [
-        "T02FMV4EB"
-      ],
-      "pending_connected_team_ids": [],
-      "is_member": false,
-      "topic": {
-        "value": "Code for Japan Summit についてチャットするチャンネルです",
-        "creator": "U02FMV4EF",
-        "last_set": 1408728006
-      },
-      "purpose": {
-        "value": "Code for Japan Summit についてチャットするチャンネルです",
-        "creator": "U02FMV4EF",
-        "last_set": 1408728023
-      },
-      "properties": {
-        "tabs": [
-          {
-            "id": "files",
+            "id": "bookmarks",
             "label": "",
-            "type": "files"
+            "type": "bookmarks"
           }
         ],
         "tabz": [
           {
             "type": "files"
+          },
+          {
+            "type": "bookmarks"
           }
         ]
       },
       "previous_names": [
-        "summit2014"
+        "questions_and_answers"
       ],
-      "num_members": 0
+      "num_members": 5424
     },
     {
-      "id": "C02GTRK2K",
-      "name": "summit-event",
+      "id": "C99LS7WES",
+      "name": "cfj-hackday",
       "is_channel": true,
       "is_group": false,
       "is_im": false,
       "is_mpim": false,
       "is_private": false,
-      "created": 1408727599,
-      "is_archived": true,
+      "created": 1518593192,
+      "is_archived": false,
       "is_general": false,
       "unlinked": 0,
-      "name_normalized": "summit-event",
+      "name_normalized": "cfj-hackday",
       "is_shared": false,
       "is_org_shared": false,
       "is_pending_ext_shared": false,
       "pending_shared": [],
       "context_team_id": "T02FMV4EB",
-      "updated": 1724849001468,
-      "parent_conversation": null,
-      "creator": "U02FMV4EF",
-      "is_ext_shared": false,
-      "shared_team_ids": [
-        "T02FMV4EB"
-      ],
-      "pending_connected_team_ids": [],
-      "is_member": false,
-      "topic": {
-        "value": "イベントについてチャットするチャンネルです",
-        "creator": "U02FMV4EF",
-        "last_set": 1408727634
-      },
-      "purpose": {
-        "value": "イベントについてチャットするチャンネルです\n* プレ懇親会（金曜：googleカフェ）\n* 本番懇親会（土曜：ホワイエで）\n* アンカンファレンス（日曜・テーマ＆やり方／土曜に付箋に書いてもらう？）\n* ハックデイ（何やる？）\n* ワークショップ（今のところ日程ないけど・テーマ＆やり方）",
-        "creator": "U02FMV4EF",
-        "last_set": 1408727599
-      },
-      "properties": {
-        "tabs": [
-          {
-            "id": "files",
-            "label": "",
-            "type": "files"
-          }
-        ],
-        "tabz": [
-          {
-            "type": "files"
-          }
-        ]
-      },
-      "previous_names": [
-        "summit2014-event"
-      ],
-      "num_members": 0
-    },
-    {
-      "id": "C02GUN6J0",
-      "name": "summit-community",
-      "is_channel": true,
-      "is_group": false,
-      "is_im": false,
-      "is_mpim": false,
-      "is_private": false,
-      "created": 1408727405,
-      "is_archived": true,
-      "is_general": false,
-      "unlinked": 0,
-      "name_normalized": "summit-community",
-      "is_shared": false,
-      "is_org_shared": false,
-      "is_pending_ext_shared": false,
-      "pending_shared": [],
-      "context_team_id": "T02FMV4EB",
-      "updated": 1724849001437,
-      "parent_conversation": null,
-      "creator": "U02FMV4EF",
-      "is_ext_shared": false,
-      "shared_team_ids": [
-        "T02FMV4EB"
-      ],
-      "pending_connected_team_ids": [],
-      "is_member": false,
-      "topic": {
-        "value": "場の環境作り（コミュニティ＆コネクト）についてチャットするチャンネルです",
-        "creator": "U02FMV4EF",
-        "last_set": 1408727436
-      },
-      "purpose": {
-        "value": "場の環境作り（コミュニティ＆コネクト）についてチャットするチャンネルです。\n\n* 名札の設計\n* アイスブレイク（土曜の入場時：全員参加＆ランチ時：任意参加）、\n* ブースアイデア（アプリに触れられる、プロジェクトを紹介する）、\n* 子供を連れてこれる環境、日本地図を貼ってBrigade の場所を貼っておく等",
-        "creator": "U02FMV4EF",
-        "last_set": 1408727503
-      },
-      "properties": {
-        "tabs": [
-          {
-            "id": "files",
-            "label": "",
-            "type": "files"
-          }
-        ],
-        "tabz": [
-          {
-            "type": "files"
-          }
-        ]
-      },
-      "previous_names": [
-        "summit2014-community"
-      ],
-      "num_members": 0
-    },
-    {
-      "id": "C02GUNK0L",
-      "name": "summit-content",
-      "is_channel": true,
-      "is_group": false,
-      "is_im": false,
-      "is_mpim": false,
-      "is_private": false,
-      "created": 1408727559,
-      "is_archived": true,
-      "is_general": false,
-      "unlinked": 0,
-      "name_normalized": "summit-content",
-      "is_shared": false,
-      "is_org_shared": false,
-      "is_pending_ext_shared": false,
-      "pending_shared": [],
-      "context_team_id": "T02FMV4EB",
-      "updated": 1724849001492,
-      "parent_conversation": null,
-      "creator": "U02FMV4EF",
-      "is_ext_shared": false,
-      "shared_team_ids": [
-        "T02FMV4EB"
-      ],
-      "pending_connected_team_ids": [],
-      "is_member": false,
-      "topic": {
-        "value": "メインコンテンツについてチャットするチャンネルです",
-        "creator": "U02FMV4EF",
-        "last_set": 1408727579
-      },
-      "purpose": {
-        "value": "メインコンテンツについてチャットするチャンネルです\n* 基調講演（講演者と内容）\n* 海外ゲスト（アテンド、チケット、宿泊、通訳）\n* セッションオーナー（現在10程度の企画あり。テーマ＋担当者）\n* パネルディスカッション（土曜の夕方）",
-        "creator": "U02FMV4EF",
-        "last_set": 1408727559
-      },
-      "properties": {
-        "tabs": [
-          {
-            "id": "files",
-            "label": "",
-            "type": "files"
-          }
-        ],
-        "tabz": [
-          {
-            "type": "files"
-          }
-        ]
-      },
-      "previous_names": [
-        "summit2014-content"
-      ],
-      "num_members": 0
-    },
-    {
-      "id": "C02GUNPTN",
-      "name": "summit-media",
-      "is_channel": true,
-      "is_group": false,
-      "is_im": false,
-      "is_mpim": false,
-      "is_private": false,
-      "created": 1408727623,
-      "is_archived": true,
-      "is_general": false,
-      "unlinked": 0,
-      "name_normalized": "summit-media",
-      "is_shared": false,
-      "is_org_shared": false,
-      "is_pending_ext_shared": false,
-      "pending_shared": [],
-      "context_team_id": "T02FMV4EB",
-      "updated": 1724849001414,
-      "parent_conversation": null,
-      "creator": "U02FMV4EF",
-      "is_ext_shared": false,
-      "shared_team_ids": [
-        "T02FMV4EB"
-      ],
-      "pending_connected_team_ids": [],
-      "is_member": false,
-      "topic": {
-        "value": "メディア&amp;制作についてチャットするチャンネルです",
-        "creator": "U02FMV4EF",
-        "last_set": 1408727647
-      },
-      "purpose": {
-        "value": "* 事前\n    - PRサイト（スポンサー紹介、参加申し込み、セッション講演申し込み）\n    - 広報素材（バナー、プロモ動画）、メディア告知（プレスリリース等）\n* 当日\n    - 中継動画、取材動画、twitter実況・まとめ、写真撮影\n* 事後\n    - ブログ（文字起こし）",
-        "creator": "U02FMV4EF",
-        "last_set": 1408727623
-      },
-      "properties": {
-        "tabs": [
-          {
-            "id": "files",
-            "label": "",
-            "type": "files"
-          }
-        ],
-        "tabz": [
-          {
-            "type": "files"
-          }
-        ]
-      },
-      "previous_names": [
-        "summit2014-media"
-      ],
-      "num_members": 0
-    },
-    {
-      "id": "C02GUNS3Y",
-      "name": "summit-goods",
-      "is_channel": true,
-      "is_group": false,
-      "is_im": false,
-      "is_mpim": false,
-      "is_private": false,
-      "created": 1408727667,
-      "is_archived": true,
-      "is_general": false,
-      "unlinked": 0,
-      "name_normalized": "summit-goods",
-      "is_shared": false,
-      "is_org_shared": false,
-      "is_pending_ext_shared": false,
-      "pending_shared": [],
-      "context_team_id": "T02FMV4EB",
-      "updated": 1724849001554,
-      "parent_conversation": null,
-      "creator": "U02FMV4EF",
-      "is_ext_shared": false,
-      "shared_team_ids": [
-        "T02FMV4EB"
-      ],
-      "pending_connected_team_ids": [],
-      "is_member": false,
-      "topic": {
-        "value": "モノ作りについてチャットするチャンネルです",
-        "creator": "U02FMV4EF",
-        "last_set": 1408727675
-      },
-      "purpose": {
-        "value": "モノ作りについてチャットするチャンネルです\n* カンファレンスロゴ\n* ステッカー（無料：2014コネクト用、CfJ公式）\n* Tシャツ（有料：男女兼用）\n* パンフ（コネクトに絡めた体裁）\n* オリジナル付箋（大きめ、ロゴはなし、コネクトテースト",
-        "creator": "U02FMV4EF",
-        "last_set": 1408727668
-      },
-      "properties": {
-        "tabs": [
-          {
-            "id": "files",
-            "label": "",
-            "type": "files"
-          }
-        ],
-        "tabz": [
-          {
-            "type": "files"
-          }
-        ]
-      },
-      "previous_names": [
-        "summit2014-goods"
-      ],
-      "num_members": 0
-    },
-    {
-      "id": "C02GY7EF8",
-      "name": "summit-sponsor",
-      "is_channel": true,
-      "is_group": false,
-      "is_im": false,
-      "is_mpim": false,
-      "is_private": false,
-      "created": 1408887749,
-      "is_archived": true,
-      "is_general": false,
-      "unlinked": 0,
-      "name_normalized": "summit-sponsor",
-      "is_shared": false,
-      "is_org_shared": false,
-      "is_pending_ext_shared": false,
-      "pending_shared": [],
-      "context_team_id": "T02FMV4EB",
-      "updated": 1724849003368,
+      "updated": 1732506719791,
       "parent_conversation": null,
       "creator": "U02GTJH1N",
       "is_ext_shared": false,
@@ -568,14 +247,92 @@
       "pending_connected_team_ids": [],
       "is_member": false,
       "topic": {
-        "value": "スポンサー獲得関連のチャンネルです",
-        "creator": "U02FMV4EF",
-        "last_set": 1408916525
+        "value": "ハックデーページ\n<https://hackday.code4japan.org/>\nイベントページ\n<https://code4japan.peatix.com/>\nプロジェクト一覧(随時更新)\n<https://docs.google.com/spreadsheets/d/18H2q-3b6uxvAJENm2aQmVcSph7vFpOvB49lxZ4ns1ak/edit#gid=1503426383>",
+        "creator": "UA3UCG9MM",
+        "last_set": 1590157218
       },
       "purpose": {
-        "value": "スポンサー獲得関連のチャンネルです。",
-        "creator": "U02GTJH1N",
-        "last_set": 1408887751
+        "value": "HackDay の企画用チャンネルです。運営を手伝ってくれる人向けです。\nサイト：<https://hackday.code4japan.org/>\n運営ガイドライン：<https://hackmd.io/kYj6lvBsRVusu9qA8SbolA>\nデータシート：<https://docs.google.com/spreadsheets/d/18H2q-3b6uxvAJENm2aQmVcSph7vFpOvB49lxZ4ns1ak/edit>",
+        "creator": "UA3UCG9MM",
+        "last_set": 1584195074
+      },
+      "properties": {
+        "canvas": {
+          "file_id": "F0797AG51UM",
+          "is_empty": true,
+          "quip_thread_id": "SaT9AAeTMSf"
+        },
+        "tabs": [
+          {
+            "type": "files",
+            "label": "",
+            "id": "files"
+          },
+          {
+            "id": "Ct07JYSN6MNG",
+            "type": "folder",
+            "label": ""
+          },
+          {
+            "type": "bookmarks",
+            "label": "",
+            "id": "bookmarks"
+          }
+        ],
+        "tabz": [
+          {
+            "type": "files"
+          },
+          {
+            "id": "Ct07JYSN6MNG",
+            "type": "folder"
+          },
+          {
+            "type": "bookmarks"
+          }
+        ]
+      },
+      "previous_names": [
+        "hackday"
+      ],
+      "num_members": 344
+    },
+    {
+      "id": "CA2K6J9E0",
+      "name": "cfj-hackday_website",
+      "is_channel": true,
+      "is_group": false,
+      "is_im": false,
+      "is_mpim": false,
+      "is_private": false,
+      "created": 1523074538,
+      "is_archived": false,
+      "is_general": false,
+      "unlinked": 0,
+      "name_normalized": "cfj-hackday_website",
+      "is_shared": false,
+      "is_org_shared": false,
+      "is_pending_ext_shared": false,
+      "pending_shared": [],
+      "context_team_id": "T02FMV4EB",
+      "updated": 1724849013923,
+      "parent_conversation": null,
+      "creator": "U02GTJH1N",
+      "is_ext_shared": false,
+      "shared_team_ids": [
+        "T02FMV4EB"
+      ],
+      "pending_connected_team_ids": [],
+      "is_member": false,
+      "topic": {
+        "value": "",
+        "creator": "",
+        "last_set": 0
+      },
+      "purpose": {
+        "value": "<#C99LS7WES|> のWEBサイトの構築用",
+        "creator": "UA3UCG9MM",
+        "last_set": 1597980714
       },
       "properties": {
         "tabs": [
@@ -591,12 +348,706 @@
           }
         ]
       },
-      "previous_names": [],
-      "num_members": 0
+      "previous_names": [
+        "hackday_website",
+        "hackday-website"
+      ],
+      "num_members": 26
+    },
+    {
+      "id": "CBQAS1WH4",
+      "name": "proj-kamimap",
+      "is_channel": true,
+      "is_group": false,
+      "is_im": false,
+      "is_mpim": false,
+      "is_private": false,
+      "created": 1531358861,
+      "is_archived": false,
+      "is_general": false,
+      "unlinked": 0,
+      "name_normalized": "proj-kamimap",
+      "is_shared": false,
+      "is_org_shared": false,
+      "is_pending_ext_shared": false,
+      "pending_shared": [],
+      "context_team_id": "T02FMV4EB",
+      "updated": 1746323248050,
+      "parent_conversation": null,
+      "creator": "U02GTJH1N",
+      "is_ext_shared": false,
+      "shared_team_ids": [
+        "T02FMV4EB"
+      ],
+      "pending_connected_team_ids": [],
+      "is_member": false,
+      "topic": {
+        "value": "<https://github.com/codeforjapan/mapprint>",
+        "creator": "UUL8QC8BU",
+        "last_set": 1614337286
+      },
+      "purpose": {
+        "value": "給水所マップの開発用チャットです。開発への参加方法はこちらを。\n<https://github.com/codeforjapan/mapprint/blob/master/docs/CONTRIBUTING.md>\nCircleCI <https://circleci.com/gh/codeforjapan/mapprint>",
+        "creator": "U02GTJH1N",
+        "last_set": 1571027585
+      },
+      "properties": {
+        "tabs": [
+          {
+            "type": "files",
+            "label": "",
+            "id": "files"
+          },
+          {
+            "type": "bookmarks",
+            "label": "",
+            "id": "bookmarks"
+          }
+        ],
+        "tabz": [
+          {
+            "type": "files"
+          },
+          {
+            "type": "bookmarks"
+          }
+        ]
+      },
+      "previous_names": [
+        "proj-mapprint",
+        "mapprint"
+      ],
+      "num_members": 98
+    },
+    {
+      "id": "CEA5BDYUA",
+      "name": "02_introduction",
+      "is_channel": true,
+      "is_group": false,
+      "is_im": false,
+      "is_mpim": false,
+      "is_private": false,
+      "created": 1542900621,
+      "is_archived": false,
+      "is_general": false,
+      "unlinked": 0,
+      "name_normalized": "02_introduction",
+      "is_shared": false,
+      "is_org_shared": false,
+      "is_pending_ext_shared": false,
+      "pending_shared": [],
+      "context_team_id": "T02FMV4EB",
+      "updated": 1745115898801,
+      "parent_conversation": null,
+      "creator": "UA3UCG9MM",
+      "is_ext_shared": false,
+      "shared_team_ids": [
+        "T02FMV4EB"
+      ],
+      "pending_connected_team_ids": [],
+      "is_member": false,
+      "topic": {
+        "value": "“はじめまして“の自己紹介チャンネルです。普段されていることや趣味について簡単に自己紹介をいただけると嬉しいです。スタンプでリアクションしたり、共通項のある人などはスレッドでコメントしたり、交流の場としてもご活用ください。\nSlackの使い方や気になることなどあれば <#C8Q4YULTX|> でお気軽にお声かけください。",
+        "creator": "UBQ9EMJ80",
+        "last_set": 1741672794
+      },
+      "purpose": {
+        "value": "“はじめまして“の自己紹介チャンネルです。テンプレートに従って、普段されていることや趣味について簡単に自己紹介をいただけると嬉しいです。スタンプでリアクションしたり、共通項のある人などはスレッドでコメントしたり、交流の場としてもご活用ください。\nSlackの使い方や気になることなどあれば <#C8Q4YULTX|> でお気軽にお声かけください。",
+        "creator": "UA3UCG9MM",
+        "last_set": 1631959467
+      },
+      "properties": {
+        "canvas": {
+          "file_id": "F05KT13LU7K",
+          "is_empty": true,
+          "quip_thread_id": "eOF9AAZ6Otd"
+        },
+        "tabs": [
+          {
+            "type": "files",
+            "label": "",
+            "id": "files"
+          },
+          {
+            "id": "Ct08NMPQ62RL",
+            "type": "canvas",
+            "data": {
+              "file_id": "F08NMPQ5CUW",
+              "shared_ts": "1745115898.656629"
+            },
+            "label": ""
+          }
+        ],
+        "tabz": [
+          {
+            "type": "files"
+          },
+          {
+            "id": "Ct08NMPQ62RL",
+            "type": "canvas",
+            "data": {
+              "file_id": "F08NMPQ5CUW",
+              "shared_ts": "1745115898.656629"
+            }
+          }
+        ]
+      },
+      "previous_names": [
+        "introductions",
+        "introduction"
+      ],
+      "num_members": 8191
+    },
+    {
+      "id": "CGG1ZMKGX",
+      "name": "overseas-facing_the_ocean",
+      "is_channel": true,
+      "is_group": false,
+      "is_im": false,
+      "is_mpim": false,
+      "is_private": false,
+      "created": 1550927211,
+      "is_archived": false,
+      "is_general": false,
+      "unlinked": 0,
+      "name_normalized": "overseas-facing_the_ocean",
+      "is_shared": false,
+      "is_org_shared": false,
+      "is_pending_ext_shared": false,
+      "pending_shared": [],
+      "context_team_id": "T02FMV4EB",
+      "updated": 1730518226311,
+      "parent_conversation": null,
+      "creator": "UA3UCG9MM",
+      "is_ext_shared": false,
+      "shared_team_ids": [
+        "T02FMV4EB"
+      ],
+      "pending_connected_team_ids": [],
+      "is_member": false,
+      "topic": {
+        "value": "",
+        "creator": "",
+        "last_set": 0
+      },
+      "purpose": {
+        "value": "アジアのシビックテックコミュニティの連携イベント、Facing the Ocean に関する情報共有チャンネル",
+        "creator": "UA3UCG9MM",
+        "last_set": 1597980441
+      },
+      "properties": {
+        "canvas": {
+          "file_id": "F07GWJD6VRV",
+          "is_empty": true,
+          "quip_thread_id": "TaE9AADBAF4"
+        },
+        "tabs": [
+          {
+            "id": "bookmarks",
+            "label": "",
+            "type": "bookmarks"
+          },
+          {
+            "id": "files",
+            "label": "",
+            "type": "files"
+          },
+          {
+            "id": "Ct07JTFUQER3",
+            "label": "",
+            "type": "folder"
+          }
+        ],
+        "tabz": [
+          {
+            "type": "bookmarks"
+          },
+          {
+            "type": "files"
+          },
+          {
+            "id": "Ct07JTFUQER3",
+            "type": "folder"
+          }
+        ]
+      },
+      "previous_names": [
+        "facing_the_ocean",
+        "facingtheocean",
+        "twkrjp-hackathons"
+      ],
+      "num_members": 173
+    },
+    {
+      "id": "CK0S38BFX",
+      "name": "cfj-civictech_live",
+      "is_channel": true,
+      "is_group": false,
+      "is_im": false,
+      "is_mpim": false,
+      "is_private": false,
+      "created": 1558948740,
+      "is_archived": false,
+      "is_general": false,
+      "unlinked": 0,
+      "name_normalized": "cfj-civictech_live",
+      "is_shared": false,
+      "is_org_shared": false,
+      "is_pending_ext_shared": false,
+      "pending_shared": [],
+      "context_team_id": "T02FMV4EB",
+      "updated": 1745571904504,
+      "parent_conversation": null,
+      "creator": "U08TUNXH8",
+      "is_ext_shared": false,
+      "shared_team_ids": [
+        "T02FMV4EB"
+      ],
+      "pending_connected_team_ids": [],
+      "is_member": false,
+      "topic": {
+        "value": "シビックテックライブとソーシャルハックデーはコミュニティイベントとして一般社団法人コード・フォー・ジャパンのスタッフが企画・運営しています。",
+        "creator": "UA3UCG9MM",
+        "last_set": 1741946496
+      },
+      "purpose": {
+        "value": "CivicTechに関するプロジェクト紹介・ワークショップイベントのチャンネル",
+        "creator": "UA3UCG9MM",
+        "last_set": 1597977153
+      },
+      "properties": {
+        "tabs": [
+          {
+            "type": "files",
+            "label": "",
+            "id": "files"
+          }
+        ],
+        "tabz": [
+          {
+            "type": "files"
+          }
+        ]
+      },
+      "previous_names": [
+        "civictech_live",
+        "civictech-live"
+      ],
+      "num_members": 103
+    },
+    {
+      "id": "CNYAQ0Y4A",
+      "name": "08_photos",
+      "is_channel": true,
+      "is_group": false,
+      "is_im": false,
+      "is_mpim": false,
+      "is_private": false,
+      "created": 1570855872,
+      "is_archived": false,
+      "is_general": false,
+      "unlinked": 0,
+      "name_normalized": "08_photos",
+      "is_shared": false,
+      "is_org_shared": false,
+      "is_pending_ext_shared": false,
+      "pending_shared": [],
+      "context_team_id": "T02FMV4EB",
+      "updated": 1744246240998,
+      "parent_conversation": null,
+      "creator": "U08TUNXH8",
+      "is_ext_shared": false,
+      "shared_team_ids": [
+        "T02FMV4EB"
+      ],
+      "pending_connected_team_ids": [],
+      "is_member": false,
+      "topic": {
+        "value": "全国各地でのシビックテック活動の写真をアップするチャンネル",
+        "creator": "U08TUNXH8",
+        "last_set": 1598065495
+      },
+      "purpose": {
+        "value": "全国各地でのシビックテック活動の写真をアップするチャンネル",
+        "creator": "U08TUNXH8",
+        "last_set": 1598065377
+      },
+      "properties": {
+        "tabs": [
+          {
+            "type": "files",
+            "label": "",
+            "id": "files"
+          },
+          {
+            "id": "Ct08MB401T3Q",
+            "label": "無題",
+            "type": "canvas",
+            "data": {
+              "file_id": "F08MB400V4N",
+              "shared_ts": "1744246240.846379"
+            }
+          }
+        ],
+        "tabz": [
+          {
+            "type": "files"
+          },
+          {
+            "id": "Ct08MB401T3Q",
+            "label": "無題",
+            "type": "canvas",
+            "data": {
+              "file_id": "F08MB400V4N",
+              "shared_ts": "1744246240.846379"
+            }
+          }
+        ]
+      },
+      "previous_names": [
+        "photos"
+      ],
+      "num_members": 2126
+    },
+    {
+      "id": "CPBND08EQ",
+      "name": "proj-crowd_map",
+      "is_channel": true,
+      "is_group": false,
+      "is_im": false,
+      "is_mpim": false,
+      "is_private": false,
+      "created": 1571045347,
+      "is_archived": false,
+      "is_general": false,
+      "unlinked": 0,
+      "name_normalized": "proj-crowd_map",
+      "is_shared": false,
+      "is_org_shared": false,
+      "is_pending_ext_shared": false,
+      "pending_shared": [],
+      "context_team_id": "T02FMV4EB",
+      "updated": 1724849027777,
+      "parent_conversation": null,
+      "creator": "UNEP52LN4",
+      "is_ext_shared": false,
+      "shared_team_ids": [
+        "T02FMV4EB"
+      ],
+      "pending_connected_team_ids": [],
+      "is_member": false,
+      "topic": {
+        "value": "",
+        "creator": "",
+        "last_set": 0
+      },
+      "purpose": {
+        "value": "災害対応等のクラウドマッピング用の情報共有チャンネル",
+        "creator": "UA3UCG9MM",
+        "last_set": 1597980193
+      },
+      "properties": {
+        "tabs": [
+          {
+            "id": "files",
+            "label": "",
+            "type": "files"
+          }
+        ],
+        "tabz": [
+          {
+            "type": "files"
+          }
+        ]
+      },
+      "previous_names": [
+        "crowd_map",
+        "crowd-map"
+      ],
+      "num_members": 17
+    },
+    {
+      "id": "CRTP881DX",
+      "name": "proj-sto_community",
+      "is_channel": true,
+      "is_group": false,
+      "is_im": false,
+      "is_mpim": false,
+      "is_private": false,
+      "created": 1577533551,
+      "is_archived": false,
+      "is_general": false,
+      "unlinked": 0,
+      "name_normalized": "proj-sto_community",
+      "is_shared": false,
+      "is_org_shared": false,
+      "is_pending_ext_shared": false,
+      "pending_shared": [],
+      "context_team_id": "T02FMV4EB",
+      "updated": 1726599768954,
+      "parent_conversation": null,
+      "creator": "UJG5NSUMU",
+      "is_ext_shared": false,
+      "shared_team_ids": [
+        "T02FMV4EB"
+      ],
+      "pending_connected_team_ids": [],
+      "is_member": false,
+      "topic": {
+        "value": "NPO × IT / STO(Social Technology Officer)のコミュニティです。\nIT知識を必要とするNPOの情報やご依頼を随時掲載していきます。\nご興味のある案件があれば是非事務局までご連絡ください。\n\nSTO WEBサイト：<https://sto.code4japan.org/>\nマテリアル(pdf)：<https://drive.google.com/file/d/1WyjhZNZ997gz2GX-ULXgcJSrRR2U1gng/view?usp=sharing>",
+        "creator": "UJG5NSUMU",
+        "last_set": 1586313809
+      },
+      "purpose": {
+        "value": "Social Technogy Officer（STO）コミュニティです。STOに関心のある方はどなたでも。情報交換などに活用ください。",
+        "creator": "U3ARZJ12T",
+        "last_set": 1577596953
+      },
+      "properties": {
+        "tabs": [
+          {
+            "id": "workflows",
+            "label": "",
+            "type": "workflows"
+          },
+          {
+            "id": "files",
+            "label": "",
+            "type": "files"
+          },
+          {
+            "id": "bookmarks",
+            "label": "",
+            "type": "bookmarks"
+          }
+        ],
+        "tabz": [
+          {
+            "type": "workflows"
+          },
+          {
+            "type": "files"
+          },
+          {
+            "type": "bookmarks"
+          }
+        ]
+      },
+      "previous_names": [
+        "sto_community"
+      ],
+      "num_members": 490
+    },
+    {
+      "id": "CSF0ED6N9",
+      "name": "overseas-gender-herstory",
+      "is_channel": true,
+      "is_group": false,
+      "is_im": false,
+      "is_mpim": false,
+      "is_private": false,
+      "created": 1578537057,
+      "is_archived": false,
+      "is_general": false,
+      "unlinked": 0,
+      "name_normalized": "overseas-gender-herstory",
+      "is_shared": false,
+      "is_org_shared": false,
+      "is_pending_ext_shared": false,
+      "pending_shared": [],
+      "context_team_id": "T02FMV4EB",
+      "updated": 1724849029870,
+      "parent_conversation": null,
+      "creator": "UA3UCG9MM",
+      "is_ext_shared": false,
+      "shared_team_ids": [
+        "T02FMV4EB"
+      ],
+      "pending_connected_team_ids": [],
+      "is_member": false,
+      "topic": {
+        "value": "概要:<https://hackmd.io/@codeforjapan/herstory>\n連携:<https://g0v.hackmd.io/@21nsS8HOSY-Va-bvnunmlQ/ByiaHdSQI>\n台湾:<https://g0v-tw.slack.com/archives/CS16Q642K>\n韓国:<https://nullfull.slack.com/archives/CTF7GU9JP>",
+        "creator": "UA3UCG9MM",
+        "last_set": 1606979185
+      },
+      "purpose": {
+        "value": "<#CGG1ZMKGX|> で行っている、東南アジア圏のジェンダーにまつわる歴史のログと共有のプロジェクト",
+        "creator": "UA3UCG9MM",
+        "last_set": 1597980858
+      },
+      "properties": {
+        "tabs": [
+          {
+            "id": "files",
+            "label": "",
+            "type": "files"
+          },
+          {
+            "id": "bookmarks",
+            "label": "",
+            "type": "bookmarks"
+          }
+        ],
+        "tabz": [
+          {
+            "type": "files"
+          },
+          {
+            "type": "bookmarks"
+          }
+        ]
+      },
+      "previous_names": [
+        "overseas-herstory",
+        "herstory"
+      ],
+      "num_members": 16
+    },
+    {
+      "id": "CUREP6D5G",
+      "name": "proj-stopcovid19jp",
+      "is_channel": true,
+      "is_group": false,
+      "is_im": false,
+      "is_mpim": false,
+      "is_private": false,
+      "created": 1583797354,
+      "is_archived": false,
+      "is_general": false,
+      "unlinked": 1608286183,
+      "name_normalized": "proj-stopcovid19jp",
+      "is_shared": false,
+      "is_org_shared": false,
+      "is_pending_ext_shared": false,
+      "pending_shared": [],
+      "context_team_id": "T02FMV4EB",
+      "updated": 1724849034997,
+      "parent_conversation": null,
+      "creator": "U02GTJH1N",
+      "is_ext_shared": false,
+      "shared_team_ids": [
+        "T02FMV4EB"
+      ],
+      "pending_connected_team_ids": [],
+      "is_member": false,
+      "topic": {
+        "value": "地域版の情報をこちらにまとめています。\n各地域版に関する情報やノウハウなど追加してもらえると助かります。\n<https://hackmd.io/9TTyyjchR8ufuMd9z08Rcg?both>\n各地域版の一覧はこちらです。適宜、更新をお願いします。\n<https://docs.google.com/spreadsheets/d/1c50h3YtbsCiHiKOh4cyJQYL-21Vow3X7b8tRoAceVMA/edit#gid=0>",
+        "creator": "U08TUNXH8",
+        "last_set": 1584522139
+      },
+      "purpose": {
+        "value": "<https://stopcovid19.metro.tokyo.lg.jp/> の全国展開用の共有チャンネルです",
+        "creator": "U02GTJH1N",
+        "last_set": 1583797355
+      },
+      "properties": {
+        "posting_restricted_to": {
+          "type": [
+            "ra"
+          ]
+        },
+        "threads_restricted_to": {
+          "type": [
+            "ra"
+          ]
+        },
+        "tabs": [
+          {
+            "id": "files",
+            "label": "",
+            "type": "files"
+          },
+          {
+            "id": "bookmarks",
+            "label": "",
+            "type": "bookmarks"
+          }
+        ],
+        "tabz": [
+          {
+            "type": "files"
+          },
+          {
+            "type": "bookmarks"
+          }
+        ]
+      },
+      "previous_names": [
+        "stopcovid19jp"
+      ],
+      "num_members": 703
+    },
+    {
+      "id": "CUX3F56LF",
+      "name": "proj-covid19",
+      "is_channel": true,
+      "is_group": false,
+      "is_im": false,
+      "is_mpim": false,
+      "is_private": false,
+      "created": 1583319135,
+      "is_archived": false,
+      "is_general": false,
+      "unlinked": 0,
+      "name_normalized": "proj-covid19",
+      "is_shared": false,
+      "is_org_shared": false,
+      "is_pending_ext_shared": false,
+      "pending_shared": [],
+      "context_team_id": "T02FMV4EB",
+      "updated": 1733726867233,
+      "parent_conversation": null,
+      "creator": "UNEP52LN4",
+      "is_ext_shared": false,
+      "shared_team_ids": [
+        "T02FMV4EB"
+      ],
+      "pending_connected_team_ids": [],
+      "is_member": false,
+      "topic": {
+        "value": "東京都stopcovid19チャンネル。東京都以外の地域ついては <#CUREP6D5G|> （全国展開用チャンネル ）で行っています。",
+        "creator": "U0101NN1RV3",
+        "last_set": 1585019264
+      },
+      "purpose": {
+        "value": "東京都版チャンネル。東京都以外の地域ついては <#CUREP6D5G|> （全国展開用チャンネル ）で行っています。",
+        "creator": "UA3UCG9MM",
+        "last_set": 1597979621
+      },
+      "properties": {
+        "canvas": {
+          "file_id": "F084A1S5GCC",
+          "quip_thread_id": "dWZ9AAIY0kq"
+        },
+        "tabs": [
+          {
+            "type": "files",
+            "label": "",
+            "id": "files"
+          },
+          {
+            "type": "bookmarks",
+            "label": "",
+            "id": "bookmarks"
+          }
+        ],
+        "tabz": [
+          {
+            "type": "files"
+          },
+          {
+            "type": "bookmarks"
+          }
+        ]
+      },
+      "previous_names": [
+        "covid19"
+      ],
+      "num_members": 1538
     }
   ],
   "response_metadata": {
-    "next_cursor": "dGVhbTpDMDJIQTlIR1M=",
+    "next_cursor": "dGVhbTpDVVhLNVFNSzg=",
     "scopes": [
       "channels:history",
       "channels:read",
