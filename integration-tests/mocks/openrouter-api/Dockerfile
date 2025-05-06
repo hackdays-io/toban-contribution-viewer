@@ -2,9 +2,14 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-COPY package.json ./
+# Copy package files and install dependencies
+COPY package*.json ./
 RUN npm install
 
+# Create data directory
+RUN mkdir -p /app/data
+
+# Copy application code
 COPY . .
 
 # Create data directory if it doesn't exist
