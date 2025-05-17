@@ -13,7 +13,7 @@ cd ../..
 
 echo "Running E2E tests..."
 cd tests/e2e
-npx playwright test --config=../../playwright.config.ts --reporter=junit,html --no-server
+npx playwright test --config=../../playwright.config.ts --reporter=junit,html
 
 mkdir -p ../../results/e2e-report
 
