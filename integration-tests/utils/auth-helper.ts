@@ -14,7 +14,11 @@ export class AuthHelper {
    * Login with email and password
    */
   async loginWithEmail(email: string, password: string) {
-    await this.page.goto('/login');
+    try {
+      await this.page.goto('/login');
+    } catch (error) {
+      throw new Error(`Failed to navigate to login page. Make sure FRONTEND_URL environment variable is correctly set. Error: ${error.message}`);
+    }
     await this.page.getByTestId('email-login-button').click();
     await this.page.getByLabel('Email').fill(email);
     await this.page.getByLabel('Password').fill(password);
@@ -26,7 +30,11 @@ export class AuthHelper {
    * Register a new user with email and password
    */
   async registerWithEmail(email: string, password: string, name: string) {
-    await this.page.goto('/register');
+    try {
+      await this.page.goto('/register');
+    } catch (error) {
+      throw new Error(`Failed to navigate to register page. Make sure FRONTEND_URL environment variable is correctly set. Error: ${error.message}`);
+    }
     await this.page.getByTestId('email-login-button').click();
     await this.page.getByLabel('Email').fill(email);
     await this.page.getByLabel('Password').fill(password);
