@@ -17,7 +17,12 @@ export class AuthHelper {
     try {
       await this.page.goto('/login');
       console.log('Navigated to login page');
-      
+    } catch (error) {
+      console.error('Navigation error:', error);
+      throw new Error(`Failed to navigate to login page. Make sure FRONTEND_URL environment variable is correctly set. Error: ${error.message}`);
+    }
+    
+    try {
       await this.page.getByTestId('email-login-button').click();
       console.log('Clicked email login button');
       
@@ -43,7 +48,12 @@ export class AuthHelper {
     try {
       await this.page.goto('/register');
       console.log('Navigated to register page');
-      
+    } catch (error) {
+      console.error('Navigation error:', error);
+      throw new Error(`Failed to navigate to register page. Make sure FRONTEND_URL environment variable is correctly set. Error: ${error.message}`);
+    }
+    
+    try {
       await this.page.getByTestId('email-login-button').click();
       console.log('Clicked email login button');
       

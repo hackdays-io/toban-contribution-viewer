@@ -62,6 +62,8 @@ temp-ngrok.yml
 
 # TEST
 frontend/coverage
+integration-tests/results/*
+integration-tests/test-results/*
 
 # Logs
 backend/logs/

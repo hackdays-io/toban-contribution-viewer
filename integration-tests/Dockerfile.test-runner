@@ -5,6 +5,7 @@ WORKDIR /app
 # Install Node.js dependencies
 COPY package.json ./
 RUN npm install
+RUN npm install -g http-server
 
 # Install Python and pip
 RUN apt-get update && apt-get install -y \
@@ -21,11 +22,14 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY run-tests.sh ./
 RUN chmod +x run-tests.sh
 
+# Copy Playwright configuration
+COPY playwright.config.ts ./
+
 # Copy setup scripts
 COPY setup/wait-for-services.sh ./setup/
 RUN chmod +x ./setup/wait-for-services.sh
 
 # Set up directories for test results
-RUN mkdir -p results/e2e results/api
+RUN mkdir -p results/e2e results/api test-results
 
 CMD ["./run-tests.sh"]
