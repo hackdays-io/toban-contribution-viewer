@@ -10,7 +10,7 @@ pytest -v --junitxml=../../results/api-results.xml
 
 echo "Running E2E tests..."
 cd ../e2e
-npx playwright test --reporter=junit,html
+npx playwright test --config=../../playwright.config.ts --reporter=junit,html
 mv test-results/junit.xml ../../results/e2e-results.xml
 mv test-results/html ../../results/e2e-report
 

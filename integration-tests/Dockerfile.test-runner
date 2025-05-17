@@ -21,6 +21,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY run-tests.sh ./
 RUN chmod +x run-tests.sh
 
+# Copy Playwright configuration
+COPY playwright.config.ts ./
+
 # Copy setup scripts
 COPY setup/wait-for-services.sh ./setup/
 RUN chmod +x ./setup/wait-for-services.sh
