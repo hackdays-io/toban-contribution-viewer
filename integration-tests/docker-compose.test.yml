@@ -127,8 +127,6 @@ services:
       - ./setup:/app/setup
       - ./results:/app/results
       - ./test-results:/app/test-results
-    ports:
-      - "9323:9323"  # Map Playwright report server port
     environment:
       - BACKEND_URL=http://test-backend:8000
       - FRONTEND_URL=http://test-frontend:5173
