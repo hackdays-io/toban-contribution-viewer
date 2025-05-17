@@ -1,6 +1,9 @@
 import { test, expect } from '../../utils/test-fixtures';
 
 test.describe('Authentication Flow', () => {
+  test.beforeEach(async ({ page, testData }) => {
+    await testData.resetAuthData(page);
+  });
   test('should allow user to register with email', async ({ page, authHelper, testData }) => {
     const testUser = testData.getTestUser();
     const email = `register-${Date.now()}@example.com`;

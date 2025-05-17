@@ -135,6 +135,7 @@ const SignUp: React.FC = () => {
               mt={4}
               type="submit"
               isLoading={loading}
+              data-testid="email-login-button"
             >
               Sign Up
             </Button>
