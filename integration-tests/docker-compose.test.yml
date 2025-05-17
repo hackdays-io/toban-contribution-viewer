@@ -132,6 +132,7 @@ services:
       - FRONTEND_URL=http://test-frontend:5173
       - SLACK_API_URL=http://mock-slack-api:3000
       - OPENROUTER_API_URL=http://mock-openrouter-api:3000
+      - ENABLE_HTML_REPORTER=false
     command: ["./setup/wait-for-services.sh", "./run-tests.sh"]
 
 volumes:
