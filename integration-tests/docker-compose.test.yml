@@ -126,6 +126,7 @@ services:
       - ./utils:/app/utils
       - ./setup:/app/setup
       - ./results:/app/results
+      - ./test-results:/app/test-results
     ports:
       - "9323:9323"  # Map Playwright report server port
     environment:
