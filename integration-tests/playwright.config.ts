@@ -15,6 +15,7 @@ export default defineConfig({
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'on-first-retry',
+    headless: true, // Run tests in headless mode by default
   },
   projects: [
     {
