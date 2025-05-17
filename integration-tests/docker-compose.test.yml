@@ -127,16 +127,12 @@ services:
       - ./setup:/app/setup
       - ./results:/app/results
       - ./test-results:/app/test-results
-    ports:
-      - "9324:9323"  # Map Playwright report server port
     environment:
       - BACKEND_URL=http://test-backend:8000
       - FRONTEND_URL=http://test-frontend:5173
       - SLACK_API_URL=http://mock-slack-api:3000
       - OPENROUTER_API_URL=http://mock-openrouter-api:3000
     command: ["./setup/wait-for-services.sh", "./run-tests.sh"]
-
-  # Tests should run to completion and save results as files without requiring browser inspection
 
 volumes:
   test-postgres-data:
