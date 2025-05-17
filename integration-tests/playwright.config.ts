@@ -6,10 +6,12 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
-  reporter: [
-    ['html', { outputFolder: 'test-results/html' }],
-    ['junit', { outputFile: 'test-results/junit.xml' }]
-  ],
+  reporter: process.env.ENABLE_HTML_REPORTER === 'true' 
+    ? [
+        ['html', { outputFolder: 'test-results/html' }],
+        ['junit', { outputFile: 'test-results/junit.xml' }]
+      ]
+    : [['junit', { outputFile: 'test-results/junit.xml' }]],
   use: {
     baseURL: process.env.FRONTEND_URL || 'http://test-frontend:5173',
     trace: 'on-first-retry',
