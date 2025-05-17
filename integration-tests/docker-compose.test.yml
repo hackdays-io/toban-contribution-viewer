@@ -136,18 +136,7 @@ services:
       - OPENROUTER_API_URL=http://mock-openrouter-api:3000
     command: ["./setup/wait-for-services.sh", "./run-tests.sh"]
 
-  # HTML Report server for test results
-  report-server:
-    build:
-      context: .
-      dockerfile: Dockerfile.test-runner
-    volumes:
-      - ./results:/app/results
-    ports:
-      - "9325:9323"
-    command: npx playwright show-report results/e2e-report --port 9323
-    depends_on:
-      - test-runner
+  # Tests should run to completion and save results as files without requiring browser inspection
 
 volumes:
   test-postgres-data:

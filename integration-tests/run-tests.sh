@@ -1,21 +1,14 @@
 set -e
 
-SKIP_API_TESTS=${SKIP_API_TESTS:-"false"}
-
 echo "Starting integration tests..."
 
 mkdir -p results
 mkdir -p test-results
 
-if [ "$SKIP_API_TESTS" = "true" ]; then
-  echo "Skipping API tests..."
-  echo "<?xml version=\"1.0\" encoding=\"utf-8\"?><testsuites><testsuite name=\"pytest\" errors=\"0\" failures=\"0\" skipped=\"0\" tests=\"0\" time=\"0.0\"></testsuite></testsuites>" > results/api-results.xml
-else
-  echo "Running API tests..."
-  cd tests/api
-  pytest -v --junitxml=../../results/api-results.xml
-  cd ../..
-fi
+echo "Running API tests..."
+cd tests/api
+pytest -v --junitxml=../../results/api-results.xml
+cd ../..
 
 echo "Running E2E tests..."
 cd tests/e2e
@@ -40,4 +33,4 @@ fi
 
 cd ../..
 echo "All tests completed!"
-echo "HTML report available at http://localhost:9325"
+echo "HTML report saved to results/e2e-report/"
