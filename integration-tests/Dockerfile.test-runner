@@ -29,6 +29,6 @@ COPY setup/wait-for-services.sh ./setup/
 RUN chmod +x ./setup/wait-for-services.sh
 
 # Set up directories for test results
-RUN mkdir -p results/e2e results/api
+RUN mkdir -p results/e2e results/api test-results
 
 CMD ["./run-tests.sh"]
