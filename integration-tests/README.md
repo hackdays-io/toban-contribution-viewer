@@ -44,11 +44,9 @@ docker compose -f docker-compose.test.yml run test-runner
 
 ```bash
 # E2E test results
-open results/e2e-report/index.html
-
-# Or view the HTML report in your browser at:
-http://localhost:9323
-# Note: The HTML report is served by a dedicated container and is accessible even after tests complete
+# View the HTML report by opening the file:
+results/e2e-report/index.html
+# Note: HTML reports are saved as files for later inspection
 
 # API test results
 cat results/api-results.xml
