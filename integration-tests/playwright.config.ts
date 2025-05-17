@@ -7,8 +7,8 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
   reporter: [
-    ['html', { outputFolder: 'results/e2e-report' }],
-    ['junit', { outputFile: 'results/e2e-results.xml' }]
+    ['html', { outputFolder: 'test-results/html' }],
+    ['junit', { outputFile: 'test-results/junit.xml' }]
   ],
   use: {
     baseURL: process.env.FRONTEND_URL || 'http://test-frontend:5173',

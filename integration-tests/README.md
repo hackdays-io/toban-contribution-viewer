@@ -48,7 +48,7 @@ open results/e2e-report/index.html
 
 # Or view the HTML report in your browser at:
 http://localhost:9323
-# Note: The HTML report server is automatically started after running the tests
+# Note: The HTML report is served by a dedicated container and is accessible even after tests complete
 
 # API test results
 cat results/api-results.xml
