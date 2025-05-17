@@ -1,0 +1,15 @@
+{
+  "name": "auth-api-mock",
+  "version": "1.0.0",
+  "description": "Mock authentication service for E2E tests",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "body-parser": "^1.20.2",
+    "jsonwebtoken": "^9.0.2",
+    "cors": "^2.8.5"
+  }
+}

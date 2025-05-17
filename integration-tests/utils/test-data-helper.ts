@@ -1,3 +1,5 @@
+import { Page } from '@playwright/test';
+
 /**
  * Helper functions for managing test data
  */
@@ -63,5 +65,26 @@ export class TestDataHelper {
     ];
     
     return analyses[index % analyses.length];
+  }
+
+  /**
+   * Reset the test data on the mock auth service
+   */
+  static async resetAuthData(page: Page) {
+    try {
+      const authApiUrl = process.env.AUTH_API_URL || 'http://localhost:3003';
+      const response = await fetch(`${authApiUrl}/reset`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to reset auth data: ${response.status}`);
+      }
+      
+      console.log('Successfully reset auth test data');
+    } catch (error) {
+      console.error('Error resetting auth data:', error);
+    }
   }
 }

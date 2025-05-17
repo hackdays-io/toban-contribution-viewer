@@ -60,8 +60,9 @@ services:
         condition: service_healthy
     environment:
       - VITE_API_URL=http://test-backend:8000
-      - VITE_SUPABASE_URL=${SUPABASE_URL:-http://test-supabase:9000}
+      - VITE_SUPABASE_URL=${SUPABASE_URL:-http://mock-auth-api:3000}
       - VITE_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:-test-anon-key}
+      - VITE_AUTH_REDIRECT_URI=http://test-frontend:5173/auth/callback
     ports:
       - "5174:5173"
     volumes:
@@ -107,6 +108,25 @@ services:
       retries: 3
       start_period: 30s
 
+  # Mock Auth API service
+  mock-auth-api:
+    build:
+      context: ./mocks/auth-api
+      dockerfile: Dockerfile
+    ports:
+      - "3003:3000"
+    volumes:
+      - ./mocks/auth-api:/app
+      - /app/node_modules
+    environment:
+      - PORT=3000
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3000/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1); }).on('error', () => process.exit(1))\" || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
   # Test runner container
   test-runner:
     build:
@@ -121,6 +141,8 @@ services:
         condition: service_healthy
       mock-openrouter-api:
         condition: service_healthy
+      mock-auth-api:
+        condition: service_healthy
     volumes:
       - ./tests:/app/tests
       - ./utils:/app/utils
@@ -131,6 +153,7 @@ services:
       - FRONTEND_URL=http://test-frontend:5173
       - SLACK_API_URL=http://mock-slack-api:3000
       - OPENROUTER_API_URL=http://mock-openrouter-api:3000
+      - AUTH_API_URL=http://mock-auth-api:3000
     command: ["./setup/wait-for-services.sh", "./run-tests.sh"]
 
 volumes:
